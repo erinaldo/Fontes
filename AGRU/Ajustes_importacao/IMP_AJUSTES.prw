@@ -1,13 +1,13 @@
 #include 'protheus.ch'
 #include 'parmtype.ch'
-
+//teste git
 user function IMP_AJUSTES()
 
 RpcSetType(3)
 RpcSetEnv( "01","01")
 
 // Abre o arquivo
-nHandle := FT_FUse("c:\temp\CLIENTE.csv" )
+nHandle := FT_FUse("c:\temp\CLIENTE.csv")
 // Se houver erro de abertura abandona processamento
 if nHandle = -1
 	return
