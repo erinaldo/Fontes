@@ -1,0 +1,17 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} MT235AIR() 
+
+Ponto de entrada após eliminação de resíduo (por item)
+/*/
+//------------------------------------------------------------------------------
+User Function MT235AIR()
+Local cAlias	:= PARAMIXB[1]
+Local nDoc		:= PARAMIXB[2]
+
+If nDoc == 1
+	U_ResAtuPC(SC7->C7_NUM,SC7->C7_ITEM)
+EndIf
+
+Return 

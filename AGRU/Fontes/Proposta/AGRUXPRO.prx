@@ -1,0 +1,258 @@
+#include "Protheus.Ch"
+
+/*/{Protheus.doc} ProInPos
+// Inicializador do campo Pos. (ADZ_XSEQ1)
+@author andre.oliveira
+@since 01/10/2019
+@version 1.0
+@type function
+/*/
+User Function ProInPos()
+Local oModel 	:= FWModelActive()
+Local nX		:= 1
+Local nZ		:= 0
+Local nAux		:= 0
+Local nMax		:= 0
+
+oModel := oModel:GetModel('ADZPRODUTO')
+nZ := oModel:Length()
+
+For nX := 1 To nZ
+	If !oModel:IsDeleted(nX) .And. nMax < (nAux := Int(Val(oModel:GetValue("ADZ_XSEQ1",nX))))
+	 	nMax := nAux
+	EndIf
+Next nX 
+
+Return alltrim(Str(nMax+1,TamSX3("ADZ_XSEQ1")[1]))+".0"
+
+/*/{Protheus.doc} ProRaFrt
+// Função responsável por processar o rateio do frete nos itens da proposta
+@author andre.oliveira
+@since 04/10/2019
+@version 1.0
+
+@type function
+/*/
+User Function ProRaFrt()
+Local cFrete		:= "" 	// Tipo do Frete
+Local nFrete		:= 0	// Valor do Frete
+Local nTotF			:= 0
+Local nI			:= 0
+Local nDesCabc		:= 0
+Local nRateio		:= 0
+Local nQtd			:= 0
+Local nPrcVen		:= 0
+Local aSaveLines 	:= FWSaveRows() //Salva as posicoes das FWFormGrids do Model
+Local oView      	:= FWViewActive()
+Local oModel		:= FwModelActive()
+Local oModelADY		:= oModel:GetModel("ADYMASTER")
+Local oModelADZ		:= oModel:GetModel("ADZPRODUTO")
+
+cFrete	:= oModelADY:GetValue("ADY_XFRETE")
+nFrete	:= oModelADY:GetValue("ADY_XVLFRT")
+nDesc	:= oModelADY:GetValue("ADY_DESCON")
+
+If cFrete == '2' //-- Frete Rateado
+	nLinhas	:= oModelADZ:Length()
+	nTotal	:= 0
+
+	nDesCabc := oModelADY:GetValue("ADY_DESCON") //Percentual de desconto no Cabeçalho da Proposta
+	oModelADY:SetValue("ADY_DESCON"	, 0 )
+	
+	//Zera o valor do Frete
+	For nI := 1 to nLinhas
+		oModelADZ:GoLine(nI)
+		If !oModelADZ:IsDeleted(nI)
+			oModelADZ:SetValue("ADZ_XVLFRT"	, 0 )
+			oModelADZ:SetValue("ADZ_XVLTOR"	, 0 )
+			oModelADZ:SetValue("ADZ_DESCON"	, 0 )
+			oModelADZ:SetValue("ADZ_VALDES"	, 0 )
+		Endif	
+	Next
+
+	//Recalcula o Valo do Desconto 
+	A600ReplcAlt(2)
+	oModelADY:SetValue("ADY_DESCON"	, nDesCabc )
+
+	//Captura o Total da Proposta com o Desconto aplicado (se houver)
+	For nI := 1 to nLinhas
+		oModelADZ:GoLine(nI)
+		If !oModelADZ:IsDeleted(nI)
+			nQtd	:= oModelADZ:GetValue("ADZ_QTDVEN")
+			nPrcVen	:= oModelADZ:GetValue("ADZ_PRCVEN")
+			nTotF   := oModelADZ:GetValue("ADZ_TOTAL")
+			oModelADZ:SetValue("ADZ_TOTAL"	, nQtd*nPrcVen )
+			nTotal += oModelADZ:GetValue("ADZ_TOTAL")
+		Endif	
+	Next
+
+	//Atualiza o campo Preco Unitario somando o valor do Rateio do Frete (o gatilho padrao atualiza o valor total)
+	For nI := 1 to nLinhas
+		oModelADZ:GoLine(nI)
+
+		nQtd	:= oModelADZ:GetValue("ADZ_QTDVEN")
+		nPrcVen	:= oModelADZ:GetValue("ADZ_PRCVEN")
+		nTotF   := oModelADZ:GetValue("ADZ_TOTAL")
+
+		nRateio := ((nTotF * 100) / nTotal )
+		nRateio := (nRateio * nFrete)/100
+		
+		//Atualiza preco unitario. 
+		nPrcVen	:= (nTotF + nRateio)/ nQtd
+		oModelADZ:SetValue("ADZ_PRCVEN"	, nPrcVen )	//Atualiza o campo PrcVen e executa todos os gatilhos
+		
+		oModelADZ:SetValue("ADZ_XVLFRT"	, nRateio ) // valor do frete por item 
+		oModelADZ:SetValue("ADZ_XVLTOR"	, nTotF   ) // total sem frete
+	Next nI
+Else	//-- Se o Frete não for rateado zera os campos de Valor de Frete e recalculo o Desconto
+	nLinhas	:= oModelADZ:Length()
+	For nI := 1 to nLinhas
+		oModelADZ:GoLine(nI)
+		If !oModelADZ:IsDeleted(nI)
+			oModelADZ:SetValue("ADZ_XVLFRT"	, 0 ) //valor do rateio por item
+			oModelADZ:SetValue("ADZ_XVLTOR"	, oModelADZ:GetValue("ADZ_TOTAL") ) //total sem frete
+			oModelADZ:SetValue("ADZ_DESCON"	, 0 ) //% desconto
+			oModelADZ:SetValue("ADZ_VALDES"	, 0 ) //vlr desconto
+		Endif	
+	Next nI
+
+	//Recalcula o Valo do Desconto 
+	A600ReplcAlt(2)
+Endif
+
+oView:Refresh('ADZPRODUTO')
+oModelADZ:GoLine(1)
+FWRestRows(aSaveLines) //Restaura as posicoes das FWFormGrids do Model
+
+Return .T.
+
+/*/{Protheus.doc} ProImpos
+// Função responsavel pela adicao dos valores de impostos no preco da tabela
+@author andre.oliveira
+@since 05/10/2019
+@version 1.0
+@return ${return}, ${return_description}
+@param cTabPreco, characters, Código da tabela de preço
+@param cProduto, characters, Código do produto
+@param nQtde, numeric, Quantidade da venda
+@param cCliente, characters, Código do cliente
+@param cLoja, characters, Loja do cliente
+@param nPrcSImp, numeric, Preço da tabela
+@type function
+/*/
+User Function ProImpos(cTabPreco,cProduto,nQtde,cCliente,cLoja,nPrcSImp)
+Local cCodTES	:= ""
+Local nValTot	:= 0
+Local nAliqICMS	:= 0
+Local nAliqCmp	:= 0
+Local nAliqST	:= 0
+Local nAliqPIS	:= SuperGetMV("MV_TXPIS",.F.,0)
+Local nAliqCOF	:= SuperGetMV("MV_TXCOFIN",.F.,0)
+Local nPrcCImp	:= 0
+Local oModel	:= FWModelActive()
+Local oModelADZ	:= oModel:GetModel("ADZPRODUTO")
+
+SA1->(dbSetOrder(1))
+SA1->(MSSeek(xFilial("SA1")+cCliente+cLoja))
+DA0->(dbSetOrder(1))
+If DA0->(MSSeek(xFilial("DA0")+cTabPreco)) .And. DA0->DA0_XSIMPO
+	//-- Inicia MATXFIS com dados do cliente para obter os impostos
+	MaFisIni(SA1->A1_COD,SA1->A1_LOJA,"C","N",SA1->A1_TIPO,Nil,Nil,Nil,NIL,"MATA461")
+	
+	//-- Posiciona no produto
+	SB1->(dbSetOrder(1))
+	SB1->(MSSeek(xFilial("SB1")+cProduto))
+	
+	//-- Posiciona na TES
+	If Empty(cCodTES := FWFldGet("ADZ_TES"))
+		If Empty(cCodTES := FWFldGet("ADY_TES"))
+			cCodTES := SB1->B1_TS
+		EndIf
+	EndIf
+	SF4->(dbSetOrder(1))
+	SF4->(MSSeek(xFilial("SF4")+cCodTES))
+	
+	//-- Adiciona produto para calcular os impostos
+	nValTot := 100
+	MaFisAdd(cProduto,cCodTES,nQtde,nValTot,0,"","",0,0,0,0,0,nValTot,0,SB1->(Recno()),SF4->(Recno()))
+	
+	//-- Cobrará diferencial de alíquota quado:
+	//--	Operação com DIFAL		ou	(	não revendedor				e		não contribuinte)	
+	If MaFisRet(1,"IT_VALCMP") > 0 .Or. (AllTrim(SA1->A1_TIPO) <> 'R' .And. (Empty(SA1->A1_INSCR) .Or. "ISENT" $ SA1->A1_INSCR .Or. "RG" $ SA1->A1_INSCR .Or. SA1->A1_CONTRIB == "2"))
+		//									DIFAL								FECP DEST
+		nAliqCmp := MaFisRet(1,"IT_ALIQCMP") - MaFisRet(1,"IT_ALIQICM") + MaFisRet(1,"IT_ALFCCMP")
+	EndIf		
+	//						ICMS				DIFAL			FECP ORIG
+	nAliqICMS 	:= MaFisRet(1,"IT_ALIQICM") + nAliqCmp + MaFisRet(1,"IT_ALIQFECP")
+	nAliqST	 	:= ((MaFisRet(1,"IT_VALSOL") + MaFisRet(1,"IT_VFECPST"))/ nValTot) * 100
+	nAliqPIS	:= MaFisRet(1,"IT_ALIQPS2")
+	nAliqCOF	:= MaFisRet(1,"IT_ALIQCF2")
+
+	//-- Encerra uso da MATXFIS
+	MaFisEnd()
+	
+	//-- Calcula preco com impostos (preço c/ impostos = preço da lista / (1 - soma das aliquotas))
+	nPrcCImp := nPrcSImp / (1-((nAliqICMS+nAliqPIS+nAliqCOF)/100))
+	
+	//-- Grava nos itens da proposta as aliquotas de imposto
+	oModelADZ:SetValue("ADZ_XAICMS",nAliqICMS)
+	oModelADZ:SetValue("ADZ_XALIST",nAliqST)
+	//oModelADZ:SetValue("ADZ_XVICMS",(nAliqICMS / 100) * nPrcCImp)
+	//oModelADZ:SetValue("ADZ_XVALST",(nAliqST / 100) * nPrcCImp)
+EndIf
+
+Return Round(nPrcCImp,2)
+
+/*/{Protheus.doc} ProVlDes
+// Validação do percentual de desconto na proposta
+@author emerson.natali
+@since 08/10/2019
+@version 1.0
+@type function
+/*/
+User Function ProVlDes()
+Local lRet 		:= .T.
+Local nDescSA1	:= Posicione("SA1",1,xFilial("SA1")+FWFldGet("ADY_CODIGO")+FWFldGet("ADY_LOJA"),"A1_XDESCOP")
+Local nTolDesc 	:= 0
+Local nDifDes 	:= 0
+Local oModel	:= FwModelActive()
+Local oModelADY	:= oModel:GetModel("ADYMASTER")
+
+nDesc		:= oModelADY:GetValue("ADY_DESCON")
+nTolDesc 	:= oModelADY:GetValue("ADY_XTOLDE")
+
+nDifDes	:= nDesc - nDescSA1
+
+If nDifDes > nTolDesc
+	Help(" ",1,"UNDO",,"Desconto não permitido pois ultrapassa o limite comercial.",4,0)
+	lRet := .F.
+Endif
+
+Return lRet
+
+/*/{Protheus.doc} ProAtRev
+//Função que retorna a revisao da uma proposta
+@author andre.oliveira
+@since 31/10/2019
+@version 1.0
+@return cRet, código para revisao
+@param cOportu, characters, Código da oportunidade
+@type function
+/*/
+User Function ProAtRev(cOportu)
+Local cRet := "01"
+
+//-- Incrementa 1 na última revisão gravada
+BeginSQL Alias "ADYTMP"
+	SELECT COALESCE(MAX(ADY_XREVIS),'00') MAX_XREVIS
+	FROM %Table:ADY%
+	WHERE %NotDel% AND
+		ADY_FILIAL = %xFilial:ADY% AND
+		ADY_OPORTU = %Exp:cOportu%
+EndSQL
+
+cRet := Soma1(ADYTMP->MAX_XREVIS,GetSX3Cache("ADY_XREVIS","X3_TAMANHO"))
+
+ADYTMP->(dbCloseArea())
+
+Return cRet

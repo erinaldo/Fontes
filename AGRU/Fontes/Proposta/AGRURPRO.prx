@@ -1,0 +1,644 @@
+#include "Protheus.Ch"
+#include "MSOle.Ch"
+
+#DEFINE cModelo "/samples/proposta.html"
+#DEFINE cModRep "/samples/dados_rep.html"
+
+/*/{Protheus.doc} AGRURPRO
+// Relatório da proposta comercial (baseado em modelo Word
+@author andre.oliveira
+@since 20/09/2019
+@version 1.0
+@type function
+/*/
+User Function AGRURPRO(cOportu,cRevisao)
+Local lNoParam	:= !Empty(cOportu)
+
+mv_par01 := cOportu
+mv_par02 := cRevisao
+
+If ValidHTML() .And. (lNoParam .Or. Pergunte("AGRURPRO",.T.))
+	FWMsgRun(,{|oSay| Imprime(oSay,mv_par01,mv_par02)},"Aguarde","Processando impressão da proposta comercial...")
+EndIf
+
+Return
+
+/*/{Protheus.doc} Imprime
+// Função responsável pela impressão da proposta
+@author andre.oliveira
+@since 20/09/2019
+@version 1.0
+@type function
+/*/
+Static Function Imprime(oSay,cOportu,cRevisao)
+Local oProposta		:= NIL
+Local oDadosRep		:= NIL
+Local aTipoCli		:= RetSX3Box(GetSX3Cache("A1_TIPO","X3_CBOX"),,,1)
+Local cPictCNPJ		:= PesqPict("SA1","A1_CGC")
+Local cPictQuant	:= PesqPict("SD2","D2_QUANT")
+Local cPictPreco	:= PesqPict("SD2","D2_TOTAL")
+Local cPictAliq		:= PesqPict("SB1","B1_IPI")
+Local cPictCEP		:= PesqPict("SA1","A1_CEP")
+Local cDirRmt		:= Substr(GetRemoteIniName(),1,RAt("\",GetRemoteIniName()))
+Local cNomeArq 		:= "proposta_" +cOportu +"_" +cRevisao +".htm"
+Local cDataPro		:= ""
+Local nQtdVen		:= 0
+Local nX			:= 0
+Local lDadosZP1		:= .F.
+Local lDadosRep		:= .F.
+Local lNaoContrib	:= .F.
+
+//-- Variáveis para impressão do header
+Local cCab_End		:= ""
+Local cCab_Bairro	:= ""
+Local cCab_Mun		:= ""
+Local cCab_UF		:= ""
+Local cCab_CEP		:= ""
+Local cCab_Tel		:= ""
+Local cCab_CNPJ 	:= ""
+Local cCab_IE		:= ""
+Local cCab_Emissao	:= ""
+Local cCab_Titulo	:= ""
+Local cCab_Documento:= ""
+Local cCab_Revisa	:= ""
+Local cCab_Frete	:= ""
+Local cCab_Trans	:= ""
+Local cCab_Refer	:= ""
+Local cCab_Vendedor	:= ""
+Local cCab_VenTel	:= ""
+Local cCab_Obs		:= ""
+
+//-- Variáveis para impressão dos dados do cliente
+Local cCli_Nome		:= ""
+Local cCli_Contato	:= ""
+Local cCli_Endereco := ""
+Local cCli_Cidade	:= ""
+Local cCli_UF		:= ""
+Local cCli_CNPJ		:= ""
+Local cCli_IE		:= ""
+Local cCli_Telefone	:= ""
+Local cCli_Bairro	:= ""
+Local cCli_CEP		:= ""
+Local cCli_Mail		:= ""
+Local cCli_Ativ		:= ""
+Local cCli_MailNFE	:= ""
+Local cCli_MailBOL	:= ""
+
+//-- Variáveis para impressão dos dados do representante
+Local cRep_Nome		:= ""
+Local cRep_Cidade	:= ""
+Local cRep_UF		:= ""
+Local cRep_Contato	:= ""
+Local cRep_Telefone	:= ""
+Local cRep_Mail		:= ""
+
+//-- Variáveis para impressão dos dados dos itens
+Local aItens		:= {}
+Local nItens_SubT	:= 0
+Local nItens_Tot	:= 0
+Local nItens_ICMST	:= 0
+Local nItens_IPI	:= 0
+Local nItens_Frete	:= 0
+
+//-- Variáveis para impressão dos impostos
+Local nAliq_ICMS	:= 0
+Local nAliq_PIS		:= SuperGetMV("MV_TXPIS",.F.,0)
+Local nAliq_COF		:= SuperGetMV("MV_TXCOFIN",.F.,0)
+
+//-- Obtém última revisão da oportunidade
+BeginSQL Alias "AD1TMP"
+	SELECT MAX(AD1_REVISA) MAX_REVISA
+	FROM %Table:AD1%
+	WHERE %NotDel% AND
+	AD1_FILIAL = %xFilial:AD1% AND
+	AD1_NROPOR = %Exp:cOportu%
+EndSQL
+AD1->(dbSetOrder(1))
+AD1->(MsSeek(xFilial("AD1")+cOportu+AD1TMP->MAX_REVISA))
+AD1TMP->(dbCloseArea())
+
+//-- Posiciona estagio para obter descricao da etapa
+AC2->(dbSetOrder(1))
+AC2->(MsSeek(xFilial("AC1")+AD1->(AD1_PROVEN+AD1_STAGE)))
+
+//-- Posiciona ADY pois campos memos não vem na query
+ADY->(DBOrderNickname("NICK1"))
+ADY->(MsSeek(xFilial("ADY")+cOportu+cRevisao))
+
+BeginSQL Alias "TMP"
+	SELECT ADY.ADY_OPORTU 	DOC_NUMERO,
+		ADY.ADY_XREVIS		DOC_REVISA,
+		ADY.ADY_DATA		DOC_EMISSAO,
+		ADY.ADY_ENTIDA 		DOC_ENTIDADE,
+		ADY.ADY_CONDPG		DOC_CONDICAO,
+		ADY.ADY_XFRETE		DOC_FRETE,
+		ADY.ADY_XVLFRT		DOC_VLFRETE,
+		ADY.ADY_XTRANS		DOC_TRANS,
+
+		ADY.ADY_CODIGO 		CLI_CODIGO,
+		ADY.ADY_LOJA 		CLI_LOJA,
+		SU5.U5_CONTAT 		CLI_CONTATO,
+		SU5.U5_DDD 			CLI_DDD,
+		SU5.U5_FCOM1 		CLI_TELEFONE,
+		SU5.U5_EMAIL 		CLI_MAIL,
+
+		ADY.ADY_CLIENT		ENT_CODIGO,
+		ADY.ADY_LOJENT		ENT_LOJA,
+
+		SA3VEN.A3_NOME 		VEN_NOME,
+		SA3VEN.A3_DDDTEL 	VEN_DDD,
+		SA3VEN.A3_TEL 		VEN_TELEFONE,
+		SA3VEN.A3_TIPO		VEN_TIPO,
+
+		ADZ.ADZ_ITEM 		IT_NUMERO,
+		ADZ.ADZ_XSEQ1		IT_POS,
+		ADZ.ADZ_PRODUT 		IT_PRODUTO,
+		ADZ.ADZ_DESCRI 		IT_DESCRI,
+		ADZ.ADZ_XDTENT 		IT_ENTSRE,
+		COALESCE(ZP1.ZP1_DENTPV,'') IT_ENTRES,
+		SB1.B1_POSIPI 		IT_NCM,
+		ADZ.ADZ_XALIST		IT_ALIST,
+		SB1.B1_IPI 			IT_IPI,
+		ADZ.ADZ_QTDVEN 		IT_QTDVEN,
+		COALESCE(COALESCE(SC0.C0_QTDPED,ZP1.ZP1_QTDE),0) IT_QTDRES,
+		ADZ.ADZ_UM 			IT_UM,
+		ADZ.ADZ_PRCVEN 		IT_PRECO,
+		ADZ.ADZ_TOTAL 		IT_TOTAL,
+		ADZ.ADZ_XAICMS		IT_AICMS,
+		COALESCE(ZP1.R_E_C_N_O_,0) ZP1RECNO
+	FROM %Table:ADY% ADY
+	JOIN %Table:ADZ% ADZ ON
+		ADZ.%NotDel% AND
+		ADZ.ADZ_FILIAL = %xFilial:ADZ% AND
+		ADZ.ADZ_PROPOS = ADY.ADY_PROPOS AND
+		ADZ.ADZ_REVISA = ADY.ADY_PREVIS
+	JOIN %Table:SB1% SB1 ON
+		SB1.%NotDel% AND
+		SB1.B1_FILIAL = %xFilial:SB1% AND
+		SB1.B1_COD = ADZ.ADZ_PRODUT
+	JOIN %Table:SA3% SA3VEN ON
+		SA3VEN.%NotDel% AND
+		SA3VEN.A3_FILIAL = %xFilial:SA3% AND
+		SA3VEN.A3_COD = ADY.ADY_VEND
+	LEFT JOIN %Table:AD9% AD9 ON
+		AD9.AD9_FILIAL = %xFilial:AD9% AND
+		AD9.AD9_NROPOR = ADY.ADY_OPORTU AND
+		AD9.AD9_CODCON = (	SELECT MAX(AD9_CODCON) 
+							FROM %Table:AD9% 
+							WHERE %NotDel% AND 
+								AD9_FILIAL = %xFilial:AD9% AND
+								AD9_NROPOR = ADY.ADY_OPORTU	)			
+	LEFT JOIN %Table:SU5% SU5 ON
+		SU5.%NotDel% AND
+		SU5.U5_FILIAL = %xFilial:SU5% AND
+		SU5.U5_CODCONT = AD9.AD9_CODCON
+	LEFT JOIN %Table:ZP1% ZP1 ON
+		ZP1.%NotDel% AND
+		ZP1.ZP1_FILIAL = %xFilial:ZP1% AND
+		ZP1.ZP1_NUMPV = ADY.ADY_PROPOS AND
+		ZP1.ZP1_ITEMPV = ADZ.ADZ_ITEM AND
+		ZP1.ZP1_FLAGEF = 'F'
+	LEFT JOIN %Table:SC0% SC0 ON
+		SC0.%NotDel% AND
+		SC0.C0_FILIAL = %xFilial:SC0% AND
+		SC0.C0_NUM = ZP1.ZP1_NUMSC0
+	WHERE ADY.%NotDel% AND
+		ADY.ADY_FILIAL = %xFilial:ADY% AND
+		ADY.ADY_OPORTU = %Exp:cOportu% AND
+		ADY.ADY_XREVIS = %Exp:cRevisao%
+EndSQL
+
+//-- Carrega dados do cabeçalho
+cCab_End		:= SM0->M0_ENDCOB
+cCab_Bairro		:= SM0->M0_BAIRCOB
+cCab_Mun		:= SM0->M0_CIDCOB
+cCab_UF			:= SM0->M0_ESTCOB
+cCab_CEP		:= SM0->M0_CEPCOB
+cCab_Tel		:= SM0->M0_TEL
+cCab_CNPJ 		:= SM0->M0_CGC
+cCab_IE			:= SM0->M0_INSC
+cCab_Titulo		:= Upper(AC2->AC2_DESCRI)
+cCab_Documento	:= TMP->DOC_NUMERO
+cCab_Revisa		:= TMP->DOC_REVISA
+cCab_Emissao	:= TMP->DOC_EMISSAO
+If TMP->DOC_FRETE == '0'
+	cCab_Frete := "Retirada e pagamento por conta do cliente."
+Else
+	SA1->(dbSetOrder(1))
+	SA1->(MsSeek(xFilial("SA1")+TMP->(ENT_CODIGO+ENT_LOJA)))
+	cCab_Frete := "CIF - " +SA1->(AllTrim(A1_MUN) +"/" +A1_EST)
+EndIf
+SA4->(dbSetOrder(1))
+SA4->(MsSeek(xFilial("SA4")+TMP->DOC_TRANS))
+cCab_Trans 	:= AllTrim(SA4->A4_NOME)
+cCab_Refer 	:= AllTrim(ADY->ADY_XREFER)
+cCab_Obs	:= AllTrim(ADY->ADY_OBS)
+
+SA3->(dbSetOrder(1))
+If TMP->DOC_ENTIDADE == '1'
+	//-- Carrega dados do cliente
+	SA1->(dbSetOrder(1))
+	SA1->(MsSeek(xFilial("SA1")+TMP->(CLI_CODIGO+CLI_LOJA)))
+	
+	lNaoContrib := Empty(SA1->A1_INSCR) .Or. "ISENT" $ SA1->A1_INSCR .Or. "RG" $ SA1->A1_INSCR .Or. SA1->A1_CONTRIB == "2" 
+
+	cCli_Nome 		:= AllTrim(SA1->A1_NOME)
+	cCli_Contato 	:= AllTrim(If(Empty(TMP->CLI_CONTATO),SA1->A1_CONTATO,TMP->CLI_CONTATO))
+	cCli_Endereco 	:= AllTrim(SA1->A1_END)
+	cCli_UF			:= AllTrim(SA1->A1_EST)
+	cCli_Cidade		:= AllTrim(SA1->A1_MUN) +" - " +cCli_UF
+	cCli_CNPJ 		:= AllTrim(SA1->A1_CGC)
+	cCli_IE			:= AllTrim(SA1->A1_INSCR) +Iif(Empty(SA1->A1_INSCR),""," - ")
+	If !Empty(TMP->CLI_TELEFONE)
+		cCli_Telefone 	:= TMP->("("+CLI_DDD+") "+AllTrim(CLI_TELEFONE))
+	ElseIf !Empty(SA1->A1_TEL)
+		cCli_Telefone 	:= SA1->("("+A1_DDD+") "+AllTrim(A1_TEL))
+	EndIf
+	cCli_Bairro		:= AllTrim(SA1->A1_BAIRRO)
+	cCli_CEP 		:= AllTrim(SA1->A1_CEP)
+	cCli_Mail 		:= AllTrim(If(Empty(TMP->CLI_MAIL),SA1->A1_EMAIL,TMP->CLI_MAIL))
+	cCli_Ativ 		:= aTipoCli[aScan(aTipoCli,{|x| x[2] == SA1->A1_TIPO}),3]
+	cCli_MailNFE	:= AllTrim(SA1->A1_EMAIL)
+	cCli_MailBOL	:= AllTrim(SA1->A1_EMAILBO)
+
+	//-- Posiciona vendedor
+	SA3->(MsSeek(xFilial("SA3")+SA1->A1_VEND))
+Else
+	//-- Carrega dados do cliente
+	SUS->(dbSetOrder(1))
+	SUS->(MsSeek(xFilial("SUS")+TMP->(CLI_CODIGO+CLI_LOJA)))
+	
+	lNaoContrib := Empty(SUS->US_INSCR) .Or. "ISENT" $ SUS->US_INSCR .Or. "RG" $ SUS->US_INSCR .Or. SUS->US_CONTRIB == "2"
+
+	cCli_Nome 		:= AllTrim(SUS->US_NOME)
+	cCli_Contato 	:= AllTrim(If(Empty(TMP->CLI_CONTATO),"",TMP->CLI_CONTATO))
+	cCli_Endereco 	:= AllTrim(SUS->US_END)
+	cCli_UF			:= AllTrim(SUS->US_EST)
+	cCli_Cidade		:= AllTrim(SUS->US_MUN) +" - " +cCli_UF
+	cCli_CNPJ 		:= AllTrim(SUS->US_CGC)
+	cCli_IE			:= AllTrim(SUS->US_INSCR) +Iif(Empty(SUS->US_INSCR),""," - ")
+	If !Empty(TMP->CLI_TELEFONE)
+		cCli_Telefone 	:= TMP->("("+CLI_DDD+") "+AllTrim(CLI_TELEFONE))
+	ElseIf !Empty(SUS->US_TEL)
+		cCli_Telefone 	:= SUS->("("+US_DDD+") "+AllTrim(US_TEL))
+	EndIf
+	cCli_Bairro		:= AllTrim(SUS->US_BAIRRO)
+	cCli_CEP 		:= AllTrim(SUS->US_CEP)
+	cCli_Mail 		:= AllTrim(If(Empty(TMP->CLI_MAIL),SUS->US_EMAIL,TMP->CLI_MAIL))
+	cCli_Ativ 		:= aTipoCli[aScan(aTipoCli,{|x| x[2] == SUS->US_TIPO}),3]
+	cCli_MailNFE 	:= AllTrim(SUS->US_EMAIL)
+	cCli_MailBOL	:= AllTrim(SUS->US_EMAILBO)
+
+	//-- Posiciona vendedor87yh
+	SA3->(MsSeek(xFilial("SA3")+SUS->US_VEND))
+EndIf
+
+cCli_IE += Iif(lNaoContrib,"Não contribuinte","Contribuinte")
+If Empty(cCli_MailNFE)
+	cCli_MailNFE := "[não informado]"
+EndIf
+If Empty(cCli_MailBOL)
+	cCli_MailBOL := "[não informado]"
+EndIf
+
+//-- Carrega dados do vendedor do cliente e representante
+If SA3->(Found()) .And. SA3->A3_TIPO $ "E|P"
+	lDadosRep := .T.
+
+	//-- Carrega dados do representante
+	cRep_Nome		:= AllTrim(SA3->A3_NOME)
+	cRep_UF			:= AllTrim(SA3->A3_EST)
+	cRep_Cidade		:= AllTrim(SA3->A3_MUN) + " - " +cRep_UF
+	If Alltrim(SA3->A3_GERASE2) = 'S'
+		SA2->(DbSeek(xFilial("SA2")+SA3->(A3_FORNECE+A3_LOJA) ) )
+		cRep_Contato	:= AllTrim(SA2->A2_CONTATO)
+	Else
+		cRep_Contato	:= AllTrim(SA3->A3_XCONTAT)
+	EndIf
+	If !Empty(SA3->A3_TEL)
+		cRep_Telefone	:= SA3->("("+A3_DDDTEL+") "+AllTrim(A3_TEL))
+	EndIf
+	cRep_Mail		:= AllTrim(SA3->A3_EMAIL)
+
+	//-- Carrega vendedor responsável pelo representante
+	If !Empty(SA3->A3_SUPER) .And. SA3->(MsSeek(xFilial("SA3")+SA3->A3_SUPER))
+		cCab_Vendedor := AllTrim(SA3->A3_NOME)
+		If !Empty(SA3->A3_TEL)
+			cCab_VenTel	:= "- " +SA3->("("+AllTrim(A3_DDDTEL)+") "+AllTrim(A3_TEL))
+		EndIf
+	EndIf
+Else
+	cCab_Vendedor := AllTrim(SA3->A3_NOME)
+	If !Empty(SA3->A3_TEL)
+		cCab_VenTel	:= "- " +SA3->("("+AllTrim(A3_DDDTEL)+") "+AllTrim(A3_TEL))
+	EndIf
+EndIf
+
+//-- Carrega dados da condicação
+SE4->(dbSetOrder(1))
+SE4->(MsSeek(xFilial("SE4")+TMP->DOC_CONDICAO))
+cCondicao := SE4->E4_DESCRI
+
+//-- Carrega dados dos itens
+//-- Inicia variaveis de controle de quebra do itens
+cQuebra := TMP->IT_NUMERO
+nQtdVen := TMP->IT_QTDVEN
+
+While !TMP->(EOF())
+	lDadosZP1 := TMP->ZP1RECNO > 0
+
+	AddItem(@aItens,lDadosZP1,nQtdVen)	//-- Adiciona item para impressão
+	nQtdVen -= TMP->(Iif(lDadosZP1,IT_QTDRES,IT_QTDVEN))
+	cDataPro := TMP->IT_ENTSRE
+
+	TMP->(dbSkip())
+
+	//-- Reset nas variaveis de controle da quebra
+	If cQuebra <> TMP->IT_NUMERO
+		//-- Antes, imprime linha de quantidade sem reserva (se houver)
+		If nQtdVen > 0
+			lDadosZP1 := .F.	//-- Força impressão dos dados da proposta/pedido
+			AddItem(@aItens,lDadosZP1,nQtdVen,.T.,cDataPro)	//-- Adiciona item para impressão
+		EndIf
+		cQuebra := TMP->IT_NUMERO
+		nQtdVen := TMP->IT_QTDVEN
+	EndIf
+End
+
+oProposta := TWFHTML():New(cModelo)
+oDadosRep := TWFHTML():New(cModRep)
+
+//-- Seta valores ref. proposta
+PrintValue(oProposta,'cab_End',cCab_End)
+PrintValue(oProposta,'cab_Bairro',cCab_Bairro)
+PrintValue(oProposta,'cab_Mun',cCab_Mun)
+PrintValue(oProposta,'cab_UF',cCab_UF)
+PrintValue(oProposta,'cab_CEP',Transform(cCab_CEP,cPictCEP))
+PrintValue(oProposta,'cab_Tel',Transform(cCab_Tel,"@R (99) 9999-9999"))
+PrintValue(oProposta,'cab_CNPJ',Transform(cCab_CNPJ,cPictCNPJ))
+PrintValue(oProposta,'cab_IE',cCab_IE)
+PrintValue(oProposta,'cab_emissao',DToC(SToD(cCab_Emissao)))
+PrintValue(oProposta,'cab_titulo',cCab_Titulo)
+PrintValue(oProposta,'cab_documento',cCab_Documento)
+PrintValue(oProposta,'cab_revisao',cCab_Revisa)
+PrintValue(oProposta,'cab_frete',cCab_Frete)
+PrintValue(oProposta,'cab_trans',cCab_Trans)
+PrintValue(oProposta,'cab_refer',cCab_Refer)
+PrintValue(oProposta,'cab_vendedor',cCab_Vendedor)
+PrintValue(oProposta,'cab_vendtel',cCab_VenTel)
+
+//-- Seta valores ref. cliente
+PrintValue(oProposta,'cli_nome',cCli_Nome)
+PrintValue(oProposta,'cli_contato',cCli_Contato)
+PrintValue(oProposta,'cli_endereco',cCli_Endereco)
+PrintValue(oProposta,'cli_Cidade',cCli_Cidade)
+PrintValue(oProposta,'cli_UF',cCli_UF)
+PrintValue(oProposta,'cli_CNPJ',Transform(cCli_CNPJ,cPictCNPJ))
+PrintValue(oProposta,'cli_IE',cCli_IE)
+PrintValue(oProposta,'cli_Telefone',cCli_Telefone)
+PrintValue(oProposta,'cli_Bairro',cCli_Bairro)
+PrintValue(oProposta,'cli_CEP',Transform(cCli_CEP,cPictCEP))
+PrintValue(oProposta,'cli_Mail',StrTran(cCli_Mail,";","<br>"))
+PrintValue(oProposta,'cli_Ativ',cCli_Ativ)
+
+//-- Seta valores ref. representante
+If lDadosRep
+	PrintValue(oDadosRep,'rep_nome',cRep_Nome)
+	PrintValue(oDadosRep,'rep_cidade',cRep_Cidade)
+	PrintValue(oDadosRep,'rep_UF',cRep_UF)
+	PrintValue(oDadosRep,'rep_contato',cRep_Contato)
+	PrintValue(oDadosRep,'rep_telefone',cRep_Telefone)
+	PrintValue(oDadosRep,'rep_mail',StrTran(cRep_Mail,";","<br>"))
+	
+	oProposta:ValByName('dados_rep',oDadosRep:HtmlCode())
+EndIf
+
+For nX := 1 To Len(aItens)
+	PrintValue(oProposta,'it.numero',aItens[nX,12])
+	PrintValue(oProposta,'it.produto',aItens[nX,2])
+	PrintValue(oProposta,'it.descri',aItens[nX,3])
+	PrintValue(oProposta,'it.entrega',aItens[nX,4])
+	PrintValue(oProposta,'it.ncm',aItens[nX,5])
+	PrintValue(oProposta,'it.icmst',AllTrim(Transform(aItens[nX,6],cPictAliq))+"%")
+	PrintValue(oProposta,'it.ipi',AllTrim(Transform(aItens[nX,7],cPictAliq))+"%")
+	PrintValue(oProposta,'it.quant',AllTrim(Transform(aItens[nX,8],cPictQuant)))
+	PrintValue(oProposta,'it.um',aItens[nX,9])
+	PrintValue(oProposta,'it.preco',AllTrim(Transform(aItens[nX,10],cPictPreco)))
+	PrintValue(oProposta,'it.total',AllTrim(Transform(aItens[nX,11],cPictPreco)))
+
+	nItens_ICMST += (aItens[nX,6]/100) * aItens[nX,11]
+	nItens_IPI += (aItens[nX,7]/100) * aItens[nX,11]
+	nAliq_ICMS := aItens[nX,13]
+
+	nItens_SubT += aItens[nX,11]
+Next nX
+
+//-- Se CIF Destacado, imprime valor do frete
+If TMP->DOC_FRETE == '1'
+	nItens_Frete := TMP->DOC_VLFRETE
+EndIf
+nItens_Tot := nItens_SubT +nItens_ICMST +nItens_IPI +nItens_Frete
+
+PrintValue(oProposta,'itens_subtotal',AllTrim(Transform(nItens_SubT,cPictPreco)))
+PrintValue(oProposta,'itens_icmst',AllTrim(Transform(nItens_ICMST,cPictPreco)))
+PrintValue(oProposta,'itens_ipi',AllTrim(Transform(nItens_IPI,cPictPreco)))
+PrintValue(oProposta,'itens_frete',AllTrim(Transform(nItens_Frete,cPictPreco)))
+PrintValue(oProposta,'itens_total',AllTrim(Transform(nItens_Tot,cPictPreco)))
+
+//-- Seta condicao, observação, aliquota icms e e-mails
+PrintValue(oProposta,'condicao',cCondicao)
+PrintValue(oProposta,'cab_obs',cCab_Obs)
+PrintValue(oProposta,'aliq_ICMS',Transform(nAliq_ICMS,cPictAliq)+"%")
+PrintValue(oProposta,'aliq_PIS',Transform(nAliq_PIS,cPictAliq)+"%")
+PrintValue(oProposta,'aliq_COF',Transform(nAliq_COF,cPictAliq)+"%")
+PrintValue(oProposta,'cli_mailnfe',cCli_MailNFE)
+PrintValue(oProposta,'cli_mailbol',cCli_MailBol)
+PrintValue(oProposta,'per_multa',AllTrim(Transform(SuperGetMV("AG_MULTA",.F.,0),cPictAliq))+"%")
+PrintValue(oProposta,'per_juros',AllTrim(Transform(SuperGetMV("AG_JUROS",.F.,0),cPictAliq))+"%")
+
+oProposta:SaveFile(cNomeArq)
+CpyS2T(cNomeArq,cDirRmt)
+FErase(cNomeArq)
+ShellExecute("OPEN",cDirRmt+cNomeArq,"","C:\",3)
+Sleep(3000)
+FErase(cDirRmt+cNomeArq)
+
+TMP->(dbCloseArea())
+
+Return
+
+/*/{Protheus.doc} ValidDot
+// Verifica existência do modelo da proposta
+@author andre.oliveira
+@since 20/09/2019
+@version 1.0
+@return lRet, Incica se o caminho e arquivo existem
+@type function
+/*/
+Static Function ValidHTML()
+Local lRet := .T.
+
+If !File(cModelo) .Or. !File(cModRep)
+	Help(" ",1,"NOFOUND",,"Arquivos modelos (proposta.html e dados_rep.html) não localizado no servidor em /samples. Contate o administrador do sistema.",4,0)
+	lRet := .F.
+Endif
+
+Return lRet
+
+/*/{Protheus.doc} AddItem
+//	Função que adiciona o item no array de controle
+@author andre.oliveira
+@since 20/09/2019
+@version 1.0
+@param nItem, numeric, Item da impressao
+@param lDadosZP1, logical, Indica se dados da ZP1 ou ADZ/SC6
+@param cPictPreco, characters, Picture para preço
+@param cPictQuant, characters, Picture para quantidade
+@type function
+/*/
+Static Function AddItem(aItens,lDadosZP1,nQtdVen,lQuebra,cDataPro)
+Local nUltimo	:= Len(aItens)
+Local nAglu		:= 0
+Local cPos		:= ""
+Local cProduto	:= ""
+Local cEntrega	:= ""
+
+Default lQuebra := .F.
+
+//cPos := Iif(lQuebra,aItens[nUltimo,12],Iif(Right(TMP->IT_POS,1) == "0",AllTrim(Left(TMP->IT_POS,2)),AllTrim(TMP->IT_POS)))
+cPos := Iif(lQuebra,aItens[nUltimo,12],AllTrim(TMP->IT_POS) )
+cProduto := Iif(lQuebra,aItens[nUltimo,2],TMP->IT_PRODUTO)
+cEntrega := Iif(lQuebra,cDataPro,Iif(lDadosZP1,TMP->IT_ENTRES,TMP->IT_ENTSRE))
+If cEntrega <= DToS(dDataBase)
+	cEntrega := "Imediata"
+ElseIf SToD(cEntrega) >= (SToD(TMP->DOC_EMISSAO) + SuperGetMV("FS_DTADIC",.F.,60))
+	cEntrega := "60 dias"
+Else
+	cEntrega := DToC(SToD(cEntrega))
+EndIf
+
+If (nAglu := aScan(aItens,{|x| x[12] == cPos .And. x[2] == cProduto .And. x[4] == cEntrega})) == 0
+	aAdd(aItens,Array(13))
+	aTail(aItens)[1] := Iif(lQuebra,aItens[nUltimo,1],TMP->IT_NUMERO)
+	aTail(aItens)[2] := cProduto
+	aTail(aItens)[3] := Iif(lQuebra,aItens[nUltimo,3],TMP->IT_DESCRI)
+	aTail(aItens)[4] := cEntrega //If 
+	aTail(aItens)[5] := Iif(lQuebra,aItens[nUltimo,5],TMP->IT_NCM)
+	aTail(aItens)[6] := Iif(lQuebra,aItens[nUltimo,6],TMP->IT_ALIST)
+	aTail(aItens)[7] := Iif(lQuebra,aItens[nUltimo,7],TMP->IT_IPI)
+	aTail(aItens)[8] := Iif(lDadosZP1,TMP->IT_QTDRES,nQtdVen)
+	aTail(aItens)[9] := Iif(lQuebra,aItens[nUltimo,9],TMP->IT_UM)
+	aTail(aItens)[10] := Iif(lQuebra,aItens[nUltimo,10],TMP->IT_PRECO)
+	aTail(aItens)[11] := aTail(aItens)[8] * aTail(aItens)[10]
+	aTail(aItens)[12] := cPos
+	aTail(aItens)[13] := Iif(lQuebra,aItens[nUltimo,13],TMP->IT_AICMS)
+Else
+	aItens[nAglu,8] += Iif(lDadosZP1,TMP->IT_QTDRES,nQtdVen)
+	aItens[nAglu,11] :=  aItens[nAglu,8] * aItens[nAglu,10]
+EndIf
+
+Return
+
+/*/{Protheus.doc} RProGatR
+// Função que gatilha a revisão da proposta na tela de parametros
+@author andre.oliveira
+@since 01/10/2019
+@version 1.0
+@return ${return}, ${return_description}
+
+@type function
+/*/
+User Function RProGatR()
+
+BeginSQL Alias "ADYTMP"
+	SELECT ADY_XREVIS
+	FROM %Table:ADY%
+	WHERE %NotDel% AND
+	ADY_FILIAL = %xFilial:ADY% AND
+	ADY_OPORTU = %Exp:mv_par01% AND
+	ADY_SINCPR = 'T'
+EndSQL
+
+mv_par02 := ADYTMP->ADY_XREVIS
+
+ADYTMP->(dbCloseArea())
+
+Return .T.
+
+/*/{Protheus.doc} PrintValue
+//Função que trata acentuação e imprime valor no html
+@author andre.oliveira
+@since 18/12/2019
+@version 1.0
+@param oProposta, object, Objeto da proposta
+@param cVar, characters, nome da variavel
+@param cValue, characters, conteudo
+@type function
+/*/
+Static Function PrintValue(oProposta,cVar,cValue)
+Local aTrocas	:= {}
+Local cNewValue	:= ""
+Local nX		:= 0
+Local nPos		:= 0
+
+aAdd(aTrocas,{"Á","&Aacute;"})
+aAdd(aTrocas,{"É","&Eacute;"})
+aAdd(aTrocas,{"Í","&Iacute;"})
+aAdd(aTrocas,{"Ó","&Oacute;"})
+aAdd(aTrocas,{"Ú","&Uacute;"})
+aAdd(aTrocas,{"á","&aacute;"})
+aAdd(aTrocas,{"é","&eacute;"})
+aAdd(aTrocas,{"í","&iacute;"})
+aAdd(aTrocas,{"ó","&oacute;"})
+aAdd(aTrocas,{"ú","&uacute;"})
+aAdd(aTrocas,{"Â","&Acirc;"})
+aAdd(aTrocas,{"Ê","&Ecirc;"})
+aAdd(aTrocas,{"Ô","&Ocirc;"})
+aAdd(aTrocas,{"â","&acirc;"})
+aAdd(aTrocas,{"ê","&ecirc;"})
+aAdd(aTrocas,{"ô","&ocirc;"})
+aAdd(aTrocas,{"À","&Agrave;"})
+aAdd(aTrocas,{"à","&agrave;"})
+aAdd(aTrocas,{"Ü","&Uuml;"})
+aAdd(aTrocas,{"ü","&uuml;"})
+aAdd(aTrocas,{"Ç","&Ccedil;"})
+aAdd(aTrocas,{"ç","&ccedil;"})
+aAdd(aTrocas,{"Ã","&Atilde;"})
+aAdd(aTrocas,{"Õ","&Otilde;"})
+aAdd(aTrocas,{"ã","&atilde;"})
+aAdd(aTrocas,{"õ","&otilde;"})
+aAdd(aTrocas,{"Ñ","&Ntilde;"})
+aAdd(aTrocas,{"ñ","&ntilde;"})
+aAdd(aTrocas,{"&","&amp;"})
+aAdd(aTrocas,{"“","&quot;"})
+aAdd(aTrocas,{"<","&lt;"})
+aAdd(aTrocas,{">","&gt;"})
+aAdd(aTrocas,{"°","&deg;"})
+aAdd(aTrocas,{"Ø","&Oslash;"})
+aAdd(aTrocas,{"ø","&oslash;"})
+aAdd(aTrocas,{"ß","&szlig;"})
+aAdd(aTrocas,{"Þ","&Thorn;"})
+aAdd(aTrocas,{"þ","&thorn;"})
+aAdd(aTrocas,{"©","&copy;"})
+aAdd(aTrocas,{"®","&reg;"})
+aAdd(aTrocas,{"™","&trade;"})
+aAdd(aTrocas,{"¼","&frac14;"})
+aAdd(aTrocas,{"½","&frac12;"})
+aAdd(aTrocas,{"¾","&frac34;"})
+aAdd(aTrocas,{"§","&sect;"})
+
+For nX := 1 To Len(cValue)
+	If (nPos := aScan(aTrocas,{|x| x[1] == Substr(cValue,nX,1)})) > 0
+		cNewValue += aTrocas[nPos,2]
+	Else
+		cNewValue += Substr(cValue,nX,1)
+	EndIf
+Next nX
+
+If Substr(cVar,1,3) == "it."
+	aADD(oProposta:ValByName(cVar),cNewValue)
+Else
+	oProposta:ValByName(cVar,cNewValue)
+EndIf
+
+Return

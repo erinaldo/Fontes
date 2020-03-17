@@ -1,0 +1,46 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} M410STTS() 
+
+Ponto de entrada após inclusão, alteração, exclusão e cópia do PV
+/*/
+//------------------------------------------------------------------------------
+User Function M410STTS()
+Local nOpc		:= PARAMIXB[1]
+Local cNumPV	:= Iif(INCLUI,M->C5_NUM,SC5->C5_NUM)
+
+//Alteração dos campos de Desconto quando inclusão atraves de Proposta
+If nOpc == 3 .and. !Empty(SC5->C5_XNROPOR)
+	AltPropDes(cNumPV)
+EndIf
+
+U_ResGrav1(cNumPV,.T.,nOpc == 5)
+
+Return
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} M410STTS() 
+
+Limpa campo de descontos para não comprometer a Impressão da Nota/ DANFE
+/*/
+//------------------------------------------------------------------------------
+
+Static Function AltPropDes(cNumPV)
+
+Local nRecno := SC6->(Recno())
+
+SC6->(DbSetOrder(1))
+SC6->(DbSeek(xFilial("SC6")+cNumPV))
+Do While SC6->(!EOF()) .and. SC6->C6_NUM == cNumPV
+
+	RecLock("SC6",.F.)
+	SC6->C6_DESCONT := 0
+	SC6->C6_VALDESC := 0
+	MsUnLock()
+	SC6->(DbSkip())
+EndDo
+
+Goto(nRecno)
+
+Return()

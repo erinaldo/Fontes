@@ -1,0 +1,14 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} M410LDEL() 
+
+Ponto de entrada na validação da exclusão de linha
+/*/
+//------------------------------------------------------------------------------
+User Function M410LDEL()
+Local lRet := PARAMIXB[1]
+
+lRet := U_ResVlAlt(1,NIL,.T.)
+
+Return lRet

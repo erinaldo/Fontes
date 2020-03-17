@@ -1,0 +1,13 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} M440SC9I() 
+
+Ponto de entrada para gravação de campos customizados na SC9
+/*/
+//------------------------------------------------------------------------------
+User Function M440SC9I()
+
+SC9->C9_XHRLIB := Time()
+
+Return

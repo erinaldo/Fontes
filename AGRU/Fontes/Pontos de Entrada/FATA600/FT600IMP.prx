@@ -1,0 +1,13 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} FT600IMP() 
+
+Pontos de entrada para chamada de relatório específico da proposta comercial
+/*/
+//------------------------------------------------------------------------------
+User Function FT600IMP()
+
+U_AGRURPRO(ADY->ADY_OPORTU,ADY->ADY_XREVIS)
+
+Return .T.

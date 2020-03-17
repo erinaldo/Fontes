@@ -1,0 +1,23 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} GMMA410BUT() 
+
+Ponto de entrada para adição de rotinas customizadas na enchoicebar do PV:
+- Adição da opção de reservas;
+/*/
+//------------------------------------------------------------------------------
+User Function GMMA410BUT()
+Local nOpc		:= PARAMIXB[1] 
+Local aButtons	:= {}
+Local cNumPV 	:= Iif(INCLUI,M->C5_NUM,SC5->C5_NUM)
+Local bReserva	:= {|| u_ResTela(.T.,nOpc,.F.)}
+
+SetKey(VK_F6,bReserva)
+aAdd(aButtons,{'AUTOM',bReserva,"Reservas <F6>","Reservas <F6>"})
+
+If nOpc == 3 .Or. nOpc == 4 .Or. nOpc == 1 .Or. (nOpc == 2 .And. IsInCalLStack('Ma410Resid')) //-- Exclusão está vindo como 1 e resíduo como 2
+	U_ResLoad2(cNumPV,.T.)
+Endif
+
+Return aButtons

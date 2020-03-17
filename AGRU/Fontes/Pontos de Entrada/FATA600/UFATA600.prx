@@ -1,0 +1,51 @@
+#INCLUDE 'Protheus.ch'
+#INCLUDE "FWMVCDEF.CH"
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} FATA600() 
+
+Pontos de entrada da proposta comercial
+/*/
+//------------------------------------------------------------------------------
+User Function FATA600()
+Local xRet		:= .T.
+Local oModel	:= PARAMIXB[1]
+Local cIDPonto	:= PARAMIXB[2]
+Local cIDModel	:= PARAMIXB[3]
+Local bReserva	:= NIL
+Local bFrete	:= NIL
+
+If cIDPonto == "BUTTONBAR"
+	xRet := {}
+	bReserva := {|| u_ResTela(.F.,oModel:GetOperation(),.F.)}
+	bFrete := {|| U_ProRaFrt()}
+	
+	If FWFldGet("ADY_STATUS") # "J"
+		SetKey(VK_F6,bReserva)
+		SetKey(VK_F7,bFrete)
+		aAdd(xRet,{"Reservas <F6>","AUTOM",bReserva,"Reservas <F6>"})
+		If oModel:GetOperation() == MODEL_OPERATION_INSERT .Or. oModel:GetOperation() == MODEL_OPERATION_UPDATE .Or. oModel:GetOperation() == 9
+			aAdd(xRet,{"Ratear frete <F7>","AUTOM",bFrete,"Ratear frete <F7>"})
+			If oModel:GetOperation() == MODEL_OPERATION_UPDATE
+				U_ResLoad2(FWFldGet("ADY_PROPOS"),.F.)
+			EndIf
+		EndIf
+	EndIf
+ElseIf cIDPonto == "MODELCOMMITNTTS"
+	SetKey(VK_F6,NIL)
+	SetKey(VK_F7,NIL)
+ElseIf cIDPonto == "MODELCOMMITTTS"
+	U_ResGrav1(ADY->ADY_PROPOS,.F.,oModel:GetOperation() == MODEL_OPERATION_DELETE)
+ElseIf cIDPonto == "MODELCANCEL"
+	SetKey(VK_F6,NIL)
+	SetKey(VK_F7,NIL)
+	U_ResLimZP("ZP2",FWFldGet("ADY_PROPOS"),,.F.)
+ElseIf cIdPonto == 'FORMLINEPRE'
+	If cIDModel == "ADZPRODUTO" .And. PARAMIXB[5] == 'DELETE'
+		xRet := U_ResVlAlt(1,NIL,.F.)
+	EndIf
+ElseIf cIdPonto == "FORMPOS"
+	U_ProRaFrt() //-- Para rateio do frete e recálculo do desconto
+EndIf
+
+Return xRet

@@ -1,0 +1,83 @@
+Ident. Registro00100100                                                           
+Ident. Fita Rem00200201                                                           
+Literal Remessa0030090PADR("REMESSA",7)                                           
+Cod. Servico   0100110"01"                                                        
+Literal Servico0120260PADR("COBRANCA",15)                                         
+Codigo Empresa 0270460STRZERO(VAL(SEE->EE_CODEMP),20)                             
+Nome da Empresa0470760PADR(SM0->M0_NOMECOM,30)                                    
+Numero do Banco0770790"237"                                                       
+Nome do Banco  0800940PADR("BRADESCO",15)                                         
+Data da Gravaca0951000gravadata(ddatabase,.F.)                                    
+branco         1011080SPACE(8)                                                    
+Ident. Sistema 1091100"MX"                                                        
+Nr. Remessa    1111170STRZERO(VAL(SEE->EE_ULTDSK),7)                              
+Branco         1183940SPACE(286)                                                  
+Nr. Sequencial 3954000"000001"                                                    
+Ident. Registro00100101                                                           
+Agencia Debito 0020060"00000"                                                     
+DG AG DEBITO   0070070"0"                                                         
+RAZAO CC       0080120"00000"                                                     
+CC             0130190"0000000"                                                   
+DG CC          0200200"0"                                                         
+branco         0210210"0"                                                         
+Cod.Carteira   0220240"009"                                                       
+Ag.Destino     0250290STRZERO(VAL(SEE->EE_AGENCIA),5)                             
+C/C Destino    0300360STRZERO(VAL(SEE->EE_CONTA),7)                               
+DV C/C Destino 0370370PADR(SEE->EE_DVCTA,1)                                       
+N CONTROLE     0380620PADR(SE1->E1_IDCNAB+SE1->E1_FILIAL,25)                      
+Bco Debitado   0630650"000"                                                       
+CAMPO MULTA    0660660"2"                                                         
+% MULTA        0670700U_JUROS()                                                   
+ID TITULO      0710810STRZERO(VAL(SUBS(PADL(TRIM(SE1->E1_NUMBCO),15),4,11)),11)   
+DG TITULO      0820820STRTRAN(RIGHT(TRIM(SE1->E1_NUMBCO),1)," ","0")              
+desconto       0830920REPLICATE("0",10)                                           
+condicao pape  0930930IIF(LEFT(SEE->EE_CODCOBE,1) == "1","1","2")                 
+Ident. Papel   0940940"N"                                                         
+Ident.Ope Bco  0951040SPACE(10)                                                   
+Indic.Rateio   1051050SPACE(1)                                                    
+End p/Aviso DA 1061060SPACE(1)                                                    
+Branco         1071080SPACE(2)                                                    
+Ocorrencia     1091100"01"                                                        
+Num Documento  1111200PADR(VAL(SE1->E1_NUM),07)+PADR(SE1->E1_PARCELA,03)          
+Data do Vencto 1211260GravaData(SE1->E1_VENCTO,.F.)                               
+Valor Titulo   1271390STRZERO(SE1->E1_SALDO*100,13)                               
+Banco Cobranca 1401420"000"                                                       
+Agencia Cobranc1431470"00000"                                                     
+Especie do Titu1481490"01"                                                        
+Identificacao  1501500"N"                                                         
+Data Emissao   1511560GRAVADATA(SE1->E1_EMISSAO,.F.)                              
+1a.Instrucao   1571580STRZERO(VAL(SEE->EE_INSTPRI),2)                             
+2a. Instrucao  1591600STRZERO(VAL(SEE->EE_INSTSEC),2)                             
+Vlr.Atraso Dia 1611730U_MORA()                                                    
+Data Lim. Desc.1741790"000000"                                                    
+Vlr Desconto   1801920STRZERO(SE1->E1_DECRESC*100,13)                             
+Vlr IOF        1932050REPLICATE("0",13)                                           
+Vlr Abatimento 2062180REPLICATE("0",13)                                           
+Ident. Sacado  2192200IIF(SA1->A1_PESSOA ="F","01","02")                          
+Inscr. Sacado  2212340STRZERO(VAL(SA1->A1_CGC),14,0)                              
+Nome do Sacado 2352740PADR(SA1->A1_NOME,40)                                       
+Endereco Sacado2753140PADR(SA1->A1_END,40)                                        
+1a. mensagem   3153260SPACE(12)                                                   
+Cep            3273310StrZero(Val(Left(SA1->A1_CEP,5)),5)                         
+Cep Sufixo     3323340Strzero(Val(Right(SA1->A1_CEP,3)),3)                        
+2a. mensagem   3353490PADR(IIF(VAL(SEE->EE_INSTPRI) == 0,"","APOS 05 DIAS"),15)   
+2a. mensagem   3503640PADR(IIF(VAL(SEE->EE_INSTPRI) == 0,"","DO VENCIMENTO O"),15)
+2a. mensagem   3653790PADR(IIF(VAL(SEE->EE_INSTPRI) == 0,""," TITULO SERA PR"),15)
+2a. mensagem   3803940PADR(IIF(VAL(SEE->EE_INSTPRI) == 0,"","OTESTADO."),15)      
+Numero Sequenc.3954000INCREMENTA()                                                
+Ident. Registro00100102                                                           
+Mensagem 1     02 81 0SPACE(80)                                                   
+Mensagem 2     0821610SPACE(80)                                                   
+Mensagem 3     1622410SPACE(80)                                                   
+Mensagem 4     2423210SPACE(80)                                                   
+Reserva Filler 3223660SPACE(45)                                                   
+Cod. Carteira  3673690"009"                                                       
+Ag. Destino    3703740STRZERO(VAL(SEE->EE_AGENCIA),5)                             
+CC Destino     3753810STRZERO(VAL(SEE->EE_CONTA),7)                               
+DV C/C Destino 3823820PADR(SEE->EE_DVCTA,1)                                       
+Nosso Numero   3833930STRZERO(VAL(SUBS(PADL(TRIM(SE1->E1_NUMBCO),15),4,11)),11)   
+DV Nosso Numero3943940STRTRAN(RIGHT(TRIM(SE1->E1_NUMBCO),1)," ","0")              
+Numero Sequenc.3954000INCREMENTA()                                                
+Ident.Registro 00100109                                                           
+branco         0023940SPACE(393)                                                  
+Sequencial     3954000Incrementa()                                                

@@ -1,0 +1,23 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} MT103TRF() 
+
+Ponto de entrada referente a entrada de nota em transito e a sua chegada
+/*/
+//------------------------------------------------------------------------------
+User Function MT103TRF()
+Local nTipo		:= PARAMIXB[1]
+Local cFilSD1	:= PARAMIXB[2]
+Local cDoc		:= PARAMIXB[3]
+Local cSerie	:= PARAMIXB[4]
+Local cFornece	:= PARAMIXB[5]
+Local cLoja		:= PARAMIXB[6]
+Local cProduto	:= PARAMIXB[7]
+Local cItem		:= PARAMIXB[8]
+
+If nTipo == 2
+	U_ResEvNFE(1,cDoc,cSerie,cFornece,cLoja,cProduto,cItem)	//-- Gera SC0 para reserva do pedido
+EndIf
+
+Return

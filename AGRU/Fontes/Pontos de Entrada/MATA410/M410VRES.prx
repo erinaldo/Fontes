@@ -1,0 +1,14 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} M410VRES() 
+
+Ponto de entrada para validação da eliminação de resíduo do PV
+/*/
+//------------------------------------------------------------------------------
+User Function M410VRES()
+Local lRet	:= .T.
+
+U_ResRemC0(SC5->C5_NUM)
+
+Return lRet

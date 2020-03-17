@@ -1,0 +1,26 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} OM010PRC() 
+
+Ponto de entrada para retornar preço da tabela de preços com ou sem desconto
+/*/
+//------------------------------------------------------------------------------
+User Function OM010PRC()
+Local nRet		:= 0
+Local cTabPreco := PARAMIXB[1]
+Local cProduto 	:= PARAMIXB[2]
+Local nQtde 	:= PARAMIXB[3]
+Local cCliente 	:= PARAMIXB[4]
+Local cLoja 	:= PARAMIXB[5]
+Local nMoeda 	:= PARAMIXB[6]
+Local dDataVld 	:= PARAMIXB[7]
+Local nTipo 	:= PARAMIXB[8]
+
+nRet := MaTabPrVen(cTabPreco,cProduto,nQtde,cCliente,cLoja,nMoeda,dDataVld,nTipo,.F.)
+
+If IsInCallStack("FATA600")
+	nRet := U_ProImpos(cTabPreco,cProduto,nQtde,cCliente,cLoja,nRet)
+EndIf
+
+Return nRet

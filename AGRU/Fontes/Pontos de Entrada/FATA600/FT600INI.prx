@@ -1,0 +1,30 @@
+#INCLUDE 'Protheus.ch'
+#INCLUDE "FWMVCDEF.CH"
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} FT600INI() 
+
+Pontos de entrada na ativação do modelo 
+/*/
+//------------------------------------------------------------------------------
+User Function FT600INI()
+Local oModel	:= PARAMIXB[1]
+Local oModelADZ	:= oModel:GetModel('ADZPRODUTO')
+Local nX		:= 0
+Local lCopia	:= .F.
+
+//-- Na copiada proposta, sugere as reservas para cada linhas
+If oModel:GetOperation() == 9 .Or. oModel:GetOperation() == 3 
+	For nX := 1 To oModelADZ:Length()
+		oModelADZ:GoLine(nX)
+		If !Empty(oModelADZ:GetValue("ADZ_PRODUT")) .And. !Empty(oModelADZ:GetValue("ADZ_QTDVEN"))
+			u_ResTela(.F.,3)
+			lCopia := .T.
+		EndIf
+	Next nX
+	oModelADZ:GoLine(1)	//-- Retorna para a primeira linha
+	
+	oModel:SetValue("ADYMASTER","ADY_XREVIS",u_ProAtRev(oModel:GetValue("ADYMASTER","ADY_OPORTU")))
+EndIf
+
+Return

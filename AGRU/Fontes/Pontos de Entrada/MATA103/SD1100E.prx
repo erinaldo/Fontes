@@ -1,0 +1,13 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} SD1100E() 
+
+Ponto de entrada referente a exclusão de nota de entrada
+/*/
+//------------------------------------------------------------------------------
+User Function SD1100E()
+
+U_ResEvNFE(2,SD1->D1_DOC,SD1->D1_SERIE,SD1->D1_FORNECE,SD1->D1_LOJA,SD1->D1_COD,SD1->D1_ITEM)	//-- Exclui SC0 para reserva do pedido
+
+Return

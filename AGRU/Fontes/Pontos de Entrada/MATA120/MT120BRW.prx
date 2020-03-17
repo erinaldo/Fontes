@@ -1,0 +1,25 @@
+#include 'protheus.ch'
+#include 'parmtype.ch'
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de entrada para inclusao de novas opcoes no aRotina                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//±±³Parametros³Parametros do array a Rotina:                               ³±±
+//±±³          ³1. Nome a aparecer no cabecalho                             ³±±
+//±±³          ³2. Nome da Rotina associada                                 ³±±
+//±±³          ³3. Reservado                                                ³±±
+//±±³          ³4. Tipo de Transa‡„o a ser efetuada:                        ³±±
+//±±³          ³    1 - Pesquisa e Posiciona em um Banco de Dados           ³±±
+//±±³          ³    2 - Simplesmente Mostra os Campos                       ³±±
+//±±³          ³    3 - Inclui registros no Bancos de Dados                 ³±±
+//±±³          ³    4 - Altera o registro corrente                          ³±±
+//±±³          ³    5 - Remove o registro corrente do Banco de Dados        ³±±
+//±±³          ³5. Nivel de acesso                                          ³±±
+//±±³          ³6. Habilita Menu Funcional                                  ³±±
+//±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+
+user function MT120BRW()
+
+AADD(aRotina,{"Altera Dt.Entrega","U_AGCOMA01",0,4,0,.T.})
+	
+return(aRotina)

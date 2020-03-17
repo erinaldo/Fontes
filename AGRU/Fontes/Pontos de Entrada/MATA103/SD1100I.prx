@@ -1,0 +1,13 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} SD1100I() 
+
+Ponto de entrada referente a entrada de nota em transito e a sua chegada
+/*/
+//------------------------------------------------------------------------------
+User Function SD1100I()
+
+U_ResEvNFE(1,SD1->D1_DOC,SD1->D1_SERIE,SD1->D1_FORNECE,SD1->D1_LOJA,SD1->D1_COD,SD1->D1_ITEM)	//-- Gera SC0 para reserva do pedido
+
+Return

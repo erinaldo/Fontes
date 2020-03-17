@@ -1,0 +1,62 @@
+ID REGISTRO    0010010"0"                                                         
+ID ARQUIVO     0020020"1"                                                         
+LITERAL REMESSA0030090"REMESSA"                                                   
+COD SERVICO    0100110"01"                                                        
+LITERAL SERVIC 0120260"COBRANCA"                                                  
+COD EMPRESA    0270460STRZERO(VAL(SEE->EE_CODEMP),20)                             
+NOME EMPRESA   0470760UPPER(SUBSTR(SM0->M0_NOMECOM,1,30))                         
+COD BANCO      0770790PADL(ALLTRIM(SA6->A6_COD),3,"0")                            
+BANCO          0800940"BRADESCO"                                                  
+DATA GRAVACAO  0951000GRAVADATA(DDATABASE,.F.)                                    
+BRANCO         1011080SPACE(8)                                                    
+ID SISTEMA     1091100"MX"                                                        
+NUMERO REMESSA 1111170STRZERO(VAL(SEE->EE_ULTDSK),7)                              
+BRANCO         1183940SPACE(277)                                                  
+SEQUENCIAL     3954000"000001"                                                    
+ID REGISTRO    0010010"1"                                                         
+AG SACADO      0020060STRZERO(0,6)                                                
+DV AG SACADO   0070070STRZERO(0,1)                                                
+RAZAO SACADO   0080120STRZERO(0,5)                                                
+CONTA SACADO   0130190STRZERO(0,7)                                                
+DV CONTA SACADO0200200STRZERO(0,1)                                                
+ID EMPRESA 1   0210210STRZERO(0,1)                                                
+ID EMPRESA 2   0220240STRZERO(VAL(SEE->EE_CODCART),3)                             
+ID EMPRESA 3   0250290STRZERO(VAL(SA6->A6_AGENCIA),5)                             
+ID EMPRESA 4   0300370PADL(ALLTRIM(SA6->A6_NUMCON),7,"0")+SA6->A6_DVCTA           
+NUM CONTROLE   0380620SE1->E1_IDCNAB                                              
+COD BANCO      0630650STRZERO(0,3)                                                
+ZEROS          0660700"2" + u_MULTA()                                             
+NOSSO NUMERO   0710820NOSSONUM()                                                  
+DESCONTO DIA   0830920STRZERO(0,10)                                               
+COND PAPELETA  0930930IIF(ALLTRIM(SEE->EE_TPCOBRA)=="1","1","2")                  
+ID DEBITO AUTOM0940940"N"                                                         
+ID OPERACAO    0951040SPACE(10)                                                   
+ID RATEIO      1051050SPACE(1)                                                    
+AVISO DEBITO   1061060"2"                                                         
+BRANCO         1071080SPACE(2)                                                    
+ID OCORRENCIA  1091100IIF(empty(SE1->E1_OCORREN),"01",SE1->E1_OCORREN)            
+NUM DOCUMENTO  1111200SE1->E1_NUM+SE1->E1_PARCELA                                 
+DATA VENCTO    1211260GRAVADATA(SE1->E1_VENCREA,.F.)                              
+VALOR TITULO   1271392STRZERO(INT(ROUND(SE1->E1_SALDO*100,2)),13)                 
+BANCO/AGENCIA  1401470STRZERO(0,8)                                                
+ESPECIE        1481490Tabela("17",substr(SE1->E1_TIPO,1,2))                       
+IDENTIFICACAO  1501500"N"                                                         
+DATA EMISSAO   1511560GRAVADATA(SE1->E1_EMISSAO,.F.)                              
+INSTRUCAO 1    1571580IIF(empty(SEE->EE_INSTPRI),"00",SEE->EE_INSTPRI)            
+INSTRUCAO 2    1591600IIF(empty(SEE->EE_INSTSEC),"00",SEE->EE_INSTSEC)            
+VALOR ATRASO   1611732u_MORA()                                                    
+DATA LIMITE    1741790STRZERO(0,6)                                                
+VALOR DESCONTO 1801922STRZERO(0,13)                                               
+VALOR IOF      1932052STRZERO(0,13)                                               
+VALOR ABATIMENT2062180STRZERO(0,13)                                               
+ID INSCR SAC   2192200IIF(SA1->A1_PESSOA="F",01,02)                               
+NUM INSCR SAC  2212340PADL(ALLTRIM(SA1->A1_CGC),14,"0")                           
+NOME SACADO    2352740SUBSTR(SA1->A1_NOME,1,40)                                   
+ENDERECO SACADO2753140IIF(empty(SA1->A1_ENDCOB),SA1->A1_END,SA1->A1_ENDCOB)       
+MENSAGEM 1     3153260SPACE(12)                                                   
+CEP SACADO     3273340SUBSTR(SA1->A1_CEP,1,5)+SUBSTR(SA1->A1_CEP,6,3)             
+MENSAGEM 2     3353940ALLTRIM(SEE->EE_FORMEN1)                                    
+SEQUENCIAL     3954000INCREMENTA()                                                
+ID REGISTRO    0010010"9"                                                         
+BRANCO         0023940SPACE(393)                                                  
+SEQUENCIAL     3954000INCREMENTA()                                                

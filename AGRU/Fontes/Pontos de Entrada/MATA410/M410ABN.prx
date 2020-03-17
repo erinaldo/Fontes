@@ -1,0 +1,14 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} M410ABN() 
+
+Ponto de entrada após inclusão, alteração e cópia do PV
+/*/
+//------------------------------------------------------------------------------
+User Function M410ABN()
+
+SetKey(VK_F6,NIL)
+U_ResLimZP("ZP2",M->C5_NUM,,.T.)
+
+Return 
