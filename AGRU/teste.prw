@@ -11,5 +11,5 @@
     @see (links_or_references)
     /*/
 Function teste(param_name)
-    
+    LOCAL teste
 Return return_var
