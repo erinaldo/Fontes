@@ -6,7 +6,8 @@
 	],
 	"settings": {
 		"totvsLanguageServer.welcomePage": false,
-		"totvsLanguageServer.askEncodingChange": false
+		"totvsLanguageServer.askEncodingChange": false,
+		"totvsLanguageServer.askCompileResult": true
 	},
 	"launch": {
 		"configurations": []
