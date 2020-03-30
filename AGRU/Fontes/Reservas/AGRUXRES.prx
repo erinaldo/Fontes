@@ -285,7 +285,13 @@ User Function ResManut(cNumPV,cItem,cProduto,cLocal,nQtde,lEfetiva,oGetD,lAutoma
 		ORDER BY SC7.C7_DATPRF, SC7.C7_NUM
 	EndSQL
 
-	SC7TMP->(dbEval({|| IIf(SLDPC > 0,aAdd(aSaldos,{.F.,'COMPRA',0,SLDPC,SToD(C7_DATPRF),C7_NUM,C7_ITEM}),NIL)}))
+	//SC7TMP->(dbEval({|| IIf(SLDPC > 0,aAdd(aSaldos,{.F.,'COMPRA',0,SLDPC,SToD(C7_DATPRF),C7_NUM,C7_ITEM}),NIL)}))
+	Do While SC7TMP->(!EOF())
+		If SC7TMP->SLDPC > 0
+			aAdd(aSaldos,{.F.,'COMPRA',0,SC7TMP->SLDPC,SToD(C7_DATPRF),C7_NUM,C7_ITEM})
+		EndIf
+		SC7TMP->(DbSkip())
+	EndDo
 
 	SC7TMP->(dbCloseArea())
 
@@ -321,7 +327,13 @@ User Function ResManut(cNumPV,cItem,cProduto,cLocal,nQtde,lEfetiva,oGetD,lAutoma
 	End
 
 	nQtdEnt := GetAdvFVal("SC6","C6_QTDENT",xFilial("SC6")+cProduto+cNumPv+cItem,2)
-	nQtde	-= nQtdEnt 
+	If IsInCallStack("MATA120")
+		If nQtdEnt < nQtde
+			nQtde	-= nQtdEnt
+		EndIf
+	else
+		nQtde	-= nQtdEnt 
+	Endif
 
 	If lAutoma
 		lSoma := nQtde > 0
@@ -528,6 +540,10 @@ User Function ResLoad2(cNumPV,lEfetiva)
 
 	cNomesZP2 := StrTran(cNomesZP1,"ZP1","ZP2")
 
+	If IsInCallStack("MATA120")
+		cNomesZP1 := StrTran(cNomesZP1,"ZP1_QTDE","(SC6.C6_QTDVEN-ZP1_QTDE) ZP1_QTDE")
+	EndIf
+
 	//-- Limpa registros da ZP2
 	U_ResLimZP("ZP2",cNumPV,,lEfetiva)
 
@@ -553,6 +569,11 @@ User Function ResLoad2(cNumPV,lEfetiva)
 	EndIf
 	cSQLComm += "WHERE ZP1.D_E_L_E_T_ = ' ' AND ZP1.ZP1_FILIAL = '" +xFilial("ZP1") +"' AND "
 	cSQLComm += "ZP1.ZP1_NUMPV = '" +cNumPV +"' AND ZP1.ZP1_FLAGEF = '" +Iif(lEfetiva,"T","F") +"'"
+	If IsInCallStack("MATA120")
+		//cSQLComm += " AND (SC6.C6_QTDVEN - ZP1_QTDE) > 0 "
+		cSQLComm += " AND SC6.C6_QTDENT <> ZP1_QTDE "
+	EndIf
+
 	If TCSQLExec(cSQLComm) < 0
 		Aviso("Erro fatal na função ResLoad2",TCSQLError(),{"OK"},3)
 		Final("Erro fatal na função ResLoad2.")
@@ -1937,14 +1958,16 @@ Static Function RetSC0Item(cNumPV,cItem)
 
 	BeginSQL Alias "TMPZP1"
 		SELECT SUM(ZP1_QTDSC0) ZP1_QTDSC0
-		FROM %Table:ZP1%
-		WHERE %NotDel% AND
-		ZP1_FILIAL = %xFilial:ZP1% AND
-		ZP1_NUMPV = %Exp:cNumPV% AND
-		ZP1_ITEMPV = %Exp:cItem% AND
-		ZP1_FLAGEF = 'T' AND
-		ZP1_FLAGC0 = 'T' AND
-		ZP1_NUMSC0 <> ' '
+		FROM %Table:ZP1% ZP1
+			JOIN %Table:SC9% SC9 ON SC9.%NotDel% AND SC9.C9_PEDIDO = ZP1.ZP1_NUMPV AND SC9.C9_ITEM = ZP1.ZP1_ITEMPV
+			AND SC9.C9_QTDRESE = ZP1.ZP1_QTDSC0 AND SC9.C9_NFISCAL = ''
+		WHERE ZP1.%NotDel% AND
+		ZP1.ZP1_FILIAL = %xFilial:ZP1% AND
+		ZP1.ZP1_NUMPV = %Exp:cNumPV% AND
+		ZP1.ZP1_ITEMPV = %Exp:cItem% AND
+		ZP1.ZP1_FLAGEF = 'T' AND
+		ZP1.ZP1_FLAGC0 = 'T' AND
+		ZP1.ZP1_NUMSC0 <> ' '
 	EndSQL
 	nRet := TMPZP1->ZP1_QTDSC0
 	TMPZP1->(dbCloseArea())
