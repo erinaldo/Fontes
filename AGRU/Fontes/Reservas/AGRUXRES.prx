@@ -1553,7 +1553,7 @@ User Function ResEvNFE(nEvento,cDoc,cSerie,cFornece,cLoja,cProduto,cItem)
 			BeginSQL Alias "ZP1SC0"
 				SELECT ZP1.R_E_C_N_O_ ZP1RECNO,
 					ZP1.ZP1_QTDE,
-					COALESCE(SC0.C0_QTDPED,0) + COALESCE(SUM(SC9.C9_QTDRESE),0) C0_QTDPED,
+					COALESCE(SC0.C0_QTDPED,0) + COALESCE(SUM(SC6.C6_QTDRESE),0) C0_QTDPED,
 					SC0.C0_PRODUTO,
 					SC0.C0_LOCAL
 				FROM %Table:ZP1% ZP1
@@ -1571,6 +1571,12 @@ User Function ResEvNFE(nEvento,cDoc,cSerie,cFornece,cLoja,cProduto,cItem)
 					SC9.C9_PEDIDO = ZP1.ZP1_NUMPV AND
 					SC9.C9_ITEM = ZP1.ZP1_ITEMPV AND
 					(SC9.C9_BLEST = ' '	OR SC9.C9_NFISCAL <> ' ')
+
+				JOIN %Table:SC6% SC6 ON SC6.D_E_L_E_T_ = ' ' AND 
+				SC6.C6_NUM = ZP1.ZP1_NUMPV AND 
+				SC6.C6_ITEM = ZP1.ZP1_ITEMPV AND 
+				SC6.C6_RESERVA = ZP1.ZP1_NUMSC0
+
 				WHERE ZP1.%NotDel% AND
 					ZP1.ZP1_FILIAL = %xFilial:ZP1% AND
 					ZP1.ZP1_NUMPC = %Exp:SD1->D1_PEDIDO% AND
