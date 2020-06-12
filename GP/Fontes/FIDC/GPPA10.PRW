@@ -97,13 +97,22 @@ AAdd(aParams, {1, 'Vencimento Até'		, CriaVar('E1_VENCTO', .F.)		, PesqPict('SE1
 // --------------------
 // SELECIONA OS TITULOS
 // --------------------
+//Verifica parametro para a geração do PIS/COF/CSL na Baixa
+//Caso seja na baixa inclui os campos na query para subtrair do valor (Valor Liquido)
+lImpBx := Iif(GetMv("MV_BR10925") = "1" ,.T.,.F.)
+If (lImpBx)
+   cValImp := "%(SE1L.E1_CSLL+SE1L.E1_COFINS+SE1L.E1_PIS)%"
+Else
+   cValImp := "%0%"
+EndIf
+
 If ParamBox(aParams, 'Parâmetros')
 	cAliasQry := GetNextAlias()
 	BeginSQL Alias cAliasQry
 		SELECT SE1.E1_FILIAL, SE1.E1_PREFIXO, SE1.E1_NUM, SE1.E1_PARCELA, SE1.E1_TIPO, SX5.X5_DESCRI, SE1.E1_NATUREZ, SED.ED_DESCRIC,
 		       SE1.E1_CLIENTE, SE1.E1_LOJA, SA1.A1_NOME, SA1.A1_NREDUZ, SE1.E1_EMISSAO, SE1.E1_VENCTO, SE1.E1_VENCREA,SE1.E1_NFELETR, 
 		       ( SELECT 
-			   		SUM(CASE WHEN SE1L.E1_TIPO = 'NF' THEN SE1L.E1_VALOR ELSE (SE1L.E1_VALOR*-1) END ) AS LIQUIDO 
+			   		SUM(CASE WHEN SE1L.E1_TIPO = 'NF' THEN SE1L.E1_VALOR-%Exp:cValImp% ELSE (SE1L.E1_VALOR*-1) END ) AS LIQUIDO 
 				FROM 
 					%Table:SE1% SE1L
 				WHERE 
