@@ -1,0 +1,58 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+User Function b237doc()        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CALIAS,_DOC,__cLinDig,_CCAMPO1,_CCAMPO2,_CCAMPO3") 
+
+_aArea := GetArea() 
+_aAreaE2 := SE2->(GetArea())
+//_aAreaEA := SEA->(GetArea())
+
+/////  PROGRAMA GRAVAR AS POSICOES DE 374 A 398 COM O CODIGO DE BARRAS CASO NAO
+/////  SEJA DOC OU COM O TIPO E ZEROS SE FOR DOC PAGFOR - POSICOES ( 105 - 117 )
+
+cALIAS  :=  Alias()
+
+_Doc  := Space(25)
+
+If Substr(SE2->E2_MODELO,1,2) $ "01"  // CONTA CORRENTE
+    _Doc   :=  "C00000001"+Space(31)
+ElseIf SubStr(SE2->E2_MODELO,1,2) $ "03"  // DOC-E
+    _Doc   :=  "C00000003"+Space(31)
+ElseIf SubStr(SE2->E2_MODELO,1,2) $ "08"  // TED
+    _Doc   :=  "C00000001"+Space(31)
+ElseIf SubStr(SE2->E2_MODELO,1,2) $ "31"  // PGTO TITULO (BOLETO)
+    If !Empty(SE2->E2_CODBAR)
+       _Doc  :=  SUBSTR(SE2->E2_CODBAR,20,25)
+    ElseIf !Empty(SE2->E2_LD)
+       ExtrLinDig()
+    EndIf
+EndIf
+
+//SEA->(RestArea(_aAreaEA))
+SE2->(RestArea(_aAreaE2))
+RestArea(_aArea)
+
+// Substituido pelo assistente de conversao do AP6 IDE em 15/07/02 ==> __return(_DOC)
+Return(_DOC)        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+////Funcao para extracao do campo livre da linha digitavel
+////Deve-se excluir todos os digitos de verificacao do campo livre da linha
+////digitavel para envio
+// Substituido pelo assistente de conversao do AP6 IDE em 15/07/02 ==> Function ExtrLinDig
+Static Function ExtrLinDig()
+
+_cLinDig := SE2->E2_LD
+_cCampo1 := SubStr(_cLinDig,05,05)
+_cCampo2 := SubStr(_cLinDig,11,10)
+_cCampo3 := SubStr(_cLinDig,22,10)
+_Doc     := _cCampo1+_cCampo2+_cCampo3
+
+Return(nil)        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02

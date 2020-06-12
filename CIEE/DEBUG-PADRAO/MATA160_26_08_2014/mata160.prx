@@ -1,0 +1,3592 @@
+#INCLUDE "MATA160.CH"
+#INCLUDE "PROTHEUS.CH"
+
+#DEFINE CAB_ARQTMP  01
+#DEFINE CAB_POSATU  02
+#DEFINE CAB_SAYGET  03
+#DEFINE CAB_HFLD1   04
+#DEFINE CAB_HFLD2   05
+#DEFINE CAB_HFLD3   06
+#DEFINE CAB_MARK    07 
+#DEFINE CAB_GETDAD  08                     
+#DEFINE CAB_COTACAO 09
+#DEFINE CAB_MSMGET  10
+#DEFINE CAB_ULTFORN 11
+#DEFINE CAB_HISTORI 12
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Define Array contendo as Rotinas a executar do programa      ?
+//?----------- Elementos contidos por dimensao ------------     ?
+//?1. Nome a aparecer no cabecalho                              ?
+//?2. Nome da Rotina associada                                  ?
+//?3. Usado pela rotina                                         ?
+//?4. Tipo de Transa‡„o a ser efetuada                          ?
+//?   1 - Pesquisa e Posiciona em um Banco de Dados             ?
+//?   2 - Simplesmenter Mostra os Campos                        ?
+//?   3 - Inclui registros no Bancos de Dados                   ?
+//?   4 - Altera o registro corrente                            ?
+//?   5 - Remove o registro corrente do Banco de Dados          ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?ATA160   ?utor  ?duardo Riera          ?Data ?9/08/2000 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡„o ?sta rotina permite as operacoes de pesquisa e analise das   ³±?
+±±?         ?otacoes de compra. Ele tem como objetivo permitir ao compra-³±?
+±±?         ?or escolher o(s) melhor(es) fornecedores para adquirir o    ³±?
+±±?         ?roduto.                                                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?V_PAR01: Sugere a melhor cotacao de compra para cada produto³±?
+±±?         ?V_PAR02: Quanto a TES? Padrao/Cotacao                       ³±?
+±±?         ?V_PAR03: Considera o Prazo de entrega para a analise        ³±?
+±±?         ?V_PAR04: Necessidade do Pedido? SC/Entrega do material      ³±?
+±±?         ?V_PAR05: Seleciona fornecedores?                            ³±?
+±±?         ?V_PAR06: Filtra Compradores?                                ³±?
+±±?         ?V_PAR07: Filtra cotacoes analisadas?                        ³±?
+±±?         ?V_PAR08: Tolerancia de atraso em dias                       ³±?
+±±?         ?V_PAR09: Priorizar? Fornecedor/Cotacao                      ³±?
+±±?         ?V_PAR10: Considera nota Minima? Sim/Nao                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?SIGACOM                                                     ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MATA160(lTrm,nOpcAuto,lSysTrk,xAutoCab,xAutoItens)
+
+Local aFixe 	:= {	{ STR0001,"C8_VALIDA " },;		//"Dt Validade "
+						{ STR0002,"C8_NUM    " },;		//"Numero      "
+						{ STR0003,"C8_FORNECE" },;		//"Fornecedor  "
+						{ STR0004,"C8_LOJA   " } }		//"Loja Fornec."
+Local aCores	:= { {"(SC8->(FieldPos('C8_ACCNUM'))>0 .And. !Empty(SC8->C8_ACCNUM) .And. !Empty(SC8->C8_NUMPED))","BR_AZUL"},; //Cotação em compra atrav? do portal marketplace
+				{"Empty(C8_NUMPED).And.C8_PRECO<>0.And.!Empty(C8_COND)","ENABLE" },;							 //Cotacao em aberto
+				{"!Empty(C8_NUMPED)","DISABLE" },;															//Cotacao Baixada
+				{"C8_PRECO==0.And.Empty(C8_NUMPED)","BR_AMARELO"} }				   							//Cotacao nao digitada
+				 
+Local aGrupo	:= UsrGrComp(RetCodUsr())
+Local aIndexSC8 := {}
+Local bBlock
+Local cFiltraSC8  := ""
+Local cFilSC8QRY  := ""
+Local cFilUser	  := ""
+Local cFilUserQry := ""
+Local lSolic	  := GetMv("MV_RESTCOM")=="S"
+Local lFiltra     := .F.
+Local lFilUser	  := ExistBlock("MT160FIL")
+Local lFilUserQry := ExistBlock("MT160QRY")
+Local nPos
+Local nCntFor	:= 0
+Local cAliasSC8 :="SC8"
+
+PRIVATE aLegenda  := {	{"ENABLE",STR0024},{"DISABLE",STR0025},{"BR_AMARELO",STR0026}, {"BR_AZUL",STR0085} } //"Legenda"
+PRIVATE aRotina   := MenuDef()
+PRIVATE bFiltraBrw:= {|| Nil }
+PRIVATE cCadastro := STR0008	//"Analise das Cota‡”es"
+PRIVATE l160Auto	:= (xAutoCab <> Nil)
+PRIVATE lOnUpdate := .T.
+PRIVATE aAutoCab	:= {}
+PRIVATE aAutoItens:= {}
+PRIVATE aSelManual:= {}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?onto de entrada para inclus? de novo STATUS da legenda     ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+If ( ExistBlock("MT160LEG") )
+	aCoresUsr := ExecBlock("MT160LEG",.F.,.F.,{aCores})
+	If ( ValType(aCoresUsr) == "A" )
+		aCores := aClone(aCoresUsr)
+	EndIf
+EndIf 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?onto de entrada para alteracao da ordem dos campos do aFixe ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+If ExistBlock("MT160FIX")
+	aFixe := ExecBlock("MT160FIX",.F.,.F.,aFixe)
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?Carrega as perguntas selecionadas                   ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+AjustaSX1()
+
+AjustaSX3()
+If !l160Auto
+	Pergunte("MTA160",.F.)
+	
+	SetKey( VK_F12 ,{|| Pergunte("MTA160",.T.)})
+	lSolic  := If(MV_PAR06==1,lSolic,.F.)
+	lFiltra := MV_PAR07==1
+	
+	Default lTrm    := .F.
+	Default lSysTrk := .F.
+	
+	lFiltra := IIF(lSysTrk,.F.,lFiltra)
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	//?ealiza a Filtragem                                  ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	If ( lFiltra .Or. lSolic .Or. lFilUser .Or. lFilUserQry .Or. lTrm )
+		If lFilUser
+			cFilUser := ExecBlock("MT160FIL",.F.,.F.,{cAliasSC8})
+			If ( ValType(cFilUser) <> "C" )
+				cFilUser := ""
+			EndIf
+		EndIf
+		#IFDEF TOP	
+			If lFilUserQry
+				cFilUserQry := ExecBlock("MT160QRY",.F.,.F.,{cAliasSC8})
+				If ( ValType(cFilUserQry) <> "C" )
+					cFilUserQry := ""
+				EndIf
+			EndIf
+		#ENDIF		
+		If lFiltra .Or. lSolic .Or. lTrm
+			#IFDEF TOP
+				IF TcSrvType() != "AS/400"
+				    If lFiltra .Or. lSolic
+						cFilSC8QRY := "C8_FILIAL='"+xFilial("SC8")+"' And "
+						cFilSC8QRY += "C8_NUMPED='"+Space(Len(SC8->C8_NUMPED))+"'"
+					EndIf
+					If ( lSolic )
+						If ( Ascan(aGrupo,"*") == 0 )
+							cFilSC8QRY  += If(Empty(cFilSC8QRY),cFilSC8QRY," And ")
+							cFilSC8QRY  += "(C8_GRUPCOM='"+Space(Len(SC8->C8_GRUPCOM))+"'"
+							For nCntFor := 1 To Len(aGrupo)
+								If nCntFor == 1 
+									cFilSC8QRY += " Or C8_GRUPCOM IN ('"+aGrupo[nCntFor]+"'"
+								Else
+									cFilSC8QRY += ",'"+aGrupo[nCntFor]+"'"
+								Endif	
+							Next nCntFor
+							If Len(aGrupo) > 0
+								cFilSC8QRY  += ")"
+							Endif
+							cFilSC8QRY  += ")"
+						EndIf
+					EndIf
+					If lTrm
+						cFilSC8QRY += If(Empty(cFiltraSC8),cFiltraSC8," And ")
+						cFilSC8QRY += "C8_ORIGEM = 'TRM     ' "
+					EndIf
+				Else
+			#ENDIF
+			If lFiltra .Or. lSolic
+				cFiltraSC8 := "C8_FILIAL=='"+xFilial("SC8")+"' .And. "
+				cFiltraSC8 += "C8_NUMPED=='"+Space(Len(SC8->C8_NUMPED))+"'"
+			EndIf
+			If ( lSolic )
+				If ( Ascan(aGrupo,"*") == 0 )
+					cFiltraSC8  += If(Empty(cFiltraSC8),cFiltraSC8," .And. ")
+					cFiltraSC8  += "(C8_GRUPCOM=='"+Space(Len(SC8->C8_GRUPCOM))+"'"
+					For nCntFor := 1 To Len(aGrupo)
+						If nCntFor == 1 
+							cFiltraSC8 += ".Or.C8_GRUPCOM $ '"+aGrupo[nCntFor]+""
+						Else
+							cFiltraSC8 += ","+aGrupo[nCntFor]
+						Endif	
+					Next nCntFor
+					If Len(aGrupo) > 0
+						cFiltraSC8  += "'"
+					Endif
+					cFiltraSC8  += ")"
+				EndIf
+			EndIf
+			If lTrm
+				cFiltraSC8 += If(Empty(cFiltraSC8),cFiltraSC8," .And. ")
+				cFiltraSC8 += "C8_ORIGEM == 'TRM     ' "
+			EndIf
+		   #IFDEF TOP
+		      Endif
+	       #ENDIF
+		EndIf
+		#IFDEF TOP
+			If !Empty(cFilUserQry)
+				cFilSC8QRY += If(Empty(cFilSC8QRY),AllTrim(cFilUserQry)," And "+AllTrim(cFilUserQry))
+			EndIf
+		#ELSE   
+			If !Empty(cFilUser)
+				cFiltraSC8 += If(Empty(cFiltraSC8),AllTrim(cFilUser)," .And. "+AllTrim(cFilUser))
+			EndIf
+			bFiltraBrw := {|| FilBrowse("SC8",@aIndexSC8,@cFiltraSC8) }
+			Eval(bFiltraBrw)
+		#ENDIF
+	EndIf
+
+	If nOpcAuto<>Nil
+		nPos := Ascan(aRotina,{|x| x[4]== nOpcAuto})
+		If ( nPos # 0 )
+			bBlock := &( "{ |x,y,z,k,m| " + aRotina[ nPos,2 ] + "(x,y,z,k,m) }" )
+			Eval( bBlock,Alias(),SC8->(Recno()),nPos,Nil)
+		EndIf
+	Else
+		#IFDEF TOP
+			MBrowse( 6, 1,22,75,"SC8",aFixe,,,,,aCores,,,,,,,,cFilSC8QRY)
+		#ELSE
+			MBrowse( 6, 1,22,75,"SC8",aFixe,,,,,aCores)
+		#ENDIF
+	EndIf
+Else
+	Pergunte("MTA160",.F.)
+	
+	aAutoCab   := xAutoCab
+	aAutoItens := xAutoItens	
+	
+	MBrowseAuto(nOpcAuto,Aclone(aAutoCab),"SC8")
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?estaura a integridade da rotina             ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+dbSelectArea("SC8")
+RetIndex("SC8")
+dbClearFilter()
+aEval(aIndexSc8,{|x| Ferase(x[1]+OrdBagExt())})
+SetKey( VK_F12, Nil )
+
+Return(.T.)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?160Analis?utor  ?duardo Riera          ?Data ?9/08/2000 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡„o ?otina de analise das cotacoes de compra                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?xpC1: Alias do Arquivo                                      ³±?
+±±?         ?xpN2: Numero do Registro                                    ³±?
+±±?         ?xpN3: Opcao do MBrowse                                      ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?etorno   ?enhum                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?IGACOM                                                      ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A160Analis(cAlias,nReg,nOpcX)
+
+Local aArea		:= GetArea()
+Local aTitles   := {    OemToAnsi(STR0009),;	//"Planilha"
+						OemToAnsi(STR0010),;	//"Auditoria"
+						OemToAnsi(STR0011),;	//"Fornecedor"
+						OemToAnsi(STR0012)}		//"Historico"
+						
+Local oSize
+Local oSize2
+Local aSizeAut	:= {}
+Local aObjects	:= {}
+Local aInfo 	:= {}
+Local aInfo2 	:= {}
+Local aPosGet	:= {}
+Local aPosObj	:= {}
+Local aPosObj3	:= {}
+Local aPosObj4	:= {}
+Local aRet160PLN:= {}
+
+Local aPlanilha := {}
+Local aAuditoria:= {}
+Local aCotacao  := {}
+Local aListBox  := {}
+Local aHeadUltF := {}
+Local aRefImpos := {}
+Local aCabec	:= {"",0,Array(31,2),Nil,Nil,Nil,Nil,Nil,Nil,Nil,Nil,Nil}
+Local aSC8      := {} 
+Local aCT5      := {}
+Local bCtbOnLine:= {||.T.}
+Local lProceCot := MV_PAR17==1
+Local bPage	    := {}
+Local bOk		:= {||IIF(MA160TOK(nOpcX,nReg,aPlanilha,aAuditoria,aCotacao,aCabec,aSC8,aCpoSC8),Eval({|| Eval(bPage,0),nOpcA:=1,IIf(A160FeOdlg(lProceCot,@nOpcA,l160Visual,aCabec,aCotacao,aAuditoria),oDlg:End(),.F.)}),.F.)}
+Local bCancel	:= {||oDlg:End()}
+Local cLoteCtb  := ""
+Local cArqCtb   := ""
+Local c652      := ""
+Local lSugere	:= MV_PAR01==1 .And. !l160Auto
+Local lTes		:= MV_PAR02==1
+Local lEntrega	:= MV_PAR03==1
+Local lDtNeces  := MV_PAR04==1
+Local lSelFor   := (MV_PAR05==1 .Or. !lSugere)
+Local lBestFor  := MV_PAR09==1
+Local lNota     := MV_PAR10==1
+Local lCtbOnLine:= MV_PAR11==1 .And. SC7->(FieldPos("C7_DTLANC"))<>0 .And. VerPadrao("652")
+Local lAglutina := MV_PAR12==1
+Local lDigita   := MV_PAR13==1
+Local l160Visual:= aRotina[nOpcX,4] <> 3 .And. aRotina[nOpcX,4] <> 4 .And. aRotina[nOpcX,4] <> 6
+Local lMT160ok  := .T.
+Local lSigaCus  := .T.
+Local nOpcA		:= 0
+Local nToler    := MV_PAR08
+Local nX		:= 0
+Local nY		:= 0
+Local nOpcGetd  := nOpcX
+Local nHdlPrv   := 0
+Local nTotalCtb := 0
+Local nScanCot  := 0
+Local nPosNumCot:= 0
+Local nSaveSX8  := GetSX8Len()
+Local nResHor   := IIF(!l160Auto,GetScreenRes()[1],0) //Tamanho resolucao de video horizontal
+Local nResVer   := IIF(!l160Auto,GetScreenRes()[2],0) //Tamanho resolucao de video horizontal
+Local oDlg
+Local oFont
+Local oScroll
+Local cNumCot  := SC8->C8_NUM
+Local cProdCot := ""
+Local cItemCotID  := ""
+Local cMoeda   := SubStr(GetMv("MV_SIMB"+GetMv("MV_MCUSTO"))+Space(4),1,4)
+Local lProd1   := .T.
+Local aAreaSC8 := SC8->(GetArea())
+Local aSaveSC8 := {}
+Local aPedidos := {}
+Local aHeadSC8 := {}
+Local aColsSC8 := {}
+
+Local nScanGrd := 0
+Local nScanIte := 0
+Local nScanFor := 0
+Local nScanLoj := 0
+Local nScanNum := 0
+
+Local nPos     := 0
+Local nLoop    := 0
+Local nLoop1   := 0
+Local aCpoSC8  := {}
+Local aCtbDia  := {}
+Local lContinua:= .T.
+
+Local nPFornSCE := 0
+Local nPLojaSCE := 0
+Local nPPropSCE := 0
+Local nPItemSCE := 0
+Local nPQtdeSCE := 0
+Local nPUsrQtd  := 0
+Local nPUsrItem := 0
+Local nPUsrForn := 0
+Local nPUsrLoja := 0
+Local nPUsrProp := 0
+Local nPACCNUM  := 0
+Local nPACCITEM := 0
+Local aAutItems := {}
+Local nItmAuto  := 0
+Local nForAuto  := 0
+LOcal nForVenc  := 0
+Local cCotACC	:= "(SC8->(FieldPos('C8_ACCNUM'))>0 .And. !Empty(SC8->C8_ACCNUM) .And. Empty(SC8->C8_NUMPED))"
+Local cCompACC  := ""
+Local aDadosACC := {}
+Local lIntegDef :=  FindFunction("GETROTINTEG") .And. FindFunction("FWHASEAI") .And. FWHasEAI("MATA120",.T.,,.T.)
+Local cAliasSC7 := "SC7"
+// Projeto - botoes F5 e F6 para movimentacao
+// guarda as teclas atuais
+Local bOldF5 := SetKey(VK_F5)
+Local bOldF6 := SetKey(VK_F6)  
+
+Local lVencFor	:= .F.
+Local nVencFor
+Local lPrjCni := FindFunction("ValidaCNI") .And. ValidaCNI()
+
+#IFDEF TOP
+	Local cQuery    := ""
+	Local cAliasCot := ""
+#ENDIF	
+
+PRIVATE aHeader     := {}
+PRIVATE aCols       := {}
+PRIVATE nMoedaAval  := 1
+PRIVATE oFolder
+If !lProceCot
+	PRIVATE aProds  := {}
+Endif	
+
+//Ponto de entrada para inclus? de abas 
+If ExistBlock("MT160ABA")
+	aTitles := ExecBlock("MT160ABA",.F.,.F.,{aTitles} )                
+EndIf
+
+If !l160Auto
+	bPage := {|n| Eval(oFolder:bSetOption,1),oFolder:nOption:=1,Ma160Page(n,@aCabec,@aPlanilha,@aAuditoria,@aCotacao,oScroll,lProceCot,aCpoSC8,@oDlg,aPosGet)}
+Else
+   bPage := {|n| Ma160Page(n,@aCabec,@aPlanilha,@aAuditoria,@aCotacao,oScroll,lProceCot,aCpoSC8)}
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Definicao da Estrutura do array aCotaGrade ?
+//ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+//?1 - C8_FORNECE                             ?
+//?2 - C8_LOJA                                ?
+//?3 - C8_NUMPRO                              ?
+//?4 - C8_ITEM                                ?
+//?5 - C8_PRODUTO (Familia)                   ?
+//?6 - Alimentado quando for produto de Grade ?
+//?6.1 - C8_PRODUTO                           ?
+//?6.2 - CE_QUANT                             ?
+//?6.3 - C8_DATPRF                            ?
+//?6.4 - C8_ITEMGRD                           ?
+//?6.5 - Recno SC8                            ?
+//?6.6 - C8_QUANT (Quantidade Original)       ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aLinGrade := {}
+PRIVATE aCotaGrade:= {}
+PRIVATE lGrade    := MaGrade()
+PRIVATE oGrade	  := MsMatGrade():New('oGrade',,"CE_QUANT",,"A160GValid()",,;
+  						{ 	{"CE_QUANT"  ,NIL,NIL},;
+							{"CE_ENTREGA",NIL,NIL}, ;
+							{"CE_ITEMGRD",NIL,NIL} })
+PRIVATE ALTERA    := .T.   // Necessario para o objeto grade
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?Desabilida button Replica do objeto de grade                    |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+oGrade:lShowButtonRepl := .F.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?Funcao utilizada para verificar a ultima versao dos fontes      ?
+//?SIGACUS.PRW, SIGACUSA.PRX e SIGACUSB.PRX, aplicados no rpo do   |
+//| cliente, assim verificando a necessidade de uma atualizacao     |
+//| nestes fontes. NAO REMOVER !!!							        ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+IF !(FindFunction("SIGACUS_V") .and. SIGACUS_V() >= 20050512)
+	Aviso(STR0027,STR0029,{STR0028}) //"Atualizar patch do programa SIGACUS.PRW !!!"
+	lSigaCus := .F.
+EndIf
+IF !(FindFunction("SIGACUSA_V") .and. SIGACUSA_V() >= 20050512)
+	Aviso(STR0027,STR0030,{STR0028}) //"Atualizar patch do programa SIGACUSA.PRW !!!"
+	lSigaCus := .F.
+EndIf
+IF !(FindFunction("SIGACUSB_V") .and. SIGACUSB_V() >= 20050512)
+	Aviso(STR0027,STR0031,{STR0028}) //"Atualizar patch do programa SIGACUS.PRW !!!"
+	lSigaCus := .F.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?Funcao utilizada para verificar a ultima versao do ATUALIZADOR  ?
+//?do dicionario do modulo de Compras necessario para o uso do     |
+//| recurso de grade produtos no MP10 Relese I dever?ser retirado  |
+//| no proximo Release da Versao quando o dicionario for Atualizado |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+If !(FindFunction("UPDCOM01_V") .And. UPDCOM01_V() >= 20070615)
+	Final(STR0072) // "Atualizar UPDCOM01_V.PRW ou checar o processamento deste UPDATE !!!"
+EndIf
+
+If SC8->(FieldPos('C8_ACCNUM')) > 0 
+	If FunName() # "RPC" .And. !l160Auto .And. !Empty(SC8->C8_ACCNUM)
+		If !l160Visual
+			Aviso( STR0083 , STR0084 ,{ STR0028 })  //"Portal MarketPlace"#"Esta cotação poder?ser manipulada somente via Portal MarketPlace"
+			lContinua := .F.
+		EndIf
+	EndIf
+EndIf
+
+If lContinua .And. lSigaCus
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?fetua a montagem dos dados referentes ao fornecedor            ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SA2")
+	dbSetOrder(1)
+	MsSeek(xFilial("SA2")+SC8->C8_FORNECE+SC8->C8_LOJA)
+	RegToMemory("SA2",.F.,.T.)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?niciar lancamento do PCO                                       ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	PcoIniLan("000052")
+    
+    If !lProceCot
+		#IFDEF TOP
+			dbSelectArea("SC8")
+			cAliasCot:= GetNextAlias()
+			cQuery := "SELECT DISTINCT C8_PRODUTO, C8_IDENT "
+			cQuery += "FROM "+RetSqlName("SC8")+" SC8 "
+			cQuery += "WHERE SC8.C8_FILIAL='"+xFilial("SC8")+"' AND "
+			cQuery += "SC8.C8_NUM='"+cNumCot+"' AND "
+			cQuery += "SC8.D_E_L_E_T_=' ' "
+			cQuery := ChangeQuery(cQuery)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasCot,.T.,.T.)
+			While (cAliasCot)->(!Eof())
+			    AADD(aProds,{(cAliasCot)->C8_PRODUTO,(cAliasCot)->C8_IDENT,IIF(lProd1,"X"," "),cNumCot})
+			    If lProd1
+				    cProdCot := (cAliasCot)->C8_PRODUTO
+				    cItemCotID := (cAliasCot)->C8_IDENT
+				    lProd1 := .F.
+				Endif    
+				(cAliasCot)->(dbSkip())
+			EndDo
+			dbSelectArea(cAliasCot)
+			dbCloseArea()
+   		#ELSE
+   			dbSelectArea("SC8")
+   			dbSetOrder(4)
+   			dbSeek(xFilial("SC8")+cNumCot)
+   			While !Eof() .And. SC8->C8_FILIAL+SC8->C8_NUM == xFilial("SC8")+cNumCot
+			    nPos := Ascan(aProds,{|x| x[1]==SC8->C8_PRODUTO .And. x[2]==SC8->C8_IDENT})
+			    If nPos == 0
+				    AADD(aProds,{SC8->C8_PRODUTO,SC8->C8_IDENT,IIF(lProd1,"X"," "),cNumCot})
+				    If lProd1
+					    cProdCot := SC8->C8_PRODUTO
+					    cItemCotID := SC8->C8_IDENT
+					    lProd1 := .F.
+					Endif    
+				Endif	
+	   			dbSkip()
+   			EndDo
+		#ENDIF
+		RestArea(aAreaSC8)
+	Endif	
+	
+	If MultLock("SC8",{cNumCot},1)
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//?fetua a montagem dos dados a serem exibidos pelo programa      ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If MaMontaCot(@aCabec,@aPlanilha,@aAuditoria,@aCotacao,@aListBox,@aRefImpos,lTes,nOpcX==2,lProceCot,cProdCot,cItemCotID,.T.,aSC8,aCpoSC8, @aHeadSC8, @aColsSC8)
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//?eleciona as melhores cotacoes conforme os parametros           ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ( nOpcX == 3 .And. (lSugere .Or. !lSelFor) )
+				MaAvCotVen(@aPlanilha,@aCotacao,@aAuditoria,aCABEC[CAB_HFLD2],lEntrega,nToler,lNota,lBestFor,,aCpoSC8,lSelFor)
+			EndIf
+			
+			dbSelectArea(aCabec[CAB_ARQTMP])      
+			
+			If !l160Auto	
+				aSizeAut := MsAdvSize()
+		
+				aPosGet := MsObjGetPos(aSizeAut[3]-aSizeAut[1],315,{{001,013,070,195,230,295,195,230},;
+					{007,038,101,140,204,245,007,038,101,140}, {210,255}, {003,043,096,139,191,218} })
+	
+				aObjects := {}
+				AAdd( aObjects, { 000, 025, .T., .F. } )
+				AAdd( aObjects, { 100, 100, .T., .T., .T. } )
+				aInfo := { aSizeAut[ 1 ], aSizeAut[ 2 ], aSizeAut[ 3 ], aSizeAut[ 4 ], 2, 2 }
+				aPosObj := MsObjSize( aInfo, aObjects )
+	
+				aObjects := {}
+				AAdd( aObjects, { 000, 100, .T., .T. } )
+				AAdd( aObjects, { 100, 084, .T., .T.} )			
+				aInfo2 := { 0, 0, aPosObj[2,3] - 3, aPosObj[2,4] - 13, 2, 2 }	
+				aPosObj3 := MsObjSize( aInfo2, aObjects, .T. ) 	
+		
+				aObjects := {}
+				AAdd( aObjects, { 000,100, .T., .T., .T. } )
+				AAdd( aObjects, { 000,100, .T., .T., .T. } )	
+				aInfo2 := { 129, 0, aPosObj[2,3] - 3, aPosObj[2,4] - 13, 2, 2 }	
+				aPosObj4 := MsObjSize( aInfo2, aObjects ) 	
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?Calcula dimens?s                                            ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				oSize := FwDefSize():New()             
+				oSize:AddObject( "CABECALHO",  100, 15, .T., .T. ) // Totalmente dimensionavel
+				oSize:AddObject( "FOLDER"   ,  100, 85, .T., .T. ) // Totalmente dimensionavel 
+				
+				oSize:lProp 	:= .T. // Proporcional             
+				oSize:aMargins 	:= { 0, 0, 0, 3 } // Espaco ao lado dos objetos 0, entre eles 3 
+				
+				oSize:Process() 	   // Dispara os calculos      
+				
+				oSize2 := FwDefSize():New()
+				
+				oSize2:aWorkArea := oSize:GetNewCallArea( "FOLDER" ) 
+				
+				oSize2:AddObject( "SELECT" ,  100, 100, .T., .T.) // Totalmente dimensionavel 
+				  
+				oSize2:lProp := .T.               // Proporcional             
+				oSize:aMargins 	:= { 0, 0, 0, 3 } // Espaco ao lado dos objetos 0, entre eles 3 
+				
+				oSize2:Process() // Dispara os calculos  
+				
+				DEFINE FONT oBold NAME "Arial" SIZE 0, -12 BOLD
+				DEFINE MSDIALOG oDlg TITLE OemToAnsi(STR0013) ;	//"An lise de Cota‡”es"
+										FROM oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] OF oMainWnd PIXEL	
+										
+				oScrollBox := TScrollBox():new(oDlg,oSize:GetDimension("CABECALHO","LININI")+3, oSize:GetDimension("CABECALHO","COLINI")+3,;
+													 oSize:GetDimension("CABECALHO","LINEND"), oSize:GetDimension("CABECALHO","COLEND")-4,;
+													 .T.,.T.,.T.)
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?efinicao dos Gets do Cabecalho da Area de Trabalho             ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				DEFINE FONT oFont SIZE 8,0 BOLD
+				
+		   		@ oSize:GetDimension("CABECALHO","LININI")+3, oSize:GetDimension("CABECALHO","COLINI")+3  SAY aCabec[CAB_SAYGET,1,1] PROMPT RetTitle("C8_PRODUTO") SIZE 22,09 PIXEL OF oScrollBox
+				@ oSize:GetDimension("CABECALHO","LININI")  , oSize:GetDimension("CABECALHO","COLINI")+35 MSGET aCabec[CAB_SAYGET,2,1] VAR aCabec[CAB_SAYGET,2,2] PICTURE PesqPict("SC8","C8_PRODUTO",30) SIZE 105,09 WHEN .F. PIXEL OF oScrollBox
+		
+				oScroll := TScrollBox():New( oScrollBox, oSize:GetDimension("CABECALHO","LININI"), oSize:GetDimension("CABECALHO","COLINI")+150, 25,180)
+				@ 02, 02 SAY aCabec[CAB_SAYGET,3,1] PROMPT aCabec[CAB_SAYGET,3,2] SIZE 120,80 PIXEL Of oScroll
+				aCabec[CAB_SAYGET,3,1]:Disable()
+		
+				@ oSize:GetDimension("CABECALHO","LININI")+3 ,oSize:GetDimension("CABECALHO","COLINI")+356 SAY   aCabec[CAB_SAYGET,4,1] PROMPT RetTitle("C8_QUANT") SIZE 30,09 PIXEL OF oScrollBox
+				@ oSize:GetDimension("CABECALHO","LININI")   ,oSize:GetDimension("CABECALHO","COLINI")+410 MSGET aCabec[CAB_SAYGET,5,1] VAR aCabec[CAB_SAYGET,5,2] PICTURE PesqPict("SC8","C8_QUANT",30) SIZE 60,09 WHEN .F. PIXEL OF oScrollBox
+				@ oSize:GetDimension("CABECALHO","LININI")+3 ,oSize:GetDimension("CABECALHO","COLINI")+570 SAY   aCabec[CAB_SAYGET,6,1] PROMPT aCabec[CAB_SAYGET,6,2] SIZE 30,09 COLOR CLR_BLUE PIXEL OF oScrollBox FONT oFont
+				@ oSize:GetDimension("CABECALHO","LININI")+15,oSize:GetDimension("CABECALHO","COLINI")+356 SAY   aCabec[CAB_SAYGET,7,1] PROMPT OemToAnsi(STR0014) SIZE 30,09 PIXEL OF oScrollBox //"Saldo"
+				@ oSize:GetDimension("CABECALHO","LININI")+15,oSize:GetDimension("CABECALHO","COLINI")+410 MSGET aCabec[CAB_SAYGET,8,1] VAR aCabec[CAB_SAYGET,8,2] PICTURE PesqPict("SC8","C8_QUANT",30) SIZE 60,09 WHEN .F. PIXEL OF oScrollBox
+		
+				If ExistBlock("MT160TEL")
+					ExecBlock("MT160TEL",.F.,.F.,{@oDlg, aPosGet,nOpcx, nReg} )                
+				EndIf  		
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?riacao do Objeto oFolder com os Folders da Analise             ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				oFolder := TFolder():New(oSize:GetDimension("FOLDER","LININI")+10, oSize:GetDimension("FOLDER","COLINI"),aTitles,{"HEADER"},oDlg,,,,.T.,.F.,;
+										oSize:GetDimension("FOLDER","XSIZE"), oSize:GetDimension("FOLDER","YSIZE")-13)
+				oFolder:bSetOption:={|x| Ma160Fld(x,oFolder:nOption,oFolder,@aCabec,@aListBox,aPosObj3, @aColsSC8)}
+	
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 1 - Planilha de Cotacao                                  ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				aCabec[CAB_MARK]:=MsSelect():New(aCabec[CAB_ARQTMP],"PLN_OK",,aCabec[CAB_HFLD1],.F.,"XX",;
+															{oSize2:GetDimension("SELECT","LININI"), oSize2:GetDimension("SELECT","COLINI"),oSize2:GetDimension("SELECT","LINEND")-25, oSize2:GetDimension("SELECT","COLEND")},,,oFolder:aDialogs[1])
+				aCabec[CAB_MARK]:oBrowse:lCanAllMark := .F.
+				If ( nOpcX == 3 )
+					If ( lSelFor )
+						aCabec[CAB_MARK]:bMark := {|| Ma160Marca(@aCabec,@aPlanilha,@aCotacao,oScroll,@aListBox,aCpoSC8) }
+					Else
+						aCabec[CAB_MARK]:bAval := {|| .T. }
+						nOpcGetd := 2
+					Endif
+				Else
+					aCabec[CAB_MARK]:bAval := {|| .T. }
+					nOpcGetd := 2
+				EndIf	
+	
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 2 - Planilha de Auditoria                                ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				aHeader := aCabec[CAB_HFLD2]
+				aCols   := aAuditoria[1]
+				aCabec[CAB_GETDAD]:=MSGetDados():New(oSize2:GetDimension("SELECT","LININI"),oSize2:GetDimension("SELECT","COLINI"),; 
+					/*08*/							  oSize2:GetDimension("SELECT","LINEND")-25,oSize2:GetDimension("SELECT","COLEND"),;
+													  		nOpcGetd,"Ma160LinOk","","",.T.,,,,300,,,,,oFolder:aDialogs[2])
+				aCabec[CAB_GETDAD]:oBrowse:bValid := {|lGrava| Ma160VldGd(@aCabec,@aPlanilha,@aCotacao,lGrava,aCpoSC8) }
+	
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 3 - Planilha do Fornecedor - Informaoes Cadastrais       ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				aCabec[CAB_MSMGET]:=MsMGet():New("SA2",SA2->(RecNo()),1,,,,,{aPosObj3[1,1],aPosObj3[1,2],aPosObj3[1,3]+17,aPosObj3[1,4]-155},,2,,,,oFolder:aDialogs[3],,.T.,,,.F.)
+	
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 3 - Gets de Informacoes do Fornecedor.                   ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				SA2->(dbSetOrder(1))
+				SA2->(MsSeek(xFilial("SA2")+(aCabec[CAB_ARQTMP])->PLN_FORNECE+(aCabec[CAB_ARQTMP])->PLN_LOJA))
+				@ 013,aPosObj3[1,4]-130 SAY STR0051             SIZE 55,9 OF oFolder:aDialogs[3] PIXEL COLOR CLR_BLUE	 //"Saldo Historico"
+				@ 027,aPosObj3[1,4]-130 SAY STR0052+" "+cMoeda  SIZE 55,9 OF oFolder:aDialogs[3] PIXEL COLOR CLR_BLUE	 //"Maior Compra"
+				@ 041,aPosObj3[1,4]-130 SAY STR0053+" "+cMoeda  SIZE 55,9 OF oFolder:aDialogs[3] PIXEL COLOR CLR_BLUE	 //"Maior Nota"
+				@ 055,aPosObj3[1,4]-130 SAY STR0054+" "+cMoeda  SIZE 55,9 OF oFolder:aDialogs[3] PIXEL COLOR CLR_BLUE	 //"Maior Saldo"
+				@ 069,aPosObj3[1,4]-130 SAY STR0055+" "+cMoeda  SIZE 55,9 OF oFolder:aDialogs[3] PIXEL COLOR CLR_BLUE	 //"Saldo Historico em"
+				@ 083,aPosObj3[1,4]-130 SAY STR0056             SIZE 55,9 OF oFolder:aDialogs[3] PIXEL COLOR CLR_BLUE	 //"Maior Atraso"
+				@ 013,aPosObj3[1,4]-070 MSGET aCabec[CAB_SAYGET,14,1] VAR aCabec[CAB_SAYGET,14,2] SIZE 53,9 OF oFolder:aDialogs[3] PIXEL When .F. Picture PesQPict("SA2","A2_SALDUP",19)
+				@ 027,aPosObj3[1,4]-070 MSGET aCabec[CAB_SAYGET,15,1] VAR aCabec[CAB_SAYGET,15,2] SIZE 53,9 OF oFolder:aDialogs[3] PIXEL When .F. Picture PesQPict("SA2","A2_MCOMPRA",19)
+				@ 041,aPosObj3[1,4]-070 MSGET aCabec[CAB_SAYGET,16,1] VAR aCabec[CAB_SAYGET,16,2] SIZE 53,9 OF oFolder:aDialogs[3] PIXEL When .F. Picture PesQPict("SA2","A2_MNOTA",19)
+				@ 055,aPosObj3[1,4]-070 MSGET aCabec[CAB_SAYGET,17,1] VAR aCabec[CAB_SAYGET,17,2] SIZE 53,9 OF oFolder:aDialogs[3] PIXEL When .F. Picture PesQPict("SA2","A2_MSALDO",19)
+				@ 069,aPosObj3[1,4]-070 MSGET aCabec[CAB_SAYGET,18,1] VAR aCabec[CAB_SAYGET,18,2] SIZE 53,9 OF oFolder:aDialogs[3] PIXEL When .F. Picture PesQPict("SA2","A2_SALDUPM",19)
+				@ 083,aPosObj3[1,4]-070 MSGET aCabec[CAB_SAYGET,19,1] VAR aCabec[CAB_SAYGET,19,2] SIZE 53,9 OF oFolder:aDialogs[3] PIXEL When .F. Picture PesqPictQt("A2_MATR")
+				                                                                                                
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 3 - Botao de consulta da Posicao do Fornecedor           ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				@ 103,aPosObj3[1,4]-117 BUTTON STR0057 SIZE 100,012 ACTION A160ToFC030(aCabec) OF oFolder:aDialogs[3] PIXEL //"Consulta Posicao do Fornecedor"
+	
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 3 - ListBox das Propostas do Fornecedor para o Produto   ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				aCabec[CAB_COTACAO] := MsNewGetDados():New((aPosObj3[2,1]+17),(aPosObj3[2,2]),(aPosObj3[2,3]-45),(aPosObj3[2,4]+5),0,,,,,,,,,,oFolder:aDialogs[3],aHeadSC8,(aColsSC8[1][(aCabec[CAB_ARQTMP])->(RecNo())]))
+	
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 4 - Planilha Historico Produto - Gets Estoque Consolidado?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ     
+				// ---- Seta a Posição de acordo com a Resolução do Video --- //
+				If !SetMDIChild()
+					If nResHor < 1600
+					    aPosGet[4,02]:= CalcRes(8,nResHor,,.T.)
+					    aPosObj4[1,2]:= CalcRes(8,nResHor,,.T.)+60
+					    aPosObj4[2,2]:= CalcRes(8,nResHor,,.T.)+60
+					Else
+					    aPosGet[4,02]:= CalcRes(6,nResHor,,.T.)
+					    aPosObj4[1,2]:= CalcRes(6,nResHor,,.T.)+60
+					    aPosObj4[2,2]:= CalcRes(6,nResHor,,.T.)+60			    
+					EndIf
+				Else
+					If nResHor < 1600
+					    aPosGet[4,02]:= CalcRes(7,nResHor,,.T.)
+					    aPosObj4[1,2]:= CalcRes(7,nResHor,,.T.)+60
+					    aPosObj4[2,2]:= CalcRes(7,nResHor,,.T.)+60
+					Else
+					    aPosGet[4,02]:= CalcRes(5,nResHor,,.T.)
+					    aPosObj4[1,2]:= CalcRes(5,nResHor,,.T.)+60
+					    aPosObj4[2,2]:= CalcRes(5,nResHor,,.T.)+60
+					EndIf
+				Endif
+				// ---- Seta o tamanho de acordo com o Aspecto da Tela --- //			
+				If  ( nResHor/nResVer < 1.4 )//Aspecto 4:3				
+					aPosObj4[1,3]:= aPosObj4[1,3]-CalcRes(1,nResHor,,.T.)
+					aPosObj4[2,3]:= aPosObj4[2,3]-CalcRes(1,nResHor,,.T.)
+				ElseIf ( nResHor/nResVer > 1.7 ) // Aspecto 16:9
+					aPosObj4[1,3]:= aPosObj4[1,3]-CalcRes(2,nResHor,,.T.)-10
+					aPosObj4[2,3]:= aPosObj4[2,3]-CalcRes(2,nResHor,,.T.)-10
+				Else// Aspecto 16:10 e outros
+					aPosObj4[1,3]:= aPosObj4[1,3]-CalcRes(2.5,nResHor,,.T.)-10
+					aPosObj4[2,3]:= aPosObj4[2,3]-CalcRes(2.5,nResHor,,.T.)-10
+				EndIf
+				
+				@ aPosObj4[1,1]+03,003 SAY STR0068 OF oFolder:aDialogs[4] PIXEL FONT oBold COLOR CLR_RED //"Estoque Consolidado"
+				@ aPosObj4[1,1]+13,003 TO aPosObj4[1,1]+14,120 OF oFolder:aDialogs[4] PIXEL 
+				@ 019,aPosGet[4,01] SAY STR0060 OF oFolder:aDialogs[4] PIXEL //"Quantidade Disponivel    "
+				@ 019,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,20,1] VAR aCabec[CAB_SAYGET,20,2] Picture PesqPict("SB2","B2_QATU") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 033,aPosGet[4,01] SAY STR0063 OF oFolder:aDialogs[4] PIXEL //"Quantidade Empenhada "
+				@ 033,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,21,1] VAR aCabec[CAB_SAYGET,21,2] Picture PesqPict("SB2","B2_QEMP") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 047,aPosGet[4,01] SAY STR0061 OF oFolder:aDialogs[4] PIXEL //"Saldo Atual   "
+				@ 047,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,22,1] VAR aCabec[CAB_SAYGET,22,2] Picture PesqPict("SB2","B2_QATU") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 061,aPosGet[4,01] SAY STR0064 OF oFolder:aDialogs[4] PIXEL //"Qtd. Entrada Prevista"
+				@ 061,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,23,1] VAR aCabec[CAB_SAYGET,23,2] Picture PesqPict("SB2","B2_SALPEDI") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 075,aPosGet[4,01] SAY STR0062 OF oFolder:aDialogs[4] PIXEL //"Qtd. Pedido de Vendas  "
+				@ 075,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,24,1] VAR aCabec[CAB_SAYGET,24,2] Picture PesqPict("SB2","B2_QPEDVEN") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 089,aPosGet[4,01] SAY STR0066 OF oFolder:aDialogs[4] PIXEL //"Qtd. Reservada  "
+				@ 089,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,25,1] VAR aCabec[CAB_SAYGET,25,2] Picture PesqPict("SB2","B2_RESERVA") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 103,aPosGet[4,01] SAY STR0065 OF oFolder:aDialogs[4] PIXEL //"Qtd. Empenhada S.A."
+				@ 103,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,26,1] VAR aCabec[CAB_SAYGET,26,2] Picture PesqPict("SB2","B2_QEMPSA") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 117,aPosGet[4,01] SAY RetTitle("B2_QTNP")    OF oFolder:aDialogs[4] PIXEL
+				@ 117,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,27,1] VAR aCabec[CAB_SAYGET,27,2] Picture PesqPict("SB2","B2_QTNP") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 131,aPosGet[4,01] SAY RetTitle("B2_QNPT")    OF oFolder:aDialogs[4] PIXEL
+				@ 131,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,28,1] VAR aCabec[CAB_SAYGET,28,2] Picture PesqPict("SB2","B2_QNPT") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 145,aPosGet[4,01] SAY RetTitle("B2_QTER")    OF oFolder:aDialogs[4] PIXEL 
+				@ 145,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,29,1] VAR aCabec[CAB_SAYGET,29,2] Picture PesqPict("SB2","B2_QTER") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 159,aPosGet[4,01] SAY RetTitle("B2_QEMPN")   OF oFolder:aDialogs[4] PIXEL 
+				@ 159,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,30,1] VAR aCabec[CAB_SAYGET,30,2] Picture PesqPict("SB2","B2_QEMPN") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+				@ 173,aPosGet[4,01] SAY RetTitle("B2_QACLASS") OF oFolder:aDialogs[4] PIXEL 
+				@ 173,aPosGet[4,02] MsGet aCabec[CAB_SAYGET,31,1] VAR aCabec[CAB_SAYGET,31,2] Picture PesqPict("SB2","B2_QACLASS") SIZE 55,08 WHEN .F. PIXEL OF oFolder:aDialogs[4] RIGHT
+		
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 4 - ListBox da Posicao Analitica do estoque              ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				@ aPosObj4[1,1]+03,aPosObj4[1,2] SAY STR0069 OF oFolder:aDialogs[4] PIXEL FONT oBold COLOR CLR_RED //"POSIÇÃO ANALITICA"
+				@ aPosObj4[1,1]+13,aPosObj4[1,2] TO aPosObj4[1,1]+14,aPosObj4[1,2]+aPosObj4[1,3] OF oFolder:aDialogs[4] PIXEL 
+				@ aPosObj4[1,1]+17,aPosObj4[1,2] LISTBOX aCabec[CAB_HISTORI] FIELDS TITLE "" SIZE aPosObj4[1,3],aPosObj4[1,4]-17 OF oFolder:aDialogs[4] PIXEL
+				aCabec[CAB_HISTORI]:aHeaders := {STR0058,STR0059,STR0060,STR0061,STR0062,STR0063,STR0064,STR0065,STR0066,RetTitle("B2_QTNP"),RetTitle("B2_QNPT"),RetTitle("B2_QTER"),RetTitle("B2_QEMPN"),RetTitle("B2_QACLASS")}	
+				aCabec[CAB_HISTORI]:SetArray({Array(14)})
+				aCabec[CAB_HISTORI]:bLine := {|| aCabec[CAB_HISTORI]:aArray[aCabec[CAB_HISTORI]:nAt] }
+				aCabec[CAB_HISTORI]:bChange := {|| A160UltFor(aCabec[CAB_HISTORI]:aArray[aCabec[CAB_HISTORI]:nAt,2],aCabec) }
+	
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 4 - Botao de consulta do Historico do Produto            ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				@ 190,aPosGet[4,01] BUTTON STR0070 SIZE 100,012 ACTION A160ComView(aCabec[CAB_HISTORI]:aArray[aCabec[CAB_HISTORI]:nAt,2]) OF oFolder:aDialogs[4] PIXEL //"Mais Informacoes do Produto"
+	
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?older 4 - ListBox dos Ultimos Fornecimentos do Produto         ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				MaUltForn("",@aHeadUltF)
+				@ aPosObj4[2,1]+03,aPosObj4[2,2] SAY STR0071 OF oFolder:aDialogs[4] PIXEL FONT oBold COLOR CLR_RED //"Ultimos Fornecimentos"
+				@ aPosObj4[2,1]+13,aPosObj4[2,2] TO aPosObj4[2,1]+14,aPosObj4[2,2]+aPosObj4[2,3] OF oFolder:aDialogs[4] PIXEL 
+				@ aPosObj4[2,1]+17,aPosObj4[2,2] LISTBOX aCabec[CAB_ULTFORN] FIELDS TITLE "" SIZE aPosObj4[2,3],aPosObj4[2,4]-45 OF oFolder:aDialogs[4] PIXEL
+				aCabec[CAB_ULTFORN]:aHeaders := aHeadUltF
+				aCabec[CAB_ULTFORN]:SetArray({aHeadUltF})
+				aCabec[CAB_ULTFORN]:bLine := {|| aCabec[CAB_ULTFORN]:aArray[aCabec[CAB_ULTFORN]:nAt] }
+				
+				//Ponto de entrada para inclus? de abas 
+				If ExistBlock("MT160FDL")
+					ExecBlock("MT160FDL",.F.,.F.,)                
+				EndIf
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?certo na movimentacao do folder                                ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				For nX := 1 to Len(oFolder:aDialogs)
+					DEFINE SBUTTON FROM 5000,5000 TYPE 5 ACTION Allwaystrue() ENABLE OF oFolder:aDialogs[nX]
+				Next nX
+				
+				ACTIVATE MSDIALOG oDlg ON INIT Ma160Bar(oDlg,bOk,bCancel,nOpcX,bPage,nReg,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,lProceCot,aSC8,aCpoSC8, aHeadSC8, aColsSC8)
+			Else 
+				PRIVATE bGetValid := {|lGrava| Ma160VldGd(@aCabec,@aPlanilha,@aCotacao,lGrava,aCpoSC8) }
+						
+				aHeader := aClone(aCabec[CAB_HFLD2])
+		
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?erifica os campos do aCols                                     ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				nPItemSCE := aScan(aHeader,{|x| Trim(x[2])=="CE_ITEMCOT"}) 
+				nPFornSCE := aScan(aHeader,{|x| Trim(x[2])=="CE_FORNECE"})
+				nPLojaSCE := aScan(aHeader,{|x| Trim(x[2])=="CE_LOJA"   })
+				nPPropSCE := aScan(aHeader,{|x| Trim(x[2])=="CE_NUMPRO" })
+				nPQtdeSCE := aScan(aHeader,{|x| Trim(x[2])=="CE_QUANT"  })
+		
+		
+		
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?erifica os campos do array da rotina automatica                ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ				
+				nPUsrItem := aScan(aAutoItens[1,1],{|x| Trim(x[1])=="CE_ITEMCOT"})
+				nPUsrForn := aScan(aAutoItens[1,1],{|x| Trim(x[1])=="CE_FORNECE"})
+				nPUsrLoja := aScan(aAutoItens[1,1],{|x| Trim(x[1])=="CE_LOJA"   })
+				nPUsrProp := aScan(aAutoItens[1,1],{|x| Trim(x[1])=="CE_NUMPRO" })		
+				nPUsrQtd  := aScan(aAutoItens[1,1],{|x| Trim(x[1])=="CE_QUANT"  })
+				nPACCNUM  := aScan(aAutoItens[1,1],{|x| Trim(x[1])=="ACCNUM"    })
+				nPACCITEM := aScan(aAutoItens[1,1],{|x| Trim(x[1])=="ACCITEM"    })
+				
+				nOpca := 1
+				nX    := 1
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?arre paginacao da analise                                      ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ				
+				While nX <= len(aAuditoria) .And. nOpca == 1
+		                	aCols := aClone(aAuditoria[nX])//Carrega aCols com as propostas
+		                	
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//?Posiciona na pagina da analise |
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					Eval(bPage,nX)				
+		                  
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//?Verifica se o item foi informado na rotina automatica          ?
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					nItmAuto := aScan(aAutoItens,{|x| x[1,nPUsrItem,2] == aAuditoria[nx,1,nPItemSCE]})
+					If nItmAuto > 0
+		   				For nY := 1 to Len(aCols)
+							//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+							//?Verifica se o fornecedor foi informado na rotina automatica    ?
+							//?Em caso positivo copia sua quantidade						   ?
+							//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+							If (nForAuto := aScan(aAutoItens[nItmAuto],{|x| x[nPUsrItem,2]+x[nPUsrForn,2]+x[nPUsrLoja,2]+x[nPUsrProp,2] == aCols[nY,nPItemSCE]+aCols[nY,nPFornSCE]+aCols[nY,nPLojaSCE]+aCols[nY,nPPropSCE]})) > 0
+    	   						aAuditoria[nX][nY][nPQtdeSCE] := aAutoItens[nItmAuto][nForAuto][nPUsrQtd][2]
+    	   						aAdd(aAutItems,aClone (aAutoItens[nItmAuto,nForAuto]))
+    	   						aAdd(aTail(aAutItems),{"LINPOS","CE_FORNECE+CE_LOJA",aAutoItens[nItmAuto][nForAuto][nPUsrForn][2],aAutoItens[nItmAuto][nForAuto][nPUsrLoja][2]})
+    	   						nForVenc := nForAuto
+    	   						If !Empty(nPACCNUM)
+    	   							aAdd(aDadosACC,{nX,nY,nItmAuto,nForAuto})
+    	   						EndIf    	  					
+    	  					ElseIf Empty(nPACCNUM)
+    	  						aAdd(aAutItems,aClone(aAutoItens[nItmAuto,1]))
+		                  		aTail(aAutItems)[nPUsrItem,2] := aCols[nY,nPItemSCE]
+		                  		aTail(aAutItems)[nPUsrForn,2] := aCols[nY,nPFornSCE]
+		                  		aTail(aAutItems)[nPUsrLoja,2] := aCols[nY,nPLojaSCE]
+		                  		aTail(aAutItems)[nPUsrProp,2] := aCols[nY,nPPropSCE]
+	                  			aTail(aAutItems)[nPUsrQtd,2]  := 0
+	            			Else
+	            				aAuditoria[nItmAuto][nY][nPQtdeSCE] := aAutoItens[nY][nItmAuto][nPUsrQtd][2]
+		                  	EndIf
+						Next nY
+						
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+						//?Posiciona arquivo temporario no |
+						//?fornecedor vencedor. 			|
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+						While !(aCabec[CAB_ARQTMP])->(EOF())
+							If (aCabec[CAB_ARQTMP])->PLN_FORNECE == aAutoItens[nItmAuto][nForVenc][nPUsrForn][2] .And.;
+							   (aCabec[CAB_ARQTMP])->PLN_LOJA == aAutoItens[nItmAuto][nForVenc][nPUsrLoja][2]						   
+								Exit
+							EndIf
+							(aCabec[CAB_ARQTMP])->(dbSkip())
+						End
+						
+						If !MsGetDAuto(aAutItems,"Ma160LinOk",,aAutoCab,,.F.)
+							nOpca := 0
+							Exit
+						Else
+							nOpca := 1
+						EndIf
+					EndIf	 			                                
+					nX++
+					aAutItems := {}
+				EndDo
+			EndIf
+
+			If ( Select(aCabec[CAB_ARQTMP])<> 0 )
+				dbSelectArea(aCabec[CAB_ARQTMP])
+				dbCloseArea()
+				dbSelectArea("SC8")
+			EndIf
+
+		Else
+			nOpcA := 0
+		EndIf  
+	    SC8->(MsUnlockAll())
+	Endif
+   
+
+	// Projeto - botoes F5 e F6 para movimentacao
+	// restaura as teclas
+	SetKey(VK_F5,bOldF5)
+	SetKey(VK_F6,bOldF6)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	//?estaura o Array aAuditoria a condicao Original da tabela SC8?
+	//?evido a glutinacao do mesmo para uso de produto de Grade.   ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	If nOpcA == 1 .And. !l160Visual
+		aAuditoria := A160Audit(aCabec,aAuditoria,aSC8,aCotagrade)
+    EndIf
+
+	If nOpcA == 1 .And. (ExistBlock("MT160OK") .Or. ExistBlock("MT160AOK"))
+
+		If Len(aCotacao) >= 1
+			nPosNumCot  := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_NUM"})
+			Private cA160num:= aCotacao[1,1,nPosNumCot,2]
+		Endif
+		
+		If ExistBlock("MT160OK")
+
+	   		lMT160ok := ExecBlock("MT160OK",.F.,.F.,aPlanilha)
+	  		If ValType( lMT160ok ) == "L" .And. !lMT160ok
+		   		nOpcA := 0
+	   		EndIf
+	   	
+	   	ElseIf ExistBlock("MT160AOK")
+			
+			lMT160Aok := ExecBlock("MT160AOK",.F.,.F.,{aPlanilha, nOpcX})
+			If ValType(lMT160Aok) == "L" .And. !lMT160Aok
+				nOpcA := 0
+			EndIf 
+		EndIf
+	EndIf
+
+	If nOpcA == 1 .And. ExistBlock("MT160PLN")
+		aRet160PLN := ExecBlock("MT160PLN",.F.,.F.,{aPlanilha,aAuditoria,aCotacao,nOpcX,aCpoSC8})
+		If ValType( aRet160PLN ) == "A" 
+			aPlanilha  := aRet160PLN[1]
+			aAuditoria := aRet160PLN[2]
+        EndIf
+	EndIf
+
+	If nOpcA == 1 .And. !l160Visual
+	
+		If lPrjCni
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//?ERIFICA SE FOI ESCOLHIDO ALGUM FORNECEDOR NA ANALISE                   ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			For nVencFor := 1 To Len(aPlanilha)
+			
+				aEval(aPlanilha[nVencFor], {|x| IIF (Alltrim(x[1])=='XX', lVencFor := .T. , .F. )})
+		
+			Next nVencFor	                    	
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?Ä¿
+		//?Conforme situacao do parametro abaixo, integra com o SIGAGSP ?
+		//?            MV_SIGAGSP - 0-Nao / 1-Integra                   ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ-ÄÄ?
+		If SuperGetMV("MV_SIGAGSP",.F.,"0") == "1"
+			GSPF200(aCotacao)
+		EndIf
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+		//?Prepara a contabilizacao On-Line                          ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+		If lCtbOnLine
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			//?Verifica o numero do lote contabil                        ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			dbSelectArea("SX5")
+			dbSetOrder(1)
+			If MsSeek(xFilial("SX5")+"09COM")
+				cLoteCtb := AllTrim(X5Descri())
+			Else
+				cLoteCtb := "COM "
+			EndIf		
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			//?Executa um execblock                                      ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			If At(UPPER("EXEC"),X5Descri()) > 0
+				cLoteCtb := &(X5Descri())
+			EndIf				
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			//?Inicializa o arquivo de contabilizacao                    ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			nHdlPrv:=HeadProva(cLoteCtb,"MATA160",Subs(cUsuario,7,6),@cArqCtb)
+			IF nHdlPrv <= 0
+				HELP(" ",1,"SEM_LANC")
+				lCtbOnLine := .F.
+			EndIf
+			If lCtbOnLine
+				bCtbOnLine := {|| nTotalCtb += DetProva(nHdlPrv,"652","MATA120",cLoteCtb,,,,,@c652,@aCT5),;
+				SC7->C7_DTLANC := dDataBase}
+			EndIf
+			
+		EndIf
+		
+		//-- Tratamentos para o ACC gerar os pedidos de compra
+		//-- com o grupo de aprovacao correto e gravando o numero ACC
+		If l160Auto .And. (nPos := aScan(aAutoCab,{|x| x[1] == "COMPACC"})) > 0
+			cCompACC := aAutoCab[nPos,2]
+		EndIf
+		
+		If !Empty(aDadosACC)
+			aEval(aDadosACC, {|x| aAdd(aAuditoria[x[1]][x[2]],aAutoItens[x[3]][x[4]][nPACCNUM][2]),aAdd(aAuditoria[x[1]][x[2]],aAutoItens[x[3]][x[4]][nPACCITEM][2])})
+		EndIf
+		
+		Begin Transaction
+			If ( MaAvalCOT("SC8",4,aSC8,aCABEC[CAB_HFLD2],aAuditoria,lDtNeces,Nil,bCtbOnLine,cCompACC) )
+				EvalTrigger()
+				While ( GetSX8Len() > nSaveSX8 )
+					ConfirmSx8()		
+				EndDo
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//?Conforme situacao do parametro abaixo, integra com SIGAGSP ?
+				//?MV_SIGAGSP - 0-Nao / 1-Integra                             ?
+				//?Para gerar os contratos no GSp                             ?
+				//?Solicitado por Roberto Mazzarolo em 25/10/2004 por e-mail  ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If GetNewPar("MV_SIGAGSP","0") == "1"
+					GSPF370(aCotacao,aCABEC[CAB_HFLD2],aAuditoria)
+				EndIf
+			Else
+				While ( GetSX8Len() > nSaveSX8 )
+					RollBackSx8()
+				EndDo
+			EndIf          		
+
+		End Transaction 
+		
+		If lPrjCni
+			//Caio.Santos - 11/01/13 - Req.72
+			RSTSCLOG("ANL",1,/*cUser*/)
+		EndIf
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//?Ponto de entrada para Workflow                                 ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ExistBlock( "MT160WF" )
+			If !Empty( nScanCot := AScan( aCotacao[1,1], { |x| x[1] == "SC8RECNO" } ) )
+				SC8->( dbGoto( aCotacao[ 1, 1, nScanCot, 2 ] ) )
+				ExecBlock( "MT160WF", .f., .f., { SC8->C8_NUM } )
+			EndIf
+		EndIf
+        
+
+		aSaveSC8 := SC8->(GetArea())
+		cNumCot  := SC8->C8_NUM
+		SC8->(DbSeek( xFilial("SC8")+ SC8->C8_NUM ))
+		// -- Verifica todos os pedidos gerados para a cotação.
+		While !SC8->(Eof()) .And. cNumCot == SC8->C8_NUM
+			If aScan(aPedidos,{|x| xFilial("SC8",x[1])+x[2] == SC8->(C8_FILIAL+C8_NUMPED)}) == 0
+				aAdd(aPedidos,{cFilAnt,SC8->C8_NUMPED})
+			End
+			SC8->(DbSkip())
+		End
+		//-- Envia todos os pedidos para Marketplace
+		For nX := 1 To Len(aPedidos)
+			SC7->(DbSeek(xFilial("SC7")+aPedidos[nX][2]))
+			If SuperGetMV("MV_MKPLACE",.F.,.F.) .And. lIntegDef  .And. SC7->(FieldPos("C7_ACCNUM")) > 0 .And. SC7->C7_CONAPRO $ " L" ;
+				.And. SC7->C7_TPOP $ " F" .And. !Empty(AllTrim(SC7->C7_ACCNUM))
+				cA120Num := SC7->C7_NUM
+				Inclui:=.T.
+				StartJob("MaEnvPed",GetEnvServer(),.F.,cEmpAnt,cFilAnt,cA120Num)
+			EndIf
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			//?Envia os dados para o modulo contabil     ?                ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			If lCtbOnLine
+				RodaProva(nHdlPrv,nTotalCtb)
+				If nTotalCtb > 0
+					If ( FindFunction( "UsaSeqCor" ) .And. UsaSeqCor() )
+						cCodDia := CTBAVerDia() 
+						aCtbDia := {{"SC7",SC7->(RECNO()),cCodDia,"C7_NODIA","C7_DIACTB"}}
+					Else
+					    aCtbDia := {}
+					EndIF
+	
+					cA100Incl(cArqCtb,nHdlPrv,1,cLoteCtb,lDigita,lAglutina,,,,,,aCtbDia)
+				EndIf
+			EndIf
+		Next nX
+		RestArea(aSaveSC8)
+		
+	Else
+		While ( GetSX8Len() > nSaveSX8 )
+			RollBackSx8()
+		EndDo
+		MsUnLockAll()
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	//?Finaliza processo de lancamento do PCO                    ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	PcoFinLan("000052")
+	PcoFreeBlq("000052")
+	
+	If ( Select(aCabec[CAB_ARQTMP])<> 0 )
+		dbSelectArea(aCabec[CAB_ARQTMP])
+		dbCloseArea()
+		dbSelectArea("SC8")
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	//?Exclui arquivo de trabalho gerado por MontaCot na Comxfun ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	If File(aCabec[CAB_ARQTMP]+GetDBExtension())
+		Ferase(aCabec[CAB_ARQTMP]+GetDBExtension()) 
+	Endif
+	
+EndIf
+
+//Descarta o array com informacoes sobre a selecao manual do fornecedor da cotacao 
+aSelManual := {}
+
+RestArea(aArea)
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?uncao    ?a160Bar  ?Autor ?Eduardo Riera         ?Data ?9.08.2000³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡…o ?EnchoiceBar especifica do Mata160                          ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?etorno   ?Nenhum                                                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?arametros?ExpO1: Objeto Dialog                                       ³±?
+±±?         ?ExpB2: Code Block para o Evento Ok                         ³±?
+±±?         ?ExpB3: Code Block para o Evento Cancel                     ³±?
+±±?         ?ExpN4: nOpc transmitido pela mbrowse                       ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+/*/
+Static Function Ma160Bar(oDlg,bOk,bCancel,nOpc,bPage,nReg,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,lProceCot,aSC8,aCpoSC8, aHeadSC8, aColsSC8)
+
+Local aButtons    := {}
+Local aButtonUsr  := {}
+Local nX		  := {}
+Local cPrinter    := GetNewPar("MV_IMPRCOT"," ")
+Local lMa160Imp   := IIf(!Empty( cPrinter ) .And. Existblock( cPrinter ),.T.,.F.)
+
+DEFAULT aCpoSC8   := {}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Adiciona os botoes padroes                                             ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aadd(aButtons,{"PMSPRINT",{|| IIF(!lMa160Imp,MA160Imp(aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,aCpoSC8),ExecBlock( cPrinter, .F., .F., {nReg,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,aCpoSC8} )) },OemToAnsi(STR0032),OemToAnsi(STR0050) })  
+
+If lProceCot
+	aadd(aButtons,{"PREV"    ,{|| Eval(bPage,-1)},OemToAnsi(STR0020),OemToAnsi(STR0020)})	//"Anterior"
+	aadd(aButtons,{"NEXT"    ,{|| Eval(bPage,+1)},OemToAnsi(STR0021),OemToAnsi(STR0021)})	//"Proximo"
+
+	// Projeto - botoes F5 e F6 para movimentacao
+	// seta as teclas para realizar a movimentacao
+	SetKey(VK_F5, {|| Eval(bPage,-1)}) 	//"Anterior"
+	SetKey(VK_F6, {|| Eval(bPage,+1)}) 	//"Proximo"
+
+Else
+	aadd(aButtons,{"PREV"    ,{|| M160PRVNXT(.T.,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,nOpc,bPage,lProceCot,aSC8,aCpoSC8, aHeadSC8, aColsSC8)},OemToAnsi(STR0020),OemToAnsi(STR0020)})	//"Anterior"
+	aadd(aButtons,{"NEXT"    ,{|| M160PRVNXT(.F.,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,nOpc,bPage,lProceCot,aSC8,aCpoSC8, aHeadSC8, aColsSC8)},OemToAnsi(STR0021),OemToAnsi(STR0021)})	//"Proximo"
+
+	// Projeto - botoes F5 e F6 para movimentacao
+	// seta as teclas para realizar a movimentacao
+	SetKey(VK_F5, {|| M160PRVNXT(.T.,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,nOpc,bPage,lProceCot,aSC8,aCpoSC8, aHeadSC8, aColsSC8)}) 	//"Anterior"
+	SetKey(VK_F6, {|| M160PRVNXT(.F.,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,nOpc,bPage,lProceCot,aSC8,aCpoSC8, aHeadSC8, aColsSC8)}) 	//"Proximo"
+
+Endif	
+
+Eval(bPage,1)
+
+If ( ExistBlock("MA160BAR") )
+	aButtonUsr := ExecBlock("MA160BAR",.F.,.F.,{nReg,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,aCpoSC8})
+	If ( ValType(aButtonUsr) == "A" )
+		For nX := 1 To Len(aButtonUsr)
+			Aadd(aButtons,aClone(aButtonUsr[nX]))
+		Next nX
+	EndIf
+EndIf
+
+Return(EnchoiceBar(oDlg,bOK,bCancel,,aButtons))
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?uncao    ?a160Page ?Autor ?Eduardo Riera         ?Data ?0.08.2000³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡…o ?                                                           ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?etorno   ?Nenhum                                                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?arametros?ExpO1:                                                     ³±?
+±±?         ?ExpB2:                                                     ³±?
+±±?         ?ExpB3:                                                     ³±?
+±±?         ?ExpN4:                                                     ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+/*/
+Static Function Ma160Page(nSoma,aCabec,aPlanilha,aAuditoria,aCotacao,oScroll,lProceCot,aCpoSC8,oDlg,aPosGet)
+
+Local aArea   	  := GetArea()
+Local cCodPro     := ""
+Local cDescPro    := ""
+Local cAlias      := aCabec[CAB_ARQTMP]
+Local nPosAtu     := If(!l160Auto,aCabec[CAB_POSATU],nSoma)
+Local nPosAnt     := nPosAtu
+Local nPNumSC     := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_NUMSC"})
+Local nPItemSC    := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_ITEMSC"})
+Local nPItemGrd   := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_ITEMGRD"})
+Local nPQtdSC8    := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_QUANT"})
+Local nPGrdSC8    := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_GRADE"})
+Local nPQtdSCE    := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_QUANT"})
+Local nPProd      := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_PRODUTO"})
+Local nSaldo      := 0
+Local nX		  := 0
+Local nY	  	  := 0
+Local lValido     := .T.
+Local lReferencia := Nil
+Local lVldQuant   := GetNewPar("MV_DIFQTDC","N") == "N" .And. If(Type('lIsACC')#"L",.T.,!lIsACC)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Executa a validacao do Saldo a Distribuir da pagina atual do Folder    ?
+//?Auditoria. O Par.MV_DIFQTDC usado para permitir que a analise gere PCs ?
+//?mesmo que exista saldo a distribuir so tera efeito com produtos que nao?
+//?usem grade de produto, caso contrario so proseguira a analise quando   ?
+//?nao existir mais saldo a distribuir para os produtos de grade.         ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( nPosAnt <> 0 )
+	For nX := 1 To Len(aCols)
+		nSaldo += aCols[nX][nPQtdSCE]
+	Next nX
+	If lVldQuant .Or. aCotacao[nPosAnt][1][nPGrdSC8][2] == "S"
+		If ( nSaldo <> aCotacao[nPosAnt][1][nPQtdSC8][2] .And. nSaldo > 0 )
+			lValido := .F.	
+		EndIf
+	Else
+		If ( nSaldo > aCotacao[nPosAnt][1][nPQtdSC8][2] .And. nSaldo > 0 )
+  			lValido := .F.	
+		EndIf
+	Endif	
+	nSaldo := 0
+EndIf
+
+If lValido 
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Ajusta a nova posicao atual                                            ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ  
+	If !l160Auto
+		nPosAtu += nSoma
+	Else
+		nPosAtu := nSoma
+	EndIf
+	nPosAtu := Min(nPosAtu,Len(aPlanilha))
+	nPosAtu := Max(1,nPosAtu)
+	aCabec[CAB_POSATU] := nPosAtu	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Calcula o saldo restante a ser selecionado                             ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nSaldo := 0
+	For nX := 1 To Len(aAuditoria[nPosAtu])
+		nSaldo += aAuditoria[nPosAtu][nX][nPQtdSCE]
+	Next nX
+
+	nSaldo := aCotacao[nPosAtu][1][nPQtdSC8][2] - nSaldo
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Limpa o arquivo temporario                                             ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea(cAlias)
+	ZAP
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Atualiza os dados da Planilha de cotacao                               ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nX := 1 To Len(aPlanilha[nPosAtu])
+		RecLock(cAlias,.T.)
+		For nY := 1 To FCount()
+			FieldPut(nY,aPlanilha[nPosAtu][nX][nY])
+		Next nY
+		MsUnLock()
+	Next nX         
+	If !l160Auto
+		aCabec[CAB_MARK]:oBrowse:GoTop()
+		aCabec[CAB_MARK]:oBrowse:Refresh()
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Atualiza os dados da Planilha de auditoria                             ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	N := 1
+	If ( nPosAnt <> 0 )
+		If !l160Auto
+			aCabec[CAB_GETDAD]:oBrowse:lDisablePaint := .T.
+		EndIf
+		aAuditoria[nPosAnt] := aClone(aCols)
+		aCols := aClone(aAuditoria[nPosAtu])
+		If !l160Auto
+			aCabec[CAB_GETDAD]:oBrowse:lDisablePaint := .F.
+			aCabec[CAB_GETDAD]:oBrowse:Refresh()
+		EndIf
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Atualiza os dados do cabecalho da analise da cotacao                   ?
+	//| Caso n? existir a SC1, busca a descrição da SB1 ou SB5                |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SC1")+aCotacao[nPosAtu][1][nPNumSC][2]+aCotacao[nPosAtu][1][nPItemSC][2])
+		cCodPro  := SC1->C1_PRODUTO
+		cDescPro := SC1->C1_DESCRI
+	Else
+		cCodPro  := aCotacao[nPosAtu][1][nPProd][2]
+		dbSelectArea("SB1")
+		dbSetOrder(1)
+		If MsSeek(xFilial("SB1")+cCodPro)    
+			cDescPro := SB1->B1_DESC
+			dbSelectArea("SB5")
+			dbSetOrder(1)
+			If MsSeek(xFilial("SB5")+cCodPro) 
+				cDescPro := SB5->B5_CEME
+			EndIf
+		EndIf
+	EndIf
+
+	If lGrade .And. !Empty(aCotacao[nPosAtu][1][nPItemGrd][2])
+		If (lReferencia := MatGrdPrRf(@cCodPro,.T.))
+			cCodPro  := RetCodProdFam(SC1->C1_PRODUTO)
+			cDescPro := DescPrRF(cCodPro)
+		Endif
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	//?Atribuido o codigo do produto a variavel PUBLICA VAR_IXB para uso em ponto de entrada ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+
+	VAR_IXB :={}
+	aAdd(VAR_IXB,{"PRODUTO", cCodPro}) 
+	
+	If !l160Auto
+		aCabec[CAB_SAYGET,2,2] := cCodPro	//Codigo do Produto
+		aCabec[CAB_SAYGET,2,1] :Refresh()
+	
+		aCabec[CAB_SAYGET,3,1]:SetText( Transform( cDescPro, PesqPict("SC8","C8_DESCRI",30) ) )
+		oScroll:Reset()
+	
+		aCabec[CAB_SAYGET,5,2] := aCotacao[nPosAtu][1][nPQtdSC8][2] //Quantidade
+		aCabec[CAB_SAYGET,5,1] :Refresh()
+		If lProceCot
+			aCabec[CAB_SAYGET,6,1] :cCaption := StrZero(nPosAtu,3)+"/"+StrZero(Len(aPlanilha),3) //Ordem
+		Else	
+			aCabec[CAB_SAYGET,6,1] :cCaption := StrZero(nPosAtu,3)+"/"+StrZero(Len(aProds),3) //Ordem
+		Endif	
+		aCabec[CAB_SAYGET,6,1] :Refresh()
+	
+		aCabec[CAB_SAYGET,8,2] := nSaldo //Saldo
+		aCabec[CAB_SAYGET,8,1] :Refresh()
+	EndIf
+Else
+	Help(" ",1,"QTDDIF")
+EndIf	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?onto de Entrada para atualizar as Gets criadas pelo MT160TEL   ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !l160Auto .And. ExistBlock("MT160ATU")
+	ExecBlock("MT160ATU",.F.,.F.,{@oDlg,aPosGet,Var_Ixb} )
+EndIf  
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?onta a Grade para o Produto Analisado.                         ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+A160ColsGrade(aCabec[CAB_SAYGET,2,2], .T.)
+
+If !l160Auto
+	aCabec[CAB_GETDAD]:oBrowse:refresh()
+EndIf
+
+RestArea(aArea)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?o trocar o produto mantem sempre a MarkBrowse posicionada no   ?
+//?o inicio do Arquivo independente do fornecedor selecionado.    ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+(calias)->(Dbgotop())
+
+Return(.T.)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?a160Marca?utor  ?duardo Riera          ?Data ?9.08.2000 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡„o ?                                                            ³±?
+±±?         ?                                                            ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?xpC1:                                                       ³±?
+±±?         ?xpN2:                                                       ³±?
+±±?         ?xpN3:                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?etorno   ?enhum                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?IGACOM                                                      ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Ma160Marca(aCabec,aPlanilha,aCotacao,oScroll,aListBox,aCpoSC8)
+
+Local aArea    	 := GetArea()
+Local cCodPro  	 := ""
+Local cDescPro 	 := ""
+Local cAlias   	 := aCabec[CAB_ARQTMP]
+Local nPosAtu  	 := aCabec[CAB_POSATU]
+Local nPCodPro 	 := aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="C8_PRODUTO"})
+Local nPQtdSC8 	 := aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="C8_QUANT"  })
+Local nPNumSC  	 := aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="C8_NUMSC"  })
+Local nPItemSC 	 := aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="C8_ITEMSC" })
+Local nPItemGrd	 := aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="C8_ITEMGRD"})
+Local nSC8Recno	 := aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="SC8RECNO"  })
+Local nPQtdSCE 	 := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_QUANT"  })
+Local nPFornSCE	 := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_FORNECE"})
+Local nPLojaSCE	 := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_LOJA"   })
+Local nPPropSCE	 := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_NUMPRO" })
+Local nPItemSCE	 := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_ITEMCOT"})
+Local nPDataSCE	 := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_ENTREGA"})
+Local nLinha   	 := (cAlias)->(RecNo())
+Local nSaldo   	 := 0
+Local nX       	 := 0
+Local nY       	 := 0
+Local nG       	 := 0
+Local nScan    	 := 0
+Local lRet	   	 := .T.
+Local aRet160Mar := {}    
+Local aRet160Mrk := {}
+Local nPlanOK    := aScan(aCpoSC8,"PLN_OK")
+Local nPlanTotal := aScan(aCpoSC8,"PLN_TOTAL")
+Local nPlanFlag  := aScan(aCpoSC8,"PLN_FLAG")
+Local lMarca     := .T.
+Local lMt160P    := .T.
+Local lTrocaFor	 := ( MV_PAR01 == 1 .And. MV_PAR05 == 1 .And. MV_PAR09 == 1 )	// Traz marcado = Sim / Seleciona Fornec = Sim / Prioriza = Fornec
+Local cItemPE	 := ""
+
+// Inicializa a seleção Manual por Item
+If Len(aSelManual) < Len(aPlanilha)
+	For nX:=Len(aSelManual) To Len(aPlanilha)
+		Aadd(aSelManual,.F.)
+	Next nX
+Endif
+
+If lRet
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Calcula a quantidade selecionada ate o momento                         ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nX := 1 To Len(aCols)
+		nSaldo += aCols[nX][nPQtdSCE]
+	Next nX
+
+	nSaldo := aCotacao[nPosAtu][1][nPQtdSC8][2] - nSaldo
+
+	If ( nPlanFlag > 0 .And. aPlanilha[nPosAtu][nLinha][nPlanFlag] == 1 .And. !lTrocaFor )
+		nSaldo := 0
+	EndIf	
+	
+	If ( nPlanTotal > 0 .And. aPlanilha[nPosAtu][nLinha][nPlanTotal] == 0 )
+		Help(" ",1,"A160ATU")
+		nSaldo := 0
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Verifica se a SC esta vinculada a um Edital              ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ 
+	If (SC1->C1_QUJE>0 .And. !Empty(SC1->C1_CODED) )
+		Aviso(STR0027,STR0080+SC1->C1_NUM+STR0081+Alltrim(SC1->C1_CODED)+STR0082,{"Ok"})
+		nSaldo := 0
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Verifica se um novo fornecedor pode ser escolhido e atualiza os dados  ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (cAlias)->(IsMark("PLN_OK",ThisMark(),ThisInv()))
+		If lTrocaFor
+			aSelManual[nPosAtu] := .T.
+			aPlanilha[nPosAtu][nLinha][nPlanFlag] := 0
+		EndIf
+		If ( nSaldo == 0 )
+			RecLock(cAlias)
+			(cAlias)->PLN_OK := ""
+			MsUnLock()
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//?Verifica se existe algum fornecedor marcado  ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If aScan(aPlanilha[nPosAtu],{|x| x[nPlanOK] == ThisMark()}) == 0
+				lMarca:=.F.
+			EndIf
+		Else
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			//?Se vencedor e o Produto for de Grade alimenta a Quantidade do item de Grade com a quantidade do SC8.?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			nScan := aScan(aCotaGrade, {|z| z[1] + z[2] + z[3] + z[4] == ;
+			aCols[nLinha][nPFornSCE] + aCols[nLinha][nPLojaSCE] + aCols[nLinha][nPPropSCE] + aCols[nLinha][nPItemSCE] })
+			
+			If Len(aCotaGrade[nScan][6]) > 0
+
+				For nG := 1 To Len(aCotaGrade[nScan][6])
+					aCotaGrade[nScan][6][nG][2] := aCotaGrade[nScan][6][nG][6]
+					aCotaGrade[nScan][6][nG][3] := aCols[nLinha][nPDataSCE]
+				Next nG
+
+				aCols[nLinha][nPQtdSCE] := aCotacao[nPosAtu][1][nPQtdSC8][2]
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+				//?pos marcar um Vencedor e preencher os itens da grade com a quantidade original do SC8, esta rotina  ?
+				//?era as quantidades da grade das propostas dos demais fornecedores da cotacao deste produto.         ?
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+				For nX := 1 To Len(aCotaGrade)
+					If Len(aCotaGrade[nX][6]) > 0 .And. nX <> nScan .And. aCotaGrade[nX][4] == aCotaGrade[nScan][4]
+						For nY:= 1 to Len(aCotaGrade[nX][6])
+							aCotaGrade[nX, 6, nY, 2] := 0
+						Next nY
+					EndIf
+				Next nX
+	
+				For nX := 1 To Len(aCols)
+					If nX <> nLinha
+						aCols[nX][nPQtdSCE]:= 0
+               		EndIf 
+				Next nX
+			
+   			Else
+            	aCols[nLinha][nPQtdSCE] += nSaldo
+			EndIf
+			
+			nSaldo := 0
+
+		EndIf
+
+	Else
+
+		nSaldo += aCols[nLinha][nPQtdSCE]
+		aCols[nLinha][nPQtdSCE] := 0
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+		//?Se nao for o vencedor e o Produto for de Grade zera a Quantidade do item de Grade.                  ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+		nScan := aScan(aCotaGrade, {|z| z[1] + z[2] + z[3] + z[4] == ;
+		aCols[nLinha][nPFornSCE] + aCols[nLinha][nPLojaSCE] + aCols[nLinha][nPPropSCE] + aCols[nLinha][nPItemSCE] })
+		
+		If Len(aCotaGrade[nScan][6]) > 0
+			For nG := 1 To Len(aCotaGrade[nScan][6])
+				aCotaGrade[nScan][6][nG][2] := 0
+			Next nG
+		EndIf
+		
+	EndIf
+
+	If (nPlanOK > 0)
+		aPlanilha[nPosAtu][nLinha][nPlanOK] := (cAlias)->PLN_OK
+	EndIf
+	
+	If ExistBlock("M160MARK")
+		aRet160Mar := ExecBlock("M160MARK",.F.,.F.,{cAlias,aPlanilha[nPosAtu][nLinha],aCotacao[nPosAtu][nLinha],aListBox,aCabec[CAB_HFLD3]})
+		If ValType( aRet160Mar ) == "A" 
+			aPlanilha[nPosAtu][nLinha] := aRet160Mar[1]
+			aCotacao[nPosAtu][nLinha]  := aRet160Mar[2]
+			aListBox := aRet160Mar[3]
+        EndIf
+        aCabec[CAB_MARK]:oBrowse:Refresh()
+        aCabec[CAB_COTACAO]:Refresh()
+	EndIf			
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Ponto de entrada para customizar os arrays utilizados na marcacao do fornecedor vencedor       ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	      
+	If ExistBlock("M160MRK1")
+		aRet160Mrk := ExecBlock("M160MRK1",.F.,.F.,{cAlias,aPlanilha,aCotacao,aListBox,aCabec})
+		If ValType( aRet160Mrk ) == "A" 
+			aPlanilha := aClone(aRet160Mrk[1])
+			aCotacao  := aClone(aRet160Mrk[2])
+			aListBox  := aClone(aRet160Mrk[3])
+        EndIf           
+        aCabec[CAB_MARK]:oBrowse:Refresh()
+        aCabec[CAB_COTACAO]:Refresh()
+	EndIf  
+				
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Atualiza os dados do cabecalho da analise da cotacao                   ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	MsSeek(xFilial("SC1")+aCotacao[nPosAtu][1][nPNumSC][2]+aCotacao[nPosAtu][1][nPItemSC][2])
+	
+	cCodPro  := SC1->C1_PRODUTO
+	cDescPro := SC1->C1_DESCRI
+	
+	If lGrade .And. !Empty(aCotacao[nPosAtu][1][nPItemGrd][2])
+		If (lReferencia := MatGrdPrRf(@cCodPro,.T.))
+			cCodPro  := RetCodProdFam(SC1->C1_PRODUTO)
+			cDescPro := DescPrRF(cCodPro)
+		Endif
+	Endif
+
+	aCabec[CAB_SAYGET,2,2] := cCodPro	//Codigo do Produto
+	aCabec[CAB_SAYGET,2,1] :Refresh()
+	
+	aCabec[CAB_SAYGET,3,1]:SetText( Transform( cDescPro, PesqPict("SC8","C8_DESCRI",30) ) ) //Descricao do Produto
+	oScroll:Reset()
+	
+	aCabec[CAB_SAYGET,5,2] := aCotacao[nPosAtu][1][nPQtdSC8][2] //Quantidade
+	aCabec[CAB_SAYGET,5,1] :Refresh()
+	
+	aCabec[CAB_SAYGET,6,1] :cCaption := StrZero(nPosAtu,3)+"/"+StrZero(Len(aPlanilha),3) //Ordem
+	aCabec[CAB_SAYGET,6,1] :Refresh()
+	
+	aCabec[CAB_SAYGET,8,2] := nSaldo //Saldo
+	aCabec[CAB_SAYGET,8,1] :Refresh()
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?onta a Grade para o Produto Analisado.                         ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	A160ColsGrade(aCabec[CAB_SAYGET,2,2], .T.)
+	
+EndIf 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//| Ponto de entrada para ser utilizado antes da validação do SIGAPCO |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+If ExistBlock("MT160PCOK")
+	If ValType(aCols)=="A"
+		If Len(aCols[1]) >= 9
+			cItemPe := aCols[1][9]	// C8_ITEM
+		EndIf
+	EndIf
+	lMt160P := ExecBlock("MT160PCOK",.F.,.F.,{aPlanilha,cItemPE})
+	If Valtype(lMt160P) <> "L"
+		lMt160P:=.T.
+	EndIf
+EndIf
+
+If !lMarca
+	Aviso(STR0027,STR0074,{STR0028})//"Este fornecedor n? pode ser selecionado, pois n? atende aos crit?ios de avaliação solicitados atrav? dos par?etros da rotina (F12)."
+Else
+	If SuperGetMV("MV_PCOINTE",.F.,"2")=="1"
+		//Variaveis para analise de orcamento
+		SC8->(MsGoTo(aCotacao[nPosAtu][nLinha][nSC8Recno][2]))
+		SC1->(DbSetOrder(1))
+		SC1->(MsSeek(xFilial("SC1")+aCotacao[nPosAtu][nLinha][nPNumSC][2]+aCotacao[nPosAtu][nLinha][nPItemSC][2]))
+		
+		If !PcoVldLan('000052','02',,,Empty((cAlias)->PLN_OK)) .And. lMt160P 
+			//Forca a liberacao de todos os lancamentos de bloqueio, pois cada item ?uma liberacao exclusiva
+			PcoFreeBlq('000052')
+			RecLock(cAlias)
+				(cAlias)->PLN_OK := ""
+			(cAlias)->(MsUnLock())
+			
+			//Atualizo a planilha para que, caso tenha havido bloqueio, a planilha n? contenha os registros marcados
+			//Isso evitar?que ao ser pressionado o bot? "Pr?imo" a MarkBrowse seja "ticada" incorretamente
+			If ValType(nPlanOk) == "N" .And. nPlanOk > 0
+				aPlanilha[nPosAtu][nLinha][nPlanOK] := (cAlias)->PLN_OK							
+			EndIf
+		Endif
+		
+		If !(cAlias)->(IsMark("PLN_OK",ThisMark(),ThisInv()))
+			nSaldo += aCols[nLinha][nPQtdSCE]
+			aCols[nLinha][nPQtdSCE] := 0
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			//?Se nao for o vencedor e o Produto for de Grade zera a Quantidade do item de Grade.                  ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+			nScan := aScan(aCotaGrade, {|z| z[1] + z[2] + z[3] + z[4] == ;
+			aCols[nLinha][nPFornSCE] + aCols[nLinha][nPLojaSCE] + aCols[nLinha][nPPropSCE] + aCols[nLinha][nPItemSCE] })
+			
+			If Len(aCotaGrade[nScan][6]) > 0
+				For nG := 1 To Len(aCotaGrade[nScan][6])
+					aCotaGrade[nScan][6][nG][2] := 0
+				Next nG
+			EndIf		
+		EndIf
+
+		aCabec[CAB_SAYGET,2,2] := cCodPro	//Codigo do Produto
+		aCabec[CAB_SAYGET,2,1] :Refresh()
+		
+		aCabec[CAB_SAYGET,3,1]:SetText( Transform( cDescPro, PesqPict("SC8","C8_DESCRI",30) ) ) //Descricao do Produto
+		oScroll:Reset()
+		
+		aCabec[CAB_SAYGET,5,2] := aCotacao[nPosAtu][1][nPQtdSC8][2] //Quantidade
+		aCabec[CAB_SAYGET,5,1] :Refresh()
+		
+		aCabec[CAB_SAYGET,6,1] :cCaption := StrZero(nPosAtu,3)+"/"+StrZero(Len(aPlanilha),3) //Ordem
+		aCabec[CAB_SAYGET,6,1] :Refresh()
+		
+		aCabec[CAB_SAYGET,8,2] := nSaldo //Saldo
+		aCabec[CAB_SAYGET,8,1] :Refresh()
+		
+	Endif
+EndIf
+
+RestArea(aArea)
+
+Return(.T.)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?a160VldGd?utor  ?duardo Riera          ?Data ?9.08.2000 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡„o ?                                                            ³±?
+±±?         ?                                                            ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?xpC1:                                                       ³±?
+±±?         ?xpN2:                                                       ³±?
+±±?         ?xpN3:                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?etorno   ?enhum                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?IGACOM                                                      ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Ma160VldGd(aCabec,aPlanilha,aCotacao,lGrava,aCpoSC8)
+
+Local aArea    := GetArea()
+Local cAlias   := aCabec[CAB_ARQTMP]
+Local cHelp    := ""
+Local cCodPro  := ""
+Local cDescPro := ""
+Local nPosAtu  := Max(aCabec[CAB_POSATU],1)
+Local nPCodPro := aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="C8_PRODUTO"})
+Local nPQtdSCE := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_QUANT"})
+Local nPQtdSC8 := aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="C8_QUANT"})
+Local nPItemGrd:= aScan(aCotacao[nPosAtu][1],{|x| Trim(x[1])=="C8_ITEMGRD"})
+Local nRecNo   := (cAlias)->(RecNo())
+Local nSaldo   := 0
+Local nX       := 0
+Local lRetorno := .T.
+Local lMt160lOk:= ExistBlock("MT160LOK")
+Local lRet160lOK:= .T.
+Local nPlanOK   := aScan(aCpoSC8,"PLN_OK")
+Local nPlanFlag := aScan(aCpoSC8,"PLN_FLAG")
+
+DEFAULT lGrava := .T.
+
+lGrava := If(ValType(lGrava)<>"L",.T.,lGrava)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Verifica se as quantidades informadas nao superam o quantidade limite  ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nX := 1 To Len(aCols)
+	nSaldo += aCols[nX][nPQtdSCE]
+Next nX
+
+If ( nSaldo > aCotacao[nPosAtu][1][nPQtdSC8][2] )
+	cHelp := "QTDDIF"
+	lRetorno := .F.
+EndIf
+
+If ( aCols[nRecno][nPQtdSCE] > 0 .And. nPlanFlag > 0 .And. aPlanilha[nPosAtu][nRecno][nPlanFlag] == 1 )
+	cHelp := "A160ATU"
+	lRetorno := .F.
+EndIf
+
+If lMt160lOk
+	
+	If Len(aCotacao) >= 1
+		nPosNumCot  := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_NUM"})
+		Private cA160num:= aCotacao[1,1,nPosNumCot,2]
+	Endif
+	
+	lRet160Lok := Execblock("MT160LOK",.F.,.F.,aPlanilha)
+	
+	If Valtype( lRet160LOK ) == "L"
+		lRetorno := lRet160LOK
+	EndIf
+	
+Endif
+
+nSaldo := aCotacao[nPosAtu][1][nPQtdSC8][2] - nSaldo
+
+If ( lRetorno )
+	
+	If ( lGrava )
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//?Atualiza a Planilha de cotacao com base na Planilha de auditoria       ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea(cAlias)
+		dbGotop()
+		
+		For nX := 1 To Len(aCols)
+			RecLock(cAlias)
+			If ( aCols[nX][nPQtdSCE] == 0 )
+				(cAlias)->PLN_OK := ""
+			Else
+				(cAlias)->PLN_OK := "XX"
+			EndIf
+			MsUnLock()
+
+			If nPlanOK > 0
+				aPlanilha[nPosAtu][nX][nPlanOK] := (cAlias)->PLN_OK
+			EndIf
+			
+			dbSelectArea(cAlias)
+			dbSkip()
+		Next nX
+		
+		dbSelectArea(cAlias)
+		dbGoto(nRecNo)
+		
+	EndIf
+	
+Else
+	
+	If !(Empty(CHelp))
+		HELP(" ",1,cHelp)
+	EndIf
+	
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Atualiza os dados do cabecalho da analise da cotacao                   ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SB1")
+dbSetOrder(1)
+MsSeek(xFilial("SB1")+aCotacao[nPosAtu][1][nPCodPro][2])
+
+cCodPro  := SB1->B1_COD
+cDescPro := SB1->B1_DESC
+
+If lGrade  .And. !Empty(aCotacao[nPosAtu][1][nPItemGrd][2])
+	If (lReferencia := MatGrdPrRf(@cCodPro,.T.))
+		cCodPro  := RetCodProdFam(SB1->B1_COD)
+		cDescPro := DescPrRF(cCodPro)
+	Endif
+Endif
+
+If !l160Auto
+	aCabec[CAB_SAYGET,2,2] := cCodPro	//Codigo do Produto
+	aCabec[CAB_SAYGET,2,1] :Refresh()
+	
+	aCabec[CAB_SAYGET,3,2] := cDescPro //Descricao do Produto
+	aCabec[CAB_SAYGET,3,1] :Refresh()
+	
+	aCabec[CAB_SAYGET,5,2] := aCotacao[nPosAtu][1][nPQtdSC8][2] //Quantidade
+	aCabec[CAB_SAYGET,5,1] :Refresh()
+	
+	aCabec[CAB_SAYGET,6,1] :cCaption := StrZero(nPosAtu,3)+"/"+StrZero(Len(aPlanilha),3) //Ordem
+	aCabec[CAB_SAYGET,6,1] :Refresh()
+	
+	aCabec[CAB_SAYGET,8,2] := nSaldo //Saldo
+	aCabec[CAB_SAYGET,8,1] :Refresh()
+	
+	aCabec[CAB_MARK]:oBrowse:Gotop()
+EndIf
+
+RestArea(aArea)
+
+Return(lRetorno)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?a160LinOk?utor  ?duardo Riera          ?Data ?9.08.2000 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡„o ?                                                            ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?xpC1:                                                       ³±?
+±±?         ?xpN2:                                                       ³±?
+±±?         ?xpN3:                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?etorno   ?enhum                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?IGACOM                                                      ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Ma160LinOk(oGetDad)
+Local lRet := .T.
+
+If !l160Auto
+	lRet := Eval(oGetDad:bValid,.F.)
+Else
+	lRet := Eval(bGetValid,.F.)
+EndIf
+
+Return(lRet)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?a160Fld  ?utor  ?lexandre Inacio Lemes ?Data ?1/06/2007 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡…o ?uncao de Tratamento dos Folders                             ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?xpN1: Numero do Folder de Destino                           ³±?
+±±?         ?xpN2: Numero do Folder Atual                                ³±?
+±±?         ?xpO3: Objeto do Folder                                      ³±?
+±±?         ?xpA4: Array contendo todos objetos da analise               ³±?
+±±?         ?xpA5: Array contendo os elementos da listbox do Folder 3    ³±?
+±±?         ?xpA6: Array contendo as posicoes dos Gets do Folder 3       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?ATA160                                                      ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Ma160Fld(nFldDst,nFldAtu,oFolder,aCabec,aListbox,aPosObj3, aColsSC8)
+
+Local aArea		 := GetArea()
+Local aUltForn   := {}
+Local aViewSB2   := {}
+Local bCampo     := { |n| FieldName(n) }
+Local cProduto   := ""
+Local nPosAtu    := aCabec[CAB_POSATU]
+Local nX         := 0
+Local nR         := 0
+Local nSaldo     := 0
+Local nDuracao   := 0
+Local nTotDisp	 := 0
+Local nQtPV		 := 0
+Local nQemp		 := 0
+Local nSalpedi	 := 0
+Local nReserva	 := 0
+Local nQempSA	 := 0
+Local nQtdTerc	 := 0
+Local nQtdNEmTerc:= 0
+Local nSldTerc	 := 0
+Local nQEmpN	 := 0
+Local nQAClass	 := 0
+Local nScan      := 0
+Local nSaldoSB2  := 0
+Local lSigaCus   := .T.
+
+DEFAULT aCabec[CAB_ULTFORN]:CARGO := ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?Funcao utilizada para verificar a ultima versao dos fontes      ?
+//?SIGACUS.PRW, SIGACUSA.PRX e SIGACUSB.PRX, aplicados no rpo do   |
+//| cliente, assim verificando a necessidade de uma atualizacao     |
+//| nestes fontes. NAO REMOVER !!!							        ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+IF !(FindFunction("SIGACUS_V") .and. SIGACUS_V() >= 20050512)
+	Aviso(STR0027,STR0029,{STR0028}) //"Atualizar patch do programa SIGACUS.PRW !!!"
+	lSigaCus := .F.
+EndIf
+IF !(FindFunction("SIGACUSA_V") .and. SIGACUSA_V() >= 20050512)
+	Aviso(STR0027,STR0030,{STR0028}) //"Atualizar patch do programa SIGACUSA.PRW !!!"
+	lSigaCus := .F.
+EndIf
+IF !(FindFunction("SIGACUSB_V") .and. SIGACUSB_V() >= 20050512)
+	Aviso(STR0027,STR0031,{STR0028}) //"Atualizar patch do programa SIGACUSB.PRW !!!"
+	lSigaCus := .F.
+EndIf
+
+If lSigaCus
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?fetua a atualizacao dos dados na Troca dos Folders                     ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( nFldDst <> nFldAtu )
+
+		aCabec[CAB_MARK]:oBrowse:lDisablePaint := .T.
+		aCabec[CAB_GETDAD]:oBrowse:lDisablePaint := .T.
+		aCabec[CAB_ULTFORN]:lDisablePaint := .T.
+		
+		Do Case
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//?Folder 1 - Planilha Analisar - Efetua a atualizacao dos dados do Folder?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			Case ( nFldDst == 1 )
+				
+				aCabec[CAB_MARK]:oBrowse:lDisablePaint := .F.
+				aCabec[CAB_MARK]:oBrowse:Reset()
+				
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//?Folder 2 - Auditoria - Efetua a atualizacao dos dados do Folder        ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			Case ( nFldDst == 2 )
+				
+				aCabec[CAB_GETDAD]:oBrowse:lDisablePaint := .F.
+				
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//?Folder 3 - Fornecedor - Efetua a atualizacao dos dados do Folder       ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			Case ( nFldDst == 3 )
+				
+				dbSelectArea("SA2")
+				dbSetOrder(1)
+				MsSeek(xFilial("SA2")+(aCabec[CAB_ARQTMP])->PLN_FORNECE+(aCabec[CAB_ARQTMP])->PLN_LOJA)
+				If ( M->A2_COD <> (aCabec[CAB_ARQTMP])->PLN_FORNECE .Or.;
+					M->A2_LOJA <> (aCabec[CAB_ARQTMP])->PLN_LOJA )
+					For nX := 1 To FCount()
+						M->&(EVAL(bCampo,nX)) := FieldGet(nX)
+					Next nX
+					aCabec[CAB_MSMGET]:EnchRefreshAll()
+				EndIf
+				aCabec[CAB_SAYGET,14,2]:= SA2->A2_SALDUP
+				aCabec[CAB_SAYGET,15,2]:= SA2->A2_MCOMPRA
+				aCabec[CAB_SAYGET,16,2]:= SA2->A2_MNOTA
+				aCabec[CAB_SAYGET,17,2]:= SA2->A2_MSALDO
+				aCabec[CAB_SAYGET,18,2]:= SA2->A2_SALDUPM
+				aCabec[CAB_SAYGET,19,2]:= SA2->A2_MATR
+				
+				aCabec[CAB_COTACAO]:SetArray(aColsSC8[nPosAtu][(aCabec[CAB_ARQTMP])->(RecNo())])
+				aCabec[CAB_COTACAO]:Refresh()
+				
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//?Folder 4 - Historico do Produto e Estoques - Atualiza os Dados         ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			Case ( nFldDst == 4 )
+				
+				aCabec[CAB_ULTFORN]:lDisablePaint := .F.
+				If aCabec[CAB_ULTFORN]:CARGO <> aCabec[CAB_SAYGET,2,2]
+					
+					nScan := aScan( aCotaGrade, { |x| x[5] == aCabec[CAB_SAYGET,2,2] } )
+					
+					For nX := 1 to IIF( Len(aCotaGrade[nScan,6]) > 0 , Len(aCotagrade[nScan,6]) , 1 )
+
+						If Len(aCotaGrade[nScan,6]) > 0
+							cProduto := aCotagrade[nScan,6,nX,1]
+						Else
+							cProduto := aCabec[CAB_SAYGET,2,2]
+						EndIf
+						
+						dbSelectArea("SB2")
+						dbSetOrder(1)
+						MsSeek(xFilial("SB2")+cProduto)
+						While !Eof() .And. xFilial("SB2")+cProduto == SB2->B2_FILIAL+SB2->B2_COD
+							If !(SB2->B2_STATUS == '2')
+								
+								If SB2->B2_LOCAL < MV_PAR15 .Or. SB2->B2_LOCAL > MV_PAR16
+									dbSkip()
+									Loop
+								EndIf
+								
+								nSaldoSB2:=SaldoSB2(,,,,,"SB2")
+								
+								aAdd(aViewSB2,{TransForm(SB2->B2_LOCAL,PesqPict("SB2","B2_LOCAL")),;
+								TransForm(SB2->B2_COD,PesqPict("SB2","B2_COD")),;
+								TransForm(nSaldoSB2,PesqPict("SB2","B2_QATU")),;
+								TransForm(SB2->B2_QATU,PesqPict("SB2","B2_QATU")),;
+								TransForm(SB2->B2_QPEDVEN,PesqPict("SB2","B2_QPEDVEN")),;
+								TransForm(SB2->B2_QEMP,PesqPict("SB2","B2_QEMP")),;
+								TransForm(SB2->B2_SALPEDI,PesqPict("SB2","B2_SALPEDI")),;
+								TransForm(SB2->B2_QEMPSA,PesqPict("SB2","B2_QEMPSA")),;
+								TransForm(SB2->B2_RESERVA,PesqPict("SB2","B2_RESERVA")),;
+								TransForm(SB2->B2_QTNP,PesqPict("SB2","B2_QTNP")),;
+								TransForm(SB2->B2_QNPT,PesqPict("SB2","B2_QNPT")),;
+								TransForm(SB2->B2_QTER,PesqPict("SB2","B2_QTER")),;
+								TransForm(SB2->B2_QEMPN,PesqPict("SB2","B2_QEMPN")),;
+								TransForm(SB2->B2_QACLASS,PesqPict("SB2","B2_QACLASS"))})
+								
+								nTotDisp	+= nSaldoSB2
+								nSaldo		+= SB2->B2_QATU
+								nQtPV		+= SB2->B2_QPEDVEN
+								nQemp		+= SB2->B2_QEMP
+								nSalpedi	+= SB2->B2_SALPEDI
+								nReserva	+= SB2->B2_RESERVA
+								nQempSA		+= SB2->B2_QEMPSA
+								nQtdTerc	+= SB2->B2_QTNP
+								nQtdNEmTerc	+= SB2->B2_QNPT
+								nSldTerc	+= SB2->B2_QTER
+								nQEmpN		+= SB2->B2_QEMPN
+								nQAClass	+= SB2->B2_QACLASS
+								
+							EndIf
+							dbSelectArea("SB2")
+							dbSkip()
+						EndDo
+						
+					Next nX
+					
+					If Len(aViewSb2) > 0
+						aCabec[CAB_HISTORI]:SetArray(aViewSB2)
+						aCabec[CAB_HISTORI]:bLine := {|| aCabec[CAB_HISTORI]:aArray[aCabec[CAB_HISTORI]:nAt] }
+						aCabec[CAB_HISTORI]:Refresh()
+						
+						aCabec[CAB_SAYGET,20,2] := nTotDisp
+						aCabec[CAB_SAYGET,21,2] := nQemp
+						aCabec[CAB_SAYGET,22,2] := nSaldo
+						aCabec[CAB_SAYGET,23,2] := nSalPedi
+						aCabec[CAB_SAYGET,24,2] := nQtPv
+						aCabec[CAB_SAYGET,25,2] := nReserva
+						aCabec[CAB_SAYGET,26,2] := nQEmpSA
+						aCabec[CAB_SAYGET,27,2] := nQtdTerc
+						aCabec[CAB_SAYGET,28,2] := nQtdNEmTerc
+						aCabec[CAB_SAYGET,29,2] := nSldTerc
+						aCabec[CAB_SAYGET,30,2] := nQEmpN
+						aCabec[CAB_SAYGET,31,2] := nQAClass
+						
+						A160UltFor(aCabec[CAB_HISTORI]:aArray[aCabec[CAB_HISTORI]:nAt,2],aCabec)
+					Else
+						Aviso(STR0027,STR0086,{STR0028})
+					EndIf
+				EndIf
+				
+		EndCase
+		
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Efetua Refresh nos Objetos da Getdados da Auditoria e Todos SayGets    ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aCabec[CAB_GETDAD]:oBrowse:Refresh()
+	
+	For nR :=14 to Len(aCabec[CAB_SAYGET])
+		aCabec[CAB_SAYGET,nR,1]:Refresh()
+	Next nR
+	
+EndIf
+
+RestArea(aArea)
+
+Return(.T.)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?160UltFor?Autor ?lexandre Inacio Lemes ?Data ?0/05/2007 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escricao ?usca os 4 ultimos Fornecimentos do produto informado e      ³±?
+±±?         ?tualiza o LixtBox do Folder 4 - Historico do Produto        ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?xpC1: Produto a ser pesquisado                              ³±?
+±±?         ?xpA1: Array contendo todos os Objetos da Analise            ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A160UltFor(cProduto,aCabec)
+
+If cProduto == Nil
+   cProduto := ""
+EndIf   
+   
+aUltForn := MaUltForn(cProduto)
+aCabec[CAB_ULTFORN]:CARGO := cProduto
+aCabec[CAB_ULTFORN]:SetArray(aUltForn)
+aCabec[CAB_ULTFORN]:bLine := {|| aCabec[CAB_ULTFORN]:aArray[aCabec[CAB_ULTFORN]:nAt] }
+aCabec[CAB_ULTFORN]:Refresh()
+
+Return(.T.)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?a160Custo?Autor ?Eduardo Riera         ?Data ?7.07.2000 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡„o ?otina de calculo do custo de entrada de um item da cotacao  ³±?
+±±?         ?e compra                                                    ³±?
+±±?         ?sta funcao calcula o custo de entrada da cotacao consideran-³±?
+±±?         ?o o valor presente caso haja parcelamento de pagamentos     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?xpC1: Alias do SC8                                          ³±?
+±±?         ?xpN2: Item da funcao fiscal                                 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?etorno   ?xpN1: Custo de entrada convertido para o valor presente     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?SIGACOM                                                     ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Ma160Custo(cAliasSC8,nItem)
+
+Static lAltC8TxFi := Nil
+
+Local aVencto   := {}
+Local aDupl     := {}
+Local aRet      := {}
+Local aCusto    := {}
+Local nX        := 0
+Local nTaxa     := 0
+Local nValor    := 0
+Local nTotal    := 0
+Local nValBase  := 0
+Local nValIPI   := 0
+Local nValSol   := 0
+Local nRetorno  := 0
+Local lMA160CUS := ExistBlock("MA160CUS")
+Local lMtxFisCo := GetNewPar('MV_PERFORM',.T.) 
+Local nBaseDup  := IIF(lMtxFisCo,MaFisRet(,'NF_BASEDUP'),0)
+Local nTxJuro   := IIF(Alltrim(FunName())=="MATA160",mv_par14,0)
+
+//Indica se ira utilizar as funcoes fiscais para calcular o valor presente. So pode usar esse parametro quem utiliza calculo especifico via ponto de entrada.
+If !lMtxFisCo .And. !lMA160CUS
+	nBaseDup  := MaFisRet(,'NF_BASEDUP')
+Endif
+
+If lMA160CUS
+	nRetorno := ExecBlock("MA160CUS",.F.,.F.,{cAliasSC8,nItem})
+	If Valtype( nRetorno ) <> "N"
+		nRetorno := 0
+	EndIf
+Else
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	//?Funcao utilizada para verificar a ultima versao dos fontes      ?
+	//?SIGACUS.PRW, SIGACUSA.PRX e SIGACUSB.PRX, aplicados no rpo do   |
+	//| cliente, assim verificando a necessidade de uma atualizacao     |
+	//| nestes fontes. NAO REMOVER !!!							        ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+	IF !(FindFunction("SIGACUS_V") .and. SIGACUS_V() >= 20050512)
+		Final(STR0029)  //"Atualizar patch do programa SIGACUS.PRW !!!"
+	Endif
+	IF !(FindFunction("SIGACUSA_V") .and. SIGACUSA_V() >= 20050512)
+		Final(STR0030) //"Atualizar patch do programa SIGACUSA.PRW !!!"
+	Endif
+	IF !(FindFunction("SIGACUSB_V") .and. SIGACUSB_V() >= 20050512)
+		Final(STR0031) //"Atualizar patch do programa SIGACUSB.PRW !!!"
+	Endif
+	
+	If lAltC8TxFi == Nil
+		nIndSX3 := SX3->(IndexOrd())
+		SX3->(dbSetOrder(2))
+		lAltC8TxFi := (SX3->(MsSeek('C8_TAXAFIN', .F.)) .And. SX3->X3_VISUAL $ ' A')
+		If SX3->(IndexOrd()) # nIndSX3
+			SX3->(dbSetOrder(nIndSX3))
+		EndIf	
+	EndIf
+	
+	If lAltC8TxFi
+		nTaxa := If(Empty(nTxJuro),(cAliasSC8)->C8_TAXAFIN,nTxJuro)
+	Else
+		nTaxa := If(Empty(nTxJuro),SuperGetMV("MV_JUROS"),nTxJuro)
+	EndIf	
+	
+	dbSelectArea("SF4")
+	dbSetOrder(1)
+	MsSeek(xFilial("SF4")+(cAliasSC8)->C8_TES)
+	If (cAliasSC8)->(FieldPos("C8_MOEDA")<>0)
+		nValBase  := xMoeda(nBaseDup,(cAliasSC8)->C8_MOEDA,1,(cAliasSC8)->C8_EMISSAO,,If((cAliasSC8)->(FIELDPOS("C8_TXMOEDA")) > 0,(cAliasSC8)->C8_TXMOEDA,''))
+		nValIPI   := xMoeda(MaFisRet(,"NF_VALIPI"),(cAliasSC8)->C8_MOEDA,1,(cAliasSC8)->C8_EMISSAO,,If((cAliasSC8)->(FIELDPOS("C8_TXMOEDA")) > 0,(cAliasSC8)->C8_TXMOEDA,''))
+		nValSol   := xMoeda(MaFisRet(,"NF_VALSOL"),(cAliasSC8)->C8_MOEDA,1,(cAliasSC8)->C8_EMISSAO,,If((cAliasSC8)->(FIELDPOS("C8_TXMOEDA")) > 0,(cAliasSC8)->C8_TXMOEDA,''))
+		nValICMS  := xMoeda(MaFisRet(,"NF_VALICM"),(cAliasSC8)->C8_MOEDA,1,(cAliasSC8)->C8_EMISSAO,,If((cAliasSC8)->(FIELDPOS("C8_TXMOEDA")) > 0,(cAliasSC8)->C8_TXMOEDA,''))
+		aVencto   := Condicao(nValBase,(cAliasSC8)->C8_COND,nValIPI,dDataBase,nValSol)
+	Else
+		nValIPI  := MaFisRet(,"NF_VALIPI")
+		nValICMS := MaFisRet(,"NF_VALICM")
+		aVencto  := Condicao(nBaseDup,(cAliasSC8)->C8_COND,nValIPI,dDataBase,MaFisRet(,"NF_VALSOL"))
+		nValBase := nBaseDup
+	Endif
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Monta o array utilizado na geracao das duplicatas    ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nX := 1 to Len(aVencto)
+		nValor := MaValPres(aVencto[nX][2],aVencto[nX][1],nTaxa)
+		If nX == Len(aVencto) .And. ((nTotal+nValor) <> nValBase .And. !(nTaxa > 0))
+			nValor += (nBaseDup - (nTotal+nValor) )
+		EndIf
+		nTotal += nValor
+		aADD(aRet,{'MT160  ','   ',' ',aVencto[nX][1],nValor})
+	Next nX
+
+	For nX := 1 to Len(aRet)
+		aAdd(aDupl,aRet[nX][2]+"?+aRet[nX][1]+"?"+aRet[nX][3]+" ?+DTOC(aRet[nX][4])+"?"+Transform(aRet[nX][5],PesqPict("SE2","E2_VALOR",14,1)))
+	Next nX
+	
+	dbSelectArea("SF4")
+	dbSetOrder(1)
+	MsSeek(xFilial("SF4")+(cAliasSC8)->C8_TES)
+	If  cPaisLoc <> "BRA"
+		aadd(aCusto,{nTotal,;
+			0,;
+			0,;
+			"N",;
+			"N",;
+			"0",;
+			"0",;
+			(cAliasSC8)->C8_PRODUTO,;
+			RetFldProd(SB1->B1_COD,"B1_LOCPAD"),;
+			(cAliasSC8)->C8_QUANT,;
+			0})
+	Else
+		aadd(aCusto,{nTotal-IIf(!Empty((cAliasSC8)->C8_TES).And.SF4->F4_IPI=="R",0,nValIPI)+MaFisRet(nItem,"IT_VALCMP"),;
+			nValIPI,;
+			nValICMS,;
+			If(Empty((cAliasSC8)->C8_TES),"N",SF4->F4_CREDIPI) ,;
+			If(Empty((cAliasSC8)->C8_TES),"N",SF4->F4_CREDICM),;
+			MaFisRet(nItem,"IT_NFORI"),;
+			MaFisRet(nItem,"IT_SERORI"),;
+			(cAliasSC8)->C8_PRODUTO,;
+			RetFldProd(SB1->B1_COD,"B1_LOCPAD"),;
+			(cAliasSC8)->C8_QUANT,;
+			If(!Empty((cAliasSC8)->C8_TES).And.SF4->F4_IPI=="R",;
+			nValIPI,0) })
+	EndIf
+
+	nRetorno := RetCusEnt(aDupl,aCusto,'N')[1][1]
+
+EndIf
+
+Return(nRetorno)
+
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?160Legend?utor  ?lexandre Inacio Lemes ?Data ?3/12/2005 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?         ?emonstra a legenda das cores da mbrowse                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?enhum                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡„o ?sta rotina monta uma dialog com a descricao das cores da    ³±?
+±±?         ?browse.                                                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?Materiais                                                   ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A160Legenda()
+
+BrwLegenda(cCadastro,STR0023,aLegenda)
+
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡…o    ?A160Imp  ?utor  ?lexandre Inacio Lemes ?ata  ?0/03/2006 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡…o ?Imprime a Posicao da Cotacao no momento da Analise.         ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?intaxe   ?MA160Imp(ExpA1,ExpA2,ExpA3,ExpA4,ExpA5,ExpA6,ExpL7)         ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?ExpA1: Array contendo todos os dados da Planilha de Analise ³±?
+±±?         ?ExpA2: Array contendo os dados do FOLDER AUDITORIA grava SCE³±?
+±±?         ?ExpA3: Array contendo os dados da cotacao da tabela SC8     ³±?
+±±?         ?ExpA4: Array contendo os dados utilizados na listbox Fornec.³±?
+±±?         ?ExpA5: Array contendo os Headers de todas as estruturas Util³±?
+±±?         ?ExpA6: Array contendo todas as referencias de impostos SC8  ³±?
+±±?         ?ExpL7: Logica que indica se usa TES padrao/Cotacao MV_PAR02 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?Uso      ?ToolBar do Mata160.prx - ANALISE DE COTACOES                ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Ma160Imp(aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes)
+
+Local aArea	     := GetArea()
+Local nPosNumCot := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_NUM"})
+Local nPosTxFin  := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_TAXAFIN"})
+Local cNumCot    := aCotacao[1][1][nPosNumCot][2]
+Local cTaxaFin   := ""
+Local wnrel  	 := "MA160IMP"
+
+PRIVATE Titulo   := ""
+PRIVATE aReturn  := { STR0033, 1,STR0034, 2, 2, 1, "",0 }		//"Zebrado"###"Administracao"
+PRIVATE nLastKey := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Define qual TAXA FINANCEIRA sera utilizada na impressao da Analise     ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lAltC8TxFi
+	cTaxaFin := Transform(If(Empty(mv_par14),aCotacao[1][1][nPosTxFin][2],mv_par14),PesqPict("SC8","C8_TAXAFIN",14))
+Else
+	cTaxaFin := Transform(If(Empty(mv_par14),SuperGetMV("MV_JUROS"),mv_par14),PesqPict("SC8","C8_TAXAFIN",14))
+EndIf
+
+Titulo := STR0035+" "+cNumCot+" "+STR0036+" "+cTaxaFin+" %" //"Posição da Cotação Numero 999999 no Momento da Analise - TAXA FINANCEIRA"
+
+wnrel  := SetPrint("SC8",wnrel,"",@Titulo,STR0037,"","",.F.,,.F.,"G",,.F.,,,,,)
+
+If nLastKey <> 27
+
+	SetDefault(aReturn,"SC8")
+
+	If nLastKey <> 27
+
+		RptStatus({|lEnd| R160Imp(@lEnd,wnrel,@Titulo,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes)},Titulo)
+
+	EndIf
+EndIf
+If nLastKey = 27
+	dbClearFilter()
+EndIf
+
+RestArea(aArea)
+Return Nil
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡…o    ?R160IMP  ?utor  ?lexandre Inacio Lemes ?ata  ?0/03/2006 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡…o ?Chamada do Relatorio                                        ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?intaxe   ?MA160Imp(ExpA1,ExpA2,ExpA3,ExpA4,ExpA5,ExpA6,ExpL7)         ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?ExpL1 :Variavel Logica para interromper a impressao         ³±?
+±±?         ?ExpC2 :String contendo o nome do Relatorio                  ³±?
+±±?         ?ExpC3 :String contendo o Titulo impresso na Cabec do Rel.   ³±?
+±±?         ?ExpA4 :Array contendo todos os dados da Planilha de Analise ³±?
+±±?         ?ExpA5 :Array contendo os dados do FOLDER AUDITORIA grava SCE³±?
+±±?         ?ExpA6 :Array contendo os dados da cotacao da tabela SC8     ³±?
+±±?         ?ExpA7 :Array contendo os dados utilizados na listbox Fornec.³±?
+±±?         ?ExpA8 :Array contendo os Headers de todas as estruturas Util³±?
+±±?         ?ExpA9 :Array contendo todas as referencias de impostos SC8  ³±?
+±±?         ?ExpL10:Logica que indica se usa TES padrao/Cotacao MV_PAR02 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?Uso      ?MATR160			                                           ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function R160Imp(lEnd,wnrel,Titulo,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes)
+
+Local nPosFornec:= aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_FORNECE"})
+Local nPosLoja  := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_LOJA"})
+Local nPosPropos:= aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_NUMPRO"})
+Local nPosProd  := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_PRODUTO"})
+Local nPosQtde  := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_QUANT"})
+Local nPosNumSC := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_NUMSC"})
+Local nPosItemSC:= aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_ITEMSC"})
+Local nPosDtPrf := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_DATPRF"})
+Local nPosPrazo := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_PRAZO"})
+Local nPosTxFin := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_TAXAFIN"})
+Local nPosPreco := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_PRECO"})
+Local nPosCond  := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_COND"})
+Local nPosUnida := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_UM"})
+Local nPosNumCot:= aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_NUM"})
+Local nPosGrpCom:= aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_GRUPCOM"})
+Local nPosMoeda := aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_MOEDA"})
+Local nSC8Recno := aScan(aCotacao[1][1],{|x| Trim(x[1])=="SC8RECNO"})
+Local nPosQtdSCE:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_QUANT"})
+Local nPosMotivo:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_MOTIVO"})
+Local nPosDatSCE:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_ENTREGA"})
+Local nPosRegSCE:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_REGIST"})
+Local nSaldoSB2 := 0
+Local nDuracao  := 0
+Local ncusto    := 0 
+Local nCnt      := 0
+Local nX        := 0
+Local nY        := 0
+Local nZ        := 0
+Local cabec1    := ""
+Local cabec2    := ""
+Local lReferencia := .F.
+Local cProdRef    := " "
+
+li	   := 80
+m_pag  := 1
+
+cabec1 := STR0038 //"FORNECEDOR           LOJA NOME REDUZIDO    VENCEDOR  PROPOSTA    VL.PRESENTE CONDICAO PAGAMENTO  NESSIDADE  PRZ ENTREGA DIAS  NOTA     QUANTIDADE UN VALOR UNITARIO    VALOR TOTAL MOTIVO                         DT ENTREGA"
+				  // 12345678901234567890 1234 12345678901234567890    1        12 12345678901234 123 123456789012345 99/99/9999 99/99/9999  9999     9   123456789012 22 12345678901234 12345678901234 123456789012345678901234567890 99/99/9999
+  				  // 0         1         2         3         4         5         6         7         8         9        10        11        12        13        14        15        16        17        18        19        20        21        22
+				  // 01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?Forca a atualizacao do array aAuditoria quando da edicao do produto no    ?
+//?Folder Auditoria.                                                         ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+aAuditoria[aCabec[CAB_POSATU]] := aClone(aCols)
+
+For nX := 1 To Len(aPlanilha)
+	
+	If li > 55
+		cabec(titulo,cabec1,cabec2,"MA160IMP","G",IIF(aReturn[4]==1,15,18))
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Posiciona o SC1 para buscar Descricao do Produto na Solicitacao Compras?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	MsSeek(xFilial("SC1")+aCotacao[nX][1][nPosNumSC][2]+aCotacao[nX][1][nPosItemSC][2])
+	@ li,000 PSAY STR0039 + aCotacao[nX][1][nPosProd][2]+" - " + Substr(SC1->C1_DESCRI,1,195) //"Produto :"
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Posiciona o SB1 para consultar o ponto de pedido  e lote economico     ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SB1")
+	dbSetOrder(1)
+	MsSeek(xFilial("SB1")+aCotacao[nX][1][nPosProd][2])
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Efetua a contagem fisica do estoque em todos os almoxarifados SB2      ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SB2")
+	dbSetOrder(1)
+	MsSeek(xFilial("SB2")+aCotacao[nX][1][nPosProd][2])
+	nSaldoSB2 := 0
+	While ( !Eof() .And. xFilial("SB2") == SB2->B2_FILIAL .And. SB2->B2_COD == aCotacao[nX][1][nPosProd][2] )
+
+		If SB2->B2_LOCAL < MV_PAR15 .Or. SB2->B2_LOCAL > MV_PAR16
+			dbSkip()
+			Loop
+		EndIf
+		
+		nSaldoSB2 += SaldoSb2()
+		dbSelectArea("SB2")
+		dbSkip()
+
+	EndDo
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Posiciona o SB3 e Calcula o tempo de duracao do estoque em dias        ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SB3")
+	dbSetOrder(1)
+	MsSeek(xFilial("SB3")+aCotacao[nX][1][nPosProd][2])
+	nDuracao := (nSaldoSB2/SB3->B3_MEDIA*30)
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//?Imprime os dados do Produto e Estoque                                  ?
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	li++
+	@ li,000 PSAY __PrtThinLine()
+	li++
+	@ li,000 PSAY STR0040 // "Dados do Estoque      "
+	@ li,023 PSAY STR0041 // "Saldo Atual :"
+	@ li,036 PSAY nSaldoSB2 Picture PesQPict("SB2","B2_QATU",18)
+	@ li,058 PSAY STR0042 // "Ponto de Pedido :"
+	@ li,075 PSAY RetFldProd(SB1->B1_COD,"B1_EMIN") Picture PesQPict("SB1","B1_EMIN",18)
+	@ li,097 PSAY STR0043 // "Lote Economico :"
+	@ li,113 PSAY RetFldProd(SB1->B1_COD,"B1_LE") Picture PesQPict("SB1","B1_LE",18)
+	@ li,135 PSAY STR0044 // "Media de Consumo :"
+	@ li,153 PSAY SB3->B3_MEDIA Picture PesqPict("SB3","B3_MEDIA",18)
+	@ li,175 PSAY STR0045 // "Duracao (Dias) :"
+	@ li,191 PSAY nDuracao Picture PesqPict("SB3","B3_MEDIA",18)
+	li++
+	@ li,000 PSAY __PrtThinLine()
+	li++
+	li++
+	
+	For nY := 1 To Len(aPlanilha[nX])
+		
+		If li > 55
+			cabec(titulo,cabec1,cabec2,"MA160IMP","G",IIF(aReturn[4]==1,15,18))
+		EndIf
+		
+		dbSelectArea("SC8")
+		MsGoTo(aCotacao[nX][nY][nSC8Recno][2])
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//?Calculo do custo da Cotacao  (Valor Presente)                          ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		MaFisIni(SC8->C8_FORNECE,SC8->C8_LOJA,"F","N","R")
+		MaFisIniLoad(1)
+		For nZ := 1 To Len(aRefImpos)
+			MaFisLoad(aRefImpos[nZ][3],SC8->(FieldGet(FieldPos(aRefImpos[nZ][2]))),1)
+		Next nZ
+		If ( lTes .And. Empty(SC8->C8_TES) )
+			dbSelectArea("SB1")
+			dbSetOrder(1)
+			MsSeek(xFilial("SB1")+SC8->C8_PRODUTO)
+			MaFisAlt("IT_TES",RetFldProd(SB1->B1_COD,"B1_TE"),1)
+		EndIf
+		MaFisEndLoad(1)
+		nCusto := Ma160Custo("SC8",1)
+		MaFisEnd()
+		
+		cProdRef   := aCotacao[nX][nY][nPosProd][2]
+		lReferencia:= MatGrdPrrf(@cProdRef,.T.)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//?osiciona SA2-Fornecedores SA5-FornecedorXproduto e SE4-Condicao Pagto. ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+		dbSelectArea("SA2")
+		dbsetOrder(1)
+		MsSeek(xFilial("SA2")+aCotacao[nX][nY][nPosFornec][2]+aCotacao[nX][nY][nPosLoja][2])
+		
+		dbSelectArea("SA5")
+		dbSetOrder(1)
+		If !MsSeek(xFilial("SA5")+aCotacao[nX][nY][nPosFornec][2]+aCotacao[nX][nY][nPosLoja][2]+aCotacao[nX][nY][nPosProd][2] )
+			If lReferencia		
+				dbSelectArea("SA5")
+				dbSetOrder(9)
+				MsSeek(xFilial("SA5")+aCotacao[nX][nY][nPosFornec][2]+aCotacao[nX][nY][nPosLoja][2]+cProdRef )
+	        Endif
+		Endif 
+		
+		dbSelectArea("SE4")
+		dbSetOrder(1)
+		MsSeek(xFilial("SE4")+aCotacao[nX][nY][nPosCond][2])
+		
+		@ li,000 PSAY aCotacao[nX][nY][nPosFornec][2]
+		@ li,021 PSAY aCotacao[nX][nY][nPosLoja][2]
+		@ li,026 PSAY Substr(SA2->A2_NREDUZ,1,20)
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//?valia se Fornecedor foi Indicado Pelo Sistema ou Selecionado pelo Usr. ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+		SCE->(dbSetOrder(1))
+		If SCE->(MsSeek(xFilial("SCE")+SC8->C8_NUM+SC8->C8_ITEM+SC8->C8_PRODUTO+SC8->C8_FORNECE+SC8->C8_LOJA))
+			If SCE->CE_REGIST == 1
+				@ li,050 PSAY "X"
+			Elseif SCE->CE_REGIST == 0 .And. SCE->CE_QUANT > 0
+				@ li,050 PSAY "*"
+			EndIf								
+		Else
+			If aAuditoria[nX][nY][nPosRegSCE] == 1 
+				@ li,050 PSAY "X"
+			Elseif aAuditoria[nX][nY][nPosRegSCE] == 0 .And. aAuditoria[nX][nY][nPosQtdSCE] > 0
+				@ li,050 PSAY "*"
+			EndIf
+		Endif	
+		
+		@ li,059 PSAY aCotacao[nX][nY][nPosPropos][2]
+		@ li,062 PSAY nCusto                            Picture PesqPict("SC8","C8_TOTAL",14)
+		@ li,077 PSAY aCotacao[nX][nY][nPosCond][2]
+		@ li,081 PSAY Substr(SE4->E4_DESCRI,1,15)
+		@ li,097 PSAY aCotacao[nX][nY][nPosDtPrf][2]
+		@ li,108 PSAY dDataBase+aCotacao[nX][nY][nPosPrazo][2]
+		@ li,120 PSAY aCotacao[nX][nY][nPosPrazo][2]
+		@ li,129 PSAY SA5->A5_NOTA
+		@ li,133 PSAY aAuditoria[nX][nY][nPosQtdSCE]   Picture PesqPict("SC8","C8_QUANT",12)
+		@ li,146 PSAY aCotacao[nX][nY][nPosUnida][2]
+		@ li,149 PSAY aCotacao[nX][nY][nPosPreco][2]   Picture PesqPict("SC8","C8_PRECO",14)
+		@ li,164 PSAY aAuditoria[nX][nY][nPosQtdSCE] * aCotacao[nX][nY][nPosPreco][2] Picture PesqPict("SC8","C8_TOTAL",14)
+		@ li,179 PSAY Substr(aAuditoria[nX][nY][nPosMotivo],1,30)
+		@ li,210 PSAY aAuditoria[nX][nY][nPosDatSCE]
+		
+		li++
+		
+	Next nY
+	
+	nCnt++
+	li++
+	
+Next nX
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Verifica se Imprime a Cabec e imprime as Legendas Finais do Relatorio. ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If li > 55
+	cabec(titulo,cabec1,cabec2,"MA160IMP","G",IIF(aReturn[4]==1,15,18))
+EndIf
+
+@ li,000 PSAY STR0046           // "Legendas :  * - Fornecedor Selecionado pelo Usuario"
+li++
+@ li,000 PSAY SPACE(12)+STR0047 // "            X - Vencedor Indicado pelo Sistema"
+
+If li != 80
+	Roda(nCnt,STR0048,"G")
+EndIf
+
+If aReturn[5] = 1
+	Set Printer To
+	dbCommitAll()
+	ourspool(wnrel)
+Endif
+
+MS_FLUSH()
+
+Return(.T.)          
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡…o    ?160PRVNXT?utor  ?Nereu Humberto Junior ?ata  ?6/09/2006 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡…o ?Funcao utilizada p/efetuar a montagem da analise por produto³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?intaxe   ?M160PRVNXT(ExpL1,ExpA1,ExpA2,ExpA3,ExpA4,ExpA5,ExpA6,ExpL7) ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?ExpL1 :Variavel Logica para identificar se e Prev ou Next   ³±?
+±±?         ?ExpA1 :Array contendo todos os dados da Planilha de Analise ³±?
+±±?         ?ExpA2 :Array contendo os dados do FOLDER AUDITORIA grava SCE³±?
+±±?         ?ExpA3 :Array contendo os dados da cotacao da tabela SC8     ³±?
+±±?         ?ExpA4 :Array contendo os dados utilizados na listbox Fornec.³±?
+±±?         ?ExpA5 :Array contendo os Headers de todas as estruturas Util³±?
+±±?         ?ExpA6 :Array contendo todas as referencias de impostos SC8  ³±?
+±±?         ?ExpL7 :Logica que indica se usa TES padrao/Cotacao MV_PAR02 ³±?
+±±?         ?ExpN8: nOpc transmitido pela mbrowse                        ³±?
+±±?         ?ExpC9: Codeblock utilizado para virada de pagina da planilha³±?
+±±?         ?ExpL10:Logica que indica se ira utilizar esse tipo de analise±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?Uso      ?MATR160			                                           ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function M160PRVNXT(lPrevNext,aPlanilha,aAuditoria,aCotacao,aListBox,aCabec,aRefImpos,lTes,nOpc,bPage,lProceCot,aSC8,aCpoSC8, aHeadSC8, aColsSC8)
+
+Local nX
+Local cProdCot  := ""
+Local cItemCotID := ""
+Local cNumCot   := ""
+Local lSugere	:= MV_PAR01==1
+Local lEntrega	:= MV_PAR03==1
+Local lSelFor   := (MV_PAR05==1 .Or. !lSugere)
+Local lBestFor  := MV_PAR09==1
+Local lNota     := MV_PAR10==1
+Local nToler    := MV_PAR08
+Local aArea     := SC8->(GetArea()) 
+
+If !lPrevNext
+
+	For nX:= 1 To Len(aProds)
+		If Empty(aProds[nx][3])
+			cProdCot := aProds[nX][1]
+			cItemCotID := aProds[nX][2]
+			cNumCot  := aProds[nX][4]
+			aProds[nx][3] := "X"
+			Exit
+		Endif
+	Next
+	
+	If !Empty(cProdCot) .And. !Empty(cItemCotID)
+		SC8->(dbSetOrder(4))
+   		SC8->(dbSeek(xFilial("SC8")+cNumCot))
+		If MaMontaCot(@aCabec,@aPlanilha,@aAuditoria,@aCotacao,@aListBox,@aRefImpos,lTes,nOpc==2,lProceCot,cProdCot,cItemCotID,.F.,aSC8,aCpoSC8, aHeadSC8, aColsSC8)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//?eleciona as melhores cotacoes conforme os parametros           ?
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ( nOpc == 3 .And. (lSugere .Or. !lSelFor) )
+				MaAvCotVen(@aPlanilha,@aCotacao,@aAuditoria,aCABEC[CAB_HFLD2],lEntrega,nToler,lNota,lBestFor,lProceCot,aCpoSC8,lSelFor)
+			EndIf
+		Endif	
+	Endif	
+	Eval(bPage,+1)
+Else
+	Eval(bPage,-1)
+Endif
+
+RestArea(aArea)
+
+Return(.T.)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±?un‡„o    ?160FeOdlg?utor  ?ereu Humberto Junior  ?Data ?8/09/2006 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?escri‡„o ?sta rotina verifica se todos os itens foram analisados quan-³±?
+±±?         ?o a analise for produto a produto.                          ³±?
+±±?         ?erifica se todos os itens foram analisados - Cot. p/ Produto³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?arametros?enhum                                                       ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±?so       ?Materiais                                                   ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A160FeOdlg(lProceCot,nOpcA,l160Visual,aCabec,aCotacao,aAuditoria)
+
+Local nPosAtu := aCabec[CAB_POSATU]
+Local nPQtdSC8:= aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_QUANT"})
+Local nPGrdSC8:= aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_GRADE"})
+Local nPProSCE:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_NUMPRO"})
+Local nPForSCE:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_FORNECE"})
+Local nPLojSCE:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_LOJA"})
+Local nPQtdSCE:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_QUANT"})
+Local nPMotSCE:= aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_MOTIVO"})
+Local nSaldo  := 0
+Local nX      := 0
+Local nY      := 0
+Local lRet    := .T. 
+Local lVldQtd := GetNewPar("MV_DIFQTDC","N") == "N" .And. If(Type('lIsACC')#"L",.T.,!lIsACC)
+
+If !l160Visual .And. !lProceCot
+	If nOpcA == 1 
+		For nX:= 1 To Len(aProds)
+			If Empty(aProds[nx][3])
+				nOpcA:= 0
+				lRet := .F.
+				Aviso(STR0027,STR0049,{STR0028}) //"A cotacao so podera ser confirmada quando todos os itens forem analisados !"
+				Exit
+			Endif
+		Next
+	Endif	
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Executa a validacao do Saldo a Distribuir da pagina atual do Folder    ?
+//?Auditoria. O Par.MV_DIFQTDC usado para permitir que a analise gere PCs ?
+//?mesmo que exista saldo a distribuir so tera efeito com produtos que nao?
+//?usem grade de produto, caso contrario so proseguira a analise quando   ?
+//?nao existir mais saldo a distribuir para os produtos de grade.         ?
+//?Obs:O Help e exibido previamente na Funcao Ma160Page pelo codeBlock    ?
+//?a validacao aqui impede que o usuario prosiga caso confirme a Analise. ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !l160Visual .And. nPosAtu <> 0 
+	For nX := 1 To Len(aCols)
+		nSaldo += aCols[nX][nPQtdSCE]
+	Next nX
+	If lVldQtd .Or. aCotacao[nPosAtu][1][nPGrdSC8][2] == "S"
+		If ( nSaldo <> aCotacao[nPosAtu][1][nPQtdSC8][2] .And. nSaldo > 0 )
+			nOpcA:= 0
+			lRet := .F.
+		EndIf
+	Else
+		If ( nSaldo > aCotacao[nPosAtu][1][nPQtdSC8][2] .And. nSaldo > 0 )
+			nOpcA:= 0
+			lRet := .F.
+		EndIf
+	Endif	
+EndIf  
+
+If GetNewPar("MV_MOTIVOK",.F.) .And. !l160Visual .And. lRet // "Tratamento para obrigatoriedade do preenchimento do Campo MOTIVO do Folder Auditoria da proposta "
+    For nX :=1 To Len(aAuditoria)
+    	For nY := 1 To Len(aAuditoria[nX])
+    	    If aAuditoria[nX][nY][nPQtdSCE] > 0 .And. Empty(aAuditoria[nX][nY][nPMotSCE])
+				Aviso("A160MOTIVO", STR0075 + aAuditoria[nX][nY][nPProSCE] + " " + STR0076 + aAuditoria[nX][nY][nPForSCE]+" "+aAuditoria[nX][nY][nPLojSCE],{STR0028})     
+				nOpcA:= 0
+		 			lRet := .F.
+				Exit
+            EndIf
+        Next nY
+        If !lRet
+           Exit
+        EndIf   
+    Next nX
+EndIf
+
+Return(lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?uncao    ?etCodProdFam?Autor ?Marcelo Iuspa      ?Data ?03/04/07 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡ao ?Retorna codigo da familia ou do produto                    ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?intaxe   ?etCodProdFam(ExpC1,[ExpL1])								  ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?arametros?xpC1: Codigo do Produto a ser verificado                   ³±?
+±±?         ?xpL1: (Default = .T.) Se =.F., nao retorna a familia, mesmo³±?
+±±?         ?      que seja grade, p/ uso quando o item E' de grade mas ³±?
+±±?         ?      NAO foi utilizado recurso de grade (C8_ITEMGRD vazio)³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?etorno   ?Se MV_GRADE ligado E produto for referencia de grade       ³±?
+±±?         ?Retorna codigo da familia                                  ³±?
+±±?         ?Senao                                                      ³±?
+±±?         ?Retorna o proprio Codigo do Produto                        ³±?
+±±?         ?(EXCECAO: vide uso do 2o.parametro)                        ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?Uso      ?MATA160, COMXFUN (MaMontaCot)                              ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+*/
+Function RetCodProdFam(cProduto,lItGrd)
+
+Local cRet := cProduto
+
+DEFAULT lItGrd := .T.
+
+If lItGrd .And. MatGrdPrrf(@cProduto, .T.)
+	cRet := cProduto
+Endif
+
+Return(Pad(cRet, Len(SB1->B1_COD)))
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?uncao    ?160ColsGrad?Autor ?Marcelo Iuspa       ?Data ?15/04/07 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡ao ?Monta a grade para o produto analisado                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?Uso      ?MATA160                                                    ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+*/
+Function A160ColsGrade(cProduto, lMonta, nRowCols)
+
+Local aOldGrade := aClone(aLinGrade)
+Local cPosForn  := ""
+Local cPosLoja  := ""
+Local cPosProp  := ""
+Local cPosItem  := ""
+Local nPosQuant := aScan(aHeader, {|z| AllTrim(z[2]) == "CE_QUANT"  })
+Local nPosEntr  := aScan(aHeader, {|z| AllTrim(z[2]) == "CE_ENTREGA"})
+Local nPosForn  := aScan(aHeader, {|z| AllTrim(z[2]) == "CE_FORNECE"})
+Local nPosLoja  := aScan(aHeader, {|z| AllTrim(z[2]) == "CE_LOJA"   })
+Local nPosProp  := aScan(aHeader, {|z| AllTrim(z[2]) == "CE_NUMPRO" })
+Local nPosItem  := aScan(aHeader, {|z| AllTrim(z[2]) == "CE_ITEMCOT"})
+Local nScan     := 0
+Local nLoop     := 0
+Local nLoop2    := 0
+Local nLinha    := 0
+Local nColuna   := 0
+Local nLinGrd   := 0
+Local nColGrd   := 0
+Local nItemGrd  := 0 
+Local nColsSCE  := 0
+
+Default lMonta  := .T.
+						
+If lMonta
+
+	aLinGrade := {}
+
+	For nLoop := 1 to Len(aCols)
+	
+		cPosForn  := aCols[nLoop, nPosForn ]
+		cPosLoja  := aCols[nLoop, nPosLoja ]
+		cPosProp  := aCols[nLoop, nPosProp ]
+		cPosItem  := aCols[nLoop, nPosItem ]
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//?Definicao da Estrutura do array aCotaGrade ?
+		//ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+		//?1 - C8_FORNECE                             ?
+		//?2 - C8_LOJA                                ?
+		//?3 - C8_NUMPRO                              ?
+		//?4 - C8_ITEM                                ?
+		//?5 - C8_PRODUTO (Familia)                   ?
+		//?6 - Alimentado quando for produto de Grade ?
+		//?6.1 - C8_PRODUTO                           ?
+		//?6.2 - CE_QUANT                             ?
+		//?6.3 - C8_DATPRF                            ?
+		//?6.4 - C8_ITEMGRD                           ?
+		//?6.5 - Recno SC8                            ?
+		//?6.6 - C8_QUANT (Quantidade Original)       ?
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+		If (nScan := aScan(aCotaGrade, {|z| z[1] + z[2] + z[3] + z[4] == cPosForn + cPosLoja + cPosProp + cPosItem})) == 0 .Or. Len(aCotaGrade[nScan, 6]) == 0
+			oGrade:MontaGrade(nLoop)
+			Aadd(aLinGrade, {.F., Nil, 0})
+			Loop
+		Endif
+
+		oGrade:MontaGrade(nLoop, cProduto,.T. ,.T.,, .T.)
+
+		Aadd(aLinGrade, {.T., cProduto, nScan})
+
+		For nLoop2 := 1 to Len(aCotaGrade[nScan, 6])
+
+			cLinha   := AllTrim(Substr(aCotaGrade[nScan, 6, nLoop2, 1],oGrade:TamRef()+1,oGrade:TamLin()))
+			cColuna  := AllTrim(Substr(aCotaGrade[nScan, 6, nLoop2, 1],oGrade:TamRef()+oGrade:TamLin()+1,oGrade:TamCol()))
+		
+			nColuna := oGrade:RetPosCol(nLoop,cColuna) + 1
+			nLinha  := oGrade:RetPosLin(nLoop,cLinha)  
+			
+			If nLinha > 0 .And. nColuna > 0
+
+				oGrade:aColsGrade[nLoop, nLinha, nColuna, 1] := aCotaGrade[nScan, 6, nLoop2, 2] // CE_QUANT 
+				oGrade:aColsGrade[nLoop, nLinha, nColuna, 2] := aCotaGrade[nScan, 6, nLoop2, 3] // CE_ENTREGA
+				oGrade:aColsGrade[nLoop, nLinha, nColuna, 3] := aCotaGrade[nScan, 6, nLoop2, 4] // CE_ITEMGRD
+
+			Endif
+
+		Next
+
+	Next		
+
+Else
+
+	For nColsSCE := 1 to Len(aCols)
+		
+		If nRowCols # Nil .And. nRowCols # nColsSCE
+			Loop
+		Endif
+		
+		cPosForn  := aCols[nColsSCE, nPosForn]
+		cPosLoja  := aCols[nColsSCE, nPosLoja]
+		cPosProp  := aCols[nColsSCE, nPosProp]
+		cPosItem  := aCols[nColsSCE, nPosItem]
+
+		If (nScan := aScan(aCotaGrade, {|z| z[1] + z[2] + z[3] + z[4] == cPosForn + cPosLoja + cPosProp + cPosItem})) == 0 .Or. Len(aCotaGrade[nScan, 6]) == 0
+			Loop
+		Endif
+		
+		For nLinGrd := 1 to Len(oGrade:aColsGrade[nColsSCE])
+			
+			For nColGrd := 2 to Len(oGrade:aHeadGrade[nColsSCE])
+				
+				For nItemGrd := 1 To Len(aCotaGrade[nScan,6])
+					
+					If AllTrim(aCotaGrade[nScan, 6, nItemGrd, 1]) == oGrade:GetNameProd(AllTrim(aCotaGrade[nScan, 5]),nLinGrd,nColGrd)
+						
+						aCotaGrade[nScan, 6, nItemGrd, 2] := oGrade:aColsGrade[nColsSCE, nLinGrd, nColGrd, 1] // GetFieldGrdPos
+						aCotaGrade[nScan, 6, nItemGrd, 3] := oGrade:aColsGrade[nColsSCE, nLinGrd, nColGrd, 2]
+						aCotaGrade[nScan, 6, nItemGrd, 4] := oGrade:aColsGrade[nColsSCE, nLinGrd, nColGrd, 3]
+						
+					EndIf
+					
+				Next nItemGrd
+				
+			Next nColGrd
+			
+		Next nLinGrd
+		
+	Next nColsSCE
+	
+Endif	
+
+Return(.T.)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?un‡…o    ?A160Audit ?utor  ?lexandre Inacio Lemes?ata  ?4/06/2007³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡…o ?A funcao e utilizada para recompor o array aAuditoria de   ³±?
+±±?         ?forma compativel a gravacao da funcao MaAvalCot da Comxfun.³±?
+±±?         ?Na analise o Array sofreu aglutinacao para uso do recurso  ³±?
+±±?         ?de grade de produtos.                                      ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?arametros?ExpA1: Array com todos os elementos da Analise             ³±?
+±±?         ?ExpA2: Array contendo dados da auditoria usada na Analise  ³±?
+±±?         ?ExpA3: Array contendo todos os itens da cotacao original   ³±?
+±±?         ?ExpA4: Array contendo todos elementos da Grade calculada.  ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?etorno   ?ExpA1: Array aAudtoria compativel a gravacao da MaAvalCot  ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+/*/
+Function A160Audit(aCabec,aAuditoria,aSC8,aCotagrade)
+
+Local aNewAudit := {}
+Local nPosRecn  := aScan(aSC8[1][1],{|x| Trim(x[1])=="SC8RECNO"})
+Local nPosProp  := aScan(aSC8[1][1],{|x| Trim(x[1])=="C8_NUMPRO"})
+Local nPosForn  := aScan(aSC8[1][1],{|x| Trim(x[1])=="C8_FORNECE"})
+Local nPosLoja  := aScan(aSC8[1][1],{|x| Trim(x[1])=="C8_LOJA"})
+Local nPosItCt  := aScan(aSC8[1][1],{|x| Trim(x[1])=="C8_ITEM"}) 
+Local nPosProd  := aScan(aSC8[1][1],{|x| Trim(x[1])=="C8_PRODUTO"}) 
+Local nPosNCot  := aScan(aSC8[1][1],{|x| Trim(x[1])=="C8_NUM"}) 
+Local nPosIGrd  := aScan(aSC8[1][1],{|x| Trim(x[1])=="C8_ITEMGRD"}) 
+Local nPPropSCE := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_NUMPRO"}) 
+Local nPFornSCE := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_FORNECE"}) 
+Local nPLojaSCE := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_LOJA"})  
+Local nPICotSCE := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_ITEMCOT"}) 
+Local nPQtdeSCE := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_QUANT"}) 
+Local nPMotiSCE := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_MOTIVO"}) 
+Local nPEntrSCE := aScan(aCabec[CAB_HFLD2],{|x| Trim(x[2])=="CE_ENTREGA"}) 
+
+Local nProdGrd  := 0
+Local nScan     := 0
+Local nA        := 0
+Local nG        := 0
+Local nX		:= 0
+Local nY 		:= 0
+Local nZ        := 0
+
+For nX := 1 to Len(aSC8)
+	
+	aadd(aNewAudit,{})
+	
+	For nY := 1 to Len(aSC8[nX])
+		
+		aadd(aNewAudit[nX],Array(Len(aCabec[CAB_HFLD2])+1))
+		
+		For nZ := 1 To Len(aCabec[CAB_HFLD2])
+			
+			Do Case
+				
+				Case IsHeadRec(aCabec[CAB_HFLD2][nZ][2])
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aSC8[nX][nY][nPosRecn][2]
+				Case IsHeadAlias(aCabec[CAB_HFLD2][nZ][2])
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := "SC8"
+				Case aCabec[CAB_HFLD2][nZ][2]=="CE_NUMPRO"
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aSC8[nX][nY][nPosProp][2]
+				Case aCabec[CAB_HFLD2][nZ][2]=="CE_FORNECE"
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aSC8[nX][nY][nPosForn][2]
+				Case aCabec[CAB_HFLD2][nZ][2]=="CE_LOJA"
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aSC8[nX][nY][nPosLoja][2]
+				Case  aCabec[CAB_HFLD2][nZ][2]=="CE_ITEMCOT"
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aSC8[nX][nY][nPosItCt][2]
+				Case  aCabec[CAB_HFLD2][nZ][2]=="CE_NUMCOT"
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aSC8[nX][nY][nPosNCot][2]
+				Case  aCabec[CAB_HFLD2][nZ][2]=="CE_ITEMGRD"
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aSC8[nX][nY][nPosIGrd][2]
+				Case  aCabec[CAB_HFLD2][nZ][2]=="CE_QUANT"
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+					//?m caso de produto de grade obtem a quantidade do item do Array aCotaGrade,se nao,obtem do aAuditoria?
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+					nScan := aScan(aCotaGrade, {|z| z[1] + z[2] + z[3] + z[4] == ;
+					aSC8[nX][nY][nPosForn][2] + aSC8[nX][nY][nPosLoja][2] + aSC8[nX][nY][nPosProp][2] + aSC8[nX][nY][nPosItCt][2] })
+					If Len(aCotaGrade[nScan][6]) > 0
+						nProdGrd := aScan(aCotaGrade[nScan][6], {|z| z[1] == aSC8[nX][nY][nPosProd][2]})
+						aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aCotaGrade[nScan][6][nProdGrd][2]
+					Else
+						For nA := 1 To Len(aAuditoria)
+							nScan := aScan(aAuditoria[nA], {|z| z[nPPropSCE] + z[nPFornSCE] + z[nPLojaSCE] + z[nPICotSCE] == ;
+							aSC8[nX][nY][nPosProp][2] + aSC8[nX][nY][nPosForn][2] + aSC8[nX][nY][nPosLoja][2] + aSC8[nX][nY][nPosItCt][2] })
+							If nScan > 0
+								Exit
+							EndIf
+						Next nA
+						aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aAuditoria[nA][nScan][nPQtdeSCE]
+					EndIf
+				Case  aCabec[CAB_HFLD2][nZ][2]=="CE_ENTREGA"
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+					//?m caso de produto de grade obtem a data Entrega do Array aCotaGrade,se nao,obtem do aAuditoria      ?
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+					nScan := aScan(aCotaGrade, {|z| z[1] + z[2] + z[3] + z[4] == ;
+					aSC8[nX][nY][nPosForn][2] + aSC8[nX][nY][nPosLoja][2] + aSC8[nX][nY][nPosProp][2] + aSC8[nX][nY][nPosItCt][2]})
+					If Len(aCotaGrade[nScan][6]) > 0
+						nProdGrd := aScan(aCotaGrade[nScan][6], {|z| z[1] == aSC8[nX][nY][nPosProd][2]})
+						aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aCotaGrade[nScan][6][nProdGrd][3]
+					Else
+						For nA := 1 To Len(aAuditoria)
+							nScan := aScan(aAuditoria[nA], {|z| z[nPPropSCE] + z[nPFornSCE] + z[nPLojaSCE] + z[nPICotSCE] == ;
+							aSC8[nX][nY][nPosProp][2] + aSC8[nX][nY][nPosForn][2] + aSC8[nX][nY][nPosLoja][2] + aSC8[nX][nY][nPosItCt][2] })
+							If nScan > 0
+								Exit
+							EndIf
+						Next nA
+						aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aAuditoria[nA][nScan][nPEntrSCE]
+					EndIf
+				Case  aCabec[CAB_HFLD2][nZ][2]=="CE_MOTIVO"
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+					//? Motivo da Analise sempre sera obtido do array aAuditoria aglutinado para compor o novo aAuditoria. ?
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+					For nA := 1 To Len(aAuditoria)
+						nScan := aScan(aAuditoria[nA], {|z| z[nPPropSCE] + z[nPFornSCE] + z[nPLojaSCE] + z[nPICotSCE] == ;
+						aSC8[nX][nY][nPosProp][2] + aSC8[nX][nY][nPosForn][2] + aSC8[nX][nY][nPosLoja][2] + aSC8[nX][nY][nPosItCt][2] })
+						If nScan > 0
+							Exit
+						EndIf
+					Next nA
+					aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aAuditoria[nA][nScan][nPMotiSCE]
+				OtherWise
+					nScan := 0
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+					//?dentifica o campo especifico no array original da auditoria ?
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+					For nA := 1 To Len(aAuditoria)
+						nScan := aScan(aAuditoria[nA], {|z| z[nPPropSCE] + z[nPFornSCE] + z[nPLojaSCE] + z[nPICotSCE] == ;
+						aSC8[nX][nY][nPosProp][2] + aSC8[nX][nY][nPosForn][2] + aSC8[nX][nY][nPosLoja][2] + aSC8[nX][nY][nPosItCt][2] })
+						If nScan > 0
+							Exit
+						EndIf
+					Next nA
+					If nScan > 0
+						aNewAudit[nX][Len(aNewAudit[nX])][nZ] := aAuditoria[nX][nScan][nZ]
+					Else
+						aNewAudit[nX][Len(aNewAudit[nX])][nZ] := CriaVar(aCabec[CAB_HFLD2][nZ][2],.T.)
+					EndIF
+			EndCase
+			
+		Next nZ
+		
+		aNewAudit[nX][Len(aNewAudit[nX])][ Len(aCabec[CAB_HFLD2])+1] := .F.
+		
+	Next nY
+	
+Next nX
+
+Return(aNewAudit)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?un‡…o    ?160GValid ?utor  ?lexandre Inacio Lemes?ata  ?5/06/2007³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡…o ?Validacao dos elementos da grade de Produtos (Grid)        ³±?
+±±?         ?Realiza a validacao da Quatidade e Data de Entrega)        ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?etorno   ?ExpL1: .T. Edicao Valida / .F. Edicao nao valida           ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+/*/
+Function A160GValid()
+
+Local uReadVar 	:= &(ReadVar())
+Local nLinAudit := oGrade:nPosLinO
+Local nLinha    := oGrade:oGetdados:oBrowse:Nat
+Local nColuna   := oGrade:oGetdados:oBrowse:nColpos
+Local nPPropSCE := aScan(oGrade:aHeadAux,{|x| Trim(x[2])=="CE_NUMPRO"}) 
+Local nPFornSCE := aScan(oGrade:aHeadAux,{|x| Trim(x[2])=="CE_FORNECE"}) 
+Local nPLojaSCE := aScan(oGrade:aHeadAux,{|x| Trim(x[2])=="CE_LOJA"})  
+Local nPICotSCE := aScan(oGrade:aHeadAux,{|x| Trim(x[2])=="CE_ITEMCOT"}) 
+Local nItemGrd  := 0
+Local nSldProp  := 0
+Local nX        := 0
+Local nY        := 0
+Local nScan     := 0
+Local lRet 		:= .T.
+Local lYesCot   := .F.
+
+Local aHlpInfP := {"Este Item n? foi gerado nesta cotação, ","somente os itens que constam nesta cota?,"? podem ser informados.                "}
+Local aHlpInfE := {"This Item was not generated in this quot","ation, only the items that they consist ","in this quote they can be informed.     "}  
+Local aHlpInfS := {"Este item no se gener?en esta cotizacio","n, s?o los itens que consisten en esta ","cotizacion que ellos pueden informarse. "} 
+Local aHlpSldP := {"A quantidade informada neste item somada","a quantidade distribuida entre as demais"," propostas, n? devem exceder a quantida","de original da cotação.                 "}
+Local aHlpSldE := {"The amount informed in this added item  ","the amount distributed among the other  ","proposals,they should not exceed the    ","original amount of the quotation.       "} 
+Local aHlpSldS := {"La cantidad informada en esto item      ","agreg?la cantidad distribuy?entre las ","otras propuestas, ellos no deben exceder","la cantidad original de la cotizacion.  "}
+
+PutHelp("PA160QTDGRD" , aHlpInfP, aHlpInfE, aHlpInfS,.F.)
+PutHelp("PA160SLDGRD" , aHlpSldP, aHlpSldE, aHlpSLdS,.F.)
+
+nScan := aScan(aCotaGrade, {|z| z[1] + z[2] + z[3] + z[4] == ;
+oGrade:aColsAux[nLinAudit][nPFornSCE] + oGrade:aColsAux[nLinAudit][nPLojaSCE] + oGrade:aColsAux[nLinAudit][nPPropSCE] + oGrade:aColsAux[nLinAudit][nPICotSCE] })
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?otina para calcular o Saldo da peca (Item da Grade) entre as demais propostas dos fornecedores      ?
+//? calculo do saldo e necessario pois a soma por item da grade em todas as propostas dos fornecedores ?
+//?ao pode exceder a quantidade original no SC8-Atencao nao sera considerado o item a validar na rotina?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+For nX := 1 To Len(aCotaGrade)
+	If Len(aCotaGrade[nX][6]) > 0 .And. nX <> nScan
+		For nY:= 1 to Len(aCotaGrade[nX][6])
+			If AllTrim(aCotaGrade[nX, 6, nY, 1]) == oGrade:GetNameProd(AllTrim(aCotaGrade[nScan, 5]),nLinha,nColuna)
+				nSldProp += aCotaGrade[nX, 6, nY, 2]				
+			EndIf
+		Next nY
+	EndIf
+Next nX
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?alida a Quantidade digitada do Item do Produto de grade no Grid de grade, a quantidade digitada nao ?
+//?ode exceder a quantidade original da cotacao na tabela SC8.                                         ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+For nItemGrd := 1 To Len(aCotaGrade[nScan][6])
+	
+	If AllTrim(aCotaGrade[nScan, 6, nItemGrd, 1]) == oGrade:GetNameProd(AllTrim(aCotaGrade[nScan, 5]),nLinha,nColuna)
+		
+		If oGrade:cCpo == "CE_QUANT"
+			
+			If uReadVar + nSldProp > aCotaGrade[nScan][6][nItemGrd][6]
+				Help(" ",1,"A160SLDGRD")
+				lRet:=.F.
+			EndIf
+			
+		EndIf
+		
+		lYesCot := .T.
+		
+		Exit
+		
+	EndIf
+	
+Next nItemGrd
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+//?e o Item do Produto de grade apresentado no Grid nao existir na cotacao original SC8 a validacao    ?
+//?mpede que seja digitado dados para o mesmo.                                                         ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ?
+If !lYesCot
+	Help(" ",1,"A160QTDGRD")
+	lRet:=.F.
+EndIf
+	
+Return(lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?uncao    ?A160Grade  ?Autor ?Marcelo Iuspa       ?Data ?15/04/07 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡ao ?Exibe a grade para edição das celulas                      ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?Uso      ?MATA160                                                    ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+*/
+Function A160Grade()
+
+Local cCpoName	:= StrTran(ReadVar(),"M->","")
+Local nRowGt    := N
+
+If !l160Auto .And. aLinGrade[N, 1]
+	oGrade:nPosLinO := N
+	oGrade:cProdRef	:= aLinGrade[N, 2]
+	If oGrade:Show(cCpoName)
+		N := nRowGt
+		If "CE_QUANT" $ cCpoName
+			M->CE_QUANT	        := oGrade:nQtdInformada
+			GdFieldPut("CE_QUANT", oGrade:nQtdInformada)
+		Endif
+		A160ColsGrade(, .F., N)
+	Endif
+Endif
+
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?un‡…o    ?160ToFC030 ?utor?lexandre Inacio Lemes ?ata  ?4/05/2007³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡…o ?ompatibilizacao de variaveis utilizadas no FINC030.        ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?arametros?ExpA1: Array contendo todos os Objetos da Analise          ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?Uso      ?ATA160                                                     ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+/*/
+Function A160ToFc030(aCabec)
+
+Local aArea	:= GetArea()
+
+PRIVATE nJuros
+PRIVATE nTotal1    := nTotal2 := nTotal3 := 0
+PRIVATE aTotal5    := {0.00,0,0.00,0}
+PRIVATE dBaixa     := dDataBase
+PRIVATE nVlGeralNf := 0
+
+M-> nJuros := 0
+SA2->(dbSetOrder(1))
+SA2->(MsSeek(xFilial("SA2")+(aCabec[CAB_ARQTMP])->PLN_FORNECE+(aCabec[CAB_ARQTMP])->PLN_LOJA))
+
+If Pergunte("FIC030",.T.)
+	Finc030("Fc030Con")
+EndIf
+
+Pergunte("MTA160",.F.)
+
+RestArea(aArea)
+
+Return 
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?un‡…o    ?160ComView?utor  ?lexandre Inacio Lemes?ata  ?0/05/2007³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡…o ?Cria uma tela de consulta de historico dos produtos        ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?arametros?ExpC1: Codigo do Produto Pesquisado                        ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+/*/
+Function A160ComView(cProduto)
+
+If cProduto == Nil
+   cProduto := ""
+Else
+	MaFisSave()
+	MaFisEnd()
+	If !AtIsRotina("MACOMVIEW")
+		If !Empty(cProduto)
+			MaComView(cProduto)
+		EndIf
+	EndIf
+	MaFisRestore()	
+EndIf
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?rograma  ?enuDef   ?Autor ?Fabio Alves Silva     ?Data ?6/11/2006³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡…o ?Utilizacao de menu Funcional                               ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?etorno   ?rray com opcoes da rotina.                                 ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?arametros?arametros do array a Rotina:                               ³±?
+±±?         ?. Nome a aparecer no cabecalho                             ³±?
+±±?         ?. Nome da Rotina associada                                 ³±?
+±±?         ?. Reservado                                                ³±?
+±±?         ?. Tipo de Transa‡„o a ser efetuada:                        ³±?
+±±?         ?  1 - Pesquisa e Posiciona em um Banco de Dados           ³±?
+±±?         ?   2 - Simplesmente Mostra os Campos                       ³±?
+±±?         ?   3 - Inclui registros no Bancos de Dados                 ³±?
+±±?         ?   4 - Altera o registro corrente                          ³±?
+±±?         ?   5 - Remove o registro corrente do Banco de Dados        ³±?
+±±?         ?. Nivel de acesso                                          ³±?
+±±?         ?. Habilita Menu Funcional                                  ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+/*/
+Static Function MenuDef()     
+
+PRIVATE aRotina	:= {{STR0005,"Pesqbrw"    , 0 , 1, 0, .F.},;	//"Pesquisar"
+					{STR0006,"A160Analis" , 0 , 2, 0, nil},;	//"Visual"
+					{STR0007,"A160Analis" , 0 , 6, 8, nil},;	//"Analisar"
+					{STR0023,"A160Legenda", 0 , 5, 0, .F.}}	//"Legenda"
+					
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Ponto de entrada utilizado para inserir novas opcoes no array aRotina  ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistBlock("MTA160MNU")
+	ExecBlock("MTA160MNU",.F.,.F.)
+EndIf
+
+Return(aRotina) 
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?un‡„o    ?justaSX1  ?Autor ?ereu Humberto Junior ?Data ?6/08/2005³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡„o ?nclui novos parametros no SX1.                             ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?Uso      ?MATA160                                                    ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?/
+Static Function AjustaSX1()
+
+Local aHelpPor := {}
+Local aHelpEng := {}
+Local aHelpSpa := {}
+
+/*-----------------------MV_PAR17--------------------------*/
+Aadd( aHelpPor, "Por Cotacao: O sistema fara a carga da  " )
+Aadd( aHelpPor, "cotacao de uma vez na tela.             " )
+Aadd( aHelpPor, "Por Produto: O sistema fara a carga da  " )
+Aadd( aHelpPor, "cotacao a cada troca de produto. Nesse  " )
+Aadd( aHelpPor, "caso, e obrigatoria a passagem por todos" )
+Aadd( aHelpPor, "os itens da cotacao.                    " )
+
+Aadd( aHelpEng, "By Quotation: the system will load the  " )
+Aadd( aHelpEng, "quotation on screen at once.            " )
+Aadd( aHelpEng, "By Product: the system will load the    " )
+Aadd( aHelpEng, "quotation in each change of product. In " )
+Aadd( aHelpEng, "this case, the passage through all the “" )
+Aadd( aHelpEng, "quotation items is necessary.           " )
+
+Aadd( aHelpSpa, "Por Cotizacion: el sistema cargara la   " ) 
+Aadd( aHelpSpa, "cotizacion de unasola vez en pantalla   " ) 
+Aadd( aHelpSpa, "Por Producto: el sistema cargara la co- " ) 
+Aadd( aHelpSpa, "tizacion de cada cambio de producto.En e" ) 
+Aadd( aHelpSpa, "se caso es obligatorio el paso por todos" ) 
+Aadd( aHelpSpa, "los items de la cotizacion.             " ) 
+
+PutSx1( "MTA160","17","Quanto ao processo de analise?","?uanto a proceso de analisis?","About the analysis process?   ","mv_chh",;
+"N",1,0,1,"C","","","","","mv_par17","Por Cotacao","Por Cotizacion","By Quotation","",;
+"Por Produto","Por Producto","By Product","","","","","","","","","",;
+aHelpPor,aHelpEng,aHelpSpa)
+
+aHelpPor := {"Digite o pre? dos produtos na rotina de"," Atualiza cotações, caso o pre? j?tenh","a sido atualizado, verifique se a TES in","formada no item possui o campo Gera Dupl","icatas = SIM, (F4_DUPLIC).              "}
+aHelpEng := {"Type the price of the products in the ro","utine of it Modernizes quotations, I mar","ry the price it has already been moderni","zed, TES is verified informed in the ite","m it possesses the field it Generates Co","pies = YES, (F4_DUPLIC)."}
+aHelpSpa := {"Teclee el precio de los productos en la ","rutina de ? Moderniza citas, yo me caso"," el precio que ya se ha modernizado, TES"," se verifica informado en el art?ulo po","see el campo Genera Copias= Si F4_DUPLIC"}
+
+PutHelp("SA160ATU" , aHelpPor, aHelpEng, aHelpSpa ,.F.)
+
+/*-----------------------MV_PAR06--------------------------*/
+aHelpPor := {}
+aHelpEng := {}
+aHelpSpa := {}
+
+Aadd( aHelpPor, "Informa ao sistema se somente as " )
+Aadd( aHelpPor, "cotações relacionadas ao comprador " )
+Aadd( aHelpPor, "dever? ser apresentadas." )
+Aadd( aHelpPor, "Tamb? ser? apresentadas as cotações " )
+Aadd( aHelpPor, "que n? estiverem relacionadas a nenhum " )
+Aadd( aHelpPor, "comprador." )
+
+Aadd( aHelpEng, "It informs the system if only the " )
+Aadd( aHelpEng, "quotations related to the purchaser " )
+Aadd( aHelpEng, "should be presented." )
+Aadd( aHelpEng, "The quotations not related to any " )
+Aadd( aHelpEng, "purchaser will also be presented." )
+
+Aadd( aHelpSpa, "Informe si se deben presentar solo " )
+Aadd( aHelpSpa, "las cotizaciones relacionadas al " )
+Aadd( aHelpSpa, "comprador." )
+Aadd( aHelpSpa, "Tambi? se presentar? las " )
+Aadd( aHelpSpa, "cotizaciones que no se refieran a " )
+Aadd( aHelpSpa, "cualquier comprador." )
+
+PutSX1Help("P.MTA16006.",aHelpPor,aHelpEng,aHelpSpa)
+
+Return	
+
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±± ÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±?rograma  ?alcRes   ?utor  ?uribio Miranda     ?Data ? 01/07/10   º±?
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±?
+±±?esc.     ?uncao que transforma um percentual da tela em pixels conforº±?
+±±?         ?e a resolucao de video utilizada                           º±?
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±?
+±±?arametros?Perc   - Valor em percentual de video desejado		      º±?
+±±?         ?ResHor - Resolucao Horizontal de referencia				  º±?
+±±?         ?ResVer - Resolucao Vertical de referencia  		     	  º±?
+±±?         ?Widht  - Flag para controlar se a medida e vertical ou horzº±?
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±?
+±±?so       ?MATA160								  	 	              º±?
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?/
+Static Function CalcRes(nPerc,nResHor,nResVer,lWidth)
+Local nRet
+
+DEFAULT	nResHor:= GetScreenRes()[1]
+DEFAULT nResVer:= GetScreenRes()[2]
+
+if lWidth
+	nRet := nPerc * nResHor / 100
+else
+	nRet := nPerc * nResVer / 100
+endif
+
+Return nRet
+
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±± ÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±?rograma  ?MA160TOK ?utor  ?uribio Miranda     ?Data ?27/07/10    º±?
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±?
+±±?esc.     ?uncao executada no bot? Ok da enchoice Bar do programa    º±?
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±?
+±±?arametros?ExpN1: nOpc transmitida pela MBrowse - nOpcX               ³±?
+±±?         ?ExpN2: Numero do registro - nReg                           ³±?
+±±?         ?ExpA1: Array de planilhas de cotacao - aPlanilha           ³±?
+±±?         ?ExpA2: Array de auditorias - aAuditoria					  ³±?
+±±?         ?ExpA3: Array de cotacao - aCotacao	  					  ³±?
+±±?         ?ExpA5: Array de campos considerados da SC8 - aSC8		  ³±?
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±?
+±±?so       ?MATA160								  	 	              º±?
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?/
+Static Function MA160TOK(nOpcX,nReg,aPlanilha,aAuditoria,aCotacao,aSC8)
+Local lRet		:= .T.
+Local nProd		:= aScan(aCotacao[1][1],{|x| Trim(x[1])=="C8_PRODUTO"})
+Local nX		:= 0
+Local cProd		:= ""
+Local aAreaSB1	:= SB1->(GetArea())
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//?Checa se produto est?bloqueado                    ?
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lRet
+	For nX := 1 To Len(aCotacao)
+		cProd := aCotacao[nX][1][nProd][2]
+		dbSelectArea("SB1")
+		dbSetOrder(1)
+		If MsSeek(xFilial("SB1")+cProd)
+			If !RegistroOk("SB1")
+				lRet := .F.
+				Exit
+			EndIf
+		EndIf
+	Next nX
+EndIf
+
+//Ponto de entrada para validar se permite a analise da cotacao
+If ExistBlock("MA160TOK")
+	lRet:= ExecBlock("MA160TOK",.F.,.F.,{nOpcX,nReg,aPlanilha,aAuditoria,aCotacao,aSC8})
+	If ValType (lRet) <> "L"
+		lRet:= .T.
+	EndIf
+EndIf
+
+RestArea(aAreaSB1)
+
+Return lRet
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±?
+±±?un‡…o    ?AjustaSX3  |Autor ?Aline Sebrian        ?Data ?7/01/2011³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±?
+±±?escri‡…o ?osiciona a descr do produto no campo C8_DESCRI             ³±?
+±±?		 ?/ mostrar no browser 			  						  ³±?   
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?arametros?Nenhum                                                     ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?etorno   ?.T.                                                        ³±?
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±?
+±±?Uso      ?MATA150                                                    ³±?
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±?
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±?
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß?
+/*/
+Static Function AjustaSX3()
+
+Local aAreaSX3 := SX3->(GetArea())
+Local cInibrw  := 'POSICIONE("SB1",1,XFILIAL("SB1",SC8->C8_FILIAL)+SC8->C8_PRODUTO,"SB1->B1_DESC")'
+
+dbSelectArea("SX3")
+dbsetOrder(2)
+
+If MsSeek("C8_DESCRI")
+   If cInibrw <> AllTrim(SX3->X3_INIBRW)
+   	RecLock('SX3',.F.)
+    	X3_INIBRW := cInibrw
+   	MsUnLock()
+   EndIf
+EndIf
+
+RestArea(aAreaSX3)
+
+Return .T.

@@ -1,0 +1,39 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+User Function b237car()        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_RETCAR,")
+
+_aArea := GetArea()
+_aAreaE2 := SE2->(GetArea())
+_aAreaEA := SEA->(GetArea())
+
+////  PROGRAMA PARA SELECIONAR A CARTEIRA NO CODIGO DE BARRAS QUANDO
+////  NAO TIVER TEM QUE SER COLOCADO "00"
+
+_RetCar := "000"
+
+If SubStr(SE2->E2_CODBAR,01,3) == "237"
+
+   _RetCar := StrZero(Val(SubStr(SE2->E2_CODBAR,24,2)),3)
+
+ElseIf SubStr(SE2->E2_LD,01,3) == "237"
+
+   _RetCar := SubStr(SE2->E2_LD,09,01)+SubStr(SE2->E2_LD,11,01)
+   _RetCar := StrZero(Val(_RetCar),3)
+
+EndIf
+
+SEA->(RestArea(_aAreaEA))
+SE2->(RestArea(_aAreaE2))
+RestArea(_aArea)
+
+// Substituido pelo assistente de conversao do AP6 IDE em 15/07/02 ==> __Return(_Retcar)
+Return(_Retcar)        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02

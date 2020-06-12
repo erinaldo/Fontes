@@ -1,0 +1,107 @@
+<html>
+	<head>
+		<title>Zoom Ativos</title>   
+		<script type="text/javascript" src="../ecm_datasets.js"></script>
+		<script type="text/javascript" src="/portal/resources/js/jquery/jquery.js"></script>
+		<script type="text/javascript" src="/portal/resources/js/jquery/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="../vcXMLRPC.js"></script>
+		<link type="text/css" rel="stylesheet" href="/portal/resources/style-guide/css/fluig-style-guide.min.css"/>  
+		<script type="text/javascript">
+			function pesquisar(){
+				var dataset = consultar();				
+				if(dataset.values.length>0 && dataset.values[0].erro!=null){
+					alert("Ocorreu um erro ao consultar dados do protheus: " + dataset.values[0].erro);
+				}else{
+					carregaGrid(dataset);
+				}
+			}
+			
+			function consultar(){
+			    var centroCusto = $(window.opener.document).find("[name='txtPesquisaCCusto']").val();
+			    var plaqueta    = $(window.opener.document).find("[name='txtPesquisaPlqta']").val();
+			    var setor    = $(window.opener.document).find("[name='txtPesquisaSetor']").val();
+			    
+			    var dataset = DatasetFactory.getDataset("ds_ativos", [centroCusto, plaqueta, setor], null, null);
+			    return dataset;
+			}
+			
+			function carregaGrid(dataset){
+				var campos = ("CCusto,Plaqueta,DescricaoAtivo,CodDoBem,Item,Qtdade,DtAquisicao").split(",");
+				dados = {};				
+				$("tbody:eq(1)").find("tr").remove();
+										
+				for(var i=0; i < dataset.values.length; i++){
+					var CCusto         = dataset.values[i].CCusto;
+					var Plaqueta       = dataset.values[i].Plaqueta;
+					var DescricaoAtivo = dataset.values[i].DescricaoAtivo;
+					var CodDoBem       = dataset.values[i].CodDoBem;
+					var Item           = dataset.values[i].Item;
+					var Qtdade         = dataset.values[i].Qtdade;
+					var DtAquisicao    = dataset.values[i].DtAquisicao;
+										
+					dados[CodDoBem + Item] = {};				
+					for(var c=0;c < campos.length; c++){																		
+						var label = campos[c];												
+						dados[CodDoBem + Item][label] = eval("dataset.values[i]." + label); 						
+					}
+					$("#tblResult tbody").append($("<tr><td><input type='checkbox' name='selAtivos' ></td><td>"+CCusto+"</td><td>"+Plaqueta+"</td><td>"+DescricaoAtivo+"</td><td>"+CodDoBem+"</td><td>"+Item+"</td><td>"+Qtdade+"</td><td>"+DtAquisicao+"</td></tr>"));
+				}
+			}
+			
+			function marcarTodos(cbx){	
+				$("[type='checkbox']").prop("checked", $(cbx).is(":checked"));				
+			}
+			
+			function selectItem(){
+				var ativos = []; 
+				$("[type='checkbox'][name!='todos']:checked").each(function(){					
+					var cdBem = $(this).closest("tr").find("td:eq(4)").html();		
+					var item = $(this).closest("tr").find("td:eq(5)").html();		
+					ativos.push(dados[cdBem + item]);
+				});					
+							
+				var result = {"ativos":ativos, "type":"ativos"};				
+				window.opener.setSelectedZoomItem(result);				
+				window.close();
+			}		
+        </script>
+      </head>	
+	<body onload="pesquisar()" style="margin:3px; overflow: auto;">		
+		<form class="fluig-style-guide">													
+			<input type="button" value="Incluir" onclick="selectItem();"/><br>
+			<div style="margin:3px; overflow: auto;">
+				<table id="tblResult" class="table table-striped">
+					<thead>
+						<tr>		
+							<th width="50px">
+								<input name ="todos" id="todos" type="checkbox" onclick="marcarTodos(this)">			
+							</th>							
+							<th>													
+								C. Custo:								
+							</th>										
+							<th>													
+								Plaqueta:								
+							</th>							
+							<th >													
+								Descrição (Ativo):								
+							</th>
+							<th>													
+								Cod. Do Bem:								
+							</th>
+							<th>													
+								Item:								
+							</th>
+							<th>													
+								Qtdade.:								
+							</th>
+							<th>													
+								Dt. Aquisição:								
+							</th>
+						</tr>
+					</thead>
+					<tbody> </tbody>				
+				</table>				
+			</div>
+		</form>
+	</body>
+</html>

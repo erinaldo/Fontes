@@ -1,0 +1,1454 @@
+#include "rwmake.ch"
+#include "protheus.ch"
+#include "TOPCONN.ch"
+#DEFINE _EOL chr(13) + chr(10)
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA55   บAutor  ณEmerson Natali      บ Data ณ  02/02/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Tela de Consulta a Movimentacao do Cartoes ITAU            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ CIEE                                                       บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function CFINA55
+
+//Declaracao de variaveis.
+Private _cString := "SZK"
+Private aRotina
+Private cCadastro
+Private _cAntCon 	:=space(10)
+Private _cAntNat 	:=space(10)
+Private _cAntRMU 	:=space(01)
+Private aIndexSZK	:= {}
+Private _cFilSZK	:= 'ZK_TIPO == "4"'
+Private _aAux2		:= {}
+
+Private onSaldoD, _nValTotDeb := 0
+Private onSaldoC, _nValTotCre := 0
+Private onSaldoR, _nValTotRea := 0
+
+Private _nCtaImp	:= GetMV("CI_CTAFFC")
+
+DEFINE FONT oFnt     NAME "ARIAL" SIZE 08,23 BOLD
+
+SZK->(dbSetOrder(1))
+
+//Monta um aRotina proprio.
+aRotina := {	{"Pesquisar"		, "AxPesqui"       ,  0, 1},;
+				{"Consul/Prest.Ctas", "U_cfina55a(1)"  ,  0, 2},;
+				{"Receber Mov."		, "U_cfina55a(2)"  ,  0, 3},;
+				{"Legenda"			, "U_cfina55a(999)",  0, 4}}
+
+//Exibe a tela de cadastro.
+cCadastro := "Consulta x Presta็ใo de Contas"
+
+bFiltraBrw := {|| FilBrowse("SZK", @aIndexSZK, @_cFilSZK)}
+Eval(bFiltraBrw)
+
+mBrowse(06, 01, 22, 75, _cString,,,,,, Legenda(0))
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA22   บAutor  ณ Felipe Raposo      บ Data ณ  12/03/03   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ CIEE.                                                      บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+User Function CFINA55a(_nOpc)
+// _nOpc
+// 1 - Pesquisar
+// 2 - Visual
+// 3 - Incluir
+// 4 - Alterar
+// 5 - Excluir
+// 6 - Legenda
+// O campo X3_PROPRI=="L" sairao no Acols
+//Declaracao de variaveis.
+Local _lRet := .T.
+Local _aArea
+Local _aAreaZK
+Local _aAreaX3
+Local _aAreaZF
+Local _aAux1
+Local _nAux1
+
+Private aCols
+Private aHeader
+Private aHeader2
+Private aCols2
+Private LVISUAL := (_nOpc == 2)
+Private LINCLUI := (_nOpc == 3)
+Private LALTERA := (_nOpc == 4)
+Private LEXCLUI := (_nOpc == 5)
+
+// Armazena o posicionamento do alias SE2 antes de processa-lo.
+_aAreaZK := SZK->(GetArea())
+
+Do Case
+	Case _nOpc == 1  // Prestacao de Contas 		----------------- Modelo 3 manual
+		U_xMOD3() 
+	Case _nOpc == 2  // Receber Mov. 				----------------- Leitura do Arq_txt e importacao do Mesmo.
+		Processa({||  U_ImpMov() },"Processando Registros...")
+	Case _nOpc == 999
+		Legenda()
+	OtherWise
+EndCase
+
+SZK->(RestArea(_aAreaZK))
+Return(_lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณLegenda   บAutor  ณ Andy               บ Data ณ  12/01/04   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Exibe a legenda ou retorna a matriz referente a legenda    บฑฑ
+ฑฑบ          ณ para a mBrowse.                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบParametrosณ _uPar:                                                     บฑฑ
+ฑฑบ          ณ      0 - Retorna a matriz.                                 บฑฑ
+ฑฑบ          ณ    nil - Exibe a legenda na tela.                          บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP6                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Static Function Legenda(_uPar)
+
+//Declaracao de variaveis.
+Local _uRet, _aFlag
+
+_aLeg := {	{"BR_VERDE"   ,  "Sem Movimentacao"},;
+			{"BR_AMARELO" ,  "Com Movimentacao"},;
+			{"BR_VERMELHO",  "Limite Bloqueado"}}
+
+If ValType(_uPar) != "U" .and. _uPar == 0
+	_aFlag := {	{'Empty(ZK_E_SLDPR) .and. Empty(ZK_E_DTBLQ)'	, _aLeg[1][1]},;  // Verde
+				{'!Empty(ZK_E_SLDPR) .and. Empty(ZK_E_DTBLQ)'	, _aLeg[2][1]},;  // Amarelo
+				{'!Empty(ZK_E_DTBLQ)'							, _aLeg[3][1]}}   // Vermelho
+	_uRet := _aFlag
+Else
+	BrwLegenda(cCadastro, "Legenda", _aLeg)
+Endif
+Return (_uRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA55   บAutor  ณMicrosiga           บ Data ณ  02/04/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function xMOD3()
+Local lRet
+Local nOpca := 0
+Local cSaveMenuh
+Local nReg
+Local oDlg
+Local oEnchoice
+Local nDlgHeight
+Local nGDHeight
+Local aSize := {}
+
+Private aTELA:=Array(0,0)
+Private aGets:=Array(0)
+
+_nValTotDeb := 0
+_nValTotCre := 0
+_nValTotRea := 0
+
+If SetMDIChild()
+	oMainWnd:ReadClientCoors()
+	nDlgHeight := 500
+	nGDHeight  := oMainWnd:nBottom
+Else
+	nDlgHeight := 420
+	nGDHeight  := 70
+EndIf
+
+aCordW := {135,000,nDlgHeight,632}
+nSizeHeader := 210 //Tamanho do Cabecalho Enchoice
+
+Aadd(aSize,nSizeHeader)
+
+cTitulo		:= "Consulta x Presta็ใo de Contas"
+cAlias1		:= _cString         // Alias da enchoice.
+nReg		:=(cAlias1)->(Recno())
+cAlias2		:= "SE5"            // Alias da GetDados.
+cAlias3		:= "SZY"            // Alias da GetDados2.
+aMyEncho	:= {}				// Campos da Enchoice.
+cFieldOk	:= "AllwaysTrue()"  // Valida cada campo da GetDados.
+cLinOk		:= "AllwaysTrue()"  // Valida a linha.
+cTudoOk		:= "AllwaysTrue()"  // Valida toda a GetDados.
+nOpcE		:= 2                // Opcao da Enchoice.
+lVirtual	:= .T.	            // Exibe os campos virtuais na GetDados.
+nLinhas		:= 99               // Numero maximo de linhas na GetDados.
+aAltEnch	:= nil              // Campos alteraveis na Enchoice (nil = todos).
+
+nOpcE 		:= If(nOpcE==Nil,3,nOpcE)
+lVirtual 	:= Iif(lVirtual==Nil,.F.,lVirtual)
+nLinhas		:=Iif(nLinhas==Nil,99,nLinhas)
+
+nFreeze		:=nil
+
+//Cria variaveis M->????? da Enchoice.
+RegToMemory(cAlias1, .F.)
+RegToMemory("SZY", .T.)
+
+//Monta a aHeader.
+aHeader 	:= {}
+aHeader2 	:= {}
+_aArea := SX3->(GetArea())
+DbSelectArea("SX3")
+DbSetOrder(1)
+DbSeek(cAlias2)
+/*
+******************** Primeiro aHeader
+*/
+Do While SX3->(!eof() .and. SX3->X3_ARQUIVO == cAlias2) //SE5
+	If SX3->(X3USO(X3_USADO) .And. cNivel >= X3_NIVEL)
+		aAdd(aHeader,	 {	TRIM(SX3->X3_TITULO)	,;
+							SX3->X3_CAMPO			,;
+							SX3->X3_PICTURE			,;
+							SX3->X3_TAMANHO			,;
+							SX3->X3_DECIMAL			,;
+							SX3->X3_VALID			,;
+							SX3->X3_USADO			,;
+							SX3->X3_TIPO			,;
+							SX3->X3_F3				,;
+							SX3->X3_CONTEXT			,;
+							SX3->X3_CBOX			,;
+							SX3->X3_RELACAO			,;
+							SX3->X3_WHEN			,;
+							SX3->X3_VISUAL			,;
+							SX3->X3_VLDUSER			,;
+							SX3->X3_PICTVAR			,;
+							SX3->X3_OBRIGAT			})
+	Endif
+	SX3->(dbSkip())
+EndDo
+
+DbSelectArea("SX3")
+DbSetOrder(1)
+DbSeek(cAlias3)
+/*
+******************** Segundo aHeader2
+*/
+Do While SX3->(!eof() .and. SX3->X3_ARQUIVO == cAlias3) //SZY
+	If SX3->(X3USO(X3_USADO) .And. cNivel >= X3_NIVEL)
+		aAdd(aHeader2, {	TRIM(SX3->X3_TITULO)	,;
+							SX3->X3_CAMPO			,;
+							SX3->X3_PICTURE			,;
+							SX3->X3_TAMANHO			,;
+							SX3->X3_DECIMAL			,;
+							SX3->X3_VALID			,;
+							SX3->X3_USADO			,;
+							SX3->X3_TIPO			,;
+							SX3->X3_F3				,;
+							SX3->X3_CONTEXT			,;
+							SX3->X3_CBOX			,;
+							SX3->X3_RELACAO			,;
+							SX3->X3_WHEN			,;
+							SX3->X3_VISUAL			,;
+							SX3->X3_VLDUSER			,;
+							SX3->X3_PICTVAR			,;
+							SX3->X3_OBRIGAT			})
+	Endif
+	SX3->(dbSkip())
+EndDo
+SX3->(RestArea(_aArea))
+
+//Monta a aCols
+aCols 	:= {}
+aCols2 	:= {}
+
+/*
+******************** Primeiro aCols
+*/
+_aAreaX3 := SX3->(GetArea())
+DbSelectArea("SX3")
+SX3->(dbSetOrder(2))
+
+cQuery := "SELECT * "
+cQuery += "FROM "+RetSQLname('SE5')+" "
+cQuery += "WHERE D_E_L_E_T_ = '' "
+cQuery += "AND E5_MOEDA = 'DE' "
+cQuery += "AND SUBSTRING(E5_CARTAO,1,6) = '"+ALLTRIM(SZK->ZK_NROCRT)+"' "
+cQuery += "AND MONTH(E5_DATA) = "+STR(MONTH(DDATABASE),2)+" "
+cQuery += "ORDER BY E5_DATA "
+TcQuery cQuery New Alias "SE5TMP"
+TcSetField("SE5TMP","E5_DATA","D",8, 0 )
+
+DbSelectArea("SE5TMP")
+Do While !EOF()
+	_aAux1 := {}
+	For _nAux1 := 1 to len(aHeader)
+		SX3->(dbSeek(aHeader[_nAux1, 2]))
+		If SX3->X3_CONTEXT == "V"
+			aAdd(_aAux1, &(SX3->X3_RELACAO))
+		Else
+			aAdd(_aAux1, SE5TMP->(&(aHeader[_nAux1, 2])))
+		Endif
+	Next _nAux1
+	aAdd(_aAux1, .F.)
+	aAdd(aCols, _aAux1)
+	SE5TMP->(dbSkip())
+EndDo
+
+SE5TMP->(DbCloseArea())
+
+SX3->(RestArea(_aAreaX3))
+
+/*
+******************** Segundo aCols2
+*/
+_aAreaZY := SZY->(GetArea())
+_aAreaX3 := SX3->(GetArea())
+DbSelectArea("SX3")
+SX3->(dbSetOrder(2))
+DbSelectArea("SZY")
+DbSetOrder(1)
+DbSeek(xFilial("SZY")+alltrim(SZK->ZK_NROCRT),.F.)
+If EOF()
+	_aAux1 := {}
+	_aAux2 := {}
+	For _nAux1 := 1 to len(aHeader2)
+		If (alltrim(SZY->((aHeader2[_nAux1, 2])))) == "ZY_DATA"
+			aAdd(_aAux1, DDATABASE )
+		Else
+			aAdd(_aAux1, SZY->(&(aHeader2[_nAux1, 2])))
+		EndIf
+	Next _nAux1
+	aAdd(_aAux1, .F.)
+	aAdd(aCols2, _aAux1)
+EndIf
+//Verifica os movimentos de Prestacao de Contas que ainda nao foram validados pelo Financeiro
+//e que esta dentro do mes atual - DDATABASE
+cQuery := "SELECT * "
+cQuery += "FROM "+RetSQLname('SZY')+" "
+cQuery += "WHERE D_E_L_E_T_ = '' "
+cQuery += "AND ZY_VLDFIN = '2' "
+cQuery += "AND SUBSTRING(ZY_CARTAO,1,6) = '"+ALLTRIM(SZK->ZK_NROCRT)+"' "
+cQuery += "ORDER BY ZY_CARTAO, ZY_DATA "
+TcQuery cQuery New Alias "SZYTMP"
+TcSetField("SZYTMP","ZY_DATA","D",8, 0 )
+
+DbSelectArea("SZYTMP")
+Do While !EOF()
+	_aAux1 := {}
+	_aAux2 := {}
+	For _nAux1 := 1 to len(aHeader2)
+		SX3->(dbSeek(aHeader2[_nAux1, 2]))
+		If SX3->X3_CONTEXT == "V"
+			aAdd(_aAux1, &(SX3->X3_RELACAO))
+		Else
+			aAdd(_aAux1, SZYTMP->(&(aHeader2[_nAux1, 2])))
+		Endif
+		aAdd(_aAux2, recno())
+
+		If (alltrim(SZY->((aHeader2[_nAux1, 2])))) == "ZY_VALOR"
+			_nValTotDeb += IIF(!Empty(SZYTMP->ZY_ITEM) , SZYTMP->(&(aHeader2[_nAux1, 2])),0)
+			_nValTotCre += IIF(!Empty(SZYTMP->ZY_ITEMC), SZYTMP->(&(aHeader2[_nAux1, 2])),0)
+
+//			_nValTotRea += IIF(!Empty(SZYTMP->ZY_ITEM) , IIF(ALLTRIM(SZYTMP->ZY_ITEM)$_nCtaImp , SZYTMP->(&(aHeader2[_nAux1, 2])) , 0 ) , 0 )
+			_nValTotRea += IIF(!Empty(SZYTMP->ZY_ITEMC), IIF(ALLTRIM(SZYTMP->ZY_ITEMC)$_nCtaImp, SZYTMP->(&(aHeader2[_nAux1, 2])) , 0 ) , 0 )
+		EndIf
+
+	Next _nAux1
+
+	aAdd(_aAux1, .F.)
+	aAdd(aCols2, _aAux1)
+	SZYTMP->(dbSkip())
+EndDo
+
+_nValTotRea := iif(_nValTotDeb == _nValTotCre, (_nValTotCred-(_nValTotRea)), 0)
+//_nValTotRea := iif(_nValTotDeb == _nValTotCre, (_nValTotDeb-(_nValTotRea/2)), 0)
+
+SZYTMP->(DbCloseArea())
+
+SX3->(RestArea(_aAreaX3))
+SZY->(RestArea(_aAreaZY))
+
+aButtons	:= {}
+aFolder		:= {"Presta็ใo de Contas", "Movimenta็ใo Cartใo"}
+
+_nSFld1		:= 122 //Linha Inicial
+_nSFld2		:= 630 //Coluna Final
+_nSFld3		:= 290 //Linha Final
+
+/*INICIO ------------- TAMANHO DA TELA*/
+_aSize := MsAdvSize()
+aObjects:= {}
+aPosObj :={}
+
+aInfo   := {_aSize[1],_aSize[2],_aSize[3],_aSize[4],3,3}
+
+AADD(aObjects,{100,030,.T.,.F.,.F.})
+AADD(aObjects,{100,100,.T.,.T.,.F.})
+
+aPosObj:=MsObjSize(aInfo, aObjects)
+/*FIM ------------- TAMANHO DA TELA*/
+
+DEFINE FONT oBold		NAME "Arial" SIZE 0, -18 BOLD
+DEFINE FONT oBold_New	NAME "Courier" SIZE 0, -14 BOLD
+//DEFINE MSDIALOG oDlg TITLE cTitulo From aCordW[1],aCordW[2] to aCordW[3],aCordW[4] Pixel of oMainWnd
+DEFINE MSDIALOG oDlg TITLE cTitulo From _aSize[7],0 TO _aSize[6],_aSize[5] Pixel of oMainWnd
+
+oEnchoice	:= Msmget():New(cAlias1,nReg,nOpcE,,,,aMyEncho,{15,1,70,315},aAltEnch,3,,,,,,lVirtual,,,,,,,,.T.)
+
+//oFolder		:= TFolder():New(_nSFld1,1,aFolder,{},oDlg,,,, .T., .F.,_nSFld2,_nSFld3,)
+oFolder		:= TFolder():New(_nSFld1,1,aFolder,{},oDlg,,,, .T., .F.,aPosObj[2,4]-5,aPosObj[2,3]-105,)
+
+aCampos		:= {}
+aCampos2	:= {}
+
+AADD(aCampos2,"ZY_ITEM") 	//campos alteraveis no GetDados2
+AADD(aCampos2,"ZY_ITEMC") 	//campos alteraveis no GetDados2
+AADD(aCampos2,"ZY_CC")		//campos alteraveis no GetDados2
+AADD(aCampos2,"ZY_CCC")		//campos alteraveis no GetDados2
+AADD(aCampos2,"ZY_NATUREZ")	//campos alteraveis no GetDados2
+AADD(aCampos2,"ZY_HIST")	//campos alteraveis no GetDados2
+AADD(aCampos2,"ZY_VALOR")	//campos alteraveis no GetDados2
+AADD(aCampos2,"ZY_ENCARGO")	//campos alteraveis no GetDados2
+AADD(aCampos2,"ZY_DATA")	//campos alteraveis no GetDados2
+
+nGetd		:= nil
+//oGetDados1	:= MsNewGetDados():New(_nSFld1,1,_nSFld2,_nSFld3,nGetd ,cLinOk,cTudoOk,"",aCampos ,nFreeze,nLinhas,cFieldOk,/*superdel*/,/*delok*/,oFolder:aDialogs[2],aheader ,acols )
+//                                                                  coluna            linha
+oGetDados1	:= MsNewGetDados():New(aPosObj[2,1]-48,aPosObj[2,2]-2,aPosObj[2,3]-130,aPosObj[2,4]-7,nGetd ,cLinOk,cTudoOk,"",aCampos ,nFreeze,nLinhas,cFieldOk,/*superdel*/,/*delok*/,oFolder:aDialogs[2],aheader ,acols )
+oGetDados1:oBrowse:bGotFocus 	:={|| Fd_Entra(2)}
+oGetDados1:oBrowse:bLostFocus	:={|| Fd_Sai(2)}
+oGetDados1:oBrowse:Default()	
+oGetDados1:oBrowse:Refresh()	
+oFolder:aDialogs[2]:Refresh()
+
+nGetd2		:= GD_INSERT+GD_UPDATE+GD_DELETE
+
+_nLin1	:= 1	//linha
+_nLin2	:= 1	//coluna
+_nLin3	:= 210	//linha
+_nLin4	:= 630	//coluna
+
+//oGetDados2	:= MsNewGetDados():New(_nLin1,_nLin2,_nLin3,_nLin4,nGetd2,"u_LinOkGet2()",cTudoOk,"",aCampos2,nFreeze,nLinhas,cFieldOk,/*superdel*/,"u_CFINA55Del()",oFolder:aDialogs[1],aheader2,acols2)
+//                                                                  linha             coluna
+oGetDados2	:= MsNewGetDados():New(aPosObj[2,1]-48,aPosObj[2,2]-2,aPosObj[2,3]-140,aPosObj[2,4]-7,nGetd2,"u_LinOkGet2()",cTudoOk,"",aCampos2,nFreeze,nLinhas,cFieldOk,/*superdel*/,"u_CFINA55Del()",oFolder:aDialogs[1],aheader2,acols2)
+oGetDados2:oBrowse:bGotFocus 	:={|| Fd_Entra(1)}
+oGetDados2:oBrowse:bLostFocus	:={|| Fd_Sai(1)}
+oGetDados2:oBrowse:Default()	
+oGetDados2:oBrowse:Refresh()	
+oFolder:aDialogs[1]:Refresh()
+oFolder:SetOption(1)
+
+oGetDados2:oBrowse:SetFocus()
+		
+@ 045,350 SAY OemToAnsi("Limite Cartใo					 ")+TRANSFORM(SZK->ZK_E_LIMIT,'@E 999,999,999.99')	OF oDlg PIXEL SIZE 245 ,12 FONT oBold COLOR CLR_BLUE
+@ 065,350 SAY OemToAnsi("Sld. Disp.						       ")+TRANSFORM(SZK->ZK_E_SLDAT,'@E 999,999,999.99')	OF oDlg PIXEL SIZE 245 ,12 FONT oBold COLOR CLR_BLUE
+@ 085,350 SAY OemToAnsi("Sld. Prest. Conta ")+TRANSFORM(SZK->ZK_E_SLDPR,'@E 999,999,999.99') 	OF oDlg PIXEL SIZE 245 ,12 FONT oBold COLOR CLR_BLUE
+@ 105,350 SAY OemToAnsi("Percentual                      ")+Str((SZK->ZK_E_SLDPR/SZK->ZK_E_LIMITE)*100,5,2)+"%" 	OF oDlg PIXEL SIZE 245 ,12 FONT oBold COLOR CLR_BLUE
+
+@ aPosObj[2,3]-130,030 SAY "Total Debito : " of oFolder:aDialogs[1] PIXEL FONT oFnt COLOR CLR_BLUE
+@ aPosObj[2,3]-130,090 SAY onSALDOD VAR _nValTotDeb of oFolder:aDialogs[1]  Picture "@E 99,999,999.99" SIZE 60,40 PIXEL FONT oFnt COLOR CLR_BLUE
+
+@ aPosObj[2,3]-130,150 SAY "Total Credito : " of oFolder:aDialogs[1] PIXEL FONT oFnt COLOR CLR_BLUE
+@ aPosObj[2,3]-130,210 SAY onSALDOC VAR _nValTotCre of oFolder:aDialogs[1]  Picture "@E 99,999,999.99" SIZE 60,40 PIXEL FONT oFnt COLOR CLR_BLUE
+
+@ aPosObj[2,3]-130,350 SAY "Valor Prestado Contas : " of oFolder:aDialogs[1] PIXEL FONT oFnt COLOR CLR_BLUE
+@ aPosObj[2,3]-130,450 SAY onSALDOR VAR _nValTotRea of oFolder:aDialogs[1]  Picture "@E 99,999,999.99" SIZE 60,40 PIXEL FONT oFnt COLOR CLR_BLUE
+
+ACTIVATE MSDIALOG oDlg ON INIT (EnchoiceBar(oDlg,;
+											{||iif(U_CFINATOK(), (nOpca:=1,oDlg:End()), nOpca:=0 )},;
+											{||nOpca:=0,oDlg:End()},;
+											,;
+											aButtons),;
+											AlignObject(oDlg,{oEnchoice:oBox,oGetDados1:oBrowse},1,,aSize))
+lRet:=(nOpca==1)
+
+If lRet
+	//deletar todos os registros da tabela SZY para o Cartao posicionado que ainda nao foram validados pelo Financeiro
+	_cQuery := "DELETE FROM "+RetSqlName("SZY")+" "
+	_cQuery += "WHERE ZY_CARTAO ='"+alltrim(SZK->ZK_NROCRT)+"' "
+	_cQuery += "AND ZY_VLDFIN = '2' " //1=Sim / 2=Nao
+	TCSQLEXEC(_cQuery)
+
+	_nTotRat	:= 0
+	For _nI :=1 to Len(oGetDados2:aCols)
+		If !Empty(oGetDados2:aCols[_nI, 1]) .or. !Empty(oGetDados2:aCols[_nI, 3]) //Se o registro estiver em branco
+			If !oGetDados2:aCols[_nI, 10] //Se nao estiver deletado
+				RecLock("SZY",.T.)
+				SZY->ZY_FILIAL	:= xFilial("SZY")
+				SZY->ZY_CARTAO	:= alltrim(SZK->ZK_NROCRT)
+				SZY->ZY_ITEM	:= oGetDados2:aCols[_nI, 1]
+				SZY->ZY_CONTA	:= Posicione("CT1",2,xFilial("CT1")+oGetDados2:aCols[_nI, 1],"CT1_CONTA")
+				SZY->ZY_CC		:= oGetDados2:aCols[_nI, 2]
+				SZY->ZY_ITEMC	:= oGetDados2:aCols[_nI, 3]
+				SZY->ZY_CONTAC	:= Posicione("CT1",2,xFilial("CT1")+oGetDados2:aCols[_nI, 3],"CT1_CONTA")
+				SZY->ZY_CCC		:= oGetDados2:aCols[_nI, 4]
+				SZY->ZY_NATUREZ	:= oGetDados2:aCols[_nI, 5]
+				SZY->ZY_HIST	:= oGetDados2:aCols[_nI, 6]
+				SZY->ZY_VALOR	:= oGetDados2:aCols[_nI, 7]
+				SZY->ZY_ENCARGO	:= oGetDados2:aCols[_nI, 8]
+				SZY->ZY_DATA	:= oGetDados2:aCols[_nI, 9]
+				SZY->ZY_VLDFIN	:= "2"
+				MsUnLock()
+				If !Empty(alltrim(oGetDados2:aCols[_nI, 3])) // Pego apenas a coluna Credito pois o total do Movimento Debito/Credito e sempre igual
+					If !alltrim(oGetDados2:aCols[_nI, 3]) $ _nCtaImp
+						_nTotRat+=oGetDados2:aCols[_nI, 7] // Total do Rateio
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+	Next
+
+	//*************************************************
+	//Contabiliza Lancamento Cartao por Rateio
+	//*************************************************
+
+	//Pesquisa Numero do Cartao e Conta Cartao
+	DbSelectArea("SZY")
+	DbSetOrder(1)
+	DbSeek(xFilial("SZY")+alltrim(SZK->ZK_NROCRT), .F.) //Localiza o Cartao Posicionado e atualiza as informacoes
+	_aAreaSZY 		:= GetArea()
+	_cCartao 		:= alltrim(SZK->ZK_NROCRT)
+
+	_dDtRat		:= oGetDados2:aCols[1, 9]
+
+	If !(Alltrim(cUserName) $ GetMV("CI_USEPRES"))
+		cQuery := "SELECT COUNT(*) NUMREG "
+		cQuery += "FROM "+RetSQLname('CT2')+" "
+		cQuery += "WHERE D_E_L_E_T_ = '' "
+		cQuery += "AND CT2_DATA = '"+DTOS(_dDtRat)+"' "
+		cQuery += "AND CT2_ORIGEM = 'FFC "+_cCartao+"' "
+		cQuery += "AND CT2_TPSALD = '1' "
+		TcQuery cQuery New Alias "CT2TMP"
+
+		If CT2TMP->NUMREG > 0
+			msgbox("Lancamentos efetivados, nao podem ser alterados","Alerta")
+			CT2TMP->(DbCloseArea())
+			Return(.F.)
+		Else
+			CT2TMP->(DbCloseArea())
+		EndIf
+
+		cQuery := "SELECT COUNT(*) NUMREG "
+		cQuery += "FROM "+RetSQLname('CT2')+" "
+		cQuery += "WHERE D_E_L_E_T_ = '' "
+		cQuery += "AND CT2_DATA = '"+DTOS(_dDtRat)+"' "
+		cQuery += "AND CT2_ORIGEM = 'FFC "+_cCartao+"' "
+		cQuery += "AND CT2_TPSALD = '9' "
+		TcQuery cQuery New Alias "CT2TMP"
+		TcSetField("CT2TMP","CT2_DATA","D",8, 0 )
+
+		DbSelectArea("CT2TMP")
+		If CT2TMP->NUMREG > 0
+			_cQuery := "DELETE FROM "+RetSqlName('CT2')+" "
+			_cQuery += "WHERE CT2_DATA = '"+DTOS(_dDtRat)+"' "
+			_cQuery += "AND CT2_ORIGEM = 'FFC "+_cCartao+"' "
+			_cQuery += "AND CT2_TPSALD = '9' "
+			TCSQLEXEC(_cQuery)
+			CT2TMP->(DbCloseArea())
+		Else
+			CT2TMP->(DbCloseArea())
+		EndIf
+
+		aCab		:= {}
+		aItem		:= {}
+		aTotItem	:=	{}
+		lMsErroAuto := .f.
+		_nLin		:= 1
+
+		aCab := {	{"dDataLanc", _dDtRat	,NIL},;
+					{"cLote"	, "009800"	,NIL},;
+					{"cSubLote"	, "001"		,NIL}}
+
+		For _nIx :=1 to Len(oGetDados2:aCols)
+			If !Empty(oGetDados2:aCols[_nIx, 1]) .or. !Empty(oGetDados2:aCols[_nIx, 3]) //Se o registro estiver em branco
+				If !oGetDados2:aCols[_nIx, 10] //Se nao estiver deletado
+					_cDC	:= IIF(!Empty(oGetDados2:aCols[_nIx, 1]),"1","2")
+					//Debitos - Creditos
+					AADD(aItem,{	{"CT2_FILIAL"	, xFilial("CT2")									, NIL},;
+									{"CT2_LINHA"	, StrZero(_nLin,3)									, NIL},;
+									{"CT2_DC"		, _cDC	 											, NIL},;	//Debito
+									{"CT2_ITEMD"	, ALLTRIM(oGetDados2:aCols[_nIx, 1])				, NIL},;	//DEBITO  Item Contabil
+									{"CT2_CCD"		, ALLTRIM(oGetDados2:aCols[_nIx, 2])				, NIL},;	//DEBITO  Centro de Custo
+									{"CT2_ITEMC"	, ALLTRIM(oGetDados2:aCols[_nIx, 3])				, NIL},;	//CREDITO Item Contabil
+									{"CT2_CCC"		, ALLTRIM(oGetDados2:aCols[_nIx, 4])				, NIL},;	//CREDITO Centro de Custo
+									{"CT2_VALOR"	, oGetDados2:aCols[_nIx, 7]							, NIL},;
+									{"CT2_HP"		, ""												, NIL},;
+									{"CT2_HIST"		, Alltrim(oGetDados2:aCols[_nIx, 6])				, NIL},;
+									{"CT2_TPSALD"	, "9"												, NIL},;
+									{"CT2_ORIGEM"	, "FFC "+_cCartao									, NIL},;
+									{"CT2_MOEDLC"	, "01"												, NIL},;
+									{"CT2_EMPORI"	, ""												, NIL},;
+									{"CT2_ROTINA"	, ""												, NIL},;
+									{"CT2_LP"		, ""												, NIL},;
+									{"CT2_KEY"		, ""												, NIL}})
+					_nLin++
+				EndIf
+			EndIf
+		Next
+
+		aadd(aTotItem,aItem)
+		MSExecAuto({|a,b,C| Ctba102(a,b,C)},aCab,aItem,3)
+		aTotItem	:=	{}
+
+		If lMsErroAuto
+			DisarmTransaction()
+			MostraErro()
+			Return .F.
+		Endif
+
+		aCab	:= {}
+		aItem	:= {}
+
+		//*************************************************
+		//FIM Contabiliza Lancamento Cartao
+		//*************************************************
+	EndIf
+
+	RestArea(_aAreaSZY)
+	//Verifica regra de usuarios, pois somente o pessoal autorizado podem validar os lancamentos
+	If !EOF()
+		If Alltrim(cUserName) $ GetMV("CI_USEPRES")
+			If MsgYesNo("Confirma Valida็ใo dos dados?", "Gera Atualizacao Saldo")
+				Do While !EOF() .and. _cCartao == alltrim(SZY->ZY_CARTAO)
+					If SZY->ZY_VLDFIN == "1"
+						SZY->(DbSkip())
+						Loop
+					EndIf                             
+
+					RecLock("SZY",.F.)
+					SZY->ZY_VLDFIN	:= "1" //Validacao do Financeiro 
+					MsUnLock()
+
+					If !Empty(SZY->ZY_ITEM)
+						SZY->(DbSkip())
+						Loop
+					EndIf
+
+					If alltrim(SZY->ZY_ITEMC) $ _nCtaImp
+						SZY->(DbSkip())
+						Loop
+					EndIf
+
+					//Atualiza os campos de controle para Saldo
+					_xArea	:= GetArea()
+					DbSelectArea("SZK")
+					DbSetOrder(4) // Nr Cartao
+					If DbSeek(xFilial("SZK")+alltrim(SZK->ZK_NROCRT),.F.)
+						RecLock("SZK",.F.)
+						SZK->ZK_E_SLDPR -= SZY->ZY_VALOR //Saldo Prestacao de Contas, estou diminuindo para baixar o valor a prest.conta
+						MsUnLock()
+					EndIf
+					RestArea(_xArea)
+
+					DbSelectArea("SZY")
+					SZY->(DbSkip())
+				EndDo
+
+				//Gera SE5 Movimento a Receber
+				//Estorno Financeiro
+								
+				RecLock("SE5",.T.)
+				SE5->E5_FILIAL	:= xFilial("SE5")
+				SE5->E5_DATA 	:= _dDtRat
+				SE5->E5_MOEDA	:= "BC"
+				SE5->E5_VALOR	:= _nTotRat
+				SE5->E5_NATUREZ	:= "2.21.08"
+				SE5->E5_BANCO	:= "341"
+				SE5->E5_AGENCIA	:= "0350"
+				SE5->E5_CONTA	:= "74043-7"
+				SE5->E5_DOCUMEN	:= SZK->ZK_NROCRT
+				SE5->E5_HISTOR	:= "Estorno Adiantamento Cartao"
+				SE5->E5_CARTAO	:= SZK->ZK_NROCRT
+				SE5->E5_RECPAG	:= "R"
+				SE5->E5_VENCTO	:= _dDtRat
+				SE5->E5_DTDIGIT	:= _dDtRat
+				SE5->E5_DTDISPO	:= _dDtRat
+				SE5->E5_TIPOLAN	:= "X"
+				SE5->E5_RECONC	:= "x"
+				MsUnLock()
+
+				//*************************************************
+				//Gera SE5 Movimento a Pagar
+				//*************************************************
+				For _nIx :=1 to Len(oGetDados2:aCols)
+					If !Empty(oGetDados2:aCols[_nIx, 1]) //Se o registro estiver em branco
+						If !oGetDados2:aCols[_nIx, 10] //Se nao estiver deletado
+							RecLock("SE5",.T.)
+							SE5->E5_FILIAL	:= xFilial("SE5")
+							SE5->E5_DATA 	:= oGetDados2:aCols[_nIx, 9]
+							SE5->E5_MOEDA	:= "BC"
+							SE5->E5_VALOR	:= oGetDados2:aCols[_nIx, 7] - oGetDados2:aCols[_nIx, 8]
+							SE5->E5_NATUREZ	:= oGetDados2:aCols[_nIx, 5]
+							SE5->E5_BANCO	:= "341"
+							SE5->E5_AGENCIA	:= "0350"
+							SE5->E5_CONTA	:= "74043-7"
+							SE5->E5_DOCUMEN	:= SZK->ZK_NROCRT
+							SE5->E5_HISTOR	:= oGetDados2:aCols[_nIx, 6]
+							SE5->E5_CARTAO	:= SZK->ZK_NROCRT
+							SE5->E5_RECPAG	:= "P"
+							SE5->E5_VENCTO	:= oGetDados2:aCols[_nIx, 9]
+							SE5->E5_DTDIGIT	:= oGetDados2:aCols[_nIx, 9]
+							SE5->E5_DTDISPO	:= oGetDados2:aCols[_nIx, 9]
+							SE5->E5_TIPOLAN	:= "X"
+							SE5->E5_RECONC	:= "x"
+							MsUnLock()
+						EndIf
+					EndIf
+				Next
+			EndIf
+		EndIf
+	EndIf
+
+EndIf
+
+Return
+
+/*/
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑฺฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฟฑฑ
+ฑฑณFun…o    ณFd_Entra   ณAutor ณ Eduardo Motta         ณ Data ณ 12.12.00 ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณDescri…o ณ Retorna aCols e aHeader quando se foca a GETDADOS          ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณParametrosณ nE - Numero da GetDados.                                   ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณ Uso      ณ MATA030                                                    ณฑฑ
+ฑฑภฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤูฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+Static Function Fd_Entra(nE)
+oFolder:SetOption(nE)
+oFolder:Refresh()
+return           
+
+/*/
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑฺฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฟฑฑ
+ฑฑณFun…o    ณFd_Sai     ณAutor ณ Eduardo Motta         ณ Data ณ 12.12.00 ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณDescri…o ณ Guarda aCols e aHeader quando se sai da GETDADOS           ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณParametrosณ nE - Numero da GetDados.                                   ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณ Uso      ณ MATA030                                                    ณฑฑ
+ฑฑภฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤูฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+Static Function Fd_Sai(nE)
+return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA11   บAutor  ณMicrosiga           บ Data ณ  06/05/07   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณImportacao de Extrato Bancario                              บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function ImpMov()
+
+If cEmpant == '01' //SP
+	cDirect    := "\arq_txt\tesouraria\Importacao\SP\Itau\Cartao\"
+	cDirectImp := "\arq_txt\tesouraria\Importacao\SP\Itau\Backup\"
+ElseIf cEmpant == '03' //RJ
+	cDirect    := "\arq_txt\tesouraria\Importacao\RJ\Itau\"
+	cDirectImp := "\arq_txt\tesouraria\Importacao\RJ\Itau\Backup\"
+EndIf
+aDirect    := Directory(cDirect+"*.RET")
+
+If Empty(adirect)
+	MsgAlert("Nao existe nenhum arquivo para ser Importado!!!")
+	Return
+EndIf
+
+For _nI := 1 to Len(adirect)
+	FT_FUSE(cDirect+adirect[_nI,1])
+	FT_FGOTOP()
+	cBuffer 	:=	Alltrim(FT_FREADLN())
+	
+	If Substr(cBuffer,77,3) <> "341"
+		alert("Arquivo nao Pertence ao Banco Itau!")
+		Return
+	EndIf
+	
+	If Len(cBuffer)< 200 .or. Len(cBuffer)> 200
+		alert("Formato do arquivo Invalido!")
+		Return
+	EndIf
+	/*|-----------------------------------------------|
+	| Pula o primeiro registro                      |
+	| Cabecalho                                     |
+	|-----------------------------------------------|*/
+	FT_FSKIP()
+	ProcRegua(FT_FLASTREC())
+	_lFirst := .T.
+	
+	Do While !FT_FEOF()
+		IncProc("Processando Leitura do Arquivo Texto...")
+		cBuffer 	:=	Alltrim(FT_FREADLN())
+		_cID	    := Substr(cBuffer,001,1) // 0-Cabecalho; 1-Detalhes; 9-Rodape
+		_cTpSaldo   := Substr(cBuffer,042,1) // 0-Saldo Anterior; 2-Saldo Atual
+		_cCategoria := Substr(cBuffer,107,1) // Definicao de Credito/ Debito. 1-Debito, 2-Credito. Codigo da Categoria de Lancamento. EX: 201 Deposito
+		_cTipo   	:= Substr(cBuffer,107,3) // Utilizado para detectar codigo 114 para lancamentos dos cartoes
+		_cHist		:= Right(Alltrim(Substr(cBuffer,050,25)),6) // Posicao para identificar o numero do cartao. 6 ultimas posicoes.
+/*		|--------------------------------------------------------------------|
+		| Pula os registros de Saldo Anterior e Atual (_cTpSaldo)            |
+		|                      Rodape - 9 (_cID)                             |
+		| registros de Debito tambem nao sao importados - 1xx (_cCategoria)  |
+		|--------------------------------------------------------------------|*/
+		
+		If _cTpSaldo $ "0|2" .or. _cID == "9" .or. _cCategoria == "2" .or. _cTipo $ "213"   //"209"
+			FT_FSKIP()
+			Loop
+//		ElseIf _cTipo <> "114"
+//			FT_FSKIP()
+//			Loop
+		EndIf
+		
+		_cAgencia	:=	Substr(cBuffer,018,04)
+		_cConta  	:=	Substr(cBuffer,036,05)  //Sem o Digito. OBS: Posicao completa seria Substr(cBuffer,36,06)
+		_cDocument	:=	Substr(cBuffer,075,06) // Numero do Documento
+		_cEmissao	:=	Substr(cBuffer,081,06)
+		_cData 		:= ctod(SUBSTR(_cEmissao,1,2)+"/"+SUBSTR(_cEmissao,3,2)+"/"+SUBSTR(_cEmissao,5,2))
+		_cValor  	:=	Substr(cBuffer,087,18)
+		
+		/*-------------------------------------------------------------------------------|
+		| Pesquisa registros do arquivo TXT na base SZ8 com a chave                      |
+		| EMISSAO+DOCUMENTO+VALOR+DEPOSITANTE se achou nao importa o registro novamente  |
+		|--------------------------------------------------------------------------------|*/
+		cQuery := "SELECT COUNT(*) AS NREG "
+		cQuery += "FROM "+RetSQLname('SE5')+" "
+		cQuery += "WHERE D_E_L_E_T_ <> '*' "
+		cQuery += "AND E5_CARTAO = '"+_cHist+"' "
+		cQuery += "AND E5_DOCUMEN = '"+_cDocument+"' "
+		cQuery += "AND E5_DATA = '"+DTOS(_cData)+"' "
+		TcQuery cQuery New Alias "SE5PESQ"
+
+		If SE5PESQ->NREG > 0
+			FT_FSKIP()
+			SE5PESQ->(DbCloseArea())
+			Loop
+		Else
+			SE5PESQ->(DbCloseArea())
+		EndIf
+
+		If _cHist <> "000000"
+
+			_aArea			:= GetArea()
+			DbSelectArea("SA6")
+			SA6->(DbSetOrder(1))
+			If DbSeek(xFilial("SA6")+"3410350 74043-7")
+				_cContabi	:= SA6->A6_CONTABI
+				If Empty(_cContabi)
+					msgbox("Conta Contabil nao Preenchida no Cadastro de Bancos!!!","Aviso")
+					Return(.F.)
+				EndIf
+			EndIf
+
+			DbSelectArea("SZK")
+			SZK->(DbSetOrder(4))
+			If DbSeek(xFilial("SZK")+_cHist) //Procura por Cartao
+				_cReduz		:= SZK->ZK_REDUZ
+				_cContaC	:= Posicione("CT1",2,xFilial("CT1")+SZK->ZK_REDUZ,"CT1_CONTA")
+				If Empty(_cReduz)
+					msgbox("Conta Contabil nao Preenchida no Cadastro de Contas Correntes!!!","Aviso")
+					Return(.F.)
+				EndIf
+			Else
+				FT_FSKIP()		//Se nao Encontrar o Cartao passa para o proximo registro
+				Loop
+			EndIf
+			RestArea(_aArea)
+
+			RecLock("SE5",.T.)
+			SE5->E5_FILIAL	:= xFilial("SE5")
+			SE5->E5_DATA 	:= _cData
+			SE5->E5_MOEDA	:= "DE"
+			SE5->E5_VALOR	:= val(_cValor)/100
+			SE5->E5_NATUREZ	:= "2.21.07"
+			SE5->E5_BANCO	:= "341"
+			SE5->E5_AGENCIA	:= "0350"
+			SE5->E5_CONTA	:= "74043-7"
+			SE5->E5_DOCUMEN	:= _cDocument
+			SE5->E5_ITEMD	:= _cReduz		//Item Contabil		-	CTD
+			SE5->E5_DEBITO	:= _cContaC		//Conta Contabil	- 	CT1
+			SE5->E5_CARTAO	:= _cHist
+			SE5->E5_RECPAG	:= "P"
+			SE5->E5_VENCTO	:= _cData
+			SE5->E5_DTDIGIT	:= _cData
+			SE5->E5_DTDISPO	:= _cData
+			SE5->E5_TIPOLAN	:= "X"
+			SE5->E5_RECONC	:= "x"
+			MsUnLock()
+			
+			DbSelectArea("SZK")
+			DbSetOrder(4) // N Cartao
+			If DbSeek(xFilial("SZK")+_cHist,.F.)
+				RecLock("SZK",.F.)
+				SZK->ZK_E_SLDPR += val(_cValor)/100 //Saldo Prestacao de Contas
+				SZK->ZK_E_SLDAT -= val(_cValor)/100 //Disponivel para Saque
+				MsUnLock()
+			EndIf
+
+			//*************************************************
+			//Contabiliza Lancamento Cartao
+			//*************************************************
+
+			aCab		:= {}
+			aItem		:= {}
+			aTotItem	:=	{}
+			lMsErroAuto := .f.
+
+			aCab := {	{"dDataLanc", _cData	,NIL},;
+						{"cLote"	, "009800"	,NIL},;
+						{"cSubLote"	, "001"		,NIL}}
+
+			AADD(aItem,{	{"CT2_FILIAL"	, xFilial("CT2")									, NIL},;
+							{"CT2_LINHA"	, "001"												, NIL},;
+							{"CT2_DC"		, "3"	 											, NIL},;	//Partida Dobrada
+							{"CT2_ITEMD"	, _cReduz											, NIL},;	//SE5
+							{"CT2_ITEMC"	, _cContabi											, NIL},;	//SA6-BANCO
+							{"CT2_VALOR"	, val(_cValor)/100									, NIL},;
+							{"CT2_HP"		, ""												, NIL},;
+							{"CT2_HIST"		, "Movimento Cartao Empresa - "+Alltrim(_cHist)		, NIL},;
+							{"CT2_TPSALD"	, "9"												, NIL},;
+							{"CT2_ORIGEM"	, "FFC SAQUE "+_cHist								, NIL},;
+							{"CT2_MOEDLC"	, "01"												, NIL},;
+							{"CT2_EMPORI"	, ""												, NIL},;
+							{"CT2_ROTINA"	, ""												, NIL},;
+							{"CT2_LP"		, ""												, NIL},;
+							{"CT2_KEY"		, ""												, NIL}})
+
+			aadd(aTotItem,aItem)
+			MSExecAuto({|a,b,C| Ctba102(a,b,C)},aCab,aItem,3)
+			aTotItem	:=	{}
+
+			If lMsErroAuto
+				DisarmTransaction()
+				MostraErro()
+				Return .F.
+			Endif
+
+			aCab	:= {}
+			aItem	:= {}
+
+
+			//*************************************************
+			//FIM Contabiliza Lancamento Cartao
+			//*************************************************
+			
+		EndIf
+		
+		FT_FSKIP()
+	EndDo
+	FT_FUSE()
+Next
+
+//Copia e Deleta o arquivo da pasta Origem para a pasta Importado. De qualquer Banco
+For _nI := 1 to Len(adirect)
+	__copyfile(cDirect+adirect[_nI,1],cDirectImp+adirect[_nI,1])
+	ferase(cDirect+adirect[_nI,1])
+Next
+
+MsgInfo("Importacao Finalizada com Sucesso!!!")
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA55   บAutor  ณMicrosiga           บ Data ณ  03/04/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function CFINATOK()
+/*
+_lRet := .T.
+
+If u_LinOkGet2() //Linha do GetDados2
+	_lRet := .T.
+Else
+	_lRet := .F.
+EndIf
+
+If _nValTotDeb <> _nValTotCred
+	_lRet := .F.
+	msgbox("Os valores de Debito e Credito nao batem. Verifique!!!", "Alerta")
+	Return(_lRet)
+EndIf
+
+*/
+Local _lRet 	:= .T.
+Local _aErro    := {}
+Local _nY
+
+_nValTotDeb		:= 0
+_nValTotCre		:= 0
+_nValTotRea		:= 0
+_nValTotEnc		:= 0
+_nValEncarg		:= 0
+_nSaldo			:= SZK->ZK_E_SLDPR
+
+AADD(_aErro,{.F.,"Para contas do grupo 3 e 4 ้ obrigat๓rio o Centro de Custo"})                
+AADD(_aErro,{.F.,"Para contas do grupo 1 e 2 nao ้ permitido Centro de Custo"})                        
+AADD(_aErro,{.F.,"Nao ้ permitido Contao Contabil ou Natureza em Branco"})
+AADD(_aErro,{.F.,"Nao ้ permitido Conta Contabil em Branco"})
+AADD(_aErro,{.F.,"A soma Total dos Rateios informados ้ maior que o Saldo de Prestacao de Contas"})
+
+For _nII :=1 to Len(oGetDados2:aCols)
+	If !oGetDados2:aCols[_nII, 10] //Se nao estiver deletado
+
+		If !Empty(Alltrim(oGetDados2:aCols[_nII, 1]))
+			//Item Contabil grupo 3 e 4 obrigatorio Centro de Custo	DEBITO
+			If Substr(oGetDados2:aCols[_nII, 1],1,1) == "3" .or. Substr(oGetDados2:aCols[_nII, 1],1,1) == "4"
+				If Empty(oGetDados2:aCols[_nII, 2]) //Centro de Custo
+					_lRet := .F.                                                         
+					_aErro[1][1] := .T.
+					//msgbox("Para contas do grupo 3 e 4 ้ obrigat๓rio o Centro de Custo", "Alerta")
+				EndIf
+			ElseIf Substr(oGetDados2:aCols[_nII, 1],1,1) == "1" .or. Substr(oGetDados2:aCols[_nII, 1],1,1) == "2"
+				If !Empty(oGetDados2:aCols[_nII, 2]) //Centro de Custo
+					_lRet := .F.       
+					_aErro[2][1] := .T.
+					//msgbox("Para contas do grupo 1 e 2 nao ้ permitido Centro de Custo", "Alerta")
+				EndIf
+			EndIf
+
+			If Alltrim(cUserName) $ GetMV("CI_USEPRES")
+				If Empty(oGetDados2:aCols[_nII, 1]) .or. Empty(oGetDados2:aCols[_nII, 5])
+					_lRet := .F.       
+					_aErro[3][1] := .T.
+					//msgbox("Nao ้ permitido Contao Contabil ou Natureza em Branco", "Alerta")
+				EndIf
+			Else
+				If Empty(oGetDados2:aCols[_nII, 1])
+					_lRet := .F.
+					_aErro[4][1] := .T.
+					//msgbox("Nao ้ permitido Conta Contabil em Branco", "Alerta")
+				EndIf
+			EndIf
+		Else
+			//Item Contabil grupo 3 e 4 obrigatorio Centro de Custo	CREDITO
+			If Substr(oGetDados2:aCols[_nII, 3],1,1) == "3" .or. Substr(oGetDados2:aCols[_nII, 3],1,1) == "4"
+				If Empty(oGetDados2:aCols[_nII, 4]) //Centro de Custo
+					_lRet := .F.
+					_aErro[1][1] := .T.
+					//msgbox("Para contas do grupo 3 e 4 ้ obrigat๓rio o Centro de Custo", "Alerta")
+				EndIf
+			ElseIf Substr(oGetDados2:aCols[_nII, 3],1,1) == "1" .or. Substr(oGetDados2:aCols[_nII, 3],1,1) == "2"
+				If !Empty(oGetDados2:aCols[_nII, 4]) //Centro de Custo
+					_lRet := .F.
+					_aErro[2][1] := .T.
+					//msgbox("Para contas do grupo 1 e 2 nao ้ permitido Centro de Custo", "Alerta")
+				EndIf
+			EndIf
+
+			If Alltrim(cUserName) $ GetMV("CI_USEPRES")
+				If Empty(oGetDados2:aCols[_nII, 3])// .or. Empty(oGetDados2:aCols[_nII, 5])
+					_lRet := .F.
+					_aErro[4][1] := .T.
+					//msgbox("Nao ้ permitido Contao Contabil ou Natureza em Branco", "Alerta")
+				EndIf
+			Else
+				If Empty(oGetDados2:aCols[_nII, 3])
+					_lRet := .F.
+					_aErro[4][1] := .T.
+					//msgbox("Nao ้ permitido Conta Contabil em Branco", "Alerta")
+				EndIf
+			EndIf
+		EndIf
+
+		If !Empty(oGetDados2:aCols[_nII, 1]) //ZY_ITEM
+			_nValTotDeb += oGetDados2:aCols[_nII, 7]
+		ElseIf !Empty(oGetDados2:aCols[_nII, 3])	//ZY_ITEMC
+			_nValTotCre += oGetDados2:aCols[_nII, 7]
+		EndIf
+		
+		If !Empty(oGetDados2:aCols[_nII, 8]) //ZY_ENCARGO
+			_nValEncarg += oGetDados2:aCols[_nII, 8]
+		EndIf
+		
+		If alltrim(oGetDados2:aCols[_nII][3]) $ _nCtaImp
+			_nValTotEnc += oGetDados2:aCols[_nII, 7]
+		EndIf
+
+		_nValTotRea += iif(alltrim(oGetDados2:aCols[_nII][3])$_nCtaImp,oGetDados2:aCols[_nII][7],0)
+
+	EndIf
+
+Next
+
+If _nValTotDeb > _nSaldo .or. _nValTotCred > _nSaldo
+	_lRet := .F.           
+	_aErro[5][1] := .T.
+	//msgbox("A soma Total dos Rateios informados ้ maior que o Saldo de Prestacao de Contas", "Alerta")
+EndIf
+
+If _nValTotEnc <> _nValEncarg
+	_lRet := .F.
+	msgbox("O Total dos Encargos R$ "+Alltrim(TRANSFORM(_nValEncarg,'@E 999,999.99'))+" nใo Confere com os Encargos Classificados R$ "+Alltrim(TRANSFORM(_nValTotEnc,'@E 999,999.99')), "Alerta")
+EndIf
+
+If !_lRet
+	If !Empty(_aErro)
+		For _nY := 1 to Len(_aErro)
+		  	If _aErro[_nY][1]
+				msgbox(_aErro[_nY][2], "Alerta")		
+			EndIf	
+		Next _nY
+	EndIf
+EndIf
+
+_nValTotRea := (_nValTotCred-(_nValTotRea))
+
+onSaldoD:Refresh()
+onSaldoC:Refresh()
+onSaldoR:Refresh()
+
+Return(_lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA55   บAutor  ณMicrosiga           บ Data ณ  03/04/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function LinOkGet2()
+
+Local _lRet 	:= .T.
+
+_nValTotDeb		:= 0
+_nValTotCre		:= 0
+_nValTotRea		:= 0
+_nSaldo			:= SZK->ZK_E_SLDPR
+
+For _nII :=1 to Len(oGetDados2:aCols)
+	If !oGetDados2:aCols[_nII, 10] //Se nao estiver deletado
+
+		If !Empty(Alltrim(oGetDados2:aCols[_nII, 1]))
+			//Item Contabil grupo 3 e 4 obrigatorio Centro de Custo	DEBITO
+			If Substr(oGetDados2:aCols[_nII, 1],1,1) == "3" .or. Substr(oGetDados2:aCols[_nII, 1],1,1) == "4"
+				If Empty(oGetDados2:aCols[_nII, 2]) //Centro de Custo
+
+					If oGetDados2:nAT == _nII
+						_lRet := .F.
+						msgbox("Para contas do grupo 3 e 4 ้ obrigat๓rio o Centro de Custo", "Alerta")
+					Else
+						_lRet := .T.
+					EndIf
+						
+					Return(_lRet)
+				EndIf
+			ElseIf Substr(oGetDados2:aCols[_nII, 1],1,1) == "1" .or. Substr(oGetDados2:aCols[_nII, 1],1,1) == "2"
+				If !Empty(oGetDados2:aCols[_nII, 2]) //Centro de Custo
+
+					If oGetDados2:nAT == _nII
+						_lRet := .F.
+						msgbox("Para contas do grupo 1 e 2 nao ้ permitido Centro de Custo", "Alerta")
+					Else
+						_lRet := .T.
+					EndIf
+
+					Return(_lRet)
+				EndIf
+			EndIf
+
+			If Alltrim(cUserName) $ GetMV("CI_USEPRES")
+				If Empty(oGetDados2:aCols[_nII, 1]) .or. Empty(oGetDados2:aCols[_nII, 5])
+
+					If oGetDados2:nAT == _nII
+						_lRet := .F.
+						msgbox("Nao ้ permitido Contao Contabil ou Natureza em Branco", "Alerta")
+					Else
+						_lRet := .T.
+					EndIf
+				
+					Return(_lRet)
+				EndIf
+			Else
+				If Empty(oGetDados2:aCols[_nII, 1])
+
+					If oGetDados2:nAT == _nII
+						_lRet := .F.
+						msgbox("Nao ้ permitido Conta Contabil em Branco", "Alerta")
+					Else
+						_lRet := .T.
+					EndIf
+
+					Return(_lRet)
+				EndIf
+			EndIf
+		Else
+			//Item Contabil grupo 3 e 4 obrigatorio Centro de Custo	CREDITO
+			If Substr(oGetDados2:aCols[_nII, 3],1,1) == "3" .or. Substr(oGetDados2:aCols[_nII, 3],1,1) == "4"
+				If Empty(oGetDados2:aCols[_nII, 4]) //Centro de Custo
+
+					If oGetDados2:nAT == _nII
+						_lRet := .F.
+						msgbox("Para contas do grupo 3 e 4 ้ obrigat๓rio o Centro de Custo", "Alerta")
+					Else
+						_lRet := .T.
+					EndIf
+
+					Return(_lRet)
+				EndIf
+			ElseIf Substr(oGetDados2:aCols[_nII, 3],1,1) == "1" .or. Substr(oGetDados2:aCols[_nII, 3],1,1) == "2"
+				If !Empty(oGetDados2:aCols[_nII, 4]) //Centro de Custo
+
+					If oGetDados2:nAT == _nII
+						_lRet := .F.
+						msgbox("Para contas do grupo 1 e 2 nao ้ permitido Centro de Custo", "Alerta")
+					Else
+						_lRet := .T.
+					EndIf
+
+					Return(_lRet)
+				EndIf
+			EndIf
+
+			If Alltrim(cUserName) $ GetMV("CI_USEPRES")
+				If Empty(oGetDados2:aCols[_nII, 3])// .or. Empty(oGetDados2:aCols[_nII, 5])
+
+					If oGetDados2:nAT == _nII
+						_lRet := .F.
+						msgbox("Nao ้ permitido Contao Contabil em Branco", "Alerta")
+//						msgbox("Nao ้ permitido Contao Contabil ou Natureza em Branco", "Alerta")
+					Else
+						_lRet := .T.
+					EndIf
+										
+					Return(_lRet)
+				EndIf
+			Else
+				If Empty(oGetDados2:aCols[_nII, 3])
+
+					If oGetDados2:nAT == _nII
+						_lRet := .F.
+						msgbox("Nao ้ permitido Conta Contabil em Branco", "Alerta")
+					Else
+						_lRet := .T.
+					EndIf
+
+					Return(_lRet)
+				EndIf
+			EndIf
+		EndIf
+
+		If !Empty(oGetDados2:aCols[_nII, 1]) //ZY_ITEM
+			_nValTotDeb += oGetDados2:aCols[_nII, 7]
+		ElseIf !Empty(oGetDados2:aCols[_nII, 3])	//ZY_ITEMC
+			_nValTotCre += oGetDados2:aCols[_nII, 7]
+		EndIf
+
+//		_nValTotRea += iif(alltrim(oGetDados2:aCols[_nII][1])$_nCtaImp,oGetDados2:aCols[_nII][7],0)
+		_nValTotRea += iif(alltrim(oGetDados2:aCols[_nII][3])$_nCtaImp,oGetDados2:aCols[_nII][7],0)
+
+		If _nValTotDeb > _nSaldo .or. _nValTotCred > _nSaldo
+			If oGetDados2:nAT == _nII
+				_lRet := .F.
+				msgbox("A soma Parcial dos Rateios informados ้ maior que o Saldo de Prestacao de Contas", "Alerta")
+			Else
+				_lRet := .T.
+			EndIf
+			Return(_lRet)
+		EndIf
+
+	EndIf
+
+Next
+
+If _nValTotDeb > _nSaldo .or. _nValTotCred > _nSaldo
+	_lRet := .F.
+	msgbox("A soma Total dos Rateios informados ้ maior que o Saldo de Prestacao de Contas", "Alerta")
+	Return(_lRet)
+EndIf
+
+_nValTotRea := (_nValTotCred-(_nValTotRea))
+//_nValTotRea := (_nValTotDeb-(_nValTotRea/2))
+
+onSaldoD:Refresh()
+onSaldoC:Refresh()
+onSaldoR:Refresh()
+
+Return(_lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA55   บAutor  ณMicrosiga           บ Data ณ  03/09/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function CFINA55Val()
+
+LOCAL nCont
+
+_nValTotDeb := 0
+_nValTotCre := 0
+_nValTotRea := 0
+
+oGetDados2:aCols[n][7] := &(ReadVar())
+
+For nCont := 1 To Len(oGetDados2:aCols)
+	If !oGetDados2:aCols[nCont][10]
+		Do Case
+			Case !Empty(oGetDados2:aCols[nCont][1])
+				_nValTotDeb += oGetDados2:aCols[nCont][7]
+			Case !Empty(oGetDados2:aCols[nCont][3])
+				_nValTotCre += oGetDados2:aCols[nCont][7]
+		EndCase
+//		_nValTotRea += iif(alltrim(oGetDados2:aCols[nCont][1])$_nCtaImp,oGetDados2:aCols[nCont][7],0)
+		_nValTotRea += iif(alltrim(oGetDados2:aCols[nCont][3])$_nCtaImp,oGetDados2:aCols[nCont][7],0)
+	EndIf
+Next
+
+_nValTotRea := (_nValTotCred-(_nValTotRea))
+//_nValTotRea := (_nValTotDeb-(_nValTotRea/2))
+
+If Type("onSaldoD")=="O" .or. Type("onSaldoC")=="O"
+	onSaldoD:Refresh()
+	onSaldoC:Refresh()
+	onSaldoR:Refresh()
+Endif
+
+Return .t.
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA55   บAutor  ณMicrosiga           บ Data ณ  03/09/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function CFINA55Del()
+
+LOCAL nCont
+
+If oGetDados2:aCols[n][10]
+	If !Empty(oGetDados2:aCols[n][1])
+		_nValTotDeb += oGetDados2:aCols[n][7]
+	ElseIf !Empty(oGetDados2:aCols[n][3])
+		_nValTotCre += oGetDados2:aCols[n][7]
+	EndIf
+Else
+	If !Empty(oGetDados2:aCols[n][1])
+		_nValTotDeb -= oGetDados2:aCols[n][7]
+	ElseIf !Empty(oGetDados2:aCols[n][3])
+		_nValTotCre -= oGetDados2:aCols[n][7]
+	EndIf
+EndIf
+
+If Type("onSaldo")=="O" .or. Type("onSaldoC")=="O"
+	onSaldoD:Refresh()
+	onSaldoC:Refresh()
+	onSaldoR:Refresh()
+Endif
+
+Return .t.
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA55   บAutor  ณMicrosiga           บ Data ณ  03/18/09   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Validacao SX3 tabela SZY campos ZY_ITEM  / ZY_CC           บฑฑ
+ฑฑบ          ณ                                 ZY_ITEMC / ZY_CCC          บฑฑ
+ฑฑบ          ณ Nao permiti digitar na mesma linha a conta debito e creditoบฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function VALCTA(_nCampo)
+
+//_nCampo (caracter)
+//conteudo:
+//1 - campos ZY_ITEM	/ ZY_CC
+//2 - campos ZY_ITEMC	/ ZY_CCC
+
+Local _lRet	:= .T.
+
+If _nCampo == "1"
+	If !Empty(alltrim(oGetDados2:aCols[n,3])) //ZY_ITEMC
+		_lRet	:= .F.
+	EndIf
+Else
+	If !Empty(alltrim(oGetDados2:aCols[n,1])) //ZY_ITEM
+		_lRet	:= .F.
+	EndIf
+EndIf
+
+Return(_lRet)

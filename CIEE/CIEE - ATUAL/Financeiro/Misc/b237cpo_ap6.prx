@@ -1,0 +1,32 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+User Function b237cpo()        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CALIAS,_CPO,")
+
+_aArea := GetArea() 
+_aAreaE2 := SE2->(GetArea())
+_aAreaEA := SEA->(GetArea())
+
+/////  PROGRAMA PARA SEPARAR DO CAMPO LIVRE A POSISAO (44 - 44) QDO NAO FOR
+/////  TITULOS DO BRADESCO E VOLTAR BRANCO QUANDO NAO.
+
+cALIAS  :=  Alias()
+_CPO := " "
+
+
+_CPO  :=  SUBSTR(SE2->E2_CODBAR,44,1)
+
+SEA->(RestArea(_aAreaEA))
+SE2->(RestArea(_aAreaE2))
+RestArea(_aArea)
+
+// Substituido pelo assistente de conversao do AP6 IDE em 15/07/02 ==> __return(_CPO)
+Return(_CPO)        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02

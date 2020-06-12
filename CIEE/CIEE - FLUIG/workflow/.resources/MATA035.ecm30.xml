@@ -1,0 +1,868 @@
+<list>
+  <ProcessDefinition>
+    <processDefinitionPK>
+      <companyId>1</companyId>
+      <processId>MATA035</processId>
+    </processDefinitionPK>
+    <processDescription>Grupo de Produtos</processDescription>
+    <instruction>Grupo de Produtos</instruction>
+    <active>true</active>
+    <publicProcess>true</publicProcess>
+    <volumeId>Default</volumeId>
+    <categoryId></categoryId>
+    <managerEngineAllocationId></managerEngineAllocationId>
+    <snapshotFrequency>0</snapshotFrequency>
+    <baseDay>0</baseDay>
+    <baseMonth>0</baseMonth>
+    <periodId>Default</periodId>
+    <uniqueCardVersion>false</uniqueCardVersion>
+    <keyWord></keyWord>
+  </ProcessDefinition>
+  <ProcessDefinitionVersion>
+    <processDefinitionVersionPK>
+      <companyId>1</companyId>
+      <processId>Grupo de Produtos</processId>
+      <version>1</version>
+    </processDefinitionVersionPK>
+    <versionDescription></versionDescription>
+    <formId>33</formId>
+    <editionMode>true</editionMode>
+    <updateAttachmentsVersion>false</updateAttachmentsVersion>
+    <controlsAttachmentsSecurity>false</controlsAttachmentsSecurity>
+    <active>true</active>
+    <blockedVersion>false</blockedVersion>
+    <counterSign>false</counterSign>
+    <openInstances>0</openInstances>
+    <bpmnVersion>1</bpmnVersion>
+    <processStates/>
+    <favorito>false</favorito>
+  </ProcessDefinitionVersion>
+  <list>
+    <ProcessState>
+      <processStatePK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <sequence>1</sequence>
+      </processStatePK>
+      <stateName>Início</stateName>
+      <stateDescription>Início</stateDescription>
+      <instruction></instruction>
+      <deadlineTime>60</deadlineTime>
+      <joint>false</joint>
+      <agreementPercentage>0</agreementPercentage>
+      <engineAllocationId></engineAllocationId>
+      <engineAllocationConfiguration></engineAllocationConfiguration>
+      <selectColleague>0</selectColleague>
+      <initialState>true</initialState>
+      <notifyAuthorityDelay>true</notifyAuthorityDelay>
+      <notifyRequisitionerDelay>true</notifyRequisitionerDelay>
+      <allowanceAuthorityTime>0</allowanceAuthorityTime>
+      <frequenceAuthorityTime>60</frequenceAuthorityTime>
+      <allowanceRequisitionerTime>0</allowanceRequisitionerTime>
+      <frequenceRequisitionerTime>60</frequenceRequisitionerTime>
+      <transferAttachments>false</transferAttachments>
+      <subProcessId></subProcessId>
+      <formFolder>0</formFolder>
+      <notifyAuthorityFollowUp>true</notifyAuthorityFollowUp>
+      <notifyRequisitionerFollowUp>true</notifyRequisitionerFollowUp>
+      <automatic>false</automatic>
+      <positionX>300</positionX>
+      <positionY>120</positionY>
+      <forecastedEffortType>0</forecastedEffortType>
+      <forecastedEffort>0</forecastedEffort>
+      <notifyManagerFollowUp>true</notifyManagerFollowUp>
+      <notifyManagerDelay>true</notifyManagerDelay>
+      <allowanceManagerTime>0</allowanceManagerTime>
+      <frequenceManagerTime>60</frequenceManagerTime>
+      <inhibitTransfer>false</inhibitTransfer>
+      <periodId>Default</periodId>
+      <stateType>0</stateType>
+      <bpmnType>10</bpmnType>
+      <signalId>0</signalId>
+      <counterSign>false</counterSign>
+      <openInstances>0</openInstances>
+      <destinationStates/>
+      <digitalSignature>false</digitalSignature>
+    </ProcessState>
+    <ProcessState>
+      <processStatePK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <sequence>2</sequence>
+      </processStatePK>
+      <stateName>Fim</stateName>
+      <stateDescription>Fim</stateDescription>
+      <instruction>Atividade final do processo</instruction>
+      <deadlineTime>0</deadlineTime>
+      <joint>false</joint>
+      <agreementPercentage>0</agreementPercentage>
+      <engineAllocationId></engineAllocationId>
+      <engineAllocationConfiguration></engineAllocationConfiguration>
+      <selectColleague>0</selectColleague>
+      <initialState>false</initialState>
+      <notifyAuthorityDelay>true</notifyAuthorityDelay>
+      <notifyRequisitionerDelay>false</notifyRequisitionerDelay>
+      <allowanceAuthorityTime>0</allowanceAuthorityTime>
+      <frequenceAuthorityTime>1</frequenceAuthorityTime>
+      <allowanceRequisitionerTime>0</allowanceRequisitionerTime>
+      <frequenceRequisitionerTime>0</frequenceRequisitionerTime>
+      <transferAttachments>false</transferAttachments>
+      <subProcessId></subProcessId>
+      <formFolder>0</formFolder>
+      <notifyAuthorityFollowUp>false</notifyAuthorityFollowUp>
+      <notifyRequisitionerFollowUp>false</notifyRequisitionerFollowUp>
+      <automatic>false</automatic>
+      <positionX>500</positionX>
+      <positionY>240</positionY>
+      <forecastedEffortType>0</forecastedEffortType>
+      <forecastedEffort>0</forecastedEffort>
+      <notifyManagerFollowUp>false</notifyManagerFollowUp>
+      <notifyManagerDelay>false</notifyManagerDelay>
+      <allowanceManagerTime>0</allowanceManagerTime>
+      <frequenceManagerTime>0</frequenceManagerTime>
+      <inhibitTransfer>false</inhibitTransfer>
+      <periodId></periodId>
+      <stateType>0</stateType>
+      <bpmnType>60</bpmnType>
+      <signalId>0</signalId>
+      <counterSign>false</counterSign>
+      <openInstances>0</openInstances>
+      <destinationStates/>
+      <digitalSignature>false</digitalSignature>
+    </ProcessState>
+  </list>
+  <list/>
+  <list>
+    <ProcessLink>
+      <processLinkPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <linkSequence>1</linkSequence>
+      </processLinkPK>
+      <actionLabel></actionLabel>
+      <returnPermited>false</returnPermited>
+      <initialStateSequence>1</initialStateSequence>
+      <finalStateSequence>2</finalStateSequence>
+      <returnLabel></returnLabel>
+      <name></name>
+      <automaticLink>false</automaticLink>
+      <type>0</type>
+    </ProcessLink>
+  </list>
+  <list/>
+  <list>
+    <WorkflowProcessEvent>
+      <workflowProcessEventPK>
+        <companyId>1</companyId>
+        <eventId>beforeStateEntry</eventId>
+        <processId>MATA035</processId>
+        <version>1</version>
+      </workflowProcessEventPK>
+      <eventDescription>function beforeStateEntry(sequenceId){
+var serviceMVC,ret,obj1,obj2;
+var err = {message:&apos;&apos;};
+var cfx = hAPI.getAdvancedProperty(&apos;FWMVCDATASERVICE&apos;).indexOf(&apos;FLUIG&apos;) &gt; 0;
+
+serviceMVC = getServiceMVC(err);
+if (!serviceMVC){
+	throw err.message;
+	return;
+}
+try{
+	if (cfx)
+		ret = serviceMVC.getjsondatadetail([], hAPI.getAdvancedProperty(&apos;FWMODEL&apos;), (hAPI.getAdvancedProperty(&apos;FWTYPE&apos;) == 1 ? hAPI.getAdvancedProperty(&apos;FWTABLE&apos;) : &apos;&apos;))
+	else
+		ret = serviceMVC.GETJSONDATADETAIL([], hAPI.getAdvancedProperty(&apos;FWMODEL&apos;), (hAPI.getAdvancedProperty(&apos;FWTYPE&apos;) == 1 ? hAPI.getAdvancedProperty(&apos;FWTABLE&apos;) : &apos;&apos;));
+	obj1 = eval(&apos;(&apos;+new java.lang.String(ret)+&apos;)&apos;);
+	ret = org.apache.commons.codec.binary.Base64.decodeBase64(FWSTRUCT.getBytes());
+	obj2 = eval(&apos;(&apos;+new java.lang.String(ret)+&apos;)&apos;);
+} catch(e){
+throw &apos;Ocorreu um erro na comunica��o com o servi�o do Totvs Microsiga Protheus, verifique os dados do formul�rio (&apos;+e.message+&apos;)&apos;;
+	return;
+}
+if (!compareModels(obj1,obj2))
+throw &apos;Houve uma altera��o na estrutura de dados. Por favor atualize o processo atrav�s da op��o Manuten��o de Processos ECM do Configurador do Protheus para continuar.&apos;
+}
+function compareModels(obj1,obj2) {
+if (obj1.modeltype != obj2.modeltype || obj1.id != obj2.id)
+    return false;
+switch (obj1.modeltype) {
+    case &apos;FIELDS&apos;:
+        if (!compareFields(obj1.fields, obj2.fields) || !compareChildren(obj1,obj2))
+            return false;
+        break;
+    case &apos;GRID&apos;:
+        if (!compareFields(obj1.struct, obj2.struct))
+            return false;
+
+        if (obj1.items &amp;&amp; obj2.items) {
+            if (obj1.items.length &gt; 0 &amp;&amp; obj2.items.length &gt; 0 &amp;&amp; !compareChildren(obj1.items[0],obj2.items[0]))
+                return false;
+        }
+        else if (obj1.items &amp;&amp; !obj2.items || !obj1.items &amp;&amp; obj2.items) {
+            return false;
+        }
+        break;
+    default:
+        if (!compareChildren(obj1, obj2))
+            return false;
+        break;
+}
+return true;
+}
+function compareChildren(obj1, obj2) {
+if (obj1.models &amp;&amp; obj2.models) {
+    if (obj1.models.length != obj2.models.length)
+        return false;
+    for (var j = 0; j &lt; obj1.models.length; j++) {
+        if (!compareModels(obj1.models[j], obj2.models[j]))
+            return false;
+    }
+}
+else if (obj1.models &amp;&amp; !obj2.models || !obj1.models &amp;&amp; obj2.models) {
+    return false;
+}
+return true;
+}
+function compareFields(fields1, fields2) {
+var found, f1, f2;
+for (var j = 0; j &lt; fields1.length; j++) {
+    found = false;
+    f1 = fields1[j];
+
+    for (var k = 0; k &lt; fields2.length; k++) {
+        f2 = fields2[k];
+        if (f1.id == f2.id) {
+            found = true;
+            if (!compareProperties(f1, f2))
+                return false;
+            fields2.splice(k, 1);
+            break;
+        }
+    }
+    if (!found)
+        return false;
+}
+return true;
+}
+var properties = [&apos;datatype&apos;, &apos;len&apos;, &apos;order&apos;, &apos;obrigat&apos;];
+function compareProperties(f1, f2) {
+for (var l = 0; l &lt; properties.length; l++) {
+    if (f1[properties[l]] != f2[properties[l]])
+        return false;
+}
+return true;
+}
+var FWSTRUCT = new java.lang.String(&apos;eyJpZCI6Ik1BVEEwMzUiLCJvcGVyYXRpb24iOjEsIm1vZGVscyI6W3siaWQiOiJNQVRBMDM1X1NCTSIsIm1vZGVsdHlwZSI6IkZJRUxEUyIsImZpZWxkcyI6W3siaWQiOiJCTV9GSUxJQUwiLCJvcmRlciI6MSwibGVuIjoiNCwwIiwiZGF0YXR5cGUiOiJDIiwiaW5mbyI6IkZpbGlhbCJ9LHsiaWQiOiJCTV9HUlVQTyIsIm9yZGVyIjoyLCJsZW4iOiI0LDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiQ29kIEdydXBvIiwib2JyaWdhdCI6MX0seyJpZCI6IkJNX0RFU0MiLCJvcmRlciI6MywibGVuIjoiMzAsMCIsImRhdGF0eXBlIjoiQyIsImluZm8iOiJEZXNjIEdydXBvIn0seyJpZCI6IkJNX1BJQ1BBRCIsIm9yZGVyIjo0LCJsZW4iOiIzMCwwIiwiZGF0YXR5cGUiOiJDIiwiaW5mbyI6IlBpY3QgUGFkcmFvIn0seyJpZCI6IkJNX1BST09SSSIsIm9yZGVyIjo1LCJsZW4iOiIxLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiUHJvY2VkZW5jaWEifSx7ImlkIjoiQk1fQ09ETUFSIiwib3JkZXIiOjYsImxlbiI6IjMsMCIsImRhdGF0eXBlIjoiQyIsImluZm8iOiJNYXJjYSJ9LHsiaWQiOiJCTV9ERVNNQVIiLCJvcmRlciI6NywibGVuIjoiMzAsMCIsImRhdGF0eXBlIjoiQyIsImluZm8iOiJEZXNjcmljYW8ifSx7ImlkIjoiQk1fU1RBVFVTIiwib3JkZXIiOjgsImxlbiI6IjEsMCIsImRhdGF0eXBlIjoiQyIsImluZm8iOiJTdGF0dXMgR3J1cG8ifSx7ImlkIjoiQk1fR1JVUkVMIiwib3JkZXIiOjksImxlbiI6IjQwLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiR3J1cG8gUmVsYWMifSx7ImlkIjoiQk1fVElQR1JVIiwib3JkZXIiOjEwLCJsZW4iOiIyLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiVGlwbyBHcnVwbyJ9LHsiaWQiOiJCTV9ERVNUR1IiLCJvcmRlciI6MTEsImxlbiI6IjIwLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiRGVzY3JpY2FvIn0seyJpZCI6IkJNX01BUktVUCIsIm9yZGVyIjoxMiwibGVuIjoiMTAsNiIsImRhdGF0eXBlIjoiTiIsImluZm8iOiJNYXJrLVVwIn0seyJpZCI6IkJNX1BSRUNPIiwib3JkZXIiOjEzLCJsZW4iOiIzLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiVGFiZWxhIn0seyJpZCI6IkJNX0xFTlJFTCIsIm9yZGVyIjoxNCwibGVuIjoiMiwwIiwiZGF0YXR5cGUiOiJOIiwiaW5mbyI6IlRtIENoYXZlIFJlbCJ9LHsiaWQiOiJCTV9USVBNT1YiLCJvcmRlciI6MTUsImxlbiI6IjEsMCIsImRhdGF0eXBlIjoiQyIsImluZm8iOiJUcCBNb3Z0byJ9LHsiaWQiOiJCTV9DTEFTR1JVIiwib3JkZXIiOjE2LCJsZW4iOiIxLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiQ2xhcyBHcnVwbyJ9LHsiaWQiOiJCTV9GT1JNVUwiLCJvcmRlciI6MTcsImxlbiI6IjYsMCIsImRhdGF0eXBlIjoiQyIsImluZm8iOiJGb3JtdWxhIn0seyJpZCI6IkJNX1hDT05UQTEiLCJvcmRlciI6MTgsImxlbiI6IjIwLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiQ3RhLiBFc3RvcXVlIn0seyJpZCI6IkJNX1hDT05UQTIiLCJvcmRlciI6MTksImxlbiI6IjIwLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiQ3RhLiBEZXNwZXNhIn0seyJpZCI6IkJNX1hESUFTRUciLCJvcmRlciI6MjAsImxlbiI6IjUsMCIsImRhdGF0eXBlIjoiTiIsImluZm8iOiJTZWd1cmFuY2EifSx7ImlkIjoiQk1fWFBFIiwib3JkZXIiOjIxLCJsZW4iOiI1LDAiLCJkYXRhdHlwZSI6Ik4iLCJpbmZvIjoiRW50cmVnYSJ9LHsiaWQiOiJCTV9YQ1RSRUQxIiwib3JkZXIiOjIyLCJsZW4iOiIxMCwwIiwiZGF0YXR5cGUiOiJDIiwiaW5mbyI6IkNvbnRhIFJlZHV6aSJ9LHsiaWQiOiJCTV9YQ1RSRUQyIiwib3JkZXIiOjIzLCJsZW4iOiIxMCwwIiwiZGF0YXR5cGUiOiJDIiwiaW5mbyI6IkNvbnRhIFJlZHV6aSJ9LHsiaWQiOiJCTV9YVEVTIiwib3JkZXIiOjI0LCJsZW4iOiIzLDAiLCJkYXRhdHlwZSI6IkMiLCJpbmZvIjoiVEVTIn1dfV19&apos;);
+function getServiceMVC(err){
+var dataService = hAPI.getAdvancedProperty(&apos;FWMVCDATASERVICE&apos;);
+var fwService = ServiceManager.getService(dataService);
+var serviceHelper,serviceLocator,service;
+
+if (!fwService){
+err.message = &apos;O servi�o do Totvs Microsiga Protheus n�o foi registrado no ECM. Execute novamente a Manuten��o de Processos ECM no Configurador do Totvs Microsiga Protheus.&apos;
+	return null;
+}
+try{
+	serviceHelper = fwService.getBean();
+	if (dataService.indexOf(&apos;FLUIG&apos;) &lt; 0)
+		serviceLocator = serviceHelper.instantiate(&apos;br.com.totvs.webservices.fwwsmodel_apw.FWWSMODELLocator&apos;)
+	else
+		serviceLocator = serviceHelper.instantiate(&apos;br.com.totvs.webservices.fwwsmodel_apw.FWWSMODEL&apos;);
+	service = serviceLocator.getFWWSMODELSOAP();
+
+	var outInterceptor = new org.apache.cxf.interceptor.LoggingOutInterceptor();
+	var inInterceptor = new org.apache.cxf.interceptor.LoggingInInterceptor();
+	var client = org.apache.cxf.frontend.ClientProxy.getClient(service);
+	client.getOutInterceptors().add(outInterceptor);
+	client.getInInterceptors().add(inInterceptor);
+	var http = client.getConduit();
+	var httpClientPolicy = new org.apache.cxf.transports.http.configuration.HTTPClientPolicy();
+	httpClientPolicy.setAllowChunking(false);
+	http.setClient(httpClientPolicy);
+}
+catch(e){
+err.message = &apos;Ocorreu erro no servi�o do Totvs Microsiga Protheus (&apos;+e.message+&apos;). Verifique a configura��o no ECM ou execute novamente a Manuten��o de Processos ECM no Totvs Microsiga Protheus.&apos;
+	return null;
+}
+return service;
+}</eventDescription>
+    </WorkflowProcessEvent>
+    <WorkflowProcessEvent>
+      <workflowProcessEventPK>
+        <companyId>1</companyId>
+        <eventId>beforeTaskSave</eventId>
+        <processId>MATA035</processId>
+        <version>1</version>
+      </workflowProcessEventPK>
+      <eventDescription>function beforeTaskSave(colleagueId,nextSequenceId,userList){
+var serviceMVC,serviceECM,ret,xml,FWMODEL,FWTABLE;
+var err = {message:&apos;&apos;};
+var numState = getValue(&apos;WKNumState&apos;);
+var FWTYPE = hAPI.getAdvancedProperty(&apos;FWTYPE&apos;);
+var FWLASTSEQ = hAPI.getAdvancedProperty(&apos;FWLASTSEQ&apos;);
+var FWVISUAL = hAPI.getAdvancedProperty(&apos;FWVISUAL&apos;);
+var cardData = hAPI.getCardData(getValue(&apos;WKNumProces&apos;));
+var xmlStr, cfx;
+var cst1,constraints,ds;
+
+if (nextSequenceId &gt; numState &amp;&amp; (FWTYPE == 2 || nextSequenceId == FWLASTSEQ)){
+	serviceMVC = getServiceMVC(err);
+	if (!serviceMVC){
+		throw err.message;
+		return;
+	}
+
+	if (FWTYPE == 1){ // modelo 1
+		serviceECM = getServiceECM(err);
+		if (!serviceECM){
+			throw err.message;
+			return;
+		}
+		FWTABLE = hAPI.getAdvancedProperty(&apos;FWTABLE&apos;);
+	}
+
+	cfx = hAPI.getAdvancedProperty(&apos;FWMVCDATASERVICE&apos;).indexOf(&apos;FLUIG&apos;) &gt; 0;
+	FWMODEL = hAPI.getAdvancedProperty(&apos;FWMODEL&apos;);
+	try{
+		if (FWTYPE == 1){
+			if (cfx)
+				ret = serviceMVC.getxmldatatable([],FWTABLE,FWMODEL) // modelo 1
+			else
+				ret = serviceMVC.GETXMLDATATABLE([],FWTABLE,FWMODEL); // modelo 1
+		}
+		else {
+			if (cfx)
+				ret = serviceMVC.getxmldatadetail([],FWMODEL) // MVC
+			else
+				ret = serviceMVC.GETXMLDATADETAIL([],FWMODEL); // MVC
+		}
+
+		// remove tag de enconding do XML e decodifica o UTF8 do XML para realizar o parser
+		xml = new XML(new String(new java.lang.String(ret,&quot;UTF-8&quot;)).replace(/&lt;\?.*\?&gt;/g,&apos;&apos;));
+	} catch(e){
+throw &apos;Ocorreu um erro na comunica��o com o servi�o do Totvs Microsiga Protheus, verifique os dados do formul�rio (&apos;+e.message+&apos;)&apos;;
+		return;
+	}
+
+	ret = org.apache.commons.codec.binary.Base64.decodeBase64(FWVISUAL.getBytes()); // lista de campos n�o editaveis
+	ret = updateXMLFields(xml,err,eval(&apos;(&apos;+new java.lang.String(ret)+&apos;)&apos;),cardData); // atualiza XML do MODEL com valores do formul�rio
+	if (err.message.length &gt; 0){
+		throw err.message
+	}
+	else if (ret){
+throw &apos;Preencha os dados do formul�rio&apos;
+	}
+	else{
+		
+		cst1 = DatasetFactory.createConstraint(&quot;colleaguePK.colleagueId&quot;, colleagueId, colleagueId, ConstraintType.MUST);
+����	constraints = new Array(cst1);
+�����	ds = DatasetFactory.getDataset(&quot;colleague&quot;, null, constraints, null);
+		
+		xml.@Operation = 3; // define como opera��o de inclus�o no XML
+		xml.@WKDef = getValue(&apos;WKDef&apos;);
+		xml.@WKVersDef = getValue(&apos;WKVersDef&apos;);
+		xml.@WKNumProces = getValue(&apos;WKNumProces&apos;);
+		xml.@WKNumState = numState;
+		xml.@WKCurrentState = getValue(&apos;WKCurrentState&apos;);
+		xml.@WKCompany = getValue(&apos;WKCompany&apos;);
+		xml.@WKUser = getValue(&apos;WKUser&apos;);
+		xml.@WKUserEmail = ds.getValue(0,&apos;mail&apos;);
+		xml.@WKCompletTask = getValue(&apos;WKCompletTask&apos;);
+		xml.@WKNextState = nextSequenceId;
+		xml.@WKCardId = getValue(&apos;WKCardId&apos;);
+		xml.@WKFormId = getValue(&apos;WKFormId&apos;);
+		
+		try{
+			// retorna tag de encoding e codifica string com UTF-8
+			xmlStr = &apos;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&apos;+xml.toXMLString();
+			if (FWTYPE == 1) {
+				if (cfx)
+					ret = serviceECM.putdata([],FWTABLE,FWMODEL,new java.lang.String(xmlStr).getBytes(&quot;UTF-8&quot;))
+				else
+					ret = serviceECM.PUTDATA([],FWTABLE,FWMODEL,new java.lang.String(xmlStr).getBytes(&quot;UTF-8&quot;));
+			}
+			else if (nextSequenceId == FWLASTSEQ) {
+				if (cfx)
+					ret = serviceMVC.putxmldata([],FWMODEL,new java.lang.String(xmlStr).getBytes(&quot;UTF-8&quot;))
+				else
+					ret = serviceMVC.PUTXMLDATA([],FWMODEL,new java.lang.String(xmlStr).getBytes(&quot;UTF-8&quot;));
+			}
+			else {
+				if (cfx)
+					ret = serviceMVC.vldxmldata([],FWMODEL,new java.lang.String(xmlStr).getBytes(&quot;UTF-8&quot;))
+				else
+					ret = serviceMVC.VLDXMLDATA([],FWMODEL,new java.lang.String(xmlStr).getBytes(&quot;UTF-8&quot;));
+			}
+		} catch(e){
+throw &apos;Ocorreu um erro na comunica��o com o servi�o do Totvs Microsiga Protheus, verifique os dados do formul�rio (&apos;+e.message+&apos;)&apos;;
+		}
+	}
+}
+}
+function updateXMLFields(node,err,fVisual,cardData){
+var list = node.children();
+var isEmpty = true;
+var isFieldsEmpty = true;
+var optional = (node.@optional == &apos;1&apos;);
+var name,value,visual,msg = &apos;&apos;;
+var obrigat = {message:&apos;&apos;};
+
+for (var i=0;i&lt;list.length();i++){
+	switch (Trim(list[i].@modeltype.toString())){
+		case &apos;FIELDS&apos;:
+			if (!updateXMLFields(list[i],err,fVisual,cardData))
+				isEmpty = false;
+			break;
+		case &apos;GRID&apos;:
+			if (!updateXMLGrid(list[i],err,fVisual,cardData))
+				isEmpty = false;
+			break;
+		default:
+			name = list[i].name().localName; // nome do campo
+
+			// verica se campo pode ser editado
+			visual = false;
+			for (var j=0;j&lt;fVisual.length;j++){
+				if (fVisual[j] == name){
+					visual = true;
+					break;
+				}
+			}
+
+			if (!visual &amp;&amp; cardData.containsKey(name)){
+				value = cardData.get(name);
+
+				// valida se campo � obrigatorio
+				if(checkObrigat(list[i],list[i],value,obrigat)){
+					if (optional || obrigat.message.length == 0){
+						msg = obrigat.message;
+						continue;				
+					}
+					else{
+						err.message = obrigat.message;
+						break;
+					}
+				}
+
+				isFieldsEmpty = false;
+				list[i].value = convertValue(name,list[i],value,err); // converte valor para padrao ADVPL
+			}
+			break;
+	}
+	if (err.message.length &gt; 0)
+		break;
+}
+if (optional &amp;&amp; !isFieldsEmpty &amp;&amp; msg.length &gt; 0)
+	err.message = msg;
+return isEmpty &amp;&amp; isFieldsEmpty;
+}
+
+function updateXMLGrid(node,err,fVisual,cardData){
+var i,j,it,name;
+var list = node.children();
+var data
+var item = node.items.item.copy();
+var obrigat = {message:&apos;&apos;};
+var optional = (node.@optional == &apos;1&apos;);
+var isEmpty = true;
+var isGridEmpty = true;
+
+if (!cardData.containsKey(node.name().localName+&apos;_DATA&apos;))
+	return false;
+
+delete node.items.item;
+
+// verifica se grid esta vazio e se � opcional
+data = cardData.get(node.name().localName+&apos;_DATA&apos;);
+if (!data || data.trim().isEmpty()){
+	if (!optional)
+err.message = &apos;Preencha pelo menos uma linha das grades&apos;;
+	return true;
+}
+
+// linhas do grid sao guardadas no input hidden do formulario
+data = JSON.parse(new String(data));
+for (i=0;i&lt;data.length;i++){
+	
+	if (data[i].deleted == &apos;0&apos;){ // linha nao deletada
+		it = item.copy();
+		list = it.children();
+		
+		for (j=0;j&lt;list.length();j++){
+			name = list[j].name().localName;
+			value = data[i][name];
+			
+			if (value)
+				value = new java.lang.String(value.toString());
+			
+			// valida se campo � obrigatorio
+			obrigat.message = &apos;&apos;;
+			if(checkObrigat(list[j],node.struct.child(name),value,obrigat)){
+				if (optional || obrigat.message.length == 0){
+					msg = obrigat.message;
+					continue;				
+				}
+				else{
+					err.message = obrigat.message;
+					break;
+				}
+			}
+			
+			isGridEmpty = false;
+			it.replace(name,convertValue(name,node.struct.child(name),value,err)); // converte valor para padrao ADVPL
+			
+			if (err.message.length &gt; 0)
+				break;
+		}
+		
+		if (err.message.length &gt; 0)
+			break;
+		it.@id = i+1;
+		node.items.appendChild(it);
+	}
+}
+
+if (optional &amp;&amp; !isGridEmpty &amp;&amp; msg.length &gt; 0)
+	err.message = msg;
+
+if (err.message.length == 0){
+	list = node.children();
+	for (i=0;i&lt;list.length();i++){
+		switch (Trim(list[i].@modeltype.toString())){
+			case &apos;FIELDS&apos;:
+				if (!updateXMLFields(list[i],err,fVisual,cardData))
+					isEmpty = false;
+				break;
+			case &apos;GRID&apos;:
+				if (!updateXMLGrid(list[i],err,fVisual,cardData))
+					isEmpty = false;
+				break;
+		}
+		if (err.message.length &gt; 0)
+			break;
+	}
+}
+return isEmpty &amp;&amp; isGridEmpty;
+}
+
+function checkObrigat(child,struct,value,err){
+err.message = &apos;&apos;;
+if (!value || value.trim().isEmpty() || (child.@datatype.toString() == &apos;D&apos; &amp;&amp; value.replace(&apos;/&apos;,&apos;&apos;).trim().isEmpty())){
+	if(struct.@obrigat == &apos;1&apos;)
+err.message = &apos;O campo &apos;+struct.@info+&apos; (&apos;+child.name().localName+&apos;) n�o foi preenchido&apos;;
+	return true;
+}
+return false;
+}
+
+var setYear,setDate,yCount;
+
+function convertValue(name,struct,value,err){
+var y,m,d,len,str,reg,hasErr;
+
+if (!setDate){
+	setYear = new Date().getFullYear().toString().substring(0,2);
+	setDate = hAPI.getAdvancedProperty(&apos;FWSETDATE&apos;);
+	yCount = setDate.match(/yyyy/) ? 4 : 2;
+}
+
+value = value.trim();
+
+switch (struct.@datatype.toString()){
+case &apos;C&apos;:
+	break;
+case &apos;D&apos;:
+	hasErr = false;
+	len = value.length();
+			
+	d = setDate.indexOf(&apos;d&apos;);
+	m = setDate.indexOf(&apos;m&apos;);
+	y = setDate.indexOf(&apos;y&apos;);
+
+	if (d + 2 &gt; len || m + 2 &gt; len || y + yCount &gt; len){
+		hasErr = true;
+	}
+	else{
+		str = value.substr(m,2) + value.substr(d,2);
+		if (yCount == 4)
+			str = value.substr(y,4) + str;
+		else
+			str = setYear + value.substr(y,2) + str;
+
+		if (str.match(/((((19|20)(([02468][048])|([13579][26]))0229))|((19|20)[0-9][0-9])((((0[1-9])|(1[0-2]))((0[1-9])|(1\d)|(2[0-8])))|((((0[13578])|(1[02]))31)|(((0[1,3-9])|(1[0-2]))(29|30)))))/g))
+			value = new java.lang.String(str);
+		else
+			hasErr = true;
+	}
+			
+	if (hasErr)
+err.message = &apos;O campo &apos;+struct.@info+&apos; (&apos;+name+&apos;) cont�m uma data inv�lida&apos;;
+	break;
+case &apos;N&apos;:
+	len = struct.@len.toString().split(&apos;,&apos;);
+	if (len[1] == &apos;0&apos;){
+		reg = new RegExp(&apos;^[0-9]{1,&apos;+len[0]+&apos;}$&apos;);
+		str = value.replace(&apos;,&apos;,&apos;&apos;);
+		if(!reg.test(str)){
+			str = value.replace(&apos;.&apos;,&apos;&apos;);
+			if(!reg.test(str)){
+err.message = &apos;O campo &apos;+struct.@info+&apos; (&apos;+name+&apos;) cont�m um n�mero (valor ou tamanho) inv�lido&apos;
+				break;
+			}
+		}
+		value = new java.lang.String(str);
+	}
+	else{
+		reg = new RegExp(&apos;^0$|^0\.[0-9]{1,&apos;+len[1]+&apos;}$|^[0-9]{0,&apos;+len[0]+&apos;}(\.[0-9]{1,&apos;+len[1]+&apos;})?$&apos;);
+		str = value.replace(&apos;.&apos;,&apos;&apos;).replace(&apos;,&apos;,&apos;.&apos;);
+		if(!reg.test(str)){
+			str = value.replace(&apos;,&apos;,&apos;&apos;);
+			if(!reg.test(str)){
+err.message = &apos;O campo &apos;+struct.@info+&apos; (&apos;+name+&apos;) cont�m um n�mero (valor ou tamanho) inv�lido&apos;
+				break;
+			}
+		}
+		value = new java.lang.String(str);
+	}
+	break;
+}
+return value;
+}
+function Trim(str){return str.replace(/^\s+|\s+$/g,&quot;&quot;);}
+function getServiceECM(err){
+var dataService = hAPI.getAdvancedProperty(&apos;FWECMDATASERVICE&apos;);
+var fwService = ServiceManager.getService(dataService);
+var serviceHelper,serviceLocator,service;
+
+if (!fwService){
+err.message = &apos;O servi�o do Totvs Microsiga Protheus n�o foi registrado no ECM. Execute novamente a Manuten��o de Processos ECM no Configurador do Totvs Microsiga Protheus.&apos;
+	return null;
+}
+try{
+	serviceHelper = fwService.getBean();
+	if (dataService.indexOf(&apos;FLUIG&apos;) &lt; 0)
+		serviceLocator = serviceHelper.instantiate(&apos;br.com.totvs.webservices.fwwsecm_apw.FWWSECMLocator&apos;)
+	else
+		serviceLocator = serviceHelper.instantiate(&apos;br.com.totvs.webservices.fwwsecm_apw.FWWSECM&apos;);
+	service = serviceLocator.getFWWSECMSOAP();
+
+	var outInterceptor = new org.apache.cxf.interceptor.LoggingOutInterceptor();
+	var inInterceptor = new org.apache.cxf.interceptor.LoggingInInterceptor();
+	var client = org.apache.cxf.frontend.ClientProxy.getClient(service);
+	client.getOutInterceptors().add(outInterceptor);
+	client.getInInterceptors().add(inInterceptor);
+	var http = client.getConduit();
+	var httpClientPolicy = new org.apache.cxf.transports.http.configuration.HTTPClientPolicy();
+	httpClientPolicy.setAllowChunking(false);
+	http.setClient(httpClientPolicy);
+}
+catch(e){
+err.message = &apos;Ocorreu erro no servi�o do Totvs Microsiga Protheus (&apos;+e.message+&apos;). Verifique a configura��o no ECM ou execute novamente a Manuten��o de Processos ECM no Totvs Microsiga Protheus.&apos;
+	return null;
+}
+return service;
+}
+function getServiceMVC(err){
+var dataService = hAPI.getAdvancedProperty(&apos;FWMVCDATASERVICE&apos;);
+var fwService = ServiceManager.getService(dataService);
+var serviceHelper,serviceLocator,service;
+
+if (!fwService){
+err.message = &apos;O servi�o do Totvs Microsiga Protheus n�o foi registrado no ECM. Execute novamente a Manuten��o de Processos ECM no Configurador do Totvs Microsiga Protheus.&apos;
+	return null;
+}
+try{
+	serviceHelper = fwService.getBean();
+	if (dataService.indexOf(&apos;FLUIG&apos;) &lt; 0)
+		serviceLocator = serviceHelper.instantiate(&apos;br.com.totvs.webservices.fwwsmodel_apw.FWWSMODELLocator&apos;)
+	else
+		serviceLocator = serviceHelper.instantiate(&apos;br.com.totvs.webservices.fwwsmodel_apw.FWWSMODEL&apos;);
+	service = serviceLocator.getFWWSMODELSOAP();
+
+	var outInterceptor = new org.apache.cxf.interceptor.LoggingOutInterceptor();
+	var inInterceptor = new org.apache.cxf.interceptor.LoggingInInterceptor();
+	var client = org.apache.cxf.frontend.ClientProxy.getClient(service);
+	client.getOutInterceptors().add(outInterceptor);
+	client.getInInterceptors().add(inInterceptor);
+	var http = client.getConduit();
+	var httpClientPolicy = new org.apache.cxf.transports.http.configuration.HTTPClientPolicy();
+	httpClientPolicy.setAllowChunking(false);
+	http.setClient(httpClientPolicy);
+}
+catch(e){
+err.message = &apos;Ocorreu erro no servi�o do Totvs Microsiga Protheus (&apos;+e.message+&apos;). Verifique a configura��o no ECM ou execute novamente a Manuten��o de Processos ECM no Totvs Microsiga Protheus.&apos;
+	return null;
+}
+return service;
+}</eventDescription>
+    </WorkflowProcessEvent>
+  </list>
+  <list>
+    <AdvancedProcessProperties>
+      <advancedProcessPropertiesPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <propertyId>FWECMDATASERVICE</propertyId>
+        <version>1</version>
+      </advancedProcessPropertiesPK>
+      <propertieValue>TOTVS_FWWSECMFLUIG_ODB118</propertieValue>
+    </AdvancedProcessProperties>
+    <AdvancedProcessProperties>
+      <advancedProcessPropertiesPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <propertyId>FWLASTSEQ</propertyId>
+        <version>1</version>
+      </advancedProcessPropertiesPK>
+      <propertieValue>2</propertieValue>
+    </AdvancedProcessProperties>
+    <AdvancedProcessProperties>
+      <advancedProcessPropertiesPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <propertyId>FWMODEL</propertyId>
+        <version>1</version>
+      </advancedProcessPropertiesPK>
+      <propertieValue>MATA035</propertieValue>
+    </AdvancedProcessProperties>
+    <AdvancedProcessProperties>
+      <advancedProcessPropertiesPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <propertyId>FWMVCDATASERVICE</propertyId>
+        <version>1</version>
+      </advancedProcessPropertiesPK>
+      <propertieValue>TOTVS_FWMVCFLUIG_ODB118</propertieValue>
+    </AdvancedProcessProperties>
+    <AdvancedProcessProperties>
+      <advancedProcessPropertiesPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <propertyId>FWSETDATE</propertyId>
+        <version>1</version>
+      </advancedProcessPropertiesPK>
+      <propertieValue>dd/mm/yyyy</propertieValue>
+    </AdvancedProcessProperties>
+    <AdvancedProcessProperties>
+      <advancedProcessPropertiesPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <propertyId>FWTYPE</propertyId>
+        <version>1</version>
+      </advancedProcessPropertiesPK>
+      <propertieValue>2</propertieValue>
+    </AdvancedProcessProperties>
+    <AdvancedProcessProperties>
+      <advancedProcessPropertiesPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <propertyId>FWVISUAL</propertyId>
+        <version>1</version>
+      </advancedProcessPropertiesPK>
+      <propertieValue>WyJCTV9ERVNUR1IiLCJCTV9YQ1RSRUQxIiwiQk1fWENUUkVEMiJd</propertieValue>
+    </AdvancedProcessProperties>
+  </list>
+  <list/>
+  <list/>
+  <list/>
+  <list/>
+  <list/>
+  <list>
+    <ExtendedPropertyField>
+      <extendedPropertyFieldPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <stateSequence>0</stateSequence>
+        <propertyName>FWECMDATASERVICE</propertyName>
+      </extendedPropertyFieldPK>
+      <propertyType>0</propertyType>
+      <propertyDescription>FWECMDATASERVICE</propertyDescription>
+      <propertyValue>TOTVS_FWWSECMFLUIG_ODB118</propertyValue>
+      <isDefaultProperty>false</isDefaultProperty>
+    </ExtendedPropertyField>
+    <ExtendedPropertyField>
+      <extendedPropertyFieldPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <stateSequence>0</stateSequence>
+        <propertyName>FWLASTSEQ</propertyName>
+      </extendedPropertyFieldPK>
+      <propertyType>0</propertyType>
+      <propertyDescription>FWLASTSEQ</propertyDescription>
+      <propertyValue>2</propertyValue>
+      <isDefaultProperty>false</isDefaultProperty>
+    </ExtendedPropertyField>
+    <ExtendedPropertyField>
+      <extendedPropertyFieldPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <stateSequence>0</stateSequence>
+        <propertyName>FWMODEL</propertyName>
+      </extendedPropertyFieldPK>
+      <propertyType>0</propertyType>
+      <propertyDescription>FWMODEL</propertyDescription>
+      <propertyValue>MATA035</propertyValue>
+      <isDefaultProperty>false</isDefaultProperty>
+    </ExtendedPropertyField>
+    <ExtendedPropertyField>
+      <extendedPropertyFieldPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <stateSequence>0</stateSequence>
+        <propertyName>FWMVCDATASERVICE</propertyName>
+      </extendedPropertyFieldPK>
+      <propertyType>0</propertyType>
+      <propertyDescription>FWMVCDATASERVICE</propertyDescription>
+      <propertyValue>TOTVS_FWMVCFLUIG_ODB118</propertyValue>
+      <isDefaultProperty>false</isDefaultProperty>
+    </ExtendedPropertyField>
+    <ExtendedPropertyField>
+      <extendedPropertyFieldPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <stateSequence>0</stateSequence>
+        <propertyName>FWSETDATE</propertyName>
+      </extendedPropertyFieldPK>
+      <propertyType>0</propertyType>
+      <propertyDescription>FWSETDATE</propertyDescription>
+      <propertyValue>dd/mm/yyyy</propertyValue>
+      <isDefaultProperty>false</isDefaultProperty>
+    </ExtendedPropertyField>
+    <ExtendedPropertyField>
+      <extendedPropertyFieldPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <stateSequence>0</stateSequence>
+        <propertyName>FWTYPE</propertyName>
+      </extendedPropertyFieldPK>
+      <propertyType>0</propertyType>
+      <propertyDescription>FWTYPE</propertyDescription>
+      <propertyValue>2</propertyValue>
+      <isDefaultProperty>false</isDefaultProperty>
+    </ExtendedPropertyField>
+    <ExtendedPropertyField>
+      <extendedPropertyFieldPK>
+        <companyId>1</companyId>
+        <processId>MATA035</processId>
+        <version>1</version>
+        <stateSequence>0</stateSequence>
+        <propertyName>FWVISUAL</propertyName>
+      </extendedPropertyFieldPK>
+      <propertyType>0</propertyType>
+      <propertyDescription>FWVISUAL</propertyDescription>
+      <propertyValue>WyJCTV9ERVNUR1IiLCJCTV9YQ1RSRUQxIiwiQk1fWENUUkVEMiJd</propertyValue>
+      <isDefaultProperty>false</isDefaultProperty>
+    </ExtendedPropertyField>
+  </list>
+  <list/>
+</list>

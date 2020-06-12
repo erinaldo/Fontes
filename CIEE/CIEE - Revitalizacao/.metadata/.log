@@ -1,0 +1,48 @@
+!SESSION 2014-12-11 11:18:05.801 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.7.0
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=pt_BR
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.totvs.tds.dds 4 0 2014-12-11 11:18:07.747
+!MESSAGE [SCR] Component definition XMLs not found in bundle com.totvs.tds.dds. The component header value is OSGI-INF/component.xml
+
+!ENTRY com.totvs.tds.dds 4 0 2014-12-11 11:18:07.748
+!MESSAGE [SCR] Component definition XMLs not found in bundle com.totvs.tds.dds. The component header value is OSGI-INF/component.xml
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:18:56.234
+!MESSAGE Unable to create menu item "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection", command "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection" not defined
+
+!ENTRY com.totvs.tds.dds 4 0 2014-12-11 11:18:56.553
+!MESSAGE [SCR] Component definition XMLs not found in bundle com.totvs.tds.dds. The component header value is OSGI-INF/component.xml
+
+!ENTRY com.totvs.tds.dds 4 0 2014-12-11 11:18:56.559
+!MESSAGE [SCR] Component definition XMLs not found in bundle com.totvs.tds.dds. The component header value is OSGI-INF/component.xml
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:18:58.156
+!MESSAGE Unable to find Action Set: org.eclipse.jdt.junit.JUnitActionSet
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:18:58.157
+!MESSAGE Unable to find Action Set: org.eclipse.team.cvs.ui.CVSActionSet
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:18:58.157
+!MESSAGE Unable to find Action Set: org.eclipse.ant.ui.actionSet.presentation
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:18:58.157
+!MESSAGE Unable to find Action Set: com.totvs.tds.core.actionButtons
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:19:03.011
+!MESSAGE Unable to create menu item "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection", command "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection" not defined
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:19:03.029
+!MESSAGE Unable to create menu item "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection", command "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection" not defined
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:19:09.324
+!MESSAGE Unable to create menu item "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection", command "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection" not defined
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:19:25.934
+!MESSAGE Unable to create menu item "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection", command "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection" not defined
+
+!ENTRY org.eclipse.ui 4 4 2014-12-11 11:19:25.974
+!MESSAGE Unable to create menu item "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection", command "com.totvs.tds.core.ui.view.serverServerEnvironmentSelection" not defined

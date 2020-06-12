@@ -1,0 +1,1864 @@
+#INCLUDE "Mata907.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³MATA907 ºAutor  ³Edstron E. Correia  º Data ³  25/11/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Cadastro de Guias de Selos de Controle                    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SIGAFIS                                                   º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function Mata907()
+
+Local aRetCpo	:= {}          
+
+Private cCadastro	:= STR0001 //"Guias - Selos de Controle"
+Private aRotina		:= MenuDef()
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Variaveis "private" utilizadas na rotina automatica:                                     ³
+//³- lMsErroAuto e lMsHelpAuto para verificar possiveis inconsistencias na rotina automatica³
+//³- lSeloFiscal: para indicar que o movimento efetuado eh de selo                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private lMsErroAuto	:= .F.
+Private lMsHelpAuto	:= .F.
+Private lSeloFiscal	:= .T.
+
+dbSelectArea("SFN")
+dbSelectArea("SFO")
+
+aRetCpo := a907Campos()
+
+If Len(aRetCpo) == 0 
+	mBrowse( 6, 1,22,75,"SFN")
+Else 
+	a907MsgCmp(aRetCpo)
+Endif
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³A907IncluiºAutor ³Edstron E. Correia  º Data ³  25/11/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Verifica se a guia do selo de controle esta cadastrada     º±±
+±±º          ³                                                           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SIGAFIS                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a907Inclui()
+
+Local aRecSFN	:= {0,0}   
+Local aSldLote	:= {{},{}}  
+Local aSFN		:= {}              
+Local aAreaSFN	:= SFN->(GetArea())
+
+Local cAlias	:= "SFN"
+Local cFilOri	:= 	""
+Local cFilSFN	:=	""
+Local cLote		:=	""
+
+Local lEstoque	:=	dDataBase >= GetNewPar("MV_ESTSELO",cToD("/")) .And. !Empty(GetNewPar("MV_ESTSELO",cToD("/")))
+Local lTrSlAut	:= 	Iif(lEstoque,lEstoque,GetNewPar("MV_TRSLAUT",.F.))
+Local lContrEst	:= .T.
+
+Local nReg		:= SFN->(recno())
+Local nOpc		:= 3
+Local nGravou	:= 0
+Local nQtdeProc	:= 0
+Local nQtdeLote	:= 0
+
+Begin Transaction
+
+	nGravou := 	AxInclui(cAlias,nReg,nOpc,,,,"A907ChkInc()")
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Se a guia original foi gravada corretamente, efetua as demais gravacoes de³
+	//³estoque e da guia na filial que recebeu a transferencia.                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nGravou == 1       
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Quando ha o controle fisico do estoque, e necessario verificar,³
+		//³nas devolucoes e transferencias, se ha saldo nos lotes para    ³
+		//³confirmar o movimento.                                         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lEstoque 
+			If SFN->FN_TIPO $ "TD"
+				// Saldo por lote da origem do movimento
+				aSldLote[1] := a907SldFis(SFN->FN_CODIGO,SFN->FN_FILDEST,SFN->FN_QTDE,1,@nQtdeProc,cLote,@nQtdeLote)
+			Endif
+		Endif
+
+		aRecSFN[1] := SFN->(Recno())
+		
+		If SFN->FN_TIPO == 'N'
+			RecLock("SFO",.T.)
+			SFO->FO_FILIAL		:= xFilial("SFN")
+		   	SFO->FO_DATA  		:= SFN->FN_DATA
+			SFO->FO_GUIA		:= SFN->FN_GUIA
+		   	SFO->FO_SALDO		:= SFN->FN_QTDE
+		   	SFO->FO_SALDATU		:= SFN->FN_QTDE
+		   	SFO->FO_CLASSE		:= SFN->FN_CLASSE
+		   	SFO->FO_SERIE 		:= SFN->FN_SERIE
+		   	SFO->FO_COR 		:= SFN->FN_COR
+		  	SFO->(MsUnLock())
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica o xFilial das tabelas na filial de destino³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(SFN->FN_FILDEST) .And. SFN->FN_FILDEST <> cFilAnt
+			cFilOri := cFilAnt
+			cFilAnt	:= SFN->FN_FILDEST
+			cFilSFN	:= xFilial("SFN")	
+			cFilSFO	:= xFilial("SFO")	
+			cFilAnt := cFilOri
+		Endif                     
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Cria a guia de entrada por transferencia na filial que recebeu a transferencia³
+		//³Caso utilize controle fisico de estoque, sempre gera a guia automatica. Caso  ³
+		//³contrario, verifica o parametro MV_TRSLAUT para gerar ou nao.                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	    If (lEstoque .And. SFN->FN_TIPO == "T") .Or. (lTrSlAut .And. SFN->FN_TIPO == "T")
+
+			aAreaSFN := SFN->(GetArea())
+			
+			SX3->(dbSetOrder(1))
+			SX3->(dbSeek("SFN"))             
+			dbSelectArea("SFN")
+			Do While SX3->X3_ARQUIVO == "SFN" .And. !SX3->(Eof())
+				aAdd(aSFN,{SX3->X3_CAMPO,&(SX3->X3_CAMPO)})
+				SX3->(dbSkip())
+			EndDo
+	
+			RecLock("SFN",.T.)
+			SFN->FN_FILIAL	:= cFilSFN
+			SFN->FN_GUIA	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_GUIA"})][2]
+			SFN->FN_DATA	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_DATA"})][2]
+			SFN->FN_QTDE	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_QTDE"})][2]
+			SFN->FN_CLASSE	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_CLASSE"})][2]
+			SFN->FN_COR		:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_COR"})][2]
+			SFN->FN_NUMERO	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_NUMERO"})][2]
+			SFN->FN_NRFINAL	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_NRFINAL"})][2]
+			SFN->FN_SERIE	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_SERIE"})][2]
+			SFN->FN_TIPO	:= "E"
+			
+			If lEstoque
+				SFN->FN_CODIGO	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_CODIGO"})][2]
+				SFN->FN_VALOR	:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_VALOR"})][2]
+			Endif             
+			
+			SFN->(MsUnLock())    
+			
+			aRecSFN[2] := SFN->(Recno())
+			                           
+			RecLock("SFO",.T.)
+			SFO->FO_FILIAL		:= cFilSFO
+		   	SFO->FO_DATA  		:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_DATA"})][2]
+			SFO->FO_GUIA		:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_GUIA"})][2]
+		   	SFO->FO_SALDO		:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_QTDE"})][2]
+		   	SFO->FO_SALDATU		:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_QTDE"})][2]
+		   	SFO->FO_CLASSE		:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_CLASSE"})][2]
+		   	SFO->FO_SERIE 		:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_SERIE"})][2]
+		   	SFO->FO_COR 		:= aSFN[aScan(aSFN,{|x| Alltrim(x[1])=="FN_COR"})][2]
+		  	SFO->(MsUnLock())
+		  	
+		  	RestArea(aAreaSFN)
+		
+    	Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Controla o estoque fisico dos selos³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lEstoque
+			lContrEst := a907EstSL(SFN->FN_TIPO,SFN->FN_CODIGO,SFN->FN_QTDE,SFN->FN_VALOR,Iif(SFN->FN_TIPO == "T",SFN->FN_FILDEST,cFilAnt),"1",aRecSFN,aSldLote,SFN->FN_LOTECTL)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Se ocorreu erro na rotina automatica, nao efetua as gravacoes das outras tabelas - Rollback³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If !lContrEst
+				DisarmTransaction()
+			Endif  
+		Endif
+		   
+	Endif
+
+End Transaction
+	
+Return(.t.)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³A907ChkIncºAutor ³Edstron E. Correia  º Data ³  25/11/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Checa se a Guia do Selo de Controle Especial ja existe.    º±±
+±±º          ³                                                           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SIGAFIS                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a907ChkInc()
+
+Local aSldLote		:=	{{},{}}
+
+Local cIndexSFN		:=	""
+Local cFilter		:=	""
+Local cGuiaOri		:=	""     
+Local cTitulo		:=	""
+Local cProblema		:=	""
+Local cSolucao		:=	""
+Local cFilOri		:= 	""
+Local cFilSFN		:=	""
+Local cLote			:=	""
+
+Local nSelosSaida   :=	0
+Local nTotalSelos 	:=	0
+Local nOrd_ant		:=	0
+Local nQtdeOri		:=	0
+Local nQtdeLote		:=	0
+
+Local lRet			:=	.T.
+Local lEstoque		:=	dDataBase >= GetNewPar("MV_ESTSELO",cToD("/")) .And. !Empty(GetNewPar("MV_ESTSELO",cToD("/")))
+Local lOrigem		:=	.F.
+Local lTrSlAut		:= 	Iif(lEstoque,lEstoque,GetNewPar("MV_TRSLAUT",.F.))
+Local lGuia			:=	.F.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Quando ha o controle fisico do estoque, e necessario verificar,³
+//³nas devolucoes e transferencias, se ha saldo nos lotes para    ³
+//³confirmar o movimento.                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lEstoque 
+	If M->FN_TIPO $ "TD"
+		// Saldo por lote da origem do movimento
+		aSldLote[1] := a907SldFis(M->FN_CODIGO,M->FN_FILDEST,M->FN_QTDE,1,@nQtdeOri,cLote,@nQtdeLote)
+		lOrigem := nQtdeOri >= M->FN_QTDE
+	Endif
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica o xFilial das tabelas na filial de destino³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If M->FN_FILDEST <> cFilant
+	cFilOri := cFilAnt
+	cFilAnt	:= M->FN_FILDEST
+	cFilSFN	:= xFilial("SFN")	
+	cFilAnt := cFilOri
+Endif
+
+SFN->(dbsetorder(1))
+SX5->(dbsetorder(1))
+
+If M->FN_TIPO == "E"
+	// Somente efetua o processo de transferencia de filiais na filial de origem
+	cTitulo 	:= STR0069 	//"Entrada por transferência"
+	cProblema	:= STR0070	//"Os movimentos de transferências entre filiais somente podem "
+	cProblema	+= STR0071	//"ser manipulados na filial de origem."
+	cSolucao	:= STR0072	//"Para a inclusão ou a exclusão de entradas por transferência, "
+	cSolucao	+= STR0073	//"acesse a filial de origem dos movimentos."		
+	xMagHelpFis(cTitulo,cProblema,cSolucao)
+	lRet := .F.
+ElseIf M->FN_QTDE <= 0
+	cTitulo 	:= STR0112 	//"Quantidade da movimentação"
+	cProblema	:= STR0113	//"Não foi informada a quantidade de selos que será movimentada pela guia. "
+	cProblema	+= STR0114	//"Somente é possível efetuar o lançamento de guias em que exista a quantidade."
+	cSolucao	:= STR0115	//"Informe a quantidade de selos movimentada pela guia."
+	xMagHelpFis(cTitulo,cProblema,cSolucao)
+	lRet := .F.
+ElseIf SFN->(dbSeek(xFilial("SFN")+M->FN_CLASSE+M->FN_GUIA))
+	cTitulo 	:= STR0005 	//"Guia já existe"
+	cProblema	:= STR0006	//"O número da guia informada já foi cadastrado anteriormente." 
+	cSolucao	:= STR0007	//"Verifique o número correto da guia e sua classe e efetue novamente o cadastro." 
+	xMagHelpFis(cTitulo,cProblema,cSolucao)
+	lRet := .F.
+ElseIf Empty(M->FN_CLASSE)
+		cTitulo 	:= STR0008 	//"Classe inexistente"
+		cProblema	:= STR0108	//"Não foi informada a classe dos selos movimentados pela guia."
+		cSolucao	:= STR0109	//"Será necessário informar a classe para que a movimentação da guia possa ser finalizada."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.
+ElseIf SX5->(!DBSEEK(xFilial("SX5")+"A9"+M->FN_CLASSE))
+		cTitulo 	:= STR0008 	//"Classe inexistente"
+		cProblema	:= STR0009	//"A classe informada para o cadastro não existe na tabela A9"
+		cProblema	+= STR0010	//"das tabelas genéricas (SX5)."
+		cSolucao	:= STR0011 + M->FN_CLASSE + STR0012//"Cadastre a classe: "  " na tabela A9 para poder utilizá-la nesta guia."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.
+ElseIf (M->FN_TIPO=="T")
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Validacoes para guias de transferencia³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Empty (M->FN_FILDEST)
+		cTitulo 	:= STR0013 	//"Filial de destino"
+		cProblema	:= STR0014	//"A filial de destino da guia de transferência não foi informada."
+		cProblema	+= STR0015	//"Para guias de transferência, a filial de destino deve ser informada."
+		cSolucao	:= STR0016 	//"Informe a filial de destino para qual será efetuada a transferência de selos."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.
+	ElseIf SM0->(!DBSEEK(cEmpAnt+M->FN_FILDEST)) 
+		cTitulo 	:= STR0013 	//"Filial de destino"
+		cProblema	:= STR0017	//"A filial de destino da guia de transferência não existe."
+		cSolucao	:= STR0018 	//"Informe a filial de destino correta para qual será efetuada a transferência de selos."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.
+	ElseIf M->FN_FILDEST == cFilant
+		cTitulo 	:= STR0013 	//"Filial de destino"
+		cProblema	:= STR0019	//"Quando se tratar de uma transferência, a filial de destino deve ser "
+		cProblema	+= STR0020	//"diferente da filial corrente (origem da transferência)"
+		cSolucao	:= STR0018 	//"Informe a filial de destino correta para qual será efetuada a transferência de selos."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.
+	ElseIf Empty(M->FN_GUIAORI) .And. !lEstoque
+		cTitulo 	:= STR0021 	//"Guia de origem"
+		cProblema	:= STR0110	//"A guia de origem da transferência não foi informada. Esta informação é necessária "
+		cProblema	+= STR0111	//"para que se possa identificar a entrada de selos efetuada antes da transferência."			
+		cSolucao	:= STR0023 	//"Informe uma guia de origem para a transferência existente no cadastro de guias."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.	
+	ElseIf !SFN->(dbSeek(xFilial("SFN")+M->FN_CLASSE+M->FN_GUIAORI)) .And. !lEstoque
+		cTitulo 	:= STR0021 	//"Guia de origem"
+		cProblema	:= STR0022	//"A guia de origem informada não existe."
+		cSolucao	:= STR0023 	//"Informe uma guia de origem para a transferência existente no cadastro de guias."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.	
+	ElseIf SFN->FN_TIPO <> "N" .And. !lEstoque
+		cTitulo 	:= STR0021 	//"Guia de origem"
+		cProblema	:= STR0024	//"A guia de origem informada não é do tipo N-Normal. Apenas guias normais (entrada"
+		cProblema	+= STR0025	//"de selos) podem ser a origem dos selos no sistema, indicando que é possível a transferência."
+		cSolucao	:= STR0026 	//"Informe uma guia de origem para a transferência do tipo N-Normal."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.		
+	Else
+		lGuia := .T.
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Validacao da geracao da guia na filial de destino automaticamente³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (lEstoque .Or. lTrSlAut) .And. lGuia
+		If SFN->(dbSeek(cFilSFN+M->FN_CLASSE+M->FN_GUIA))
+			cTitulo 	:= STR0074 	//"Guia na filial de destino"
+			cProblema	:= STR0075	//"O número da guia de transferência informada já existe na filial de destino."
+			cSolucao	:= STR0076 	//"Informe um número de guia que não exista na filial de destino da transferência."
+			xMagHelpFis(cTitulo,cProblema,cSolucao)
+			lRet := .F.		
+		Endif
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se ha saldo para transferencia ou devolucao quando nao usa o controle fisico de estoque.³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !lEstoque
+
+	 	dbSelectArea("SFO")
+		SFO->(dbsetorder(1))
+	   	If SFO->(DBSEEK(xFilial("SFO")+M->FN_CLASSE+SPACE(8)+M->FN_GUIAORI))
+			nTotalSelos := SFO->FO_SALDATU
+		Endif
+	
+		dbSelectArea("SD2")
+   		SD2->(dbSetOrder(5))
+		SD2->(DBGOTOP())
+		SD2->(dbSeek(xFilial("SD2")+DtoS(SFO->FO_DATA+1)))
+		While SD2->(!eof()) .and. xFilial("SD2") == SD2->D2_FILIAL
+			If SF4->(dbSeek(xFilial("SF4")+SD2->D2_TES))
+    	    	If SF4->F4_SELO$"123"
+        			If SB1->(dbSeek(xFilial("SB1")+SD2->D2_COD))
+                 		If SB1->B1_SELO=="1"
+                     		nSelosSaida += SD2->D2_QUANT   
+            			Endif   
+                  	Endif
+               Endif
+            Endif
+            SD2->( dbSkip())
+        EndDo                            
+        
+		nOrd_ant 	:= SFN->(indexord())
+		cIndexSFN  	:= CriaTrab(nil,.f.)
+	    cFilter 	:= 'SFN->FN_FILIAL == "'+xFilial("SFN")+'" .And. '
+	    cFilter 	+= 'DTOS(SFN->FN_DATA) > "' +DTOS(SFO->FO_DATA) + '" .AND. '
+	    cFilter 	+= 'SFN->FN_TIPO <> "N"'
+	    IndRegua("SFN",cIndexSFN,"FN_FILIAL+FN_CLASSE+FN_GUIAORI+DTOS(FN_DATA)",,cFilter,STR0119)  // Selecionando registros
+	    
+	    SFN->(DbGoTop())
+		SFN->(dbSeek(xFilial("SFN")+M->FN_CLASSE+M->FN_GUIAORI+DtoS(SFO->FO_DATA+1)))		
+		
+		cGuiaOri	:=	xFilial("SFN")+M->FN_CLASSE+M->FN_GUIAORI
+		
+		While SFN->(!EOF()) .And. xFilial("SFN")+M->FN_CLASSE+M->FN_GUIAORI == cGuiaOri 
+			nSelosSaida += SFN->FN_QTDE
+			SFN->(DBSKIP())	
+		EndDo
+		
+		SFN->(RetIndex("SFN"))   
+       	SFN->(dbSelectArea("SFN"))
+      	SFN->(dbClearFilter())
+		SFN->(dbsetorder(nOrd_ant))    
+		
+	Endif
+		
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica o saldo fiscal e fisico por lote dos selos³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (!lEstoque .And. (nTotalSelos < (nSelosSaida+M->FN_QTDE)) .And. lGuia) .Or. (lEstoque .And. !lOrigem)
+		cTitulo 	:= STR0027 	//"Quantidade"            
+		cProblema	:= STR0028	//"A quantidade de selos que está sendo transferida é maior que o atual saldo "
+		cProblema	+= STR0029	//"disponível para movimentação."
+		cSolucao	:= STR0030 	//"Verifique a quantidade disponível de selos para transferência."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.		    
+    Endif
+
+ElseIf (M->FN_TIPO=="D")
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Validacoes para guias de devolucao³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !lEstoque
+		If Empty(M->FN_GUIAORI)
+			cTitulo 	:= STR0031 	//"Guia de origem da devolução"
+			cProblema	:= STR0032	//"A guia de origem da devolução não foi informada. Esta informação é necessária "
+			cProblema	+= STR0033	//"para que se possa identificar a entrada de selos efetuada antes da devolução."			
+			cSolucao	:= STR0034 	//"Informe uma guia de origem para a devolução existente no cadastro de guias."
+			xMagHelpFis(cTitulo,cProblema,cSolucao)
+		   	lRet := .F.	
+		ElseIf !SFN->(dbSeek(xFilial("SFN")+M->FN_CLASSE+M->FN_GUIAORI))
+			cTitulo 	:= STR0031 	//"Guia de origem da devolução"
+			cProblema	:= STR0022	//"A guia de origem informada não existe."
+			cSolucao	:= STR0035 	//"Informe uma guia de origem para a devolução existente no cadastro de guias."
+			xMagHelpFis(cTitulo,cProblema,cSolucao)
+			lRet := .F.	
+	    ElseIf SFN->FN_TIPO <> "N"
+			cTitulo 	:= STR0031 	//"Guia de origem da devolução"
+			cProblema	:= STR0024	//"A guia de origem informada não é do tipo N-Normal. Apenas guias normais (entrada "
+			cProblema	+= STR0036	//"de selos) podem ser a origem dos selos no sistema, indicando que é possível a devolução."
+			cSolucao	:= STR0037 	//"Informe uma guia de origem para a devolução do tipo N-Normal."
+			xMagHelpFis(cTitulo,cProblema,cSolucao)
+			lRet := .F.
+		Else
+			lGuia := .T.
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica se ha saldo para transferencia ou devolucao quando nao usa o controle fisico de estoque.³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea("SFO")
+		SFO->(dbsetorder(1))
+	   	If SFO->(DBSEEK(xFilial("SFO")+M->FN_CLASSE+SPACE(8)+M->FN_GUIAORI))
+			nTotalSelos := SFO->FO_SALDATU
+		Endif
+		
+		dbSelectArea("SD2")
+   		SD2->(dbSetOrder(5))
+		SD2->(dbSeek(xFilial("SD2")+DtoS(SFO->FO_DATA+1)))
+		While SD2->(!eof()) .and. xFilial("SD2") == SD2->D2_FILIAL
+			If SF4->(dbSeek(xFilial("SF4")+SD2->D2_TES))
+    	    	If SF4->F4_SELO$"123"
+        			If SB1->(dbSeek(xFilial("SB1")+SD2->D2_COD))
+                 		If SB1->B1_SELO=="1"
+                     		nSelosSaida += SD2->D2_QUANT   
+            			Endif   
+                  	Endif
+               Endif
+            Endif
+            SD2->( dbSkip())
+        EndDo   
+		
+		nOrd_ant 	:= SFN->(indexord())
+		cIndexSFN  	:= CriaTrab(nil,.f.)
+	    cFilter 	:= 'SFN->FN_FILIAL == "'+xFilial("SFN")+'" .And. '
+	    cFilter 	+= 'DTOS(SFN->FN_DATA) > "' +DTOS(SFO->FO_DATA) + '" .AND. '
+	    cFilter 	+= 'SFN->FN_TIPO <> "N"'
+	    IndRegua("SFN",cIndexSFN,"FN_FILIAL+FN_CLASSE+FN_GUIAORI+DTOS(FN_DATA)",,cFilter,STR0119) // Selecionando registros
+	    
+	    SFN->(DbGoTop())
+		SFN->(dbSeek(xFilial("SFN")+M->FN_CLASSE+M->FN_GUIAORI+DtoS(SFO->FO_DATA+1)))		
+		cGuiaOri	:=	xFilial("SFN")+M->FN_CLASSE+M->FN_GUIAORI
+		
+		While SFN->(!EOF()) .And. xFilial("SFN")+M->FN_CLASSE+M->FN_GUIAORI == cGuiaOri 
+			nSelosSaida += SFN->FN_QTDE
+			SFN->(DBSKIP())	
+		EndDo
+		
+		SFN->(RetIndex("SFN"))   
+       	SFN->(dbSelectArea("SFN"))
+      	SFN->(dbClearFilter())
+		SFN->(dbsetorder(nOrd_ant))
+
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica o saldo fiscal e fisico por lote dos selos³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (!lEstoque .And. (nTotalSelos < (nSelosSaida+M->FN_QTDE)) .And. lGuia) .Or. (lEstoque .And. !lOrigem)
+		cTitulo 	:= STR0027 	//"Quantidade"            
+		cProblema	:= STR0038	//"A quantidade de selos que está sendo devolvida é maior que o atual saldo "
+		cProblema	+= STR0029	//"disponível para movimentação."
+		cSolucao	:= STR0039 	//"Verifique a quantidade disponível de selos para devolução."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRet := .F.		    
+    Endif
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se controla o estoque fisico de selos. Caso efetue o controle,³
+//³serao chamadas rotinas automaticas do estoque para efetuar os          ³
+//³movimentos necessarios. Neste caso, serao necessarios os campos para   ³
+//³efetuar o movimento fisico.                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lRet .And. lEstoque
+	lRet := a907ChkEst(M->FN_TIPO,M->FN_FILDEST,M->FN_CODIGO,M->FN_VALOR,M->FN_LOTECTL)
+Endif
+
+Return lRet
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³A907DeleteºAutor ³Edstron E. Correia  º Data ³  26/11/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Verifica se a guia pode ser excluida.                      º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SIGAFIS                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a907Delete()
+
+Local aRecSFN		:= {0,0}    
+Local aAreaSFN 		:= SFN->(GetArea())
+Local aSldLote		:= {{},{}}
+
+Local cAlias		:= "SFN"
+Local cTitulo		:=	""
+Local cProblema		:=	""
+Local cSolucao		:=	""
+Local cFilBkp 		:= 	""
+
+Local lRet			:= .T.
+Local lEstoque		:=	dDataBase >= GetNewPar("MV_ESTSELO",cToD("/"))  .And. !Empty(GetNewPar("MV_ESTSELO",cToD("/"))) .And. SFN->FN_ESTOQUE == '1'
+Local lFecha		:= .F.
+Local lContrEst		:= .T.
+Local lOrigem		:= .F.
+Local lDestino		:= .F.
+
+Local nReg			:= SFN->(recno())
+Local nOpc			:= 5    
+Local nDeleta		:= 0
+Local nQtdeOri		:= 0
+Local nQtdeDest		:= 0
+Local nLoteOri		:= 0
+Local nLoteDest		:= 0
+
+dbSelectArea("SFO")
+dbsetorder(2)
+If dbSeek(xFilial("SFO")+SFN->FN_CLASSE+SFN->FN_GUIA)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Se existir o fechamento, nao permite a exclusao da guia³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   	If SFO->FO_DTFECHA >= SFO->FO_DATA     
+		cTitulo 	:= STR0040 	//"Exclusão não permitida"
+		cProblema	:= STR0041	//"A guia a ser excluída possui um fechamento de saldo."
+		cProblema	+= STR0042	//"Não é permitida a exclusão de guias com saldos encerrados."
+		cSolucao	:= STR0043 	//"Efetue a exclusão do fechamento de saldos antes da exclusão da guia."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+      	lRet := .F.
+   	Endif
+   	
+   	lFecha := .T.
+
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Somente permite a exclusão de transferencias na filial de origem dos movimentos³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If SFN->FN_TIPO == "E"
+	cTitulo 	:= STR0069 	//"Entrada por transferência"
+	cProblema	:= STR0070	//"Os movimentos de transferências entre filiais somente podem "
+	cProblema	+= STR0071	//"ser manipulados na filial de origem."
+	cSolucao	:= STR0072	//"Para a inclusão ou a exclusão de entradas por transferência, "
+	cSolucao	+= STR0073	//"acesse a filial de origem dos movimentos e efetue a transferência corretamente."		
+	xMagHelpFis(cTitulo,cProblema,cSolucao)
+	lRet := .F.
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se pode excluir a guia quando ha o controle fisico de estoque³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lRet .And. lEstoque
+		
+	aRecSFN[1]	:= SFN->(Recno())
+	
+	If SFN->FN_TIPO $ "N/T"
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Quando ha o controle fisico do estoque, e necessario verificar,³
+		//³nas devolucoes e transferencias, se ha saldo nos lotes para    ³
+		//³confirmar o movimento.                                         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lEstoque 
+			If SFN->FN_TIPO == "T"
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Quando for transferencia, eh necessario verificar o Recno da guia gravada na³
+				//³filial de destino.                                                          ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				aAreaSFN := SFN->(GetArea())
+				cFilBkp := cFilAnt
+				cFilAnt	:= SFN->FN_FILDEST 
+				If SFN->(dbSeek(xFilial("SFN")+SFN->FN_CLASSE+SFN->FN_GUIA))
+					aRecSFN[2]	:= SFN->(Recno())
+					aSldLote[2] := a907SldFis(SFN->FN_CODIGO,cFilAnt,SFN->FN_QTDE,2,@nQtdeDest,SFN->FN_LOTECTL,@nLoteDest)
+				Endif
+				cFilAnt := cFilBkp
+				RestArea(aAreaSFN)
+				// Saldo por lote do destino do movimento				
+				lDestino := nLoteDest >= SFN->FN_QTDE
+			ElseIf SFN->FN_TIPO == "N"
+				// Saldo por lote da origem do movimento
+				aSldLote[1] := a907SldFis(SFN->FN_CODIGO,SFN->FN_FILDEST,SFN->FN_QTDE,1,@nQtdeOri,SFN->FN_LOTECTL,@nLoteOri)
+				lOrigem := nLoteOri >= SFN->FN_QTDE
+			Endif
+		Endif
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica se pode excluir a guia de entrada normal ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+       	If SFN->FN_TIPO == "N"
+			If !lOrigem
+				cTitulo 	:= STR0044 	//"Exclusão não permitida"
+				cProblema	:= STR0045	//"Os selos da guia selecionada para exclusão já foram fisicamente "
+				cProblema	+= STR0046	//"movimentados (requisições, devoluções e demais movimentos de produção) "
+				cProblema	+= STR0117	//"ou não há saldo disponível. Neste caso, não é permitida a exclusão da guia. "				
+				cSolucao	:= STR0047 	//"Verifique a guia correta para exclusão. Somente é permitida a exclusão de guias "
+				cSolucao	+= STR0118 	//"cujo lote não tenha sido fisicamente movimentado."
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+		      	lRet := .F.
+			Endif	
+	    Endif 
+	    
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica se pode excluir a transferencia ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SFN->FN_TIPO == "T"
+			If !lDestino
+				cTitulo 	:= STR0044 	//"Exclusão não permitida"
+				cProblema	:= STR0045	//"Os selos da guia selecionada para exclusão já foram fisicamente "
+				cProblema	+= STR0046	//"movimentados (requisições, devoluções e demais movimentos de produção) "
+				cProblema	+= STR0117	//"Neste caso, não é permitida a exclusão da guia. "				
+				cSolucao	:= STR0047 	//"Verifique a guia correta para exclusão. Somente é permitida a exclusão de guias "
+				cSolucao	+= STR0118 	//"cujo lote não tenha sido fisicamente movimentado."
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+		      	lRet := .F.
+			Endif	
+		Endif           
+		
+	Endif
+		
+Endif
+
+If lRet
+		
+	Begin Transaction
+
+		dbSelectArea("SFN")  
+		nDeleta := AxDeleta(cAlias,nReg,nOpc)
+		
+		If nDeleta == 2
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Exclui os movimentos fisicos³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If lEstoque 
+				lContrEst := a907EstSL(SFN->FN_TIPO,SFN->FN_CODIGO,SFN->FN_QTDE,SFN->FN_VALOR,Iif(SFN->FN_TIPO == "T",SFN->FN_FILDEST,cFilAnt),"2",aRecSFN,aSldLote,SFN->FN_LOTECTL)
+			Endif
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Exclui a guia na filial de destino gerada automaticamente³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If SFN->FN_TIPO == "T"          
+				aAreaSFN := SFN->(GetArea())
+				SFN->(dbGoTo(aRecSFN[2])) 
+				RecLock("SFN",.F.)
+				SFN->(dbDelete())
+				SFN->(MsUnLock())
+				SFN->(FkCommit())
+				RestArea(aAreaSFN)
+			Endif
+				
+			If lContrEst
+				If lFecha
+					dbSelectArea("SFO")
+					RecLock("SFO",.F.,.T.)
+					dbDelete()
+					SFO->(MsUnLock()) 
+					SFO->(FkCommit())
+				Endif
+		    Else
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Se ocorreu erro na rotina automatica, nao efetua as gravacoes das outras tabelas - Rollback³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				DisarmTransaction()
+			Endif
+			
+		Endif
+	
+	End Transaction
+
+Endif                   
+
+Return lRet
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³A907Alter ºAutor ³Edstron E. Correia  º Data ³  25/11/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Verifica as validacoes para alteracao.                     º±±
+±±º          ³                                                           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SIGAFIS                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a907Alter()
+Local nReg	:=SFN->(recno())
+Local nOpc	:=4
+Local cAlias:="SFN"
+Local nX    :=0
+Local aCpos :={}
+
+For nX := 1 To FCount()
+	M->&(FieldName(nX)) := CriaVar(FieldName(nX))
+    // Campos nao editaveis
+	If !(FieldName(nX)) $ "FN_GUIA/FN_DATA/FN_QTDE/FN_NUMERO/FN_CLASSE/FN_SERIE/FN_NRFINAL/FN_CODIGO/FN_VALOR"
+		Aadd(aCpos,FieldName(nX))
+	EndIf
+Next nX
+
+AxAltera( cAlias, nReg, nOpc,,aCpos)
+Return(.t.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³MenuDef   ³ Autor ³ Marco Bianchi         ³ Data ³01/09/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Utilizacao de menu Funcional                               ³±±
+±±³          ³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Array com opcoes da rotina.                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Parametros do array a Rotina:                               ³±±
+±±³          ³1. Nome a aparecer no cabecalho                             ³±±
+±±³          ³2. Nome da Rotina associada                                 ³±±
+±±³          ³3. Reservado                                                ³±±
+±±³          ³4. Tipo de Transa‡„o a ser efetuada:                        ³±±
+±±³          ³	  1 - Pesquisa e Posiciona em um Banco de Dados           ³±±
+±±³          ³    2 - Simplesmente Mostra os Campos                       ³±±
+±±³          ³    3 - Inclui registros no Bancos de Dados                 ³±±
+±±³          ³    4 - Altera o registro corrente                          ³±±
+±±³          ³    5 - Remove o registro corrente do Banco de Dados        ³±±
+±±³          ³5. Nivel de acesso                                          ³±±
+±±³          ³6. Habilita Menu Funcional                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Static Function MenuDef()
+     
+Private aRotina := {	{"Pesquisar"	,"AxPesqui"		, 0 , 1, 0,.F.},;          
+						{ "Visualizar" 	,"AxVisual"		, 0 , 2, 0,NIL},;          
+						{ "Incluir" 	,"A907Inclui"	, 0 , 3, 0,NIL},;        
+						{ "Alterar" 	,"A907Alter"	, 0 , 4, 2,NIL},;     
+						{ "Excluir" 	,"A907Delete"	, 0 , 5, 0,NIL}}  
+
+If ExistBlock("MT907MNU")
+	ExecBlock("MT907MNU",.F.,.F.)
+EndIf
+
+Return(aRotina)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³a907ChkEstºAutor  ³Mary C. Hergert     º Data ³  26/03/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Verifica se todos os itens necessarios para controle fisico º±±
+±±º          ³do estoque sao atendidos                                    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³ExpC1 = tipo de movimento N=Normal;T=Transferencia;         º±±
+±±º          ³ExpC2 = filial de destino da transferencia                  º±±
+±±º          ³ExpC3 = codigo do produto SELO na tabela SB1                º±±
+±±º          ³ExpC4 = lote do produto                                     º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SigaFis                                                     º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function a907ChkEst(cTpMov,cFilDest,cCodigo,nValor,cLote)
+
+Local aCheca		:= Iif(cTpMov == "T",{cFilAnt,cFilDest},{cFilAnt})
+
+Local cEstoque		:= ""
+Local cTpMvDev 		:= ""
+Local cTpMvReq		:= ""
+Local cFilOri		:= cFilAnt   
+Local cTitulo		:=	""
+Local cProblema		:=	""
+Local cSolucao		:=	""
+
+Local lRetorno		:= .T.    
+
+Local nX			:= 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o grupo de produtos "Selos de Controle" existe para filtro do SB1³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Empty(xFilial("SX5")) 
+	aCheca	:= {cFilAnt}
+Endif
+For nX := 1 to Len(aCheca)
+	dbSelectArea("SX5")
+	SX5->(dbSetOrder(1))
+	If ! SX5->(dbSeek(xFilial("SX5")+"02SL"))
+		cTitulo 	:= STR0050 + cFilAnt	//"Grupo de produlos SL - Filial: "
+		cProblema	:= STR0051				//"O grupo de produtos SL (selo de controle), utilizado para identificar no "
+		cProblema	+= STR0052				//"cadastro de produtos quais itens são selos de controle, não está cadastrado"
+		cSolucao	:= STR0053  			//"Efetue o cadastro do grupo SL na tabela 02 (grupos de produtos)."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRetorno := .F.
+	Endif                
+Next
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Valida o codigo do produto informado.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lRetorno
+	If Empty(xFilial("SB1")) 
+		aCheca	:= {cFilAnt}
+	Endif
+	For nX := 1 to Len(aCheca)
+	
+		If !Empty(cCodigo) 
+			SB1->(dbSetOrder(1))
+			If !SB1->(dbSeek(xFilial("SB1")+cCodigo)) 
+				cTitulo 	:= STR0064 + cFilAnt			//"Produto selo - Filial: "
+				cProblema	:= STR0065 + Alltrim(cCodigo) 	//"O código do produto informado como selo de controle "
+				cProblema	+= STR0066 + cFilAnt			//" não existe no cadastro de produtos da filial "
+				cSolucao	:= STR0067 						//"Cadastre o produto informado em todas as filiais que "
+				cSolucao	+= STR0068 						//"estiverem envolvidas no processo."			
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			ElseIf SB1->B1_TIPO <> "SL"
+				cTitulo 	:= STR0064 + cFilAnt			//"Produto selo - Filial: "
+				cProblema	:= STR0077 + Alltrim(cCodigo) 	//"O código do produto informado "
+				cProblema	+= STR0078						//"não é do tipo SL - selo de controle."
+				cSolucao	:= STR0079 						//"Informe o código do produto correto."
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			ElseIf SB1->B1_RASTRO <> "L"
+				cTitulo 	:= STR0064 + cFilAnt			//"Produto selo - Filial: "
+				cProblema	:= STR0077 + Alltrim(cCodigo) 	//"O código do produto informado "
+				cProblema	+= STR0095						//"não possui controle de lotes. O controle de lotes á obrigatório "
+				cProblema	+= STR0096						//"quando se tem o controle físico de estoques para garantir a "
+				cProblema	+= STR0097						//"rastreabilidade das guias cadastradas."                                 
+				cSolucao	:= STR0098 						//"Utilize um produto selo que utilize o controle de lotes."
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			Endif
+		Else 
+			If nX == 1
+				cTitulo 	:= STR0064 + cFilAnt			//"Produto selo - Filial: "
+				cProblema	:= STR0080 						//"O código do produto referente ao selo de controle não foi informado"
+				cSolucao	:= STR0081 						//"Para controle físico de estoque é necessário informar a qual produto "
+				cSolucao	+= STR0082 						//"no cadastro de produtos o selo de controle se refere."
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			Endif
+		Endif
+	Next
+Endif
+
+If lRetorno 
+	
+	aCheca := Iif(cTpMov == "T",{cFilAnt,cFilDest},{cFilAnt})
+	
+	For nX := 1 to Len(aCheca)
+	
+		cFilAnt		:= aCheca[nX]
+		cEstoque	:= GetNewPar("MV_MOVIMSL","")	
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica no parametro os tipos de movimento especificos para devolucao e requisicao de selo³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//Movimento de devolucao - entrada no estoque
+		cTpMvDev := SubStr(cEstoque,1,At("/",cEstoque)-1)
+		//Movimento de requisicao - saida do estoque
+		cTpMvReq := SubStr(cEstoque,At("/",cEstoque)+1)
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica se os tipos de movimentos informados no parametro MV_MOVIMSL estao cadastrados³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cTpMvDev)
+			dbSelectArea("SF5")
+			SF5->(dbSetOrder(1))
+			If cTpMvDev == "499"
+				cTitulo 	:= STR0054 + cFilAnt	//"Tipo de movimento - estoque - Filial: "
+				cProblema	:= STR0055 + cTpMvDev	//"O tipo de movimento de devolução informado no parâmetro MV_ESTSELO - "
+				cProblema	+= STR0087           	//" - não pode ser utilizado para movimentações de usuário por se tratar "
+				cProblema	+= STR0088           	//"de um código de controle interno do sistema."
+				cSolucao	:= STR0089 				//"Utilize apenas códigos diferentes de 499 para movimentos de devolução"
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			ElseIf !SF5->(dbSeek(xFilial("SF5")+cTpMvDev))
+				cTitulo 	:= STR0054 + cFilAnt	//"Tipo de movimento - estoque - Filial: "
+				cProblema	:= STR0055 + cTpMvDev	//"O tipo de movimento de devolução informado no parâmetro MV_ESTSELO - "
+				cProblema	+= STR0056 				//" - não está cadastrado para a filial."
+				cSolucao	:= STR0057 				//"Efetue o cadastro do tipo de movimento informado no parâmetro para "
+				cSolucao	+= STR0058 				//"ser possível a sua utilização nos movimentos de estoque físico."			
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			ElseIf SF5->F5_VAL <> "S" 
+				cTitulo 	:= STR0054 + cFilAnt	//"Tipo de movimento - estoque - Filial: "
+				cProblema	:= STR0055 + cTpMvDev	//"O tipo de movimento de devolução informado no parâmetro MV_ESTSELO - "
+				cProblema	+= STR0091           	//" - não valoriza estoques. Por este motivo, não poderá ser utilizado para "
+				cProblema	+= STR0092           	//"atualizar estoque e custos dos selos de controle."
+				cSolucao	:= STR0093 				//"Utilize um código para movimentos de devolução que valorizem estoque."
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			Endif  
+		Else
+			cTitulo 	:= STR0054 + cFilAnt	//"Tipo de movimento - estoque - Filial: "
+			cProblema	:= STR0060 				//"O tipo de movimento de devolução não foi informado no parâmetro MV_ESTSELO."
+			cProblema	+= STR0061 				//"Desta forma, não é possível efetuar o controle de estoque físico de selos."
+			cSolucao	:= STR0062 				//"Informe o tipo de movimento solicitado no parâmetro para "
+			cSolucao	+= STR0058 				//"ser possível a sua utilização nos movimentos de estoque físico."						
+			xMagHelpFis(cTitulo,cProblema,cSolucao)
+			lRetorno := .F.
+		Endif                             
+	
+		If !Empty(cTpMvReq)
+			If cTpMvReq == "999"
+				cTitulo 	:= STR0054 + cFilAnt	//"Tipo de movimento - estoque - Filial: "
+				cProblema	:= STR0055 + cTpMvReq	//"O tipo de movimento de devolução informado no parâmetro MV_ESTSELO - "
+				cProblema	+= STR0087           	//" - não pode ser utilizado para movimentações de usuário por se tratar "
+				cProblema	+= STR0088           	//"de um código de controle interno do sistema."
+				cSolucao	:= STR0090 				//"Utilize apenas códigos diferentes de 999 para movimentos de requisição."
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			ElseIf !SF5->(dbSeek(xFilial("SF5")+cTpMvReq))
+				cTitulo 	:= STR0054 + cFilAnt	//"Tipo de movimento - estoque - Filial: "
+				cProblema	:= STR0059 + cTpMvReq	//"O tipo de movimento de requisição informado no parâmetro MV_ESTSELO - "
+				cProblema	+= STR0056 				//" - não está cadastrado para a filial."
+				cSolucao	:= STR0057 				//"Efetue o cadastro do tipo de movimento informado no parâmetro para "
+				cSolucao	+= STR0058 				//"ser possível a sua utilização nos movimentos de estoque físico."			
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			ElseIf SF5->F5_VAL <> "S" 
+				cTitulo 	:= STR0054 + cFilAnt	//"Tipo de movimento - estoque - Filial: "
+				cProblema	:= STR0059 + cTpMvReq	//"O tipo de movimento de requisição informado no parâmetro MV_ESTSELO - "
+				cProblema	+= STR0091           	//" - não valoriza estoques. Por este motivo, não poderá ser utilizado para "
+				cProblema	+= STR0092           	//"atualizar estoque e custos dos selos de controle."
+				cSolucao	:= STR0094 				//"Utilize um código para movimentos de requisição que valorizem estoque."
+				xMagHelpFis(cTitulo,cProblema,cSolucao)
+				lRetorno := .F.
+			Endif
+	  	Else
+			cTitulo 	:= STR0054 + cFilAnt	//"Tipo de movimento - estoque - Filial: "
+			cProblema	:= STR0063 				//"O tipo de movimento de requisição não foi informado no parâmetro MV_ESTSELO."
+			cProblema	+= STR0061 				//"Desta forma, não é possível efetuar o controle de estoque físico de selos."
+			cSolucao	:= STR0062 				//"Informe o tipo de movimento solicitado no parâmetro para "
+			cSolucao	+= STR0058 				//"ser possível a sua utilização nos movimentos de estoque físico."			
+			xMagHelpFis(cTitulo,cProblema,cSolucao)
+			lRetorno := .F.
+		Endif
+	Next
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Valida o valor da guia para atualização dos custos do estoque.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nValor == 0 .And. lRetorno
+	cTitulo 	:= STR0083 	//"Valor da guia"
+	cProblema	:= STR0084 	//"O valor da guia de selos de controle não foi informado."
+	cSolucao	:= STR0085 	//"Para controle físico de estoque e atualização de custos "
+	cSolucao	+= STR0086 	//"é necessário informar o valor total da guia de selos de controle."
+	xMagHelpFis(cTitulo,cProblema,cSolucao)
+	lRetorno := .F.
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Valida o lote informado. Somente permite a geracao de lotes que ³
+//³nao existam (para ser possivel rastrear a guia criada).         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(cLote) .And. cTpMov == "N"  .And. lRetorno
+	SB8->(dbSetOrder(5))
+	If SB8->(dbSeek(xFilial("SB8")+cCodigo+cLote))
+		cTitulo 	:= STR0099 + cFilAnt 	//"Lote de controle - Filial: "
+		cProblema	:= STR0100 				//"O lote de controle informado já está sendo utilizado. "
+		cProblema	+= STR0101 				//"Para controle físico de estoque, é necessário existir um lote "
+		cProblema	+= STR0102 				//"de controle por guia lançada."
+		cSolucao	:= STR0103 				//"Informe um lote que não esteja sendo utilizado ou deixe o lote em branco, "
+		cSolucao	+= STR0104 				//"para que o sistema possa determinar automaticamente o número."
+		xMagHelpFis(cTitulo,cProblema,cSolucao)
+		lRetorno := .F.                                            
+	Endif
+Endif
+
+cFilAnt := cFilOri
+
+Return lRetorno
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³a907EstSL ºAutor  ³Mary C. Hergert     º Data ³  26/03/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Efetua a movimentacao fisica do selo de controle no estoque º±±
+±±º          ³** Rotinas automaticas do SIGAEST **                        º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SigaFis                                                     º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³ExpC1 = tipo de movimento N=Normal;T=Transferencia;         º±±
+±±º          ³ExpC2 = codigo do selo na tabela SB1                        º±±
+±±º          ³ExpN3 = quantidade de selos movimentada                     º±±
+±±º          ³ExpN4 = valor total da guia de selos                        º±±
+±±º          ³ExpC5 = 1 (inclusao) / 2 (exclusao)                         º±±
+±±º          ³ExpA6 = array com os Recnos da tabela SFN (origem e destino)º±±
+±±º          ³ExpA7 = array com saldos em cada lote (1=origem/2=destino)  º±±
+±±º          ³ExpC8 = lote digitado na guia								  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function a907EstSL(cTpMov,cCodProd,nQuant,nValor,cFilDest,cOpcao,aRecSFN,aSldLote,cLoteCtl)
+
+Local aItem		:= {}
+Local aCab		:= {}
+Local aSaldo  	:= {}
+Local aCheca	:= Iif(cTpMov $ "T",{cFilAnt,cFilDest},{cFilAnt})
+Local aAreaSFN	:= {}
+
+Local cFilOri	:= cFilAnt
+Local cEstoque	:= ""
+Local cDocumento:= ""
+Local cTrbSD3   := ""              
+Local cTM		:= ""                
+Local cLoteAtual:= ""
+
+Local lRetorno 	:= .T.         
+Local lEstorno  := .F.
+Local lIndice	:= .F.
+
+Local nX		:= 0
+Local nSldLote  := 0 
+
+For nX := 1 to Len(aCheca)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Sempre posiciona na filial onde sera efetuado o movimento: origem (nX==1) ou destino (nx==2)³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cFilAnt  := aCheca[nX] 
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica o saldo por lote:³
+	//³[1] = saldo na origem     ³
+	//³[2] = saldo no destino    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (cTpMov == "T" .And. nX == 1	) .Or. (cTpMov <> "T")
+		aSaldo := aSldLote[nX]	
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Variaveis que devem ser tratadas para cada filial - nao acumular³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lEstorno 	:= .F.		
+	aCab		:= {}
+	aItem		:= {}
+
+	SB1->(dbSetOrder(1))
+	SB1->(dbSeek(xFilial("SB1")+cCodProd)) 
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica no parametro os tipos de movimento especificos para devolucao e requisicao de selo³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cEstoque := GetNewPar("MV_MOVIMSL","")
+	//Movimento de devolucao - entrada no estoque
+	cTpMvDev := SubStr(cEstoque,1,At("/",cEstoque)-1)
+	//Movimento de requisicao - saida do estoque
+	cTpMvReq := SubStr(cEstoque,At("/",cEstoque)+1)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica o tipo de movimento de estoque:³
+	//³R = requisicao (saidas de estoque)      ³
+	//³D = devolucao (entradas em estoque)     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Guia do tipo N = Normal (apenas controla o estoque da filial corrente)³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cTpMov == "N"
+		If cOpcao == "1"
+			cTM := cTpMvDev
+		Else       
+			lEstorno := .T.
+		Endif
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Guia do tipo D = Devolucao (apenas controla o estoque da filial corrente)³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cTpMov == "D"
+		If cOpcao == "1"
+			cTM := cTpMvReq
+		Else                  
+			lEstorno := .T.
+		Endif
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Guia do tipo T = Transferencia (controla o estoque na filial origem e na destino)³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cTpMov == "T"
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Quando for inclusao de guia de transferencia³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If cOpcao == "1" 
+			If nX == 1
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Na filial de origem, efetua a saida de estoque³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cTM := cTpMvReq
+			Else        
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Na filial de destino, efetua a entrada de estoque³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cTM := cTpMvDev
+			Endif
+		Else
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Quando for exclusao de guia de transferencia³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			lEstorno := .T.
+		Endif
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Se nao existir o estoque do item na tabela SB2 (primeiro movimento) sera necessario cria-lo³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+	dbSelectArea("SB2")
+	SB2->(dbSetOrder(1))
+	If !DbSeek(xFilial("SB2")+cCodProd+SB1->B1_LOCPAD)
+		CriaSB2(cCodProd,SB1->B1_LOCPAD,cFilDest)
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica o numero do documento do SD3 para chamada da rotina automatica³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cDocumento := CriaVar("D3_DOC",.T.)
+	If Empty(cDocumento)
+		cDocumento	:= NextNumero("SD3",2,"D3_DOC",.T.)
+		cDocumento	:= A261RetINV(cDocumento)
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Quando for estorno, eh necessario posicionar o SD3 e apenas chamar a   ³
+	//³rotina automática como estorno. O campo D3_IDENT eh sempre gravado com ³
+	//³o RECNO da tabela SFN.                                                 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lEstorno
+	
+		lIndice := a907IdxD3(1,@cTrbSD3)
+		
+		If dbSeek(xFilial("SD3")+StrZero(aRecSFN[nX],6)+cCodProd,.F.)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Efetua o estorno do movimento de estoque³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			MATA241(aCab,aItem,6)
+		EndIf
+       
+		lIndice := a907IdxD3(2,cTrbSD3)
+		
+	Else
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Monta o cabecalho padrao para a rotina automatica³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aCab := {	{"D3_DOC"		,cDocumento							,NIL},;
+        	    	{"D3_TM"    	,cTM	   							,NIL},;
+            		{"D3_EMISSAO"	,dDataBase	   						,Nil}	} 
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Para guias de devolucao ou transferencia, eh necessario buscar o saldo      ³
+		//³a devolver ou transferir de todos os lotes disponiveis no sistema que tenham³
+		//³movimentado o produto indicado na guia de selo.                             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If cTpMov $ "DT"
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Parametros do array aSldLote[]:              | 
+			//| aSldLote[nX,1] - Lote de Controle            |
+			//| aSldLote[nX,2] - Sub-Lote                    | 
+			//| aSldLote[nX,3] - Localizacao                 | 
+			//| aSldLote[nX,4] - Numero de Serie             |
+			//| aSldLote[nX,5] - Quantidade                  |
+			//| aSldLote[nX,6] - Quantidade 2aUM             |
+			//| aSldLote[nX,7] - Data de Validade            |
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If nX == 1
+				For nSldLote := 1 To Len(aSaldo)        
+					aAdd(aItem, {	{"D3_COD"		,cCodProd							,NIL},;
+									{"D3_QUANT"	 	,aSaldo[nSldLote,5]	  				,NIL},;
+									{"D3_CUSTO1" 	,(nValor/nQuant)*aSaldo[nSldLote,5],NIL},;
+									{"D3_LOCAL"  	,RetFldProd(cCodProd,"B1_LOCPAD")	,NIL},;
+									{"D3_UM"     	,SB1->B1_UM    						,NIL},;
+									{"D3_TIPO"		,"SL"                              	,NIL},;
+									{"D3_LOTECTL"	,aSaldo[nSldLote,1]		            ,NIL},;
+									{"D3_DTVALID"	,aSaldo[nSldLote,7]	    			,"" },;
+									{"D3_IDENT"		,StrZero(aRecSFN[nX],6)  	      	,"" } })
+	    		Next nSldLote
+	    	Else
+				aAdd(aItem, {	{"D3_COD"		,cCodProd							,NIL},;
+								{"D3_QUANT"	 	,nQuant 			  				,NIL},;
+								{"D3_CUSTO1" 	,nValor								,NIL},;
+								{"D3_LOCAL"  	,RetFldProd(cCodProd,"B1_LOCPAD")	,NIL},;
+								{"D3_UM"     	,SB1->B1_UM    						,NIL},;
+								{"D3_TIPO"		,"SL"                              	,NIL},;
+								{"D3_LOTECTL"	,""						            ,NIL},;
+								{"D3_DTVALID"	,Ctod("01/01/49","ddmmyy")			,"" },;
+								{"D3_IDENT"		,StrZero(aRecSFN[2],6)  	      	,"" } })
+	    	Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Para as guias de entrada normal, basta gerar o array do item³
+		//³de entrada com o produto informado.                         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		Else  
+			aAdd(aItem, {	{"D3_COD"		,cCodProd							,NIL},;
+							{"D3_QUANT"	 	,nQuant	    						,NIL},;
+							{"D3_CUSTO1" 	,nValor        						,NIL},;
+							{"D3_LOCAL"  	,RetFldProd(cCodProd,"B1_LOCPAD")	,NIL},;
+							{"D3_UM"     	,SB1->B1_UM    						,NIL},;
+							{"D3_TIPO"		,"SL"                              	,NIL},;
+							{"D3_LOTECTL"	,cLoteCtl							,NIL},;
+							{"D3_DTVALID"	,Ctod("01/01/49","ddmmyy" )       	,"" },;
+							{"D3_IDENT"		,StrZero(aRecSFN[nX],6)  	      	,"" } })
+        EndIf
+        
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Chamada da rotina automatica para criacao dos movimentos internos         ³
+		//³(modelo 2) de estoque. Para qualquer movimento que nao o estorno, a rotina³
+		//³eh chamada da mesma forma, apenas passado o array com o cabecalho e       ³
+		//³com os itens para geracao do estoque.                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		MATA241(aCab,aItem,3)
+
+    EndIf
+    
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se a rotina automatica foi processada corretamente. Se acaso³
+	//³tenha ocorrido algum erro no processo, apresenta ao usuario e        ³
+	//³finaliza a transacao, refazendo todos os registros gravados antes do ³
+	//³movimento interno (rollback()).                                      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lMsErroAuto
+		MostraErro()
+		lRetorno := .F.
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Efetua ajustes na gravacao da guia:                                                  ³
+		//³- lote da guia de origem quando o lote tiver sido gerado automaticamente pelo sistema³
+		//³- lote da guia de destino                                                            ³
+		//³- indicacao que o movimento controla estoques                                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If (cTpMov == "N" .And. Empty(cLoteCTL)) .Or. (cTpMov == "T" .And. nX == 2)
+		
+			lIndice := a907IdxD3(1,@cTrbSD3)
+			
+			If dbSeek(xFilial("SD3")+StrZero(aRecSFN[nX],6)+cCodProd,.F.)
+			
+				aAreaSFN := SFN->(GetArea())
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Caso seja transferencia, eh necessario posicionar o SFN na guia de destino criada automaticamente³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If cTpMov == "T"
+					SFN->(dbGoTo(aRecSFN[nX])) 
+				Endif
+			Endif 
+			
+			cLoteAtual := SD3->D3_LOTECTL
+		Endif
+		
+		RecLock("SFN",.F.)            
+		SFN->FN_LOTECTL := Iif(!Empty(cLoteAtual),cLoteAtual,cLoteCTL)
+		SFN->FN_ESTOQUE := "1"
+		MsUnLock()
+				
+		If (cTpMov == "N" .And. Empty(cLoteCTL)) .Or. (cTpMov == "T" .And. nX == 2)
+			RestArea(aAreaSFN)
+			lIndice := a907IdxD3(2,cTrbSD3)
+		Endif			
+
+	Endif
+
+Next
+
+cFilAnt := cFilOri
+
+Return lRetorno
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³a907CamposºAutor  ³Mary C. Hergert     º Data ³  26/03/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Verifica se todos os campos necessarios ao cadastro de guiasº±±
+±±º          ³de selo existem.                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SigaFis                                                     º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a907Campos()
+
+Local aAreaSM0	:= SM0->(GetArea())
+Local aFN		:= {}
+Local aFO		:= {}
+Local aB1		:= {}
+Local aRetCpo	:= {}
+
+Local cFilBk	:= cFilAnt
+
+Local lEstSelo	:= dDataBase >= GetNewPar("MV_ESTSELO",cToD("/")) .And. !Empty(GetNewPar("MV_ESTSELO",cToD("/")))
+Local nX		:= 1
+
+If lEstSelo
+	aFN	:= {"FN_TIPO","FN_FILDEST","FN_GUIAORI","FN_SERIE","FN_NRFINAL","FN_CODIGO","FN_VALOR","FN_LOTECTL","FN_ESTOQUE"}
+	aFO	:= {"FO_SERIE","FO_COR"}
+	aB1	:= {"B1_CLASSE"}
+Else
+	aFN	:= {"FN_TIPO","FN_FILDEST","FN_GUIAORI","FN_NRFINAL","FN_SERIE"}
+	aFO	:= {"FO_SERIE","FO_COR"}
+	aB1	:= {"B1_CLASSE"}
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Os campos devem estar criados em todas as filiais³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SM0->(dbGoTop())
+Do While !(SM0->(Eof())) 	
+	cFilAnt := SM0->M0_CODFIL
+	
+	For nX := 1 to Len(aFN)
+		If !SFN->(FieldPos(aFN[nX])) > 0
+			aAdd(aRetCpo,{cFilAnt,aFN[nX]})
+		Endif                    
+	Next      
+	
+	For nX := 1 to Len(aFO)
+		If !SFO->(FieldPos(aFO[nX])) > 0
+			aAdd(aRetCpo,{cFilAnt,aFO[nX]})		
+		Endif                    
+	Next      
+
+	For nX := 1 to Len(aB1)
+		If !SB1->(FieldPos(aB1[nX])) > 0
+			aAdd(aRetCpo,{cFilAnt,aB1[nX]})		
+		Endif                    
+	Next      
+
+	SM0->(dbSkip())
+EndDo
+
+RestArea(aAreaSM0)
+cFilAnt := cFilBk
+
+Return aRetCpo
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³a907SldFisºAutor  ³Mary C. Hergert     º Data ³  26/03/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Verifica se ha saldo fisico em estoque para os movimentos   º±±
+±±º          ³Calcula os saldos por lote de cada produto para a imentos   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³ExpC1: codigo do produto a verificar o saldo                º±±
+±±º          ³ExpC2: filial de destino (quando transferencia)             º±±
+±±º          ³ExpN3: quantidade a ser movimentada                         º±±
+±±º          ³ExpN4: tipo processamento (1=origem,2=destino)              º±±
+±±º          ³ExpN5: quantidade do produto encontrada nos lotes           º±±
+±±º          ³ExpC6: lote em que se deseja procurar o saldo               º±±
+±±º          ³ExpN7: quantidade do produto encontrada no lote especifico  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SigaFis                                                     º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function a907SldFis(cCodProd,cFilDest,nQuant,nTpProc,nQtdeProc,cLote,nQtdeLote)
+
+Local cFilOri		:= cFilAnt
+
+Local nX			:= 0     
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se processa a origem (1) ou o destino (2)³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nTpProc == 2 
+	cFilAnt := cFilDest 
+Endif
+
+SB1->(dbSetOrder(1))
+SB1->(dbSeek(xFilial("SB1")+cCodProd)) 
+	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Parametros do array aSldLote[]:              | 
+//| aSldLote[nX,1] - Lote de Controle            |
+//| aSldLote[nX,2] - Sub-Lote                    | 
+//| aSldLote[nX,3] - Localizacao                 | 
+//| aSldLote[nX,4] - Numero de Serie             |
+//| aSldLote[nX,5] - Quantidade                  |
+//| aSldLote[nX,6] - Quantidade 2aUM             |
+//| aSldLote[nX,7] - Data de Validade            |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aSldLote := SldPorLote(cCodProd,RetFldProd(cCodProd,"B1_LOCPAD"),nQuant,0,,,,,,.F.,,.F.)
+
+For nX := 1 to Len(aSldLote)
+	nQtdeProc += aSldLote[nX,5]	
+	If Alltrim(aSldLote[nX,1]) == Alltrim(cLote)
+		nQtdeLote += aSldLote[nX,5]	
+	Endif
+Next
+	
+cFilAnt := cFilOri
+
+Return aSldLote
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³AvalMovSelo ºAutor  ³Mary C. Hergert     º Data ³  04/04/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Valida se o movimento interno pode ser manipulado. Se o       º±±
+±±º          ³movimento estiver no parametro MV_MOVIMSL, somente eh         º±±
+±±º          ³permitida sua movimentacao atraves das guias de selo.         º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                           º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function AvalMovSelo(cCodProd,cTM)
+
+Local aArea 	:= GetArea()
+Local cEstoque	:= GetNewPar("MV_MOVIMSL","")
+Local lRetorno	:= .F.
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Somente verifica se pode estornar quando o movimento naoesteja sendo feito atraves da guia.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Type("lSeloFiscal") == "L" .And. lSeloFiscal
+	lRetorno := .F.
+Else
+	SB1->(dbSetOrder(1)) 
+	If SB1->(dbSeek(xFilial("SB1")+cCodProd))
+		If SB1->B1_TIPO == "SL"
+			If Alltrim(cTM) $ cEstoque
+				lRetorno := .T.
+			Endif
+		Endif
+	Endif
+Endif
+
+RestArea(aArea)
+
+Return lRetorno
+
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³a907IdxD3 ºAutor  ³Mary C. Hergert     º Data ³  04/08/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Cria o indice temporario no SD3 para poder encontrar o recnoº±±
+±±º          ³da guia que gerou o movimento                               º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³ExpN1: opcao (1=cria, 2=deleta)                             º±±
+±±º          ³ExpC2: nome do indice temporario criado                     º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³Mata907                                                     º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function a907IdxD3(nOpc,cTrbSD3)
+
+Local nIndice	:= 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Cria o indice por identificador³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nOpc == 1
+	cTrbSD3 := CriaTrab(,.F.)
+	dbSelectArea('SD3')
+	IndRegua('SD3',cTrbSD3,'D3_FILIAL+D3_IDENT+D3_COD',,,STR0119)	//"Selecionando Registros"
+	nIndice := RetIndex('SD3')
+	#IFNDEF TOP
+	  dbSetIndex(cTrbSD3+OrdBagExt())
+	#ENDIF
+	dbSetOrder(nIndice+1)
+Else
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Exclui o indice temporario criado³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !Empty(cTrbSD3)
+		RetIndex('SD3') 
+		Ferase(cTrbSD3+OrdBagExt())
+	EndIf
+Endif                          
+
+Return .T.
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³a907Perda ºAutor  ³Mary C. Hergert     º Data ³  04/10/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Verifica a perda de selos na producao                       º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³Mata907, Mata908 e Matr909                                  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a907Perda(aProduto,aPerda,dDataIni,dDataFim)                     
+
+Local aArea		:= GetArea()
+Local aFilSBCt	:= {"",""}
+Local aFilSBCc	:= {"",""}
+
+Local cAliasSBC := "SBC"  
+Local cAliasSX5	:= "SX5"
+Local cCmpQry	:= ""
+
+Local lEstoque	:= dDataBase >= GetNewPar("MV_ESTSELO",cToD("/")) .And. !Empty(GetNewPar("MV_ESTSELO",cToD("/")))
+Local lRet		:= .F.	
+Local lQuery	:= .F.
+
+Local nX		:= 0                         
+Local nPos		:= 0    
+Local nProd		:= 0
+
+#IFDEF TOP
+	Local aCmpSBC	:= {}
+	Local aStruSBC	:= {}
+	Local cQuery	:= ""
+#ELSE
+	Local cArqInd	:= ""
+	Local cChave	:= ""
+	Local cFiltro	:= ""
+#ENDIF
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Posicoes do array aProduto:       ³
+//³[01] = Codigo do produto selo     ³
+//³[02] = Numero do lote no estoque  ³
+//³[03] = Classe                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Posicoes do array aPerdas:        ³
+//³[01] = Codigo do produto selo     ³
+//³[02] = Motivo da perda (codigo)   ³
+//³[03] = Motivo da perda (descricao)³
+//³[04] = Quantidade perdida         ³
+//³[05] = Data em que ocorreu a perda³
+//³[06] = Classe                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If lEstoque .And. Len(aProduto) > 0
+	
+	For nX := 1 to Len(aProduto)                        
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Monta a query com os codigos de produtos e lotes a serem processados.³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aFilSBCt[01] += "'" + aProduto[nX][01] + "'"
+		If !Empty(aProduto[nX][02])
+			aFilSBCt[02] += "'" + aProduto[nX][02] + "'"
+		Endif
+		If !(nX == Len(aProduto))
+			aFilSBCt[01] += ","
+			aFilSBCt[02] += ","
+		Endif
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Monta o filtro com os codigos de produtos e lotes a serem processados.³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aFilSBCc[01] += aProduto[nX][01]
+		If !Empty(aProduto[nX][02])
+			aFilSBCc[02] += aProduto[nX][02]
+		Endif
+		If !(nX == Len(aProduto))
+			aFilSBCc[01] += "/"
+			aFilSBCc[02] += "/"
+		Endif
+		
+	Next	
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica as perdas na tabela SBC³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	#IFDEF TOP
+	
+	    If TcSrvType()<>"AS/400"
+	    
+			cAliasSBC	:= GetNextAlias()
+			cAliasSX5	:= cAliasSBC
+			lQuery		:= .T.
+
+		    aAdd(aCmpSBC,{"SBC","BC_FILIAL"})
+   		    aAdd(aCmpSBC,{"SBC","BC_PRODUTO"})
+   		    aAdd(aCmpSBC,{"SBC","BC_QUANT"})
+   	    	aAdd(aCmpSBC,{"SBC","BC_MOTIVO"})
+   	    	aAdd(aCmpSBC,{"SBC","BC_DATA"})
+   	    	aAdd(aCmpSBC,{"SX5","X5_DESCRI"})
+   	    	aAdd(aCmpSBC,{"SX5","X5_DESCSPA"})
+   	    	aAdd(aCmpSBC,{"SX5","X5_DESCENG"})
+
+	    	aStruSBC := SBC->(a907Str(aCmpSBC,@cCmpQry))
+	    	SBC->(dbCloseArea())
+	
+			cQuery    := "SELECT "
+			cQuery    += cCmpQry
+			cQuery    += "FROM " + RetSqlName("SBC") + " SBC, "
+			cQuery    += RetSqlName("SX5") + " SX5 "
+			
+			cQuery += "WHERE "
+			cQuery += "SBC.BC_FILIAL = '" + xFilial("SBC") + "' AND "
+			cQuery += "SBC.BC_DATA >= '" + dtOs(dDataIni) + "' AND "
+			cQuery += "SBC.BC_DATA <= '" + dtOs(dDataFim) + "' AND "
+			If !Empty(aFilSBCt[01])
+				cQuery += "SBC.BC_PRODUTO IN(" + aFilSBCt[01] + ") AND "
+			Endif
+			If !Empty(aFilSBCt[02])
+				cQuery += "SBC.BC_LOTECTL IN(" + aFilSBCt[02] + ") AND "
+			Endif
+			cQuery += "SBC.D_E_L_E_T_ = ' ' AND "
+			cQuery += "SX5.X5_FILIAL = '" + xFilial("SX5") + "' AND "
+			cQuery += "SX5.X5_TABELA = '43' AND "
+			cQuery += "SX5.X5_CHAVE = SBC.BC_MOTIVO AND "
+			cQuery += "SX5.D_E_L_E_T_ = ' ' "
+			cQuery += "ORDER BY " + SqlOrder(SBC->(IndexKey()))
+		
+		    cQuery := ChangeQuery(cQuery)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSBC,.T.,.T.)
+		
+			For nX := 1 To len(aStruSBC)
+				If aStruSBC[nX][2] <> "C" 
+					TcSetField(cAliasSBC,aStruSBC[nX][1],aStruSBC[nX][2],aStruSBC[nX][3],aStruSBC[nX][4])
+				EndIf
+			Next nX
+		
+			dbSelectArea(cAliasSBC)	
+		Else
+	
+	#ENDIF
+			cArqInd	:=	CriaTrab(NIL,.F.)
+			cChave	:=	SBC->(IndexKey())
+
+			cFiltro += 'BC_FILIAL == "' + xFilial("SBC") + '" .AND. '
+			cFiltro += 'DTOS(BC_DATA) >= "' + dtOs(dDataIni) + '" .AND. '
+			cFiltro += 'DTOS(BC_DATA) <= "' + dtOs(dDataFim) + '" .AND. '
+			If !Empty(aFilSBCt[01])
+				cFiltro += 'BC_PRODUTO $ "' + aFilSBCc[01] + '" .AND. '
+			Endif
+			If !Empty(aFilSBCt[02])                        
+				cFiltro += 'BC_LOTECTL $ "' + aFilSBCc[02] + '"'
+			Endif
+
+			IndRegua(cAliasSBC,cArqInd,cChave,,cFiltro,STR0119)  //"Selecionando registros"
+
+			#IFNDEF TOP
+				DbSetIndex(cArqInd+OrdBagExt())
+			#ENDIF                
+			
+			(cAliasSBC)->(dbGotop())
+	
+	#IFDEF TOP
+		Endif    
+	#ENDIF
+	                                              
+	Do While !((cAliasSBC)->(Eof()))
+	
+		If !lQuery
+			If !SX5->(dbSeek(xFilial("SX5")+"43"+(cAliasSBC)->BC_MOTIVO))
+				(cAliasSBC)->(dbSkip())
+				Loop
+			Endif
+		Endif
+		
+		nPos 	:= aScan(aPerda,{|x| Alltrim(x[1])==Alltrim((cAliasSBC)->BC_PRODUTO) .And. Alltrim(x[2])==Alltrim((cAliasSBC)->BC_MOTIVO)})
+		nProd	:= aScan(aProduto,{|x| Alltrim(x[1])==Alltrim((cAliasSBC)->BC_PRODUTO)})
+		
+		If nPos > 0
+			aPerda[nPos][04] += (cAliasSBC)->BC_QUANT
+		Else
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica a descricao do motivo da perda de acordo com o idioma do sistema³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			#ifdef SPANISH                                    
+				cMotivo := (cAliasSX5)->X5_DESCSPA		
+			#else
+				#ifdef ENGLISH                                
+					cMotivo := (cAliasSX5)->X5_DESCENG
+				#else                                 
+					cMotivo := (cAliasSX5)->X5_DESCRI
+				#endif
+			#endif        
+			aAdd(aPerda,{	(cAliasSBC)->BC_PRODUTO,;
+							(cAliasSBC)->BC_MOTIVO,;
+							cMotivo,;
+							(cAliasSBC)->BC_QUANT,;
+							(cAliasSBC)->BC_DATA,;
+							aProduto[nProd][3]})
+		Endif
+		(cAliasSBC)->(dbSkip())
+		lRet := .T.
+	Enddo
+
+	If !lQuery
+		RetIndex("SBC")	
+		dbClearFilter()	
+		Ferase(cArqInd+OrdBagExt())
+	Else
+		dbSelectArea(cAliasSBC)
+		dbCloseArea()
+	Endif
+	
+Endif
+
+RestArea(aArea)
+
+Return(lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³a907Str   ºAutor  ³Mary Hergert        º Data ³  10/04/2008 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Montar um array apenas com os campos utiLizados na query    º±±
+±±º          ³para passagem na funcao TCSETFIELD                          º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºRetorno   ³Array com os campos da query                                º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³aCampos: campos a serem tratados na query                   º±±
+±±º          ³cCmpQry: string contendo os campos para select na query     º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³Mata907, Mata908 e Matr909                                  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/ 
+#IFDEF TOP
+	
+	Function a907Str(aCampos,cCmpQry)
+
+	Local	aRet	:=	{}
+	Local	nX		:=	0
+	Local	aTamSx3	:=	{}
+	
+	For nX := 1 To Len(aCampos)
+		dbSelectArea(aCampos[nX][1])
+		If(FieldPos(aCampos[nX][2])>0)
+			aTamSx3 := TamSX3(aCampos[nX][2])
+			aAdd (aRet,{aCampos[nX][2],aTamSx3[3],aTamSx3[1],aTamSx3[2]})
+			cCmpQry	+=	aCampos[nX][2]+", "
+		EndIf
+	Next(nX)
+	
+	If(Len(cCmpQry)>0)
+		cCmpQry	:=	" " + SubStr(cCmpQry,1,Len(cCmpQry)-2) + " "
+	EndIf 
+		
+	Return(aRet)
+	
+#ENDIF
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³a907MsgCmpºAutor  ³Mary C. Hergert     º Data ³  04/10/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Apresenta mensagem com os campos inexistentes na base e que º±±
+±±º          ³sao necessarios ao processo                                 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³ExpA1 : Campos necessarios                                  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³SigaFis                                                     º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a907MsgCmp(aRetCpo)
+
+Local cCampos	:= ""
+Local cProblema	:= ""
+Local cSolucao	:= ""
+Local cTitulo	:= ""
+
+Local nX		:= 0
+
+For nX := 1 to Len(aRetCpo)
+	cCampos += aRetCpo[nX][1] + " - " + aRetCpo[nX][2] + chr(13) + chr(10)
+Next
+	
+cTitulo 	:= STR0002 //"Campos necessários"
+cProblema 	:= STR0003 //"Alguns campos necessários ao processo não foram criados para todas as filiais cadastradas."  
+cSolucao	:= STR0004 + Chr(13) + Chr(10) + cCampos //"Verifique as seguintes filiais e respectivos campos: "
+cSolucao	+= STR0105 //"A criação dos campos poderá ser efetuada manualmente ou através do compatibilizador UpdFis. "
+cSolucao	+= STR0106 //"A especificação de cada um dos campos, bem como as instruções de processamento do UpdFis, "
+cSolucao	+= STR0107 //"estão disponíveis na documentação técnica da rotina. "	
+	
+xMagHelpFis(cTitulo,cProblema,cSolucao)
+
+Return .T.

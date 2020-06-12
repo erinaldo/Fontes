@@ -1,0 +1,379 @@
+#INCLUDE "rwmake.ch"
+#DEFINE _EOL CHR(13) + CHR(10)
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณccomm02   บ Autor ณ Felipe Raposo      บ Data ณ  27/01/03   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Reprocessa os campos da aba "Compras" e "Ultima Compra" do บฑฑ
+ฑฑบ          ณ cadastro de fornecedores.                                  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ CIEE.                                                      บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+User Function ccomm02
+MsAguarde({|lEnd| U_ccomm02a()}, "Atualizando o cadastro de fornecedores...", "Aguarde", .F.)
+Return
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณccomm02a  บ Autor ณ Felipe Raposo      บ Data ณ  27/01/03   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Reprocessa os campos da aba "Compras":                     บฑฑ
+ฑฑบ          ณ A2_PRICOM, A2_ULTCOM, A2_VRACUMR, A2_VRACUMD, A2_COTVEN1,  บฑฑ
+ฑฑบ          ณ A2_MDESC, A2_MATRASO e A2_MCOMP.                           บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ CIEE.                                                      บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+User Function ccomm02a
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Declaracao de variaveis.                                            ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+Local _cMsg, _cAux1, _nAux1, _aProc := {}
+Private _cQry1, _cQry2, _cQry3, _cQry4, _cQry5, _cQry6, _cQry7, _cQry8
+
+MsProcTxt("Montando e armazenando queries em disco...")
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Query para os campos 1a compra,        ณ
+//ณ Ultima Compra e Vlr. Acum. em Reais.   ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cQry1 :=;   // Ok.
+"UPDATE " + RetSQLName("SA2") + _EOL +;
+"SET " + _EOL +;
+"	A2_PRICOM   = XX_PRICOM, " + _EOL +;
+"	A2_ULTCOM   = XX_ULTCOM, " + _EOL +;
+"	A2_VRACUMR  = XX_VRACUMR " + _EOL +;
+"FROM " + _EOL +;
+"( " + _EOL +;
+"	SELECT F1_FORNECE XX_FORNECE, F1_LOJA XX_LOJA, " + _EOL +;
+"	MIN(F1_DTDIGIT) XX_PRICOM, MAX(F1_DTDIGIT) XX_ULTCOM, " + _EOL +;
+"	SUM(F1_VALBRUT) XX_VRACUMR, MAX(F1_VALBRUT) XX_MCOMP " + _EOL +;
+"	FROM " + RetSQLName("SF1") + " SF1 WHERE " + _EOL +;
+"	SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"	GROUP BY F1_FORNECE, F1_LOJA" + _EOL +;
+") A, " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"WHERE " + _EOL +;
+"XX_FORNECE + XX_LOJA = A2_COD + A2_LOJA AND " + _EOL +;
+"SA2.D_E_L_E_T_ <> '*'"
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Query para o campo Maior Compra.       ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cQry2 :=;   // Ok.
+"UPDATE " + RetSQLName("SA2") + _EOL +;
+"SET A2_MCOMP = XX_MCOMP " + _EOL +;
+"FROM " + _EOL +;
+"( " + _EOL +;
+"	SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"	( " + _EOL +;
+"		SELECT " + _EOL +;
+"		RTRIM(CONVERT(CHAR, CAST(F1_DTDIGIT AS DATETIME), 103)) + ' - $' + RTRIM(F1_VALBRUT) " + _EOL +;
+"		FROM " + _EOL +;
+"		( " + _EOL +;
+"			SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"			( " + _EOL +;
+"				SELECT TOP 1 SF1.F1_DOC + SF1.F1_SERIE FROM " + _EOL +;
+"				( " + _EOL +;
+"					SELECT F1_FORNECE, F1_LOJA, MAX(F1_VALBRUT) F1_VALBRUT FROM " + RetSQLName("SF1") + " SF1 " + _EOL +;
+"					WHERE SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"					GROUP BY F1_FORNECE, F1_LOJA " + _EOL +;
+"				) A, " + RetSQLName("SF1") + " SF1 " + _EOL +;
+"				WHERE " + _EOL +;
+"				(SF1.F1_FORNECE = A2_COD       AND SF1.F1_LOJA = A2_LOJA)  AND " + _EOL +;
+"				(SF1.F1_FORNECE = A.F1_FORNECE AND SF1.F1_LOJA = A.F1_LOJA AND " + _EOL +;
+"				SF1.F1_VALBRUT = A.F1_VALBRUT) AND " + _EOL +;
+"				SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"				ORDER BY SF1.F1_DTDIGIT DESC -- SE HOUVER MAIS DE UMA NOTA VENCEDORA, A MAIS VELHA VENCE. " + _EOL +;
+"			) NOTA FROM " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"			WHERE SA2.D_E_L_E_T_ <> '*' " + _EOL +;
+"		)A, " + RetSQLName("SA2") + " SA2INT, " + RetSQLName("SF1") + " SF1 WHERE " + _EOL +;
+"		(SA2INT.A2_COD = SA2EXT.A2_COD AND SA2INT.A2_LOJA = SA2EXT.A2_LOJA) AND " + _EOL +;
+"		(SA2INT.A2_COD = XX_COD        AND SA2INT.A2_LOJA = XX_LOJA) AND " + _EOL +;
+"		(SF1.F1_DOC + SF1.F1_SERIE = NOTA AND SF1.F1_FORNECE = SA2INT.A2_COD AND SF1.F1_LOJA = SA2INT.A2_LOJA) AND " + _EOL +;
+"		SA2INT.D_E_L_E_T_ <> '*' AND " + _EOL +;
+"		SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"	) XX_MCOMP FROM " + RetSQLName("SA2") + " SA2EXT " + _EOL +;
+")A, " + RetSQLName("SA2") + " SA2 WHERE " + _EOL +;
+"A2_COD = XX_COD AND A2_LOJA = XX_LOJA AND " + _EOL +;
+"XX_MCOMP IS NOT NULL AND " + _EOL +;
+"SA2.D_E_L_E_T_ <> '*'"
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Query para o campo Maior Atraso.       ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cQry3 :=;   // Ok.
+"UPDATE " + RetSQLName("SA2") + _EOL +;
+"SET A2_MATRASO = " + _EOL +;
+"CASE " + _EOL +;
+"	WHEN XX_MATRASO IS NULL THEN '' " + _EOL +;
+"	WHEN XX_MATRASO = 1 THEN RTRIM(XX_DTDIGIT) + ' - 1 DIA' " + _EOL +;
+"	ELSE RTRIM(XX_DTDIGIT) + ' - ' + RTRIM(XX_MATRASO) + ' DIAS' " + _EOL +;
+"END " + _EOL +;
+"FROM " + _EOL +;
+"( " + _EOL +;
+"	SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"	( " + _EOL +;
+"		SELECT TOP 1 XX_MATRASO FROM " + _EOL +;
+"		( " + _EOL +;
+"			SELECT D1_FORNECE XX_FORNECE, D1_LOJA XX_LOJA, " + _EOL +;
+"			DATEDIFF(DAY, C7_DATPRF, D1_DTDIGIT) XX_MATRASO, " + _EOL +;
+"			D1_DTDIGIT XX_DTDIGIT " + _EOL +;
+"			FROM " + RetSQLName("SD1") + " SD1, " + RetSQLName("SC7") + " SC7 WHERE " + _EOL +;
+"			D1_PEDIDO <> '' AND " + _EOL +;
+"			(C7_NUM = D1_PEDIDO AND C7_ITEM = D1_ITEMPC) AND " + _EOL +;
+"			SD1.D_E_L_E_T_ <> '*' AND SC7.D_E_L_E_T_ <> '*' " + _EOL +;
+"		) A WHERE (XX_FORNECE = A2_COD AND XX_LOJA = A2_LOJA) " + _EOL +;
+"		ORDER BY XX_FORNECE, XX_LOJA, XX_MATRASO DESC, XX_DTDIGIT DESC " + _EOL +;
+"	) XX_MATRASO, " + _EOL +;
+"	( " + _EOL +;
+"		SELECT TOP 1 RTRIM(CONVERT(CHAR, CAST(XX_DTDIGIT AS DATETIME), 103))FROM " + _EOL +;
+"		( " + _EOL +;
+"			SELECT D1_FORNECE XX_FORNECE, D1_LOJA XX_LOJA, " + _EOL +;
+"			DATEDIFF(DAY, C7_DATPRF, D1_DTDIGIT) XX_MATRASO, " + _EOL +;
+"			D1_DTDIGIT XX_DTDIGIT " + _EOL +;
+"			FROM " + RetSQLName("SD1") + " SD1, " + RetSQLName("SC7") + " SC7 WHERE " + _EOL +;
+"			D1_PEDIDO <> '' AND " + _EOL +;
+"			(C7_NUM = D1_PEDIDO AND C7_ITEM = D1_ITEMPC) AND " + _EOL +;
+"			SD1.D_E_L_E_T_ <> '*' AND SC7.D_E_L_E_T_ <> '*' " + _EOL +;
+"		) A WHERE (XX_FORNECE = A2_COD AND XX_LOJA = A2_LOJA) " + _EOL +;
+"		ORDER BY XX_FORNECE, XX_LOJA, XX_MATRASO DESC, XX_DTDIGIT DESC " + _EOL +;
+"	) XX_DTDIGIT " + _EOL +;
+"	FROM " + RetSQLName("SA2") + _EOL +;
+") A, " + RetSQLName("SA2") + " SA2 WHERE " + _EOL +;
+"(A2_COD = XX_COD AND A2_LOJA = XX_LOJA) AND " + _EOL +;
+"SA2.D_E_L_E_T_ <> '*'"
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Query para o campo Maior Desconto.     ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cQry4 :=;   // Testar. Aparenta estar Ok.
+"UPDATE " + RetSQLName("SA2") + _EOL +;
+"SET A2_MDESC = XX_MDESC " + _EOL +;
+"FROM " + _EOL +;
+"( " + _EOL +;
+"	SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"	( " + _EOL +;
+"		SELECT " + _EOL +;
+"		RTRIM(CONVERT(CHAR, CAST(F1_DTDIGIT AS DATETIME), 103)) + ' - $' + RTRIM(F1_DESCONT) " + _EOL +;
+"		FROM " + _EOL +;
+"		( " + _EOL +;
+"			SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"			( " + _EOL +;
+"				SELECT TOP 1 SF1.F1_DOC + SF1.F1_SERIE FROM " + _EOL +;
+"				( " + _EOL +;
+"					SELECT F1_FORNECE, F1_LOJA, MAX(F1_DESCONT) F1_DESCONT FROM " + RetSQLName("SF1") + " SF1 " + _EOL +;
+"					WHERE SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"					GROUP BY F1_FORNECE, F1_LOJA " + _EOL +;
+"				) A, " + RetSQLName("SF1") + " SF1 " + _EOL +;
+"				WHERE " + _EOL +;
+"				(SF1.F1_FORNECE = A2_COD       AND SF1.F1_LOJA = A2_LOJA)  AND " + _EOL +;
+"				(SF1.F1_FORNECE = A.F1_FORNECE AND SF1.F1_LOJA = A.F1_LOJA AND " + _EOL +;
+"				SF1.F1_DESCONT  = A.F1_DESCONT) AND " + _EOL +;
+"				SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"				ORDER BY SF1.F1_DTDIGIT DESC -- SE HOUVER MAIS DE UMA NOTA VENCEDORA, A MAIS VELHA VENCE. " + _EOL +;
+"			) NOTA FROM " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"			WHERE SA2.D_E_L_E_T_ <> '*' " + _EOL +;
+"		)A, " + RetSQLName("SA2") + " SA2INT, " + RetSQLName("SF1") + " SF1 WHERE " + _EOL +;
+"		(SA2INT.A2_COD = SA2EXT.A2_COD AND SA2INT.A2_LOJA = SA2EXT.A2_LOJA) AND " + _EOL +;
+"		(SA2INT.A2_COD = XX_COD        AND SA2INT.A2_LOJA = XX_LOJA) AND " + _EOL +;
+"		(SF1.F1_DOC + SF1.F1_SERIE = NOTA AND SF1.F1_FORNECE = SA2INT.A2_COD AND SF1.F1_LOJA = SA2INT.A2_LOJA) AND " + _EOL +;
+"		SA2INT.D_E_L_E_T_ <> '*' AND " + _EOL +;
+"		SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"	) XX_MDESC FROM " + RetSQLName("SA2") + " SA2EXT " + _EOL +;
+")A, " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"WHERE " + _EOL +;
+"A2_COD = XX_COD AND A2_LOJA = XX_LOJA AND " + _EOL +;
+"XX_MDESC IS NOT NULL AND " + _EOL +;
+"SA2.D_E_L_E_T_ <> '*'"
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Query para o campo Cots. Vencidas.     ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cQry5 :=;   // Ok.
+"UPDATE " + RetSQLName("SA2") + _EOL +;
+"SET A2_COTVEN1 = " + _EOL +;
+"CASE " + _EOL +;
+"	WHEN XX_COTVEN IS NULL THEN '000' " + _EOL +;
+"	ELSE REPLICATE('0', 3 - LEN(XX_COTVEN)) + LTRIM(XX_COTVEN) " + _EOL +;
+"END " + _EOL +;
+"+ '/' + " + _EOL +;
+"CASE " + _EOL +;
+"	WHEN XX_COTPAR IS NULL THEN '000' " + _EOL +;
+"	ELSE REPLICATE('0', 3 - LEN(XX_COTPAR)) + LTRIM(XX_COTPAR) " + _EOL +;
+"END " + _EOL +;
+"FROM " + _EOL +;
+"( " + _EOL +;
+"	SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"	( " + _EOL +;
+"		SELECT COUNT(*) XX_COTVEN FROM " + _EOL +;
+"		( " + _EOL +;
+"			SELECT C8_FORNECE XX_FORNECE, C8_LOJA XX_LOJA " + _EOL +;
+"			FROM " + RetSQLName("SC8") + " SC8 WHERE " + _EOL +;
+"			C8_FORNECE + C8_LOJA = A2_COD + A2_LOJA AND " + _EOL +;
+"			C8_NUMPED <> '' AND " + _EOL +;
+"			UPPER(C8_NUMPED) <> '" + Replicate("X", len(SC8->C8_NUMPED)) + "' AND " + _EOL +;
+"			SC8.D_E_L_E_T_ <> '*' " + _EOL +;
+"			GROUP BY C8_FORNECE, C8_LOJA, C8_NUM, C8_IDENT " + _EOL +;
+"		) A " + _EOL +;
+"		GROUP BY A.XX_FORNECE, A.XX_LOJA " + _EOL +;
+"	) XX_COTVEN, " + _EOL +;
+"	( " + _EOL +;
+"		SELECT COUNT(*) XX_COTVEN FROM " + _EOL +;
+"		( " + _EOL +;
+"			SELECT C8_FORNECE XX_FORNECE, C8_LOJA XX_LOJA " + _EOL +;
+"			FROM " + RetSQLName("SC8") + " SC8 WHERE " + _EOL +;
+"			C8_FORNECE + C8_LOJA = A2_COD + A2_LOJA AND " + _EOL +;
+"			C8_NUMPED <> '' AND " + _EOL +;
+"			SC8.D_E_L_E_T_ <> '*' " + _EOL +;
+"			GROUP BY C8_FORNECE, C8_LOJA, C8_NUM, C8_IDENT " + _EOL +;
+"		) A " + _EOL +;
+"		GROUP BY A.XX_FORNECE, A.XX_LOJA " + _EOL +;
+"	) XX_COTPAR " + _EOL +;
+"	FROM " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"	WHERE SA2.D_E_L_E_T_ <> '*' " + _EOL +;
+") A, " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"WHERE " + _EOL +;
+"SA2.A2_COD + SA2.A2_LOJA = A.XX_COD + A.XX_LOJA AND " + _EOL +;
+"SA2.D_E_L_E_T_ <> '*'"
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Query para os campos Vlr. da Ultima    ณ
+//ณ Compra, Desc. da Ultima Compra.        ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cQry6 :=;   // Ok.
+"UPDATE " + RetSQLName("SA2") + _EOL +;
+"SET " + _EOL +;
+"A2_VALORUC = F1_VALBRUT, " + _EOL +;
+"A2_DESCUC  = RTRIM(ROUND(F1_DESCONT/(F1_DESCONT+F1_VALBRUT), 2)) + '% - $' + RTRIM(ROUND(0.00 + F1_DESCONT, 2)) + ' / PC-' + D1_PEDIDO " + _EOL +;
+"FROM " + _EOL +;
+"( " + _EOL +;
+"	SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"	( " + _EOL +;
+"		SELECT TOP 1 F1_DOC + F1_SERIE FROM " + RetSQLName("SF1") + " SF1 " + _EOL +;
+"		WHERE " + _EOL +;
+"		F1_FORNECE = A2_COD AND F1_LOJA = A2_LOJA AND F1_DOC=D1_DOC AND F1_SERIE=D1_SERIE" + _EOL +;
+"		SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"		ORDER BY F1_DTDIGIT DESC " + _EOL +;
+"		) NOTA FROM " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"	WHERE " + _EOL +;
+"	SA2.D_E_L_E_T_ <> '*' " + _EOL +;
+") A, " + RetSQLName("SA2") + " SA2, " + RetSQLName("SF1") + " SF1, "+ RetSQLName("SD1") + " SD1 WHERE " + _EOL +;
+"(A2_COD = XX_COD AND A2_LOJA = XX_LOJA) AND " + _EOL +;
+"(F1_FORNECE = XX_COD AND F1_LOJA = XX_LOJA AND F1_DOC + F1_SERIE = NOTA AND D1_DOC=F1_DOC AND D1_SERIE=F1_SERIE) AND " + _EOL +;
+"SA2.D_E_L_E_T_ <> '*' AND SF1.D_E_L_E_T_ <> '*' AND SD1.D_E_L_E_T_ <> '*'"
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Query para os os fornecedores          ณ
+//ณ res sem nota no sistema.               ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cQry7 :=;   // Ok.
+"UPDATE " + RetSQLName("SA2") + _EOL +;
+"SET " + _EOL +;
+"A2_PRICOM  = '', " + _EOL +;
+"A2_ULTCOM  = '', " + _EOL +;
+"A2_VRACUMR = 0,  " + _EOL +;
+"A2_VRACUMD = 0,  " + _EOL +;
+"A2_MDESC   = '', " + _EOL +;
+"A2_MATRASO = '', " + _EOL +;
+"A2_MCOMP   = ''  " + _EOL +;
+"FROM " + _EOL +;
+"( " + _EOL +;
+"	SELECT XX_COD, XX_LOJA FROM " + _EOL +;
+"	( " + _EOL +;
+"		SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"		( " + _EOL +;
+"			SELECT TOP 1 F1_DOC + F1_SERIE FROM " + RetSQLName("SF1") + " SF1 " + _EOL +;
+"			WHERE " + _EOL +;
+"			F1_FORNECE = A2_COD AND F1_LOJA = A2_LOJA AND " + _EOL +;
+"			SF1.D_E_L_E_T_ <> '*' " + _EOL +;
+"			ORDER BY F1_DTDIGIT DESC " + _EOL +;
+"			) NOTA FROM " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"		WHERE " + _EOL +;
+"		SA2.D_E_L_E_T_ <> '*' " + _EOL +;
+"	) A WHERE NOTA IS NULL " + _EOL +;
+") A, " + RetSQLName("SA2") + " SA2 " + _EOL +;
+"WHERE " + _EOL +;
+"A2_COD = XX_COD AND A2_LOJA = XX_LOJA AND " + _EOL +;
+"SA2.D_E_L_E_T_ <> '*'"
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Query para o campo Atraso da Ultima    ณ
+//ณ Compra.                                ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cQry8 :=;   // Ok.
+"UPDATE " + RetSQLName("SA2") + _EOL +;
+"SET A2_ATRASUC = CASE WHEN XX_ATRASUC IS NULL THEN 0 ELSE XX_ATRASUC END " + _EOL +;
+"FROM " + _EOL +;
+"( " + _EOL +;
+"	SELECT A2_COD XX_COD, A2_LOJA XX_LOJA, " + _EOL +;
+"	( " + _EOL +;
+"		SELECT TOP 1 XX_ATRASUC FROM " + _EOL +;
+"		( " + _EOL +;
+"			SELECT D1_FORNECE XX_FORNECE, D1_LOJA XX_LOJA, " + _EOL +;
+"			DATEDIFF(DAY, C7_DATPRF, D1_DTDIGIT) XX_ATRASUC, " + _EOL +;
+"			D1_DTDIGIT XX_DTDIGIT " + _EOL +;
+"			FROM " + RetSQLName("SD1") + " SD1, " + RetSQLName("SC7") + " SC7 WHERE " + _EOL +;
+"			D1_PEDIDO <> '' AND " + _EOL +;
+"			(C7_NUM = D1_PEDIDO AND C7_ITEM = D1_ITEMPC) AND " + _EOL +;
+"			SD1.D_E_L_E_T_ <> '*' AND SC7.D_E_L_E_T_ <> '*' " + _EOL +;
+"		) A WHERE (XX_FORNECE = A2_COD AND XX_LOJA = A2_LOJA) " + _EOL +;
+"		ORDER BY XX_FORNECE, XX_LOJA, XX_DTDIGIT DESC " + _EOL +;
+"	) XX_ATRASUC " + _EOL +;
+"	FROM " + RetSQLName("SA2") + _EOL +;
+") A, " + RetSQLName("SA2") + " SA2 WHERE " + _EOL +;
+"(A2_COD = XX_COD AND A2_LOJA = XX_LOJA) AND " + _EOL +;
+"SA2.D_E_L_E_T_ <> '*'"
+
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Grava as queries em arquivo .SQL       ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+MemoWrit(StrTran(FunName(), "#", "") + "1.SQL", _cQry1)
+MemoWrit(StrTran(FunName(), "#", "") + "2.SQL", _cQry2)
+MemoWrit(StrTran(FunName(), "#", "") + "3.SQL", _cQry3)
+MemoWrit(StrTran(FunName(), "#", "") + "4.SQL", _cQry4)
+MemoWrit(StrTran(FunName(), "#", "") + "5.SQL", _cQry5)
+MemoWrit(StrTran(FunName(), "#", "") + "6.SQL", _cQry6)
+MemoWrit(StrTran(FunName(), "#", "") + "7.SQL", _cQry6)
+MemoWrit(StrTran(FunName(), "#", "") + "8.SQL", _cQry6)
+
+aAdd(_aProc, '"1a Compra", "Ult. Compra" e "Vlr. Acum. em Reais"')
+aAdd(_aProc, '"Maior Compra"')
+aAdd(_aProc, '"Maior Atraso"')
+aAdd(_aProc, '"Maior Desconto"')
+aAdd(_aProc, '"Cotacoes Venc/Disp"')
+aAdd(_aProc, '"Valor e Desconto da Ultima Compra 1"')
+aAdd(_aProc, '"Valor e Desconto da Ultima Compra 2"')
+aAdd(_aProc, '"Atraso da Ultima Compra"')
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Processa as queries e verifica se foi corretamente.    ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+_cMsg := "Nใo foi possํvel atualizar o cadastro de fornecedores (SA2)." + _EOL +;
+"Informe o erro abaixo ao administrador do sistema." + _EOL + _EOL
+
+For _nAux1 := 1 to len(_aProc)
+	MsProcTxt('Processando ' + _aProc[_nAux1] + '...')
+	_cAux1 := AllTrim(str(_nAux1))
+	If TcSqlExec(_cQry&(_cAux1)) != 0
+		_cMsg += TcSQLError()
+		APMsgAlert(OemToAnsi(_cMsg), OemToAnsi("Aten็ใo - Query " + AllTrim(str(_nAux1))))
+		Return -1
+	Endif
+Next _nAux1
+
+_cMsg := "O cadastro de fornecedores (SA2) foi atualizado com sucesso."
+MsgInfo(_cMsg, FunName())
+Return 0

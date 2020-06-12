@@ -1,0 +1,1702 @@
+#INCLUDE "FINA377.ch"
+#Include "PROTHEUS.CH"
+#INCLUDE 'FWMVCDEF.CH'
+
+// 17/08/2009 - Compilacao para o campo filial de 4 posicoes
+// 18/08/2009 - Compilacao para o campo filial de 4 posicoes
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o	 ³ FINA377	³ Autor ³ Mauricio Pequim	    ³ Data ³ 23.08.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Programa para montagem dos titulos de IR - OffLine		  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso		 ³ SigaFin - FINA377									   	  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function FinA377()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Vari veis 											 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local lPanelFin := IsPanelFin()
+Local nOpcao		:= 0
+Local cPergunta	:= "AFI377"
+Local oDlg
+Local aSays			:= {}
+Local aButtons		:= {}
+Local lEnd			:= .F.
+Local cCadastro	:= STR0001 //"Apuracao dos titulos de INSS - OffLine"
+Local aResultado	:= {}
+Local cForInss		:= ""
+Local cLojInss		:= ""
+Local cNomInss		:= ""
+Local aArea			:= GetArea()
+Local cLojaImp		:= PadR( "00", TamSX3( "A2_LOJA" )[1], "0" )
+
+Private aFlagCTB	:= {}
+Private lUsaFlag	:= SuperGetMV( "MV_CTBFLAG" , .T. /*lHelp*/, .F. /*cPadrao*/)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ aRotina e utilizada noutras rotinas do Siga                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aRotina :=	{	{ "aRotina Falso", "AxPesq",		0, 1 },;
+								{ "aRotina Falso", "AxVisual",	0, 2 },;
+								{ "aRotina Falso", "AxInclui",	0, 3 },;
+								{ "aRotina Falso", "AxAltera",	0, 4 }}
+
+*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria as naturezas necessarias               				 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+F377NatNew()
+
+DbSelectArea("SA2")
+DbSetOrder(1)
+DbSeek(xFilial()+GetMv("MV_FORINSS")+Space(Len(A2_COD)-Len(GetMv("MV_FORINSS")))+cLojaImp)
+cForInss		:= SA2->A2_COD
+cLojInss		:= SA2->A2_LOJA
+cNomInss		:= SA2->A2_NREDUZ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Estrutura da matriz aResultado                               ³
+//³==============================================================³
+//³ 1-Fornecedor                                                 ³
+//³ 2-Loja                                                       ³
+//³ 3-Valor da base de calculo                                   ³
+//³ 4-Valor do INSS ja retido                                    ³
+//³ 5-Valor do INSS a recolher                                   ³
+//³ 6-Registros dos titulos utilizados para a base de calculo    ³
+//³ 7-Titulo ja gerado para complemento do IR                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega as perguntas selecionadas                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SetKey (VK_F12,{|a,b| AcessaPerg("AFI377",.T.)})
+Pergunte(cPergunta,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³=============================================================³
+//³ mv_par01 // Da data                                         ³
+//³ mv_par02 // Ate a data                                      ³
+//³ mv_par03 // Do fornecedor                                   ³
+//³ mv_par04 // Ate o fornecedor                                ³
+//³ mv_par05 // Da loja                                         ³
+//³ mv_par06 // Ate a loja                                 		 ³
+//³ mv_par07 // Simulacao Sim/Nao                               ³
+//³ mv_par08 // Data a ser considerada                     		 ³
+//³ mv_par09 // Considerar filiais                         		 ³
+//³ mv_par10 // Da filial                                  		 ³
+//³ mv_par11 // Ate a filial                               		 ³
+//³ mv_par12 // Dt de emissao do titulo a ser gerado       		 ³
+//³ mv_par13 // Vencimento do titulo a ser gerado          		 ³
+//³ mv_par14 // Cria nota de debito                        		 ³
+//³ mv_par15 // Mostra lancamentos contabeis               		 ³
+//³ mv_par16 // Aglutina lancamentos contabeis             		 ³
+//³ mv_par17 // Lancamentos contabeis on-line              		 ³
+//³ mv_par18 // Tipos de Fornecedores:                     		 ³
+//³             Fisica, juridica ou ambas  						 ³
+//³mv_par19 // Seleciona filiais 	
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Sem foro para utiliza‡„o da Aglutinacao de Impostos             ³
+//³ N„o permite o acesso simultƒneo … rotina por mais de 1 usuario. ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF ( nHdlLock := MSFCREATE("FINA377.L"+cEmpAnt)) < 0
+	MsgAlert(STR0003+chr(13)+chr(10)+; //"A Funcao de Apuração de INSS por"
+				STR0004+chr(13)+chr(10)+;	  //"outro usuario. Por questoes de integridade de dados, nao"
+				STR0005+chr(13)+chr(10)+;  //"‚ permitida a utiliza‡„o desta rotina por mais de um usu rio"
+				STR0006,cCadastro)  //"simultaneamente. Tente novamente mais tarde."
+	Return
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Grava no sem foro informa‡”es sobre quem est  utilizando o Bordero ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+FWrite(nHdlLock,STR0007+cUserName+chr(13)+chr(10)+; //"Operador: "
+						STR0008+cEmpAnt+chr(13)+chr(10)+; //"Empresa.: "
+						STR0009+cFilAnt+chr(13)+chr(10)) //"Filial..: "
+
+
+Aadd(aSays,STR0010) //"Este programa tem como objetivo gerar titulos a pagar de INSS, conforme a soma"
+Aadd(aSays,STR0011) //"dos titulos a vencer na mesma data do mesmo fornecedor."
+
+If (SuperGetMV( "MV_FINCTAL", .T., "1" ) == "2")
+	Aadd(aSays," ")
+	Aadd(aSays,"*** " + STR0038 + "***")		//Controle de alçadas ativo 
+	Aadd(aSays,STR0037)		//"Os novos títulos terão o aprovador padrão (parâmetro MV_FINAP01 - moeda 01)."
+Endif
+
+If lPanelFin  //Chamado pelo Painel Financeiro
+	aButtonTxt := {}
+	AADD(aButtonTxt,{STR0036,STR0036, {||Pergunte(cPergunta,.T. )}}) // Parametros
+	lOk := FaMyFormBatch(aSays,aButtonTxt,{||@nOpcao:=1},{||})
+
+Else
+	Aadd(aButtons, { 01,.T.,{|o| nOpcao:=1, o:oWnd:End()}})
+	Aadd(aButtons, { 02,.T.,{|o| o:oWnd:End()}})
+	Aadd(aButtons, { 05,.T.,{|| Pergunte(cPergunta,.T. )}})
+	FormBatch(cCadastro,aSays,aButtons)
+Endif
+
+If  nOpcao == 1
+
+	If MV_PAR01 > MV_PAR02 // Data de/Ate
+		Help(" ",1,"F375DATA")
+		Set Key VK_F12 To
+		Return
+	Endif
+	If MV_PAR12 > MV_PAR13 // Emissao/Vencto
+		Help(" ",1,"F375DTVENC")
+		Set Key VK_F12 To
+		Return
+	Endif
+
+	Processa({|lEnd| Fa377Pagar(aResultado)},STR0012) //"Apuracao do INSS Off-Line"
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ MV_PAR07=1 => Simulacao												  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If MV_PAR07 == 1
+		If Len(aResultado) >= 1
+			Fa377Result(aResultado,cForInss,cLojInss,cNomInss)
+		EndIf
+	Else
+		If Len(aResultado) >= 1
+			Fa377Grava(aResultado,cForInss,cLojInss,cNomInss)
+		EndIf
+	EndIf
+EndIf
+Set Key VK_F12 To
+
+DbSelectArea("SE2")
+Set Filter To
+RetIndex("SE2")
+DbSetOrder(1)
+DbSeek(xFilial())
+
+fclose(nHdlLock)
+Ferase("FINA377.L"+cEmpAnt)
+
+RestArea(aArea)
+Set Key VK_F12 To
+Return(Nil)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o	 ³ Fa377Result      ³ Mauricio Pequim   	³ Data ³ 29.03.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Simulacao para analise do dados obtidos                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ FA377Result(ExpA1)				 						  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 => array que contem os dados dos titulos de IR a se- ³±±
+±±³			 ³          rem gerados para simula‡Æo  					  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso		 ³ FINA377													  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Fa377Result(aDados,cForInss,cLojInss,cNomInss)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Vari veis 									         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local nUsado	:= 9
+Local nConta	:= Len(aDados)
+Local nLaco		:= 0
+Local nBase		:= 0
+Local nRetido	:= 0
+Local nRecolher	:= 0
+Local nVlrAjuste:= 0
+Local nOpcao	:= 1
+Local oBmp
+Local nA			:= 0
+Local oGet
+Local cAliasH	:= "SA2"
+
+Private aHeader	:= {}
+Private aCols	:= Array(nConta+1,nUsado+1)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montagem do vetor aHeader                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Aadd(aHeader,{STR0013,		"A2_COD",		" ",					06, 00, " ", "    ", "C", ,"V"}) //"Fornecedor    "
+Aadd(aHeader,{STR0014,		"A2_LOJA",		"@!",					02, 00, " ", "    ", "C", ,"V"}) //"Loja          "
+Aadd(aHeader,{STR0015,		"E2_VALOR",		"@e 999,999,999.99",	15, 02, " ", "    ", "N", ,"V"}) //"Valor Base    "
+Aadd(aHeader,{STR0048,		"E2_VALOR",		"@e 999,999,999.99",	15, 02, " ", "    ", "N", ,"V"}) //"Adic/Deduz"
+Aadd(aHeader,{STR0016,		"E2_VALOR",		"@e 999,999,999.99",	15, 02, " ", "    ", "N", ,"V"}) //"Inss Retido   "
+Aadd(aHeader,{STR0017,		"E2_VALOR",		"@e 999,999,999.99",	15, 02, " ", "    ", "N", ,"V"}) //"Inss Recolher "
+Aadd(aHeader,{"              ",		"E2_OK",		"!!",					02, 00, " ", "    ", "C", ,"V"})
+
+
+SX3->(dbSetOrder(2))
+
+SX3->(DbSeek(PrefixoCpo(cAliasH)+"_FILIAL"))
+
+cUsado := SX3->X3_USADO
+
+AADD( aHeader, { "Alias WT","A2_ALI_WT", "", 03, 0,, cUsado, "C", cAliasH, "V"} )
+AADD( aHeader, { "Recno WT","A2_REC_WT", "", 10, 0,, cUsado, "N", cAliasH, "V"} )
+
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montagem do aCols com os valores apurados                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nA:=1 to Len(aDados)
+	aCols[nA,1] := aDados[nA,1]						// Fornecedor
+	aCols[nA,2] := aDados[nA,2]						// Loja
+	aCols[nA,3] := aDados[nA,3]						// Valor base para montagem do titulo de IR
+	aCols[nA,4] := aDados[nA,4]						// Adic/Deduz
+	aCols[nA,5] := aDados[nA,5]						// Valor ja retido de INSS
+	aCols[nA,6] := aDados[nA,6]						// Diferenca de INSS a recolher
+	aCols[nA,7] := Space(02)
+	aCols[nA,8] := .F.
+	aCols[nA,9] := "SA2"
+	aCols[nA,10] := aDados[nA,8] 
+	
+	nBase		+= aDados[nA,3]
+	nVlrAjuste	+= aDados[nA,4]
+	nRetido		+= aDados[nA,5]
+	nRecolher	+= aDados[nA,6]
+Next nA
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Adiciona no aCols a linha de total geral                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aCols[nConta+1,1]	:= STR0018 //"Total Geral"
+aCols[nConta+1,2]	:= Space(02)
+aCols[nConta+1,3]	:= nBase
+aCols[nConta+1,4]	:= nVlrAjuste
+aCols[nConta+1,5]	:= nRetido
+aCols[nConta+1,6]	:= nRecolher
+aCols[nConta+1,7]	:= Space(02)
+aCols[nConta+1,8]	:= .F.
+aCols[nConta+1,9]	:= ""
+aCols[nConta+1,8]	:= 0
+
+DEFINE MSDIALOG oDlg TITLE STR0012 FROM 100,001 To 400,570 Of oMainWnd Pixel	 //"Apuracao do INSS Off-Line"
+	oGet := MsGetDados():New(002,001,120,350,2,"Allways True","Allways True","",.F.,,,,200)
+	oGet:oBrowse:lHscroll := .F.
+	
+	Define Sbutton From 130,180 Type 1 Action (nOpcao:=1,oDlg:End())		Enable Of oDlg
+	Define Sbutton From 130,210 Type 2 Action (nOpcao:=0,oDlg:End())		Enable Of oDlg
+	Define Sbutton From 130,240 Type 6 Action Fr377Rel(aDados)			 	Enable Of oDlg
+ACTIVATE MSDIALOG oDlg Centered
+
+If nOpcao==1  // Gravacao dos dados
+	Fa377Grava(aDados,cForInss,cLojInss,cNomInss)
+EndIf
+
+Return(Nil)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o	 ³Fa377Pagar        ³ Mauricio Pequim  	    ³ Data ³ 29.03.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Processamento da analise do contas a pagar                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ FA377Pagar(ExpA1)					 					  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 = Array que conter  os dados dos titulos de IRRF	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso		 ³ FINA377													  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Fa377Pagar(aResultado)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Vari veis 										     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local nValInsS		:= 0
+Local nValBase		:= 0
+Local nValRetido	:= 0
+Local nValTit		:= 0
+Local nIndex		:= 0
+Local nLimInss		:= GetMv("MV_LIMINSS",.F.,0)
+Local cFornece		:= ""
+Local cLoja			:= ""
+Local cIndex		:= CriaTrab(,.F.)
+Local cChave		:= ""
+Local cFiltro		:= ""
+Local dData			:= Ctod("//")
+Local dDtCompara	:= Ctod("//")
+Local dDataIni		:= Ctod("//")
+Local dDataFin		:= Ctod("//")
+Local aAreaSE2		:= {}
+Local aTitUsado	:= {}
+Local aRegs			:= {}
+Local lContinua	:= .T.
+Local cTpPessoa	:= ""
+Local nValMaxIns  := 0
+Local lPCCBaixa := SuperGetMv("MV_BX10925",.T.,"2") == "1"
+
+Local lContrRet := .T.
+
+Local aComCalc := {} //array utilizado para verificar nao permitir que o título de compras seja processado mais de uma vez, será utilizado em caso de parcelamento.
+Local nInssDesc	:= 0
+Local nDedValor	:= 0
+Local nValAjust	:= 0
+Local lAvlInss	:= CpAISlOC == "BRA"
+Local lSkip 		:= .F.
+/*
+GESTAO - inicio */
+Local aSelFil	:= {}
+/* GESTAO - fim
+*/
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Utiliza o campo: vencto, vencto real ou emissao              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If MV_PAR08 == 1
+	cChave := "E2_FILIAL+E2_FORNECE+E2_LOJA+Dtos(E2_VENCTO)+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO"
+ElseIf MV_PAR08 == 2
+	cChave := "E2_FILIAL+E2_FORNECE+E2_LOJA+Dtos(E2_VENCREA)+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO"
+ElseIf MV_PAR08 == 3
+	cChave := "E2_FILIAL+E2_FORNECE+E2_LOJA+Dtos(E2_EMIS1)+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO"
+ElseIf MV_PAR08 == 4
+	cChave := "E2_FILIAL+E2_FORNECE+E2_LOJA+Dtos(E2_EMISSAO)+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO"
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Selecao do SE2 conforme parametros                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DbSelectArea("SE2")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se deverar ser considerada filial de/ate            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+/*
+GESTAO - inicio */
+#IFDEF TOP
+	If MV_PAR19 == 1
+		AdmSelecFil("AFI377",19,.F.,@aSelFil,"SE2",.T.)
+	Else
+		Aadd(aSelFil,cFilAnt)
+	Endif
+	If Len(aSelFil) > 1
+		cFiltro := "E2_FILIAL >= '" + xFilial( "SE2" , aSelFil[1] ) + "' .And. E2_FILIAL <= '" + xFilial( "SE2" , aSelFil[Len(aSelFil)] ) + "'.And."
+	Else
+		cFiltro := "E2_FILIAL == '" + xFilial( "SE2" , aSelFil[1] ) + "'.And."
+	Endif
+#ELSE
+	If MV_PAR09 == 2
+		cFiltro := "E2_FILIAL=='"+xFilial()+"'.And."
+	Else
+		cFiltro := "E2_FILIAL>='"+MV_PAR10+"'.And.E2_FILIAL<= '"+MV_PAR11+"'.And."
+	EndIf
+#ENDIF
+/* GESTAO - fim
+*/
+cFiltro += "((E2_FORNECE>='"+MV_PAR03+"'.And.E2_FORNECE<='"+MV_PAR04+"'.And."
+cFiltro += " E2_LOJA>='"+MV_PAR05+"'.And.E2_LOJA<= '"+MV_PAR06+"'.And."
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Utiliza o campo: vencto, vencto real ou emissao              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If MV_PAR08 == 1
+	cFiltro += "DTOS(E2_VENCTO)>='"+Dtos(MV_PAR01)+"'.And.DTOS(E2_VENCTO)<='"+Dtos(MV_PAR02)+"'"
+ElseIf MV_PAR08 == 2
+	cFiltro += "DTOS(E2_VENCREA)>='"+Dtos(MV_PAR01)+"'.And.DTOS(E2_VENCREA)<='"+Dtos(MV_PAR02)+"'"
+ElseIf MV_PAR08 == 3
+	cFiltro += "DTOS(E2_EMIS1)>='"+Dtos(MV_PAR01)+"'.And.DTOS(E2_EMIS1)<='"+Dtos(MV_PAR02)+"'"
+ElseIf MV_PAR08 == 4
+	cFiltro += "DTOS(E2_EMISSAO)>='"+Dtos(MV_PAR01)+"'.And.DTOS(E2_EMISSAO)<='"+Dtos(MV_PAR02)+"'"
+EndIf
+
+cFiltro += ").Or.(E2_TIPO=='INS'))"
+
+IndRegua("SE2",cIndex,cChave,,cFiltro,STR0019) //"Selecionando Registros..."
+nIndex := RetIndex("SE2")
+#IFNDEF TOP
+	DbSetIndex(cIndex+OrdBagExt())
+#ENDIF
+DbSetOrder(nIndex+1)
+DbGoTop()
+
+ProcRegua(RecCount())
+
+SF1->(DbSetOrder(1))
+
+While SE2->(!Eof())
+	IncProc(STR0020) //"Selecionado titulos a pagar"
+	/*
+	GESTAO - inicio */
+	#IFDEF TOP
+		If Ascan(aSelFil,SE2->E2_FILORIG) == 0
+			SE2->(DbSkip())
+			Loop
+		Endif
+	#ENDIF
+	/* GESTAO - fim
+	*/
+	cFornece	:= SE2->E2_FORNECE
+	cLoja		:= SE2->E2_LOJA
+	lContinua := .T.
+	cTpPessoa := ""
+	lSkip 		:= .F.
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se o usuario optou por selecionar o tipo do forne-  ³
+	//³ cedor.                                                       ³
+	//³ MV_PAR18 (1) - Pessoa fisica                                 ³
+	//³ MV_PAR18 (2) - Pessoa juridica                               ³
+	//³ MV_PAR18 (3) - Ambas                                         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	DbSelectArea("SA2")
+	DbSetOrder(1)
+	If !DbSeek(xFilial("SA2",SE2->E2_FILORIG)+cFornece+cLoja)
+		lContinua := .F.
+	Else
+		cTpPessoa := SA2->A2_TIPO
+
+		If MV_PAR18 == 1
+			If SA2->A2_TIPO <> "F"
+				lContinua := .F.
+			EndIf
+		ElseIf MV_PAR18 == 2
+			If SA2->A2_TIPO <> "J"
+				lContinua := .F.
+			EndIf
+		Else
+			lContinua := .T.
+		EndIf
+	EndIf
+	If !lContinua
+		DbSelectArea("SE2")
+		DbSetOrder(nIndex+1)
+		DbSkip()
+		Loop
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Utiliza o campo: vencto, vencto real ou emissao              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If MV_PAR08 == 1
+		dData := SE2->E2_VENCTO
+	ElseIf MV_PAR08 == 2
+		dData := SE2->E2_VENCREA
+	ElseIf MV_PAR08 == 3
+		dData := SE2->E2_EMIS1
+	ElseIf MV_PAR08 == 4
+		dData := SE2->E2_EMISSAO
+	EndIf
+
+	dDtCompara	:= Dtos(dData)
+	nValInss	:= 0
+	nValBase	:= 0
+	nValTit		:= 0
+	nValRetido	:= 0
+	nValReter	:= 0
+	nValAjust	:= 0
+
+	aRegs			:= {}
+
+	If cTpPessoa != "F"
+		cCondicao := {|| SE2->E2_FORNECE+SE2->E2_LOJA == cFornece+cLoja .and. dDtCompara >= DTOS(mv_par01) .and. dDtCompara <= DTOS(mv_par02)}
+	Else
+		cCondicao := {|| SE2->E2_FORNECE+SE2->E2_LOJA+Substr(dDtCompara,5,2) == cFornece+cLoja+Substr(Dtos(dData),5,2)}
+	Endif
+
+	DbSelectArea("SE2")
+	DbSetOrder(nIndex+1)
+
+	While !Eof() .And. Eval(cCondicao)
+		IncProc(STR0020) //"Selecionado titulos a pagar"
+		lSkip 		:= .F.
+		/*
+		GESTAO - inicio */
+		If Ascan(aSelFil,SE2->E2_FILORIG) == 0
+			SE2->(DbSkip())
+			lSkip 		:= .T.
+			Loop
+		Endif
+
+		/* GESTAO - fim
+		*/
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica o status do titulo de IR gerado e se tudo estiver   ³
+		//³ correto somamos o valor do titulo gerado ao valor de IR      ³
+		//³ ja retido.                                                   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(SE2->E2_TITINS)
+			Fa377SitTit(SE2->E2_TITINS,@nValRetido,@aTitUsado,SE2->E2_FILORIG, SE2->(RECNO()))
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Desconsiderar titulos de abatimento				    		 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SE2->E2_TIPO $ MVPAGANT+"/"+MVPROVIS+"/"+MVTAXA+"/"+MVINSS+"/"+MVTAXA+"/"+MV_CPNEG+"/"+MVABATIM+"/"+"SES"
+			DbSelectArea("SE2")
+			DbSetOrder(nIndex+1)
+			DbSkip()
+			lSkip 		:= .T.
+			Loop
+		EndIf
+		
+		DbSelectArea("SED")
+		DbSetOrder(1)
+		If DbSeek(xFilial("SED",SE2->E2_FILORIG)+SE2->E2_NATUREZ)		/* GESTAO */
+
+			If SED->ED_CALCINS == "S" .and. SA2->A2_RECINSS == "S"
+				//Recomponho o valor base de calculo
+				If SE2->E2_ORIGEM == 'FINA050 ' .and. SE2->E2_BASEINS > 0
+					nValBase	:= SE2->E2_BASEINS
+				Else
+					nValBase	:= SE2->(E2_VALOR+E2_IRRF+E2_INSS+E2_ISS+E2_SEST)
+				EndIf
+
+				If lContrRet
+					If !lPccBaixa
+						If Empty(SE2->E2_PRETPIS)
+							nValBase += IIF(Empty(SE2->E2_VRETPIS), SE2->E2_PIS , SE2->E2_VRETPIS )
+						Endif
+						If Empty(SE2->E2_PRETCOF)
+							nValBase += IIF(Empty(SE2->E2_VRETCOF), SE2->E2_COFINS , SE2->E2_VRETCOF )
+						Endif
+						If Empty(SE2->E2_PRETCSL)
+							nValBase += IIF(Empty(SE2->E2_VRETCSL), SE2->E2_CSLL , SE2->E2_VRETCSL )
+						Endif
+					Endif
+				Else
+					nValBase += SE2->(E2_PIS+E2_COFINS+E2_CSLL)
+				Endif
+
+				// se o titulos foi gerado pelo Compras, busca a base de cálculo que está gravada lá.
+				If "MATA100" $ SE2->E2_ORIGEM .and. ;
+				   SF1->(DbSeek(xFilial("SF1",SE2->E2_FILORIG)+SE2->(E2_NUM+E2_PREFIXO+E2_FORNECE+E2_LOJA+E2_TIPO))) .and. ;
+				   SF1->F1_BASEINS > 0
+
+					If Ascan(aComCalc, {|e| e == xFilial("SF1",SE2->E2_FILORIG)+SE2->(E2_NUM+E2_PREFIXO+E2_FORNECE+E2_LOJA+E2_TIPO)}) == 0
+						nValBase := SF1->F1_BASEINS
+						//adiciona no array de controle para que nao processe o mesmo título de compras diversas vezes.
+						AADD(aComCalc,xFilial("SF1",SE2->E2_FILORIG)+SE2->(E2_NUM+E2_PREFIXO+E2_FORNECE+E2_LOJA+E2_TIPO))
+						// Verifica se o campo de INSS retido pela sub-empreiteira existe e esta alimentado
+						If lAvlInss
+							nInssDesc := F770AVLINSS(xFilial("SD1",SE2->E2_FILORIG)+SE2->(E2_NUM+E2_PREFIXO+E2_FORNECE+E2_LOJA))
+						Endif
+					Else
+						nValBase := 0
+					EndIf
+
+				ElseIf !Empty(SED->ED_BASEINS)
+					nValBase := NoRound((nValBase * (SED->ED_BASEINS/100)),2)
+				EndIf
+
+				RegToMemory("SE2",.F.,.F.,.F.)
+				If cTpPessoa == "F"
+					nValInss   := FCalcInsPF(@nValBase,,,,@nDedValor) - nInssDesc
+				Else
+					nValInss   := FCalcInsPJ(@nValBase,,,,@nDedValor)- nInssDesc
+				Endif
+				nInssDesc := 0
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Somar todos os valores de Inss do fornecedor (Carre- ³
+				//³ teiro) 												 ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If SED->ED_INSSCAR == "S"
+
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Verifica se Pessoa Fisica ou Juridica, para fins de  ³
+					//³ calculo do inss                                    	³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If cTpPessoa == "F"
+
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³ Armazena o INSS retido, informado na Viagem Atual.    ³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						nRetInss := DTR->DTR_INSRET
+						aAreaDTR := DTR->(GetArea())
+						aAreaDTY := DTY->(GetArea())
+						dDatMes  := Ctod("01/"+Str(Month(dDataBase),2,0)+"/"+Str(Year(dDataBase),4,0))
+
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³ Armazena Valor do INSS e INSS Retido no mes.          ³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					    DTY->(dbSetOrder(3))
+					    DTY->(MsSeek(xFilial("DTY",SE2->E2_FILORIG)+SA2->A2_COD+SA2->A2_LOJA+DTOS(dDatMes),.T.))
+					    While !DTY->(Eof()) .And. DTY->DTY_FILIAL+DTY->DTY_CODFOR+DTY->DTY_LOJFOR+StrZero(Month(DTY->DTY_DATCTC),2)+StrZero(Year(DTY->DTY_DATCTC),2) == ;
+					    		xFilial('DTY',SE2->E2_FILORIG)+SA2->A2_COD+SA2->A2_LOJA+StrZero(Month(dDataBase),2)+StrZero(Year(dDataBase),2)
+								nValInss += DTY->DTY_INSS
+								nRetInss += DTY->DTY_INSS + Posicione("DTR",3,xFilial("DTR")+DTY->DTY_FILORI+DTY->DTY_VIAGEM+DTY->DTY_CODVEI,"DTR_INSRET")
+								DTY->(dbSkip())
+					    EndDo
+
+						RestArea ( aAreaDTR )
+						RestArea ( aAreaDTY )
+
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³Verifica se o valor do INSS ultrapassou o valor limite.³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						If (nLimInss > 0) .And. (SE2->E2_INSS + nRetInss > nLimInss)
+							nValInss   := nLimInss
+						EndIf
+
+					EndIf
+				EndIf
+				nValTit		+= nValBase
+				nValRetido	+= SE2->E2_INSS
+				nValReter	+= nValInss
+				nValAjust	+= nDedValor
+				Aadd(aRegs,SE2->(Recno()))
+			EndIf
+		EndIf
+
+		DbSelectArea("SE2")
+		DbSetOrder(nIndex+1)
+		DbSkip()
+		lSkip 		:= .T.
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Utiliza o campo: vencto, vencto real ou emissao              ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If MV_PAR08 == 1
+			dDtCompara := Dtos(SE2->E2_VENCTO)
+		ElseIf MV_PAR08 == 2
+			dDtCompara := Dtos(SE2->E2_VENCREA)
+		ElseIf MV_PAR08 == 3
+			dDtCompara := Dtos(SE2->E2_EMIS1)
+		ElseIf MV_PAR08 == 4
+			dDtCompara := Dtos(SE2->E2_EMISSAO)
+		EndIf
+
+	EndDo
+	//Acho a diferente entre INSS a Reter e ja retido anteriormente
+	nValReter := nValReter - nValRetido
+
+	//Vejo o máximo de retencao para pessoa fisica
+	If cTpPessoa == "F"
+		If (nLimInss > 0) .And. (nValReter + nValRetido > nLimInss)
+			nValMaxIns := nLimInss - nValRetido
+			If nValMaxIns <= 0
+				nValReter := 0
+			ElseIf nValMaxIns < nValReter
+				nValReter :=  nValMaxIns
+			Endif
+		EndIf
+	Endif
+
+	If nValReter + nValRetido > GetMv("MV_VLRETIN") 
+		Aadd(aResultado,{cFornece,cLoja,nValTit,nValAjust,nValRetido,nValReter,aRegs,SA2->(Recno())})
+	Endif
+
+	DbSelectArea("SE2")
+	DbSetOrder(nIndex+1)
+	If !lSkip
+		SE2->(DbSkip())
+	EndIf	
+EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Restaura a integridade da tabela de titulos a pagar          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DbSelectArea("SE2")
+Set Filter To
+RetIndex("SE2")
+DbSetOrder(1)
+DbSeek(xFilial())
+
+Return(Nil)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o	 ³ Fa377SitTit      ³ Mauricio Pequim       ³ Data ³ 29.03.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Verifica a situacao do titulo de IR gerado            	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ FA377SitTit(ExpC1,ExpN1,ExpA1)						      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1  - Titulo a ser pesquisado:                    	      ³±±
+±±³          ³			  SE2-Prefixo+Numero+Parcela+Tipo+Fornecedor+Loja ³±±
+±±³          ³ExpN1  - Totalizador de IR ja retido.                       ³±±
+±±³          ³ExpA1  - Vetor que contem os titulos ja utilizados na soma  ³±±
+±±³          ³ 			do valor retido.                    		      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso		 ³ FINA377													  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Fa377SitTit(cNumTit,nValRetido,aTitUsado,cFilOrig,nRecnoP)
+
+Local aArea			:= {}
+Local lProcessar	:= .T.
+Local cFilAtu		:= cFilAnt
+/*
+GESTAO - inicio */
+Default cFilOrig	:= ""
+/* GESTAO - fim
+*/
+Default nRecnoP	:= 0 //Armazena o Recno do título Principal
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se o registro de IR gerado sofreu alguma alteracao  ³
+//³ por parte do usuario.                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DbSelectArea("SE2")
+aArea := GetArea()
+/*
+GESTAO - inicio */
+If Empty(cFilOrig)
+	If !Empty(xFilial("SE2"))
+		cFilAnt := Substr(cNumTit,1,FWSizeFilial())
+	Endif
+Else
+	cFilAnt := cFilOrig
+Endif
+/* GESTAO - fim
+*/
+DbSetOrder(1)
+If DbSeek(cNumTit)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se os dados nao foram gravados por outro modulo.    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !Empty(SE2->E2_ORIGEM) .And. !(Upper(AllTrim(SE2->E2_ORIGEM)) $ ".FINA377.FINA040.")
+		lProcessar := .F.
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se o titulo nao esta em bordero.                    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !Empty(SE2->E2_NUMBOR)
+		lProcessar := .F.
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se data do movimento n„o ‚ menor que data limite de ³
+	//³ movimentacao no financeiro.                                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SE2->E2_TIPO $ MVPAGANT
+		If !DtMovFin(,.F.,"1")
+			lProcessar := .F.
+		EndIf
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se nao ‚ um titulo de ISS, IR ou INSS               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SE2->E2_TIPO $ "ISS#TX #INS#TXA"
+		If Fa050Pai()
+			lProcessar := .F.
+		EndIf
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se foi emitido cheque para este titulo.             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SE2->E2_IMPCHEQ == "S"
+		lProcessar := .F.
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se foi emitido cheque para um dos titulos de        ³
+	//³ impostos e verifica a delecao do titulo pai.                 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Fa050VerImp()
+		lProcessar := .F.
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Desconsiderar titulos de abatimento							 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SE2->E2_TIPO $ MVABATIM
+		lProcessar := .F.
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Soma o valor do titulo ao valor de INSS retido               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If aScan(aTitUsado,SE2->E2_PREFIXO+SE2->E2_NUM+SE2->E2_PARCELA+SE2->E2_TIPO+SE2->E2_FORNECE+SE2->E2_LOJA) == 0
+		Aadd(aTitUsado,SE2->E2_PREFIXO+SE2->E2_NUM+SE2->E2_PARCELA+SE2->E2_TIPO+SE2->E2_FORNECE+SE2->E2_LOJA)
+		If lProcessar
+			nValRetido += SE2->E2_VALOR
+		EndIf
+	EndIf
+EndIf
+cFilAnt:= cFilAtu
+RestArea(aArea)
+Return(lProcessar)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o	 ³ Fa377Grava       ³ Mauricio Pequim       ³ Data ³ 29.03.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Gravacao dos dados nas tabelas envolvidas                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ Fa377Grava(ExpA1) 	           							  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 - Array contendo dados a serem gravados  na criacao  ³±±
+±±³			 ³          dos titulos de IRRF								  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso		 ³ FINA377													  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Fa377Grava(aDados,cForInss,cLojInss,cNomInss)
+
+Local nLaco		:= 0
+Local nTotal	:= 0
+Local nHdlPrv	:= 0
+Local cArquivo	:= ""
+Local lDigita	:= IIF(mv_par15==1,.T.,.F.)
+Local lAglutina	:= IIF(mv_par16==1,.T.,.F.)
+Local cCodAprov	:= ""
+Local lRet	:= .T.
+
+Private cLote		:= ""
+LoteCont("FIN")
+
+If (SuperGetMV( "MV_FINCTAL", .T., "1" ) == "2")
+	cCodAprov := FA050Aprov(1)
+Endif
+
+BEGIN TRANSACTION
+
+	For nLaco := 1 To Len(aDados)
+		If aDados[nLaco,6] >= 0.01
+			lRet:= Fa377GrvE2(aDados,nLaco,cForInss,cLojInss,cNomInss,@nTotal,@nHdlPrv,@cArquivo)
+		EndIf
+		If !lRet
+			Exit
+		EndIf
+	Next
+	If lRet
+		If nHdlPrv > 0 .and. nTotal > 0
+			RodaProva(  nHdlPrv,;
+						nTotal)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Envia para Lancamento Contabil                               ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			cA100Incl( cArquivo,;
+			           nHdlPrv,;
+			           3,;
+			           cLote,;
+			           lDigita,;
+			           lAglutina,;
+			           /*cOnLine*/,;
+			           /*dData*/,;
+			           /*dReproc*/,;
+			           @aFlagCTB,;
+			           /*aDadosProva*/,;
+			           /*aDiario*/ )
+		Endif
+	Else
+		DisarmTransaction()
+	Endif
+
+END TRANSACTION
+
+Return(Nil)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ Fa377GrvE2       ³ Mauricio Pequim       ³ Data ³ 29.03.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Gravacao dos titulos no SE2                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ FA377GrvE2(ExpA1,ExpN1,ExpC1) 							  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 = Array contendo os dados do titulo a ser gravado    ³±±
+±±³			 ³ ExpN1 = N£mero do registro no array						  ³±±
+±±³			 ³ ExpC1 = Titulo ja gerado para complemento do IR			  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ FinA377 				                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Fa377GrvE2(aRegistro,nLinha,cForInss,cLojInss,cNomInss,nTotal,nHdlPrv,cArquivo,cCodAprov)
+
+Local cParcela		:= TamParcela("E2_PARCELA",Space(1),Space(2),Space(3))
+Local cNumTit		:= ""
+Local cTipoSE2		:= "INS"
+Local cNatureza	:= &(GetMv("MV_INSS"))
+Local cNatNDF		:= &(GetMv("MV_NATNDF",.F.,'"NDF"'))
+Local cPrefixo		:= ""
+Local cFornece		:= ""
+Local cLoja			:= ""
+Local cNomeReduz	:= ""
+Local cPadrao		:= "510"
+Local lPadrao		:= .T.
+Local nA	        := 0
+Local nRecnoSE2     := 0
+Local aTamParc 	    := TamSx3("E2_PARCELA")
+Local lF377INSS     := ExistBlock("F377INSS")
+Local lF377NDF      := ExistBlock("F377NDF")
+Local cChaveImp		:= ""
+Local lRet			:= .T.
+Private cLote		:= ""
+
+Default cCodAprov	:= ""
+
+LoteCont("FIN")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Analise dos codigos das naturezas envolvidas                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cNatureza	:= Iif(Empty(cNatureza),"INSS",cNatureza)
+cNatNDF		:= Iif(Empty(cNatNDF),"NDF",cNatNDF)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Armazena informacoes quanto aos titulos originais            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nA:= Len(aRegistro[nLinha,7])
+DbSelectArea("SE2")
+DbGoTo(aRegistro[nLinha,7,nA])
+cNumTit	:= SE2->E2_NUM
+cPrefixo	:= SE2->E2_PREFIXO
+cParcela	:= SE2->E2_PARCELA
+cFornece	:= SE2->E2_FORNECE
+cLoja		:= SE2->E2_LOJA
+
+DbSelectArea("SA2")
+DbSetOrder(1)
+If DbSeek(xFilial()+cFornece+cLoja)
+	cNomeReduz := SA2->A2_NREDUZ
+Else
+	cNomeReduz := ""
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se o numero do titulo ja existe                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DbSelectArea("SE2")
+DbSetOrder(1)
+cParcela := Soma1(cParcela,aTamParc[1])
+While .T.
+	If DbSeek(xFilial("SE2")+cPrefixo+cNumtit+cParcela+cTipoSE2+cForInss+cLojInss)
+		cParcela := Soma1(cParcela,aTamParc[1])
+	Else
+		Exit
+	Endif
+EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Gravacao do titulo de Inss apurado                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RecLock("SE2",.T.)
+SE2->E2_FILIAL		:= xFilial("SE2")
+SE2->E2_PREFIXO	:= cPrefixo
+SE2->E2_NUM			:= cNumTit
+SE2->E2_PARCELA	:= cParcela
+SE2->E2_TIPO		:= cTipoSE2
+SE2->E2_EMISSAO	:= MV_PAR12
+SE2->E2_VALOR		:= aRegistro[nLinha,6]
+SE2->E2_VENCREA	:= DataValida(MV_PAR13,.T.)
+SE2->E2_SALDO		:= aRegistro[nLinha,6]
+SE2->E2_VENCTO		:= MV_PAR13
+SE2->E2_VENCORI	:= MV_PAR13
+SE2->E2_MOEDA		:= 1
+SE2->E2_EMIS1		:= MV_PAR12
+SE2->E2_FORNECE	:= cForInss
+SE2->E2_LOJA		:= cLojInss
+SE2->E2_NOMFOR		:= cNomInss
+SE2->E2_VLCRUZ		:= aRegistro[nLinha,6]
+SE2->E2_ORIGEM		:= "FINA377"
+SE2->E2_NATUREZ	:= cNatureza
+SE2->E2_TITINS		:= "FINA377"
+SE2->E2_MULTNAT	:= "2"
+SE2->E2_CODAPRO		:= cCodAprov
+
+If lUsaFlag  // Armazena em aFlagCTB para atualizar no modulo Contabil
+	aAdd( aFlagCTB, {"E2_LA", "S", "SE2", SE2->( Recno() ), 0, 0, 0} )
+EndIf
+
+MsUnlock()
+
+cChaveImp := SE2->E2_FILIAL + "|" +  SE2->E2_PREFIXO + "|" + SE2->E2_NUM + "|" + SE2->E2_PARCELA + "|" + SE2->E2_TIPO + "|" +;
+		SE2->E2_FORNECE+ "|" + SE2->E2_LOJA
+
+// Armazena o recno para utilizacao no P.E. F377INSS
+If lF377INSS
+	nRecnoSE2 := SE2->(Recno())
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Contabilizacao do titulo de IR                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+lPadrao		:= VerPadrao(cPadrao)
+
+If lPadrao .and. mv_par17 == 1   // Contabiliza On-Line
+	If nHdlPrv <= 0
+		nHdlPrv	:= HeadProva(	cLote,;
+								"FINA377",;
+								Substr(cUsuario,7,6),;
+								@cArquivo)
+	Endif
+	If nHdlPrv > 0
+		nTotal += DetProva( nHdlPrv,;
+		                    cPadrao,;
+		                    "FINA377",;
+		                    cLote,;
+		                    /*nLinha*/,;
+		                    /*lExecuta*/,;
+		                    /*cCriterio*/,;
+		                    /*lRateio*/,;
+		                    /*cChaveBusca*/,;
+		                    /*aCT5*/,;
+		                    /*lPosiciona*/,;
+		                    @aFlagCTB,;
+		                    /*aTabRecOri*/,;
+		                    /*aDadosProva*/ )
+	Endif
+	If nTotal > 0 .AND. !lUsaFlag
+		DbSelectArea("SE2")
+		RecLock("SE2")
+		SE2->E2_LA := "S "
+		MsUnlock()
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Atualiza os titulos originais                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nA:=1 To Len(aRegistro[nLinha,7])
+	DbSelectArea("SE2")
+	DbGoTo(aRegistro[nLinha,7,nA])
+	If Empty(SE2->E2_TITINS)
+		RecLock("SE2",.F.)
+			SE2->E2_TITINS := xFilial("SE2")+cPrefixo+cNumTit+cParcela+cTipoSE2+cForInss+cLojInss
+		MsUnlock()
+	Endif
+	lRet := F377AtuPr("SE2",cChaveImp )
+	If !lRet
+		Exit
+	EndIf
+Next
+
+If lRet
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ F377INSS  - Ponto de Entrada para complemento do titulo      |
+	//|             aglutinado do INSS.                              |
+	//| nInssSE2  - Numero do Registro Aglutinado de INSS            ³
+	//| aRegistro - Array com os recnos dos titulos originais        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lF377INSS
+		ExecBlock("F377INSS",.F.,.F.,{nRecnoSE2,aRegistro})
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Implantacao do titulo NDF                                    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If MV_PAR14 == 1
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se o numero do titulo ja existe                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		DbSelectArea("SE2")
+		DbSetOrder(1)
+		While .T.
+			If DbSeek(xFilial()+cPrefixo+cNumTit+cParcela+"NDF"+SA2->A2_COD+SA2->A2_LOJA)
+				cParcela := Soma1(cParcela)
+			Else
+				Exit
+			Endif
+		EndDo
+		RecLock("SE2",.T.)
+		SE2->E2_FILIAL		:= xFilial("SE2")
+		SE2->E2_PREFIXO	:= cPrefixo
+		SE2->E2_NUM			:= cNumTit
+		SE2->E2_PARCELA	:= cParcela
+		SE2->E2_TIPO		:= "NDF"
+		SE2->E2_EMISSAO	:= MV_PAR12
+		SE2->E2_VALOR		:= aRegistro[nLinha,6]
+		SE2->E2_VENCREA	:= DataValida(MV_PAR13,.T.)
+		SE2->E2_SALDO		:= aRegistro[nLinha,6]
+		SE2->E2_VENCTO		:= MV_PAR13
+		SE2->E2_VENCORI	:= MV_PAR13
+		SE2->E2_MOEDA		:= 1
+		SE2->E2_EMIS1		:= MV_PAR12
+		SE2->E2_FORNECE	:= cFornece
+		SE2->E2_LOJA		:= cLoja
+		SE2->E2_NOMFOR		:= cNomeReduz
+		SE2->E2_VLCRUZ		:= aRegistro[nLinha,6]
+		SE2->E2_ORIGEM		:= " "
+		SE2->E2_NATUREZ	:= cNatNDF
+		SE2->E2_NUMTIT		:= "FINA377"
+		SE2->E2_MULTNAT	:= "2"
+		SE2->E2_CODAPRO		:= cCodAprov
+	
+		If lUsaFlag  // Armazena em aFlagCTB para atualizar no modulo Contabil
+			aAdd( aFlagCTB, {"E2_LA", "S", "SE2", SE2->( Recno() ), 0, 0, 0} )
+		EndIf
+	
+		MsUnlock()  
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ F377NDF  - Ponto de Entrada para complemento do titulo       |
+		//|             de NDF. 			                             |
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lF377NDF
+			ExecBlock("F377NDF",.F.,.F.,{SE2->(Recno())})
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Contabilizacao do titulo de NDF                              ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		lPadrao		:= VerPadrao(cPadrao)
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Contabilizacao On-Line                                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lPadrao .and. mv_par17 == 1  // Contabiliza on-line
+			If nHdlPrv <= 0
+				nHdlPrv	:= HeadProva(	cLote,;
+										"FINA377",;
+										Substr(cUsuario,7,6),;
+										@cArquivo)
+			Endif
+			If nHdlPrv > 0
+				nTotal += DetProva( nHdlPrv,;
+				                    cPadrao,;
+				                    "FINA377",;
+				                    cLote,;
+				                    /*nLinha*/,;
+				                    /*lExecuta*/,;
+				                    /*cCriterio*/,;
+				                    /*lRateio*/,;
+				                    /*cChaveBusca*/,;
+				                    /*aCT5*/,;
+				                    /*lPosiciona*/,;
+				                    @aFlagCTB,;
+				                    /*aTabRecOri*/,;
+				                    /*aDadosProva*/ )
+			Endif
+			If nTotal > 0 .AND. !lUsaFlag
+				DbSelectArea("SE2")
+				RecLock("SE2")
+				SE2->E2_LA := "S "
+				MsUnlock()
+			EndIf
+		EndIf
+	EndIf
+Endif
+
+Return lRet
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ Fr377Rel         ³ Mauricio Pequim       ³ Data ³ 29.03.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Impressao do relatorio analitico para conferencia          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ Fr377Rel(ExpA1) 											  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 = Array contendo dados dos titulos apurados de IR 	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ FINA377				                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Fr377Rel(aDados)
+
+Local cDesc1	:= STR0021 //"Este relatorio ir  demonstrar os titulos que foram utilizados para "
+Local cDesc2	:= STR0022 //"para a montagem da base de calculo do INSS a recolher"
+Local cDesc3	:= ""
+Local wNrel
+Local Tamanho	:= "G"
+Local nA		:= 0
+Local nB		:= 0
+Local CbCont	:= 0
+Local CbTxt		:= Space(10)
+Local cString	:= "SE2"
+Local nColPrefixo
+Local nColNumero
+Local nColParcela
+Local nColTipo
+Local nColEmissao
+Local nColVencto
+Local nColVencRea
+Local nColValor
+Local nColFornec
+Local nColLoja
+Local nColNome
+Local nColRetido
+Local nColRec
+Local nColAdicD
+Local nColInTit
+Local nDedValor		:= 0
+Local nDedBase		:= 0
+Local nTotBase		:= 0
+Local nTotRetido	:= 0
+Local nTotBase			:= 0
+Local nTotRetido		:= 0
+Local nTotRecolher	:= 0
+Local nTotDedValor	:= 0
+Local nTotInTit		:= 0
+Local nSubInTit		:= 0
+Local lPCCBaixa := SuperGetMv("MV_BX10925",.T.,"2") == "1"
+
+Local lContrRet := .T.
+Local nTamFil 	:= FinTamSXG("033",TAMSX3("E2_FILIAL")[1])[1]
+
+Private Li			:= 80
+Private M_pag		:= 1
+Private Titulo		:= STR0023 //"Resultado Analitico para a conferencia - Titulos INSS"
+Private cabec1		:= ""
+Private cabec2		:= ""
+Private aReturn		:= {STR0024, 1, STR0025, 2, 2, 1, "",1 } //"Zebrado"###"Administracao"
+Private nomeprog	:= "FINA377"
+Private nLastKey	:= 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel := "FR377Rel"
+wnrel := SetPrint(cString,wNrel,,titulo,cDesc1,cDesc2,cDesc3,.F.,"",.T.,Tamanho,"",.F.)
+If nLastKey == 27
+	Return(Nil)
+EndIf
+
+SetDefault(aReturn,cString)
+If nLastKey == 27
+	Return(Nil)
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Considerar filiais                                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If MV_PAR09 == 1
+	nColPrefixo		:= 9
+	nColNumero		:= 18
+	nColParcela		:= 29
+	nColTipo		:= 32
+	nColEmissao		:= 38
+	nColVencto		:= 50
+	nColVencRea		:= 62
+	nColFornec		:= 76
+	nColLoja		:= 82
+	nColNome		:= 86
+	nColValor		:= 101
+	nColAdicD		:= 117
+	nColInTit		:= 133
+	nColRetido		:= 149
+	nColRec			:= 165
+
+	//Tratamento de filial variável
+	If nTamFil > 6
+		nColPrefixo		:= nColPrefixo   + (nTamFil - 5)	
+		nColNumero		:= nColNumero	+ (nTamFil - 5)	
+		nColParcela		:= nColParcela	+ (nTamFil - 5)	
+		nColTipo		:= nColTipo	+ (nTamFil - 5)	
+		nColEmissao		:= nColEmissao	+ (nTamFil - 5)	
+		nColVencto		:= nColVencto	+ (nTamFil - 5)	
+		nColVencRea		:= nColVencRea	+ (nTamFil - 5)	
+
+		nColFornec		:= nColFornec	+ (nTamFil - 5)	
+		nColLoja		:= nColLoja	+ (nTamFil - 5)	
+		nColNome		:= nColNome	+ (nTamFil - 5)	
+		nColValor		:= nColValor	+ (nTamFil - 5)	
+		nColInTit		:= nColInTit	+ (nTamFil - 5)	
+		nColRetido		:= nColRetido	+ (nTamFil - 5)	
+		nColRec			:= nColRec	+ (nTamFil - 5)	
+		nColAdicD		:= nColAdicD + (nTamFil - 5)
+   EndIf
+Else
+	nColPrefixo	:= 1
+	nColNumero	:= 10
+	nColParcela	:= 18
+	nColTipo	:= 24
+	nColEmissao	:= 30
+	nColVencto	:= 42
+	nColVencRea	:= 54
+	nColFornec	:= 68
+	nColLoja	:= 76
+	nColNome	:= 80
+	nColValor	:= 95
+	nColAdicD	:= 111
+	nColInTit	:= 132
+	nColRetido	:= 148
+	nColRec		:= 164
+
+	//Cabec1 := STR0027 //" Prefixo  Numero  Parc  Tipo  Emissao     Vencimento  Venc Real           Valor  Fornecedor                       IN Titulo    IN Retido  IN Recolher"
+	//" 			Prefixo  Numero  Parc  Tipo  Emissao     Vencimento  Venc Real           Valor  Fornecedor                       IR Titulo    IR Retido  IR Recolher"
+	//          123      123456  1     123   99/99/9999  99/99/9999  99/99/9999  99,999,999.99  123456-12 12345678901234567890   999,999.99  999,999.99   999,999.99
+	//          1        10      18    24    30          42          54          66             81     88 91                     114         126			 128
+	
+		//Cabec1 := STR0026 + Space(2) +  STR0027 //"Filial Prefixo  Numero  Parc  Tipo  Emissao     Vencimento  Venc Real           Valor  Fornecedor                        IR Titulo   IR Retido IR Recolher"
+EndIf
+
+//Cabec1 := STR0026 + Space(2) +  STR0027 //"Filial Prefixo  Numero  Parc  Tipo  Emissao     Vencimento  Venc Real           Valor  Fornecedor                        IR Titulo   IR Retido IR Recolher"
+If MV_PAR09 == 1
+	Cabec1 := STR0026 + Space(2)//"Filial"
+Else
+	Cabec1 :="" 
+Endif 
+Cabec1 += + STR0039 + Space(2) + STR0040 + Space(2) + STR0041 + Space(2) + STR0042 + Space(3) + STR0043 + Space(4) + STR0044 + Space(3) 
+Cabec1 += + STR0045 + Space(4)+ STR0046 + Space(20) + STR0047 + Space(6)
+Cabec1 += + STR0048 + Space(6)
+Cabec1 += + STR0049 + Space(6) + STR0050 + Space(6) + STR0051
+
+
+Cabec2 := ""
+If Len(aDados) > 0
+	For nA:=1 To Len(aDados)
+		If Li >= 58
+			Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,Iif(aReturn[4]==1,15,18))
+			Li := Prow()+1
+		EndIf
+		nSubInTit := 0
+		For nB:=1 To len(aDados[nA,7])
+			If Li >= 58
+				Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,Iif(aReturn[4]==1,15,18))
+				Li := Prow()+1
+			EndIf
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Posiciona na tabela de titulos a pagar                       ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			DbSelectArea("SE2")
+			DbSetOrder(1)
+			DbGoTo(aDados[nA,7,nB])
+
+			//Recomponho o valor base de calculo
+			If SE2->E2_ORIGEM == 'FINA050 ' .and. SE2->E2_BASEINS > 0
+				nBase	:= SE2->E2_BASEINS
+			Else
+				nBase	:= SE2->(E2_VALOR+E2_IRRF+E2_INSS+E2_ISS+E2_SEST)
+			EndIf
+			nDedBase := Fa986regra("SE2","INSS","1" ) 
+			nDedValor := Fa986regra("SE2","INSS","2" )
+
+			If lContrRet
+				If !lPccBaixa
+					If Empty(SE2->E2_PRETPIS)
+						nBase += IIF(Empty(SE2->E2_VRETPIS), SE2->E2_PIS , SE2->E2_VRETPIS )
+					Endif
+					If Empty(SE2->E2_PRETCOF)
+						nBase += IIF(Empty(SE2->E2_VRETCOF), SE2->E2_COFINS , SE2->E2_VRETCOF )
+					Endif
+					If Empty(SE2->E2_PRETCSL)
+						nBase += IIF(Empty(SE2->E2_VRETCSL), SE2->E2_CSLL , SE2->E2_VRETCSL )
+					Endif
+				Endif
+			Else
+				nBase += SE2->(E2_PIS+E2_COFINS+E2_CSLL)
+			Endif
+
+			If MV_PAR09 == 1
+				@Li,001 PSAY SE2->E2_FILIAL
+			EndIf
+			@Li,nColPrefixo		PSAY SE2->E2_PREFIXO
+			@Li,nColNumero		PSAY SE2->E2_NUM
+			@Li,nColParcela		PSAY SE2->E2_PARCELA
+			@Li,nColTipo		PSAY SE2->E2_TIPO
+			@Li,nColEmissao		PSAY SE2->E2_EMIS1						Picture "@d"
+			@Li,nColVencto		PSAY SE2->E2_VENCTO						Picture "@d"
+			@Li,nColVencRea		PSAY SE2->E2_VENCREA					Picture "@d"
+			@Li,nColValor		PSAY nBase+nDedBase						Picture "@e 99,999,999.99"
+			@Li,nColFornec		PSAY SE2->E2_FORNECE
+			@Li,nColLoja		PSAY SE2->E2_LOJA
+			@Li,nColNome		PSAY SubStr(SE2->E2_NOMFOR,1,20)
+			@Li,nColInTit		PSAY SE2->E2_INSS						Picture "@e 999,999.99"
+			@Li,nColAdicD		PSAY nDedValor						Picture "@e 999,999.99"
+
+			nSubInTit		+= SE2->E2_INSS
+
+			Li++
+		Next nB
+
+		@Li,050					PSAY STR0028 //"Sub-Total"
+		@Li,nColValor			PSAY aDados[nA,3]		Picture "@e 99,999,999.99"
+		@Li,nColInTit			PSAY nSubInTit			Picture "@e 999,999.99"
+		@Li,nColRetido			PSAY aDados[nA,5]- nSubInTit	Picture "@e 999,999.99"
+		@Li,nColRec				PSAY aDados[nA,6]		Picture "@e 999,999.99"
+		@Li,nColAdicD			PSAY aDados[nA,4]		Picture "@e 999,999.99"
+
+		nTotBase		+= aDados[nA,3]
+		nTotInTit		+= nSubInTit
+		nTotRetido		+= aDados[nA,5] - nSubInTit
+		nTotRecolher	+= aDados[nA,6]
+		nTotDedValor	+= aDados[nA,4]
+
+		Li += 2
+	Next nA
+
+	@Li,050					PSAY STR0029 //"TOTAL"
+	@Li,nColValor			PSAY nTotBase			Picture "@e 99,999,999.99"
+	@Li,nColInTit			PSAY nTotInTit			Picture "@e 999,999.99"
+	@Li,nColRetido			PSAY nTotRetido		Picture "@e 999,999.99"
+	@Li,nColRec				PSAY nTotRecolher		Picture "@e 999,999.99"
+	@Li,nColAdicD			PSAY nTotDedValor		Picture "@e 999,999.99"
+
+	Roda(CbCont,CbTxt,Tamanho)
+
+Endif
+
+If aReturn[5] = 1
+	Set Printer To
+	DbCommitAll()
+	OurSpool(wnrel)
+EndIf
+
+MS_FLUSH()
+
+Return(Nil)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³ F377NatNew       ³ Mauricio Pequim       ³ Data ³ 29/03/04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Criacao nas naturezas necessarias no IR OffLine            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ F377NatNew()						 						  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ FINA377      			                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function F377NatNew()
+
+Local cVar		:= ""
+Local cNatNDF	:= ""
+Local cLojaImp	:= PadR( "00", TamSX3( "A2_LOJA" )[1], "0" )
+
+//Cria Fornecedor do INSS
+DbSelectArea("SA2")
+If !(DbSeek(xFilial()+GetMv("MV_FORINSS")+Space(Len(A2_COD)-Len(GetMv("MV_FORINSS")))+cLojaImp))
+	Reclock("SA2",.T.)
+	SA2->A2_FILIAL := cFilial
+	SA2->A2_COD 	:= GetMv("MV_FORINSS")
+	SA2->A2_LOJA	:= cLojaImp
+	SA2->A2_NOME	:= STR0030 //"Instituto Nacional de Previdencia Social"
+	SA2->A2_NREDUZ := "INPS"
+	SA2->A2_BAIRRO := "."
+	SA2->A2_MUN 	:= "."
+	SA2->A2_EST 	:= SuperGetMv("MV_ESTADO")
+	SA2->A2_End 	:= "."
+	SA2->A2_TIPO	:= "J"
+	MsUnlock()
+EndIf
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria a natureza de IRRF                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cVar	:= Alltrim(&(GetMv("MV_INSS")))
+cVar	:= cVar+Space(10-Len(cVar))
+
+DbSelectArea("SED")
+DbSetOrder(1)
+If !(DbSeek(xFilial("SED")+cVar))
+	RecLock("SED",.T.)
+		SED->ED_FILIAL  := xFilial("SED")
+		SED->ED_CODIGO  := cVar
+		SED->ED_CALCIRF := "N"
+		SED->ED_CALCISS := "N"
+		SED->ED_CALCINS := "N"
+		SED->ED_DESCRIC := "RETENCAO P/ SEGURIDADE SOCIAL"
+		SED->ED_TIPO	:= "2"
+	MsUnlock()
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria a natureza do tipo NDF                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cNatNDF	:= Alltrim(&(GetMv("MV_NATNDF",.F.,'"NDF"')))
+cNatNDF	:= cNatNDF+Space(10-Len(cNatNDF))
+
+DbSelectArea("SED")
+DbSetOrder(1)
+If !DbSeek(xFilial("SED")+cNatNDF)
+	RecLock("SED",.T.)
+		SED->ED_FILIAL  := xFilial("SED")
+		SED->ED_CODIGO  := cNatNDF
+		SED->ED_CALCIRF := "N"
+		SED->ED_CALCISS := "N"
+		SED->ED_CALCINS := "N"
+		SED->ED_DESCRIC := STR0031 //"NOTA DE DEBITO AO FORNECEDOR"
+		SED->ED_TIPO	:= "2"
+	MsUnlock()
+EndIf
+
+Return(Nil)
+
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³FinA377T   ³ Autor ³ Marcelo Celi Marques ³ Data ³ 26.03.08 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Chamada semi-automatica utilizado pelo gestor financeiro   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ FINA377                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function FinA377T(aParam)
+	cRotinaExec := "FINA377"
+	ReCreateBrow("SE2",FinWindow)
+	FinA377()
+	ReCreateBrow("SE2",FinWindow)
+	dbSelectArea("SE2")
+
+	INCLUI := .F.
+	ALTERA := .F.
+
+Return .T.
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o	 ³FinAtuSXD ³ Autor ³ Totvs	³ Data ³ 27/03/10 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Funcao de processamento da gravacao do SXD                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³ Uso      ³FINA377                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function FinTamSXG(cGrupo,nTamPad)
+Local aRet
+
+DbSelectArea("SXG")
+DbSetOrder(1)
+
+IF DbSeek(cGrupo)
+	aRet := TamSXG(cGrupo)
+Else
+	aRet := {nTamPad,"@!",nTamPad,nTamPad}
+Endif
+
+Return aRet
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³FINA377   ºAutor  ³Clovis Magenta      º Data ³  31/01/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Funcao que buscara o valor do campo D1_AVLINSS referente  º±±
+±±º          ³ ao titulo/nota fiscal de entrada                           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ FINA377                                                   º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function F770AVLINSS(cChave)
+Local nAVLINSS := 0 //D1_AVLINSS
+Local aArea		:= getArea()
+
+dbSelectArea("SD1")
+dbSetOrder(1) // D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA
+If dbSeek(cChave)
+	While SD1->(!EOF()) .And. SD1->(D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA) == cChave
+		nAVLINSS += SD1->D1_AVLINSS
+		SD1->(dbSkip())
+	Enddo
+Endif
+
+RestArea(aArea)
+
+Return nAVLINSS
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} F377AtuPr 
+Atualiza o campo FKG_TITINS, nas apurações de processos judiciais
+
+@param cAliasC Informar SE1 para contas a receber e SE2 para contas a pagar
+@param cChaveImp Chave do título de INSS gerado na apuração
+
+@return lret
+
+@author Pâmela Bernardo
+@since 23/05/2017
+@version P11
+/*/
+//-------------------------------------------------------------------
+
+Function F377AtuPr(cAliasC,cChaveImp )
+	Local oModel
+	Local oSubFKG  
+	Local cIdDoc := ""
+	Local cIdDocINS :=""
+	Local nI := 0
+	Local cChave := ""
+	Local nLin := 1
+	Local lRet := .T.
+	Local lAchou := .T.
+	Local aArea := GetArea()
+
+
+	DbSelectArea("CCF")
+
+	If cAliasC == "SE2"
+		cChave := SE2->E2_FILIAL + "|" +  SE2->E2_PREFIXO + "|" + SE2->E2_NUM + "|" + SE2->E2_PARCELA + "|" + SE2->E2_TIPO + "|" +;
+		SE2->E2_FORNECE+ "|" + SE2->E2_LOJA
+	EndIf
+	cIdDoc := FINGRVFK7(cAliasC, cChave)
+	FKF->(DBSetOrder(1))
+	If FKF->(DBSeek(xFilial("FKF") + cIdDoc ))
+		oModel := FwLoadModel("FINA986")
+		oModel:SetOperation( MODEL_OPERATION_UPDATE ) //visualizacao
+		oModel:Activate()
+	Else
+		lAchou:= .F.	
+	EndIf	
+	If lAchou
+		oSubFKG:= oModel:GetModel("FKGDETAIL")
+		nLin := oSubFKG:GetLine()
+		cIdDocINS := FINGRVFK7(cAliasC, cChaveImp)
+		For nI := 1 To oSubFKG:Length()
+			oSubFKG:GoLine(nI)
+			//se for processo, nao influenciar no calculo do imposto
+			If !Empty(oSubFKG:GetValue("FKG_IDFKE")) .and. oSubFKG:GetValue("FKG_APURIN")== "1" .and. Empty(oSubFKG:GetValue("FKG_TITINS"))
+				oSubFKG:SetValue("FKG_TITINS", cIdDocINS)
+				oSubFKG:SetValue("FKG_APURIN", "3")
+			Endif
+		Next nI
+		If oModel:VldData()
+			FwFormCommit(oModel)
+		Else
+			lRet := .F.
+			cLog := cValToChar(oModel:GetErrorMessage()[4]) + ' - '
+			cLog += cValToChar(oModel:GetErrorMessage()[5]) + ' - '
+			cLog += cValToChar(oModel:GetErrorMessage()[6])        	
+			Help( ,,"FINA986GRV",,cLog, 1, 0 )
+		Endif
+		oSubFKG:GoLine(nLin)
+		oModel:Deactivate()
+		oModel:Destroy()
+		oModel:= Nil
+		oSubFKG:= Nil
+	EndIf
+
+	RestArea(aArea)
+
+Return lRet
+
+

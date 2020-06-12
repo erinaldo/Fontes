@@ -1,0 +1,795 @@
+#line 1 "C:\TOTVS\TDS\Workspace\Local\CIEE\Contabil Gerencial\CTBR110.Ch"
+#line 2 "C:\TOTVS\TDS\Workspace\Local\CIEE\Contabil Gerencial\CTBR110.PRW"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\Dialog.ch"
+#line 28 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\Font.ch"
+#line 29 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\PTMenu.ch"
+#line 31 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\Print.ch"
+#line 33 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\Colors.ch"
+#line 35 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\Folder.ch"
+#line 37 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\msobject.ch"
+#line 38 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\VKey.ch"
+#line 42 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\WinApi.ch"
+#line 44 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\FWCommand.ch"
+#line 47 "PROTHEUS.Ch"
+#line 1 "C:\Protheus11\Protheus 11.8 Atual\Protheus\include\FWCSS.CH"
+#line 50 "PROTHEUS.Ch"
+#line 22 "C:\TOTVS\TDS\Workspace\Local\CIEE\Contabil Gerencial\CTBR110.PRW"
+Function CTBR110()
+
+Local WnRel
+Local aCtbMoeda:={}
+LOCAL cString	:= "CT2"
+LOCAL cDesc1 	:= OemToAnsi("Este programa ira imprimir o Diario Geral Modelo 1, de acordo")
+LOCAL cDesc2 	:= OemToAnsi("com os parametros sugeridos pelo usuario. Este modelo e ideal")
+LOCAL cDesc3	:= OemToAnsi("para Plano de Contas que possuam codigos nao muito extensos.")
+Local Titulo 	:= OemToAnsi("Emissao do Diario Geral")
+Local lRet		:= .T. 
+
+PRIVATE Tamanho	:= "M"
+PRIVATE aReturn 	:= { OemToAnsi("Zebrado"), 1,OemToAnsi("Administracao"), 2, 2, 1, "",1 }
+PRIVATE nomeprog	:= "CTBR110"
+PRIVATE aLinha  	:= { }
+PRIVATE nLastKey	:= 0
+PRIVATE cPerg   	:= "CTR110"
+PRIVATE lCodImp		:= .F. 
+
+If ( !AMIIn(34) )
+	Return
+EndIf
+
+wnrel :="CTBR110"
+
+lCodImp := AjCodImpX1("CTR110","12",0,"mv_par12")
+
+CTR110SX1()
+
+Pergunte("CTR110", .F. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+wnrel := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3, .F. ,"",,Tamanho)
+
+If nLastKey = 27
+	dbClearFilter()
+	Return
+Endif
+
+If mv_par10 = 1
+	Pergunte("CTR040", .T. )
+	Pergunte("CTR110", .F. )
+Endif
+
+
+
+
+
+If !ct040Valid(mv_par04)
+	lRet := .F. 
+Else
+	aSetOfBook := CTBSetOf(mv_par04)
+EndIf
+
+If lRet
+	aCtbMoeda	:= CtbMoeda(mv_par03)
+	If Empty(aCtbMoeda[1])
+		Help(" ",1,"NOMOEDA")
+		lRet := .F. 
+	EndIf
+EndIf
+
+If !lRet
+	dbClearFilter()
+	Return
+EndIf
+
+SetDefault(aReturn,cString)
+
+If nLastKey = 27
+	dbClearFilter()
+	Return
+Endif
+
+RptStatus({|lEnd| CTR110Imp(@lEnd,wnRel,cString,aSetOfBook,aCtbMoeda)})
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CTR110Imp(lEnd,WnRel,cString,aSetOfBook,aCtbMoeda)
+
+
+
+Local CbTxt
+Local Cbcont
+Local Cabec1		:= OemToAnsi("            C O N T A                     H I S T O R I C O                        NUMERO                         V  A  L  O  R")
+Local Cabec2		:= Iif (cPaisLoc<>"MEX",OemToAnsi("D E B I T O          C R E D I T O                                                 LANCTO                      DEBITO        CREDITO"),OemToAnsi("D E B I T O          C R E D I T O                                                 LANCTO                      DEBITO        CREDITO"))
+Local Titulo		:= ""
+
+Local cPicture
+Local cDescMoeda
+Local cCodMasc
+Local cSeparador	:= ""
+Local cMascara
+Local cGrupo
+Local cLote			:= ""
+Local cSubLote		:= ""
+Local cDoc			:= ""
+Local cCancel		:= OemToAnsi("***** CANCELADO PELO OPERADOR *****")
+Local dData			:= Ctod("")
+Local dDataAnte 	:= Ctod("")
+Local lData			:= .T. 
+Local lFirst		:= .T. 
+Local nQuebra		:= 0
+Local nTotDiaD		:= 0
+Local nTotDiaC		:= 0
+Local nTotMesD		:= 0
+Local nTotMesC		:= 0
+Local nTotDeb		:= 0
+Local nTotCred	 	:= 0
+Local nDia
+Local nMes
+
+Local nTamDeb		:= 15
+Local nTamCrd		:= 14
+Local nRecCT2		:= 0
+
+Local nColDeb		:= 102
+Local nColCrd		:= 118
+Local dDataFim		:= mv_par02
+
+Local bPular		:= { || 	&("CT2->CT2_VLR"+cMoeda) == 0 .Or.  (CT2->CT2_TPSALD # mv_par05 .And.  mv_par05 # "*") }
+Local lImpLivro		:= .t. , lImpTermos:= .f. 
+Local l1StQb	 	:= .T. 
+Local cFilCT1		:= xFilial("CT1")
+
+Local nPagIni		:= mv_par06
+Local nPagFim		:= mv_par07
+Local nReinicia		:= mv_par08
+Local nBloco		:= 0
+Local nBlCount		:= 0
+Local lEmissUnica	:= If(GetNewPar("MV_CTBQBPG","M") == "M", .T. , .F. )
+Local lNewPAGFIM	:= If(nReinicia > nPagFim, .T. , .F. )
+Local nMaxLin   	:= mv_par13
+
+If lEmissUnica
+	m_pag    := 1
+CtbQbPg( .T. ,@nPagIni,@nPagFim,@nReinicia,@m_pag,@nBloco,@nBlCount)
+Else
+	m_pag 	:= mv_par06
+Endif
+
+Private cMoeda
+
+
+
+
+cbtxt    := SPACE(10)
+cbcont   := 0
+li       := 80
+cMoeda	:= mv_par03
+
+
+
+
+
+cDescMoeda 	:= aCtbMoeda[2]
+nDecimais 	:= DecimalCTB(aSetOfBook,cMoeda)
+
+If Empty(aSetOfBook[2])
+	cMascara := GetMv("MV_MASCARA")
+Else
+	cMascara := RetMasCtb(aSetOfBook[2],@cSeparador)
+EndIf
+cPicture 	:= aSetOfBook[4]
+
+
+Titulo		:= 	OemToAnsi("DIARIO GERAL DE ") + DTOC(mv_par01) + OemToAnsi(" ATE ") + DTOC(mv_par02) + OemToAnsi(" EM ") + cDescMoeda + CtbTitSaldo(mv_par05)
+
+dbSelectAre("CT2")
+dbSetOrder(1)
+SetRegua(Reccount())
+dbSeek(xFilial()+Dtos(mv_par01), .T. )
+
+
+
+
+Do Case
+	Case mv_par09==1 ; lImpLivro:= .t.  ; lImpTermos:= .f. 
+	Case mv_par09==2 ; lImpLivro:= .t.  ; lImpTermos:= .t. 
+	Case mv_par09==3 ; lImpLivro:= .f.  ; lImpTermos:= .t. 
+EndCase
+
+
+While 	lImpLivro .And.  !Eof() .and.  CT2->CT2_FILIAL == xFilial() .And.  DTOS(CT2->CT2_DATA) <= DTOS(mv_par02)
+
+	IF lEnd
+		PrintOut(_PROW()+1,0,cCancel,,)
+		Exit
+	EndIF
+
+	If Eval(bPular)
+		dbSkip()
+		Loop
+	EndIf
+
+	nMes := Month(CT2->CT2_DATA)
+
+
+
+	While ! Eof() .And.  CT2->CT2_FILIAL == xFilial() .And.  DTOS(CT2->CT2_DATA) <= DTOS(mv_par02) .And.  Month(CT2->CT2_DATA) == nMes
+
+		If Eval(bPular)
+			dbSkip()
+			Loop
+		EndIf
+
+		nDia := Day(CT2->CT2_DATA)
+		lData:= .T. 
+
+
+		While !Eof() .And.  CT2->CT2_FILIAL == xFilial() .And.  DTOS(CT2->CT2_DATA) <= DTOS(mv_par02) .And.  Month(CT2->CT2_DATA) == nMes .And.  Day(CT2->CT2_DATA) == nDia
+
+			IF lEnd
+				PrintOut(_PROW()+1,0,cCancel,,)
+				Exit
+			EndIF
+
+			IncRegua()
+
+			If Eval(bPular)
+				dbSkip()
+				Loop
+			EndIf
+
+			cDoc 		:= CT2->CT2_DOC
+			cLote		:= CT2->CT2_LOTE
+			cSubLote	:= CT2->CT2_SBLOTE
+
+
+
+
+
+
+
+
+			While !Eof() .And.  CT2->CT2_FILIAL == xFilial() .And.  CT2->CT2_DOC == cDoc .And.  CT2->CT2_LOTE == cLote .And.  CT2->CT2_SBLOTE == cSubLote .And.  DTOS(CT2->CT2_DATA) <= DTOS(mv_par02) .And.  Month(CT2->CT2_DATA) == nMes .And.  Day(CT2->CT2_DATA) == nDia
+
+				If Eval(bPular)
+					dbSkip()
+					Loop
+				EndIf
+
+				If li > nMaxLin
+					li++
+
+					If !lFirst .And.  (nTotDiaD <> 0 .or.  nTotDiaC <> 0)
+						PrintOut(li,055,OemToAnsi("A Transportar =======>"),,)
+						If nTotDiaD <> 0
+							ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+						EndIf
+						If nTotDiaC <> 0
+							ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+						EndIf
+						li++
+					EndIF
+
+					If lEmissUnica
+						CtbQbPg( .F. ,@nPagIni,@nPagFim,@nReinicia,@m_pag,@nBloco,@nBlCount)
+					Else
+
+						If m_pag > mv_par07
+							If lNewPAGFIM
+								mv_par07	:= m_pag+mv_par07
+								If l1StQb
+									m_pag		:= mv_par08
+									l1StQb := .F. 
+								Endif
+							Else
+								m_pag := nReinicia
+							Endif
+   	       		         Endif
+					Endif
+					CtCGCCabec(,,,Cabec1,Cabec2,dDataFim,Titulo,,"2",Tamanho)
+
+					If !lFirst .And.  (nTotDiaD <> 0 .or.  nTotDiaC <> 0)
+						li++
+						PrintOut(li,000,DTOC(CT2->CT2_DATA),,)
+						PrintOut(li,055,OemToAnsi("De Transporte =======>"),,)
+						If nTotDiaD <> 0
+							ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+						EndIf
+						If nTotDiaC <> 0
+							ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+						EndIf
+						li+=2
+					EndIF
+					lFirst := .F. 
+				EndIF
+
+				If lData
+					li++
+					PrintOut(li,000,DTOC(CT2->CT2_DATA),,)
+					li++
+					lData := .F. 
+				EndIf
+
+				If !Empty(CT2->CT2_DEBITO)
+					dbSelectArea("CT1")
+					dbSetOrder(1)
+					If MsSeek(cFilCT1+CT2->CT2_DEBITO, .F. )
+						If mv_par12 == 2
+							EntidadeCTB(CT1->CT1_RES,li,00,20, .F. ,cMascara,cSeparador)
+						ElseIf mv_par12 == 3 .AND.  lCodImp
+							EntidadeCTB(CT1->CT1_CODIMP,li,00,20, .F. ,cMascara,cSeparador)
+						Else
+							EntidadeCTB(CT2->CT2_DEBITO,li,00,20, .F. ,cMascara,cSeparador)
+						Endif
+					Else
+						EntidadeCTB(CT2->CT2_DEBITO,li,00,20, .F. ,cMascara,cSeparador)
+					Endif
+				Endif
+
+				If !Empty(CT2->CT2_CREDIT)
+					dbSelectArea("CT1")
+					dbSetOrder(1)
+					If MsSeek(cFilCT1+CT2->CT2_CREDIT, .F. )
+						If mv_par12 == 2
+							EntidadeCTB(CT1->CT1_RES,li,21,20, .F. ,cMascara,cSeparador)
+						ElseIf mv_par12 == 3 .AND.  lCodImp
+							EntidadeCTB(CT1->CT1_CODIMP,li,21,20, .F. ,cMascara,cSeparador)
+						Else
+							EntidadeCTB(CT2->CT2_CREDIT,li,21,20, .F. ,cMascara,cSeparador)
+						Endif
+					Else
+						EntidadeCTB(CT2->CT2_CREDIT,li,21,20, .F. ,cMascara,cSeparador)
+					Endif
+				Endif
+
+        		If cPaisLoc == "CHI"
+					PrintOut(li,042,Substr(CT2->CT2_HIST,1,34),,)
+					PrintOut(li,077,CT2->CT2_LOTE+CT2->CT2_SBLOTE+" "+CT2->CT2_SEGOFI+CT2->CT2_LINHA,,)
+				Else
+					PrintOut(li,042,Substr(CT2->CT2_HIST,1,40),,)
+					PrintOut(li,083,CT2->CT2_LOTE+CT2->CT2_SBLOTE+CT2->CT2_DOC+CT2->CT2_LINHA,,)
+				EndIf
+
+				nValor := &("CT2->CT2_VLR"+cMoeda)
+				If CT2->CT2_DC == "1" .Or.  CT2->CT2_DC == "3"
+					ValorCTB(nValor,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+				EndIf
+				If CT2->CT2_DC == "2" .Or.  CT2->CT2_DC == "3"
+					ValorCTB(nValor,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+				EndIf
+
+				If CT2->CT2_DC == "1" .Or.  CT2->CT2_DC == "3"
+					nTotDeb 	+= &("CT2->CT2_VLR" + cMoeda)
+					nTotDiaD	+= &("CT2->CT2_VLR" + cMoeda)
+					nTotMesD	+= &("CT2->CT2_VLR" + cMoeda)
+				EndIf
+				If CT2->CT2_DC == "2" .Or.  CT2->CT2_DC == "3"
+					nTotCred += &("CT2->CT2_VLR" + cMoeda)
+					nTotdiaC += &("CT2->CT2_VLR" + cMoeda)
+					nTotMesC += &("CT2->CT2_VLR" + cMoeda)
+				EndIf
+
+
+				nRecCT2 := CT2->(Recno())
+				dData	:= CT2->CT2_DATA
+				cSeqLan := CT2->CT2_SEQLAN
+
+				dbSelectArea("CT2")
+				dbSetOrder(10)
+				If dbSeek(xFilial()+DTOS(dData)+cLote+cSubLote+cDoc+cSeqLan)
+					dbSkip()
+					If CT2->CT2_DC == "4"
+
+
+
+
+
+
+						While !Eof() .And.  CT2->CT2_FILIAL == xFilial() .And.  CT2->CT2_LOTE == cLote .And.  CT2->CT2_SBLOTE == cSubLote .And.  CT2->CT2_DOC == cDoc .And.  CT2->CT2_SEQLAN == cSeqLan .And.  CT2->CT2_DC == "4" .And.  Dtos(CT2->CT2_DATA) == DTOS(dData)
+							li++
+							If li >= nMaxLin
+
+								If !lFirst .And.  (nTotDiaD <> 0 .or.  nTotDiaC <> 0)
+									PrintOut(li,055,OemToAnsi("A Transportar =======>"),,)
+									If nTotDiaD <> 0
+										ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+									EndIf
+									If nTotDiaC <> 0
+										ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+									EndIf
+									li++
+								EndIF
+
+								If lEmissUnica
+									CtbQbPg( .F. ,@nPagIni,@nPagFim,@nReinicia,@m_pag,@nBloco,@nBlCount)
+								Else
+
+									If m_pag > mv_par07
+										If lNewPAGFIM
+											mv_par07	:= m_pag+mv_par07
+											If l1StQb
+												m_pag		:= mv_par08
+												l1StQb := .F. 
+											Endif
+										Else
+											m_pag := nReinicia
+										Endif
+		   	       		    	    Endif
+								Endif
+								CtCGCCabec(,,,Cabec1,Cabec2,dDataFim,Titulo,,"2",Tamanho)
+
+								If !lFirst .And.  (nTotDiaD <> 0 .or.  nTotDiaC <> 0)
+									li++
+									PrintOut(li,000,DTOC(CT2->CT2_DATA),,)
+									PrintOut(li,055,OemToAnsi("De Transporte =======>"),,)
+									If nTotDiaD <> 0
+										ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+									EndIf
+									If nTotDiaC <> 0
+										ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+									EndIf
+									li+=2
+								EndIF
+								lFirst := .F. 
+							EndIF
+							PrintOut(li,042,Substr(CT2->CT2_HIST,1,40),,)
+							cLinha := CT2->CT2_LINHA
+							dbSkip()
+						EndDo
+					EndIf
+				Else
+					dbGoto(nRecCT2)
+					dbSetOrder(1)
+					dbSkip()
+				EndIf
+				dbSetOrder(1)
+				li++
+
+			EndDo
+		EndDO
+		If lEnd
+			Exit
+		Endif
+		IF (nTotDiad+nTotDiac)>0
+			li++
+			PrintOut(li,055,OemToAnsi("Totais deste dia =======>"),,)
+			ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+			ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+			nTotDiaD	:= 0
+			nTotDiaC	:= 0
+			li+=2
+		EndIF
+	EndDO
+	If lEnd
+		Exit
+	End
+
+	IF (nTotMesd+nTotMesc) > 0
+		PrintOut(li,055,OemToAnsi("Totais deste mes =======>"),,)
+		ValorCTB(nTotMesD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+		ValorCTB(nTotMesC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+		nTotMesD := 0
+		nTotMesC := 0
+		li+=2
+	EndIF
+EndDO
+
+IF (nTotDiad+nTotDiac)>0 .And.  !lEnd
+
+	li++
+	PrintOut(li,055,OemToAnsi("Totais deste dia =======>"),,)
+	ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+	ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+	li++
+
+
+	PrintOut(li,055,OemToAnsi("Totais deste mes =======>"),,)
+	ValorCTB(nTotMesD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+	ValorCTB(nTotMesC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+	li++
+EndIF
+
+
+IF (nTotDeb + nTotCred) > 0 .And.  !lEnd
+	PrintOut(li,055,OemToAnsi("Total Geral ============>"),,)
+	ValorCTB(nTotDeb ,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+	ValorCTB(nTotCred,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+EndIF
+
+dbSelectarea("CT2")
+dbSetOrder(1)
+dbClearFilter()
+
+If mv_par10 == 1
+	Ctbr040(wnRel)
+	Pergunte( "CTR110", .F.  )
+EndIf
+If mv_par11 == 1
+	Ctbr010(wnRel,mv_par02,mv_par03)
+Endif
+
+If lImpTermos
+
+	Pergunte( "CTR110", .F.  )
+
+	cArqAbert:=GetMv("MV_LDIARAB")
+	cArqEncer:=GetMv("MV_LDIAREN")
+
+	dbSelectArea("SM0")
+	aVariaveis:={}
+
+	For i:=1 to FCount()
+		If FieldName(i)=="M0_CGC"
+			AADD(aVariaveis,{FieldName(i),Transform(FieldGet(i),"@R 99.999.999/9999-99")})
+		Else
+            If FieldName(i)=="M0_NOME"
+                Loop
+            EndIf
+			AADD(aVariaveis,{FieldName(i),FieldGet(i)})
+		Endif
+	Next
+
+	dbSelectArea("SX1")
+	dbSeek("CTR110"+"01")
+
+	While SX1->X1_GRUPO=="CTR110"
+		AADD(aVariaveis,{Rtrim(Upper(X1_VAR01)),&(X1_VAR01)})
+		dbSkip()
+	End
+
+	If !File(cArqAbert)
+		aSavSet:=__SetSets()
+		cArqAbert:=CFGX024(,"Diario Geral.")
+		__SetSets(aSavSet)
+		Set(24,Set(24), .t. )
+	Endif
+
+	If !File(cArqEncer)
+		aSavSet:=__SetSets()
+		cArqEncer:=CFGX024(,"Diario Geral.")
+		__SetSets(aSavSet)
+		Set(24,Set(24), .t. )
+	Endif
+
+	If cArqAbert#NIL
+		ImpTerm(cArqAbert,aVariaveis,AvalImp(132))
+	Endif
+
+	If cArqEncer#NIL
+		ImpTerm(cArqEncer,aVariaveis,AvalImp(132))
+	Endif
+Endif
+
+If aReturn[5] = 1
+	Set( 24, "" )
+	dbCommitAll()
+	Ourspool(wnrel)
+End
+MS_FLUSH()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function AjCodImpX1(cPerg,cSeq,nX1Def,cMvPar)
+Local lUsaCodImp	:= .F. 
+Local aArea			:= GetArea()
+Local cCHAR2CH		:= "123456789abcdefghijklmnopqrstuv"
+Local cMVCH			:= cMvPar
+
+If Empty(cPerg) .or.  Empty(cSeq)
+	Return(lUsaCodImp)
+Endif
+
+dbSelectArea("SX3")
+dbSetOrder(2)
+If MsSeek("CT1_CODIMP") .and.  X3Uso(SX3->X3_USADO)
+	lUsaCodImp := .T. 
+Else
+	lUsaCodImp := .F. 
+Endif
+
+If nX1Def > 0
+	dbSelectArea("SX1")
+	dbSetOrder(1)
+	If MsSeek(cPerg+cSeq)
+		If lUsaCodImp .and.  Empty(&("SX1->X1_DEF"+STRZERO(nX1Def,2)))
+			RecLock("SX1", .F. )
+			&("Field->X1_DEF"+STRZERO(nX1Def,2))  		:= SX3->X3_TITULO
+			&("Field->X1_DEFSPA"+ALLTRIM(STR(nX1Def)))	:= SX3->X3_TITSPA
+			&("Field->X1_DEFENG"+ALLTRIM(STR(nX1Def)))	:= SX3->X3_TITENG
+			SX1->(MsUnlock())
+		ElseIf !lUsaCodImp .and.  !Empty(&("SX1->X1_DEF"+STRZERO(nX1Def,2)))
+			RecLock("SX1", .F. )
+			&("Field->X1_DEF"+STRZERO(nX1Def,2))  		:= " "
+			&("Field->X1_DEFSPA"+ALLTRIM(STR(nX1Def)))	:= " "
+			&("Field->X1_DEFENG"+ALLTRIM(STR(nX1Def)))	:= " "
+			Field->X1_PRESEL	:= 0
+			SX1->(MsUnlock())
+		Endif
+	Endif
+Else
+	If Empty(cMvPar)
+		RestArea(aArea)
+		Return( .F. )
+	Endif
+	dbSelectArea("SX1")
+	dbSetOrder(1)
+	If !MsSeek(cPerg+cSeq)
+		cMVCH := "mv_ch"+SubStr(cCHAR2CH,val(SubStr(cMvPar,7,Len(cMvPar)-6)),1)
+		RecLock("SX1", .T. )
+		Field->X1_GRUPO		:= cPerg
+		Field->X1_ORDEM		:= cSeq
+		Field->X1_PERGUNT	:= "Impr Cod. Conta    ?"
+		Field->X1_PERSPA	:= "¿Impr Cod Cuenta   ?"
+		Field->X1_PERENG	:= "Print Account Code ?"
+		Field->X1_VARIAVL	:= cMVCH
+		Field->X1_TIPO		:= "N"
+		Field->X1_TAMANHO	:= 1
+		Field->X1_DECIMAL	:= 0
+		Field->X1_PRESEL	:= 0
+		Field->X1_GSC		:= "C"
+		Field->X1_VAR01		:= cMvPar
+		Field->X1_DEF01 	:= "Normal"
+		Field->X1_DEFSPA1	:= "Normal"
+		Field->X1_DEFENG1	:= "Normal"
+		Field->X1_DEF02 	:= "Reduzido"
+		Field->X1_DEFSPA2	:= "Reducido"
+		Field->X1_DEFENG2	:= "Reduced"
+		If lUsaCodImp
+			Field->X1_DEF03 	:= SX3->X3_TITULO
+			Field->X1_DEFSPA3	:= SX3->X3_TITSPA
+			Field->X1_DEFENG3	:= SX3->X3_TITENG
+		Endif
+		SX1->(MsUnlock())
+	Else
+		If !lUsaCodImp .and.  !Empty(SX1->X1_DEF03)
+			RecLock("SX1", .F. )
+			Field->X1_DEF03 	:= ""
+			Field->X1_DEFSPA3	:= ""
+			Field->X1_DEFENG3	:= ""
+			Field->X1_PRESEL	:= 0
+			SX1->(MsUnlock())
+		ElseIf Empty(SX1->X1_DEF03)
+			RecLock("SX1", .F. )
+			Field->X1_DEF03 	:= SX3->X3_TITULO
+			Field->X1_DEFSPA3	:= SX3->X3_TITSPA
+			Field->X1_DEFENG3	:= SX3->X3_TITENG
+			SX1->(MsUnlock())
+		Endif
+	Endif
+Endif
+
+RestArea(aArea)
+Return(lUsaCodImp)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CtbQbPg(lNewVars,nPagIni,nPagFim,nReinicia,m_pag,nBloco,nBlCount)
+
+lNewVars := If( lNewVars == nil, .F. , lNewVars ) ;
+
+If lNewVars
+	nBloco		:= (nPagFim+1) - nPagIni
+	nBlCount	:= 0
+	m_pag		:= nPagIni
+Else
+	nBlCount++
+	If nBlCount > nBloco
+		If nReinicia > nPagFim
+			nUltPg	  := m_pag
+			m_pag 	  := nReinicia
+			nPagFim   := nReinicia+nBloco
+			nReinicia := nPagFim+(nReinicia-nUltPg)
+		Else
+			m_pag := nReinicia
+		Endif
+		nBlCount := 1
+	EndIf
+Endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CTR110SX1()
+
+Local aSaveArea 	:= GetArea()
+Local aPergs		:= {}
+
+Aadd(aPergs,{"No.linhas diario?","¨Num.lineas p/diario?","No.of rows daybook?","mv_chd","N",2,0,0,"G",,"mv_par13","","","","","","","","","","","","","","","","","","","","","","","","","","","S","",,,})
+
+AjustaSx1("CTR110",aPergs)
+
+RestArea(aSaveArea)
+
+Return

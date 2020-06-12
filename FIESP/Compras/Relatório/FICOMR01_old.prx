@@ -1,0 +1,466 @@
+#include "rwmake.ch"
+#include "protheus.ch"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑฺฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฟฑฑ
+ฑฑณFun…o    ณ FICOMR01 ณ Autor ณ TOTVS                 ณ Data ณ08/06/2006ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณDescri…o ณ Mapa de Cotacoes                                           ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณ Uso      ณ FIESP                                                      ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+User Function FICOMR01()
+
+Private cWFHTTP
+Private cDirHtml2
+Private cNomeFile
+Private n
+
+aPerguntas	:= {}
+aRetorno	:= {}
+//aCombo		:= {"Valor","Prazo","Cond.Pgto"}
+aCombo		:= {"Valor","Prazo"}
+
+//Perguntas
+AAdd(aPerguntas,{ 1,"Cota็ใo de    ",Space(TamSx3("C8_NUM")[1])    ,""    ,  ,"",,TamSx3("C8_NUM")[1]  ,.T.,,.T.})
+AAdd(aPerguntas,{ 1,"Cota็ใo ate   ",Space(TamSx3("C8_NUM")[1])    ,""    ,  ,"",,TamSx3("C8_NUM")[1]  ,.T.,,.T.})
+//aAdd(aPerguntas,{ 2,"Regra         ","Valor"                            ,aCombo,50,"",.T.})
+
+Private mv_par03 := "Valor"
+
+If !ParamBox(aPerguntas,"Impressใo Mapa de Cota็ใo",@aRetorno)
+	Return(Nil)
+EndIf
+
+Processa( {|| ImpRel() }, "Processando Arquivos..." )
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณFIFINR02  บAutor  ณMicrosiga           บ Data ณ  08/21/13   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+Static Function ImpRel()
+
+Local _cWfDir    := Iif(RTrim(Right(GetNewPar("MV_WFDIR"),1))=="\",GetNewPar("MV_WFDIR"),GetNewPar("MV_WFDIR")+"\")
+Local cWFHTTP    := Iif(Right(RTrim(GetNewPar("MV_WFDHTTP")),1)=="/",GetNewPar("MV_WFDHTTP"),GetNewPar("MV_WFDHTTP")+"/")
+Local cDirHtml   := "html\"
+Local cDirPasta  := "mapacotacao\"
+Local cDirUser   := __CUSERID+"\"
+Local cFile      := ""
+Local cFileHTML  := CriaTrab( NIL , .F. ) + ".htm"
+Local oBrowser   := nil
+Local oNavigate  := nil
+Local oHtml      := nil
+Local aButtons   := {}
+
+Local _cColor1	:= "#FFFFFF" //"#FFFFFF" = branco; "#999999" = cinza
+Local _cColor2	:= "#999999" //"#FFFFFF" = branco; "#999999" = cinza
+
+Private n
+
+// Verifica e cria, se necessario, o diretorio para gravacao do HTML
+aDirHtml   := Directory(_cWfDir+"emp"+cEmpAnt+"\*.*", "D",Nil,.T.)		
+If aScan( aDirHtml, {|aDir| aDir[1] == Upper( Iif(Right(cDirHtml,1)=="\", Left(cDirHtml,Len(cDirHtml)-1), cDirHtml) ) } ) == 0
+	If MakeDir(_cWfDir+"emp"+cEmpAnt+"\"+cDirHtml)	 == 0
+		ConOut(":: Diretorio dos HTML's criado com sucesso. -> "+_cWfDir+"emp"+cEmpAnt+"\"+cDirHtml )		
+	Else
+		ConOut(":: Erro na criacao do diretorio dos HTML's! -> "+_cWfDir+"emp"+cEmpAnt+"\"+cDirHtml )
+		cDirHtml := "temp\"
+	EndIf
+EndIf
+		
+// Verifica e cria, se necessario, a pasta especifica do Workflow para gravacao do HTML
+aDirHtml   := Directory(_cWfDir+"emp"+cEmpAnt+"\"+cDirHtml+"\"+cDirPasta+"*.*", "D",Nil,.T.)
+If aScan( aDirHtml, {|aDir| aDir[1] == Upper(Iif(Right(cDirUser,1)=="\", Left(cDirUser,Len(cDirUser)-1), cDirUser) ) } ) == 0
+	If MakeDir(_cWfDir+"emp"+cEmpAnt+"\"+cDirHtml+cDirUser) == 0
+		ConOut(":: Diretorio de Pasta dos HTML's criado com sucesso. -> "+_cWfDir+"emp"+cEmpAnt+"\"+cDirHtml+"\"+cDirPasta+"\"+cDirUser )		
+	Else
+		ConOut(":: Erro na criacao do diretorio dos HTML's! -> "+_cWfDir+"emp"+cEmpAnt+"\"+cDirHtml+"\"+cDirPasta+"\"+cDirUser )
+		cDirPasta := ""
+	EndIf
+EndIf
+
+cFile      := _cWfDir +"mapacotacao.html"
+
+_cQry  := "SELECT C8_NUM "
+_cQry  += "FROM " + RetSqlName("SC8")+ " "
+_cQry  += "WHERE D_E_L_E_T_ = '' "
+_cQry  += "AND C8_NUM BETWEEN '"+mv_par01+"' AND '"+mv_par02+"' "
+_cQry  += "GROUP BY C8_NUM "
+_cQry := ChangeQuery(_cQry)
+dbUseArea(.T.,"TOPCONN",TCGENQRY(,,_cQry),"TRBNUM",.t.,.t.)  
+		
+DbSelectArea("TRBNUM")
+_cNumCot	:= TRBNUM->C8_NUM
+If Select("TRBNUM") > 0
+	Do While !EOF()
+		
+			If _cNumCot <> TRBNUM->C8_NUM
+				_cNumCot	:= TRBNUM->C8_NUM
+			EndIf
+
+			oHtml := TWFHtml():New(cFile)
+
+			DbSelectArea("SC8")
+			DbSetOrder(1)
+			DbGotop()
+			SC8->(DbSeek(xFilial("SC8")+_cNumCot))
+
+			oHtml:ValByName("ncotacao"	,	SC8->C8_NUM )
+			oHtml:ValByName("demissao"	,	SC8->C8_EMISSAO )
+			
+			_nTot1		:= 0
+			_nTot2		:= 0
+			_nTot3		:= 0
+			_nTot4		:= 0
+			_nTot5		:= 0
+			_aProd 		:= {}
+			_aFor		:= {}
+			_aForPrd	:= {}
+			_nCont		:= 1
+			
+			Do While !EOF() .and. SC8->C8_NUM == _cNumCot
+				_nPos	:= ascan(_aProd,SC8->C8_PRODUTO)
+				If _nPos == 0
+					aadd(_aProd,SC8->C8_PRODUTO)
+				EndIf
+				
+				_cNomFor := Posicione("SA2",1,XFILIAL("SA2")+SC8->(C8_FORNECE+C8_LOJA), "A2_NOME")
+				_nPosFor := ascan(_aFor,_cNomFor)
+				If _nPosFor == 0
+					aadd(_aFor, _cNomFor)
+				EndIf
+				
+				_PosForPrd := ascan(_aForPrd,{|x| x[1] == SC8->(C8_PRODUTO+_cNomFor)})
+				If _PosForPrd == 0
+					aadd(_aForPrd,{SC8->(C8_PRODUTO+_cNomFor), SC8->C8_QUANT, SC8->C8_PRECO, SC8->C8_TOTAL, SC8->C8_PRODUTO, "", C8_PRAZO, C8_COND})
+				EndIf
+				
+				SC8->(DbSkip())
+			EndDo
+		
+			For _nY := 1 to Len(_aFor)
+				If _nY == 1
+					oHtml:ValByName("for1"		, _aFor[_nY])
+					oHtml:ValByName("for2"		, "")
+					oHtml:ValByName("for3"		, "")
+					oHtml:ValByName("for4"		, "")
+					oHtml:ValByName("for5"		, "")
+				ElseIf _nY == 2
+					oHtml:ValByName("for2"		, _aFor[_nY])
+					oHtml:ValByName("for3"		, "")
+					oHtml:ValByName("for4"		, "")
+					oHtml:ValByName("for5"		, "")
+				ElseIf _nY == 3
+					oHtml:ValByName("for3"		, _aFor[_nY])
+					oHtml:ValByName("for4"		, "")
+					oHtml:ValByName("for5"		, "")
+				ElseIf _nY == 4
+					oHtml:ValByName("for4"		, _aFor[_nY])
+					oHtml:ValByName("for5"		, "")
+				ElseIf _nY == 5
+					oHtml:ValByName("for5"		, _aFor[_nY])
+				EndIf
+			Next _nY
+		
+			_cCodFor1	:= oHtml:RetByName("for1")
+			_cCodFor2	:= oHtml:RetByName("for2")
+			_cCodFor3	:= oHtml:RetByName("for3")
+			_cCodFor4	:= oHtml:RetByName("for4")
+			_cCodFor5	:= oHtml:RetByName("for5")
+		
+			If mv_par03 == "Valor" //Valor
+				// verifica o produto com menor pre็o
+				_cQuery  := "SELECT C8_NUM, C8_PRODUTO, MIN(C8_TOTAL) AS C8_TOTAL "
+				_cQuery  += "FROM " + RetSqlName("SC8")+ " "
+				_cQuery  += "WHERE D_E_L_E_T_ = '' "
+				_cQuery  += "AND C8_NUM = '"+_cNumCot+"' "
+				_cQuery  += "GROUP BY C8_NUM, C8_PRODUTO "
+				_cQuery := ChangeQuery(_cQuery)
+				dbUseArea(.T.,"TOPCONN",TCGENQRY(,,_cQuery),"TRBSC8",.t.,.t.)  
+			ElseIf mv_par03 == "Prazo" //Prazo
+				// verifica o produto com menor prazo
+				_cQuery  := "SELECT C8_NUM, C8_PRODUTO, MIN(C8_PRAZO) AS C8_PRAZO "
+				_cQuery  += "FROM " + RetSqlName("SC8")+ " "
+				_cQuery  += "WHERE D_E_L_E_T_ = '' "
+				_cQuery  += "AND C8_NUM = '"+_cNumCot+"' "
+				_cQuery  += "GROUP BY C8_NUM, C8_PRODUTO "
+				_cQuery := ChangeQuery(_cQuery)
+				dbUseArea(.T.,"TOPCONN",TCGENQRY(,,_cQuery),"TRBSC8",.t.,.t.)  
+			EndIf		
+			DbSelectArea("TRBSC8")
+			DbGotop()
+			IF TRBSC8->(!Eof())
+				Do While !EOF() .and. TRBSC8->C8_NUM == _cNumCot
+					For _nX := 1 To Len(_aForPrd)
+						If mv_par03 == "Valor"
+							If _aForPrd[_nX,5] == TRBSC8->(C8_PRODUTO) .and. _aForPrd[_nX,4] == TRBSC8->(C8_TOTAL) 
+								_aForPrd[_nX,6] := "X"
+							EndIf
+						ElseIf mv_par03 == "Prazo"
+							If _aForPrd[_nX,5] == TRBSC8->(C8_PRODUTO) .and. _aForPrd[_nX,7] == TRBSC8->(C8_PRAZO) 
+								_aForPrd[_nX,6] := "X"
+							EndIf
+						EndIf
+					Next _nX				
+					TRBSC8->(DbSkip())
+				EndDo
+			EndIF
+			DbSelectArea("TRBSC8")
+			TRBSC8->(DbCloseArea())
+		
+			For _nI := 1 to Len(_aProd)
+				_nPosIt1	:= ascan(_aForPrd,{|X| X[1] == _aProd[_nI]+_cCodFor1})
+				_nPosIt2	:= ascan(_aForPrd,{|X| X[1] == _aProd[_nI]+_cCodFor2})
+				_nPosIt3	:= ascan(_aForPrd,{|X| X[1] == _aProd[_nI]+_cCodFor3})
+				_nPosIt4	:= ascan(_aForPrd,{|X| X[1] == _aProd[_nI]+_cCodFor4})
+				_nPosIt5	:= ascan(_aForPrd,{|X| X[1] == _aProd[_nI]+_cCodFor5})
+		
+				AAdd( (oHTML:ValByName("t.1"))			, TRANSFORM(_aForPrd[_nPosIt1,2],'@E 9,999.99'))		   					//Quantidade
+				AAdd( (oHTML:ValByName("t.2"))			, Posicione("SB1",1,XFILIAL("SB1")+_aProd[_nI], "B1_DESC")) 																//Produto
+				AAdd( (oHTML:ValByName("t.3"))			, TRANSFORM(iif(_nPosIt1==0,0,_aForPrd[_nPosIt1,3]),'@E 9,999.99'))			//1-coluna Vl.Unit
+				AAdd( (oHTML:ValByName("t.4"))			, TRANSFORM(iif(_nPosIt1==0,0,_aForPrd[_nPosIt1,4]),'@E 9,999.99'))			//1-coluna Total
+				AAdd( (oHTML:ValByName("t.5"))			, TRANSFORM(iif(_nPosIt2==0,0,_aForPrd[_nPosIt2,3]),'@E 9,999.99'))			//2-coluna Vl.Unit
+				AAdd( (oHTML:ValByName("t.6"))			, TRANSFORM(iif(_nPosIt2==0,0,_aForPrd[_nPosIt2,4]),'@E 9,999.99'))			//2-coluna Total
+				AAdd( (oHTML:ValByName("t.7"))			, TRANSFORM(iif(_nPosIt3==0,0,_aForPrd[_nPosIt3,3]),'@E 9,999.99'))			//3-coluna Vl.Unit
+				AAdd( (oHTML:ValByName("t.8"))			, TRANSFORM(iif(_nPosIt3==0,0,_aForPrd[_nPosIt3,4]),'@E 9,999.99'))			//3-coluna Total
+				AAdd( (oHTML:ValByName("t.9"))			, TRANSFORM(iif(_nPosIt4==0,0,_aForPrd[_nPosIt4,3]),'@E 9,999.99'))			//4-coluna Vl.Unit
+				AAdd( (oHTML:ValByName("t.10"))			, TRANSFORM(iif(_nPosIt4==0,0,_aForPrd[_nPosIt4,4]),'@E 9,999.99'))			//4-coluna Total
+				AAdd( (oHTML:ValByName("t.11"))			, TRANSFORM(iif(_nPosIt5==0,0,_aForPrd[_nPosIt5,3]),'@E 9,999.99'))			//5-coluna Vl.Unit
+				AAdd( (oHTML:ValByName("t.12"))			, TRANSFORM(iif(_nPosIt5==0,0,_aForPrd[_nPosIt5,4]),'@E 9,999.99'))			//5-coluna Total
+		
+				If _nPosIt1<>0 .and. _aForPrd[_nPosIt1,6] == "X"
+					AAdd( (oHTML:ValByName("t.13"))			, _cColor2)
+					AAdd( (oHTML:ValByName("t.14"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.15"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.16"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.17"))			, _cColor1)
+					_nTot1 := _nTot1 + _aForPrd[_nPosIt1,4]
+				ElseIf _nPosIt2<>0 .and. _aForPrd[_nPosIt2,6] == "X"
+					AAdd( (oHTML:ValByName("t.13"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.14"))			, _cColor2)
+					AAdd( (oHTML:ValByName("t.15"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.16"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.17"))			, _cColor1)
+					_nTot2 := _nTot2 + _aForPrd[_nPosIt2,4]
+				ElseIf _nPosIt3<>0 .and. _aForPrd[_nPosIt3,6] == "X"
+					AAdd( (oHTML:ValByName("t.13"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.14"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.15"))			, _cColor2)
+					AAdd( (oHTML:ValByName("t.16"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.17"))			, _cColor1)
+					_nTot3 := _nTot3 + _aForPrd[_nPosIt3,4]
+				ElseIf _nPosIt4<>0 .and. _aForPrd[_nPosIt4,6] == "X"
+					AAdd( (oHTML:ValByName("t.13"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.14"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.15"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.16"))			, _cColor2)
+					AAdd( (oHTML:ValByName("t.17"))			, _cColor1)
+					_nTot4 := _nTot4 + _aForPrd[_nPosIt4,4]
+				ElseIf _nPosIt5<>0 .and. _aForPrd[_nPosIt5,6] == "X"
+					AAdd( (oHTML:ValByName("t.13"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.14"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.15"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.16"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.17"))			, _cColor2)
+					_nTot5 := _nTot5 + _aForPrd[_nPosIt5,4]
+				Else
+					AAdd( (oHTML:ValByName("t.13"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.14"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.15"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.16"))			, _cColor1)
+					AAdd( (oHTML:ValByName("t.17"))			, _cColor1)
+				EndIf
+			Next _nI
+		
+			oHtml:ValByName("v4"		, TRANSFORM(_nTot1,'@E 9,999.99'))		//1-coluna Total
+			oHtml:ValByName("v6"		, TRANSFORM(_nTot2,'@E 9,999.99'))		//2-coluna Total
+			oHtml:ValByName("v8"		, TRANSFORM(_nTot3,'@E 9,999.99'))		//3-coluna Total
+			oHtml:ValByName("v10"		, TRANSFORM(_nTot4,'@E 9,999.99'))		//4-coluna Total
+			oHtml:ValByName("v12"		, TRANSFORM(_nTot5,'@E 9,999.99'))		//5-coluna Total
+	
+			oHtml:ValByName("c1"		, iif(_nPosIt1==0,0,Posicione("SE4",1,XFILIAL("SE4")+_aForPrd[_nPosIt1,8], "E4_DESCRI")))		//1-coluna Total
+			oHtml:ValByName("c2"		, iif(_nPosIt2==0,0,Posicione("SE4",1,XFILIAL("SE4")+_aForPrd[_nPosIt2,8], "E4_DESCRI")))		//2-coluna Total
+			oHtml:ValByName("c3"		, iif(_nPosIt3==0,0,Posicione("SE4",1,XFILIAL("SE4")+_aForPrd[_nPosIt3,8], "E4_DESCRI")))		//3-coluna Total
+			oHtml:ValByName("c4"		, iif(_nPosIt4==0,0,Posicione("SE4",1,XFILIAL("SE4")+_aForPrd[_nPosIt4,8], "E4_DESCRI")))		//4-coluna Total
+			oHtml:ValByName("c5"		, iif(_nPosIt5==0,0,Posicione("SE4",1,XFILIAL("SE4")+_aForPrd[_nPosIt5,8], "E4_DESCRI")))		//5-coluna Total
+
+			oHtml:ValByName("p1"		, iif(_nPosIt1==0,0,_aForPrd[_nPosIt1,7]))		//1-coluna Prazo
+			oHtml:ValByName("p2"		, iif(_nPosIt2==0,0,_aForPrd[_nPosIt2,7]))		//2-coluna Prazo
+			oHtml:ValByName("p3"		, iif(_nPosIt3==0,0,_aForPrd[_nPosIt3,7]))		//3-coluna Prazo
+			oHtml:ValByName("p4"		, iif(_nPosIt4==0,0,_aForPrd[_nPosIt4,7]))		//4-coluna Prazo
+			oHtml:ValByName("p5"		, iif(_nPosIt5==0,0,_aForPrd[_nPosIt5,7]))		//5-coluna Prazo
+
+
+			oHTML:SaveFile( cFileHTML )
+			cHtml := WFLoadFile(cFileHTML)
+			cHtml := StrTran(cHtml,chr(13),"")
+			cHtml := StrTran(cHtml,chr(10),"")
+			FErase(cFileHTML)
+			
+			cDirHtml2  := "emp"+cEmpAnt+"\" + cDirHtml + cDirPasta+ cDirUser
+			// Grava o arquivo no computador cliente.
+			cNomeFile := CriaTrab(nil, .F.) + ".html"
+			nHdlHTML  := fCreate(_cWfDir + cDirHtml2 + cNomeFile)
+			FWrite(nHdlHTML, cHtml)
+			FClose(nHdlHTML)
+
+		DbSelectArea("TRBNUM")
+		TRBNUM->(DbSkip())
+	EndDo
+Else
+	msgBox("Cota็ใo nใo Encontrado!","Atencao")
+	Return
+EndIf
+
+DbSelectArea("TRBNUM")
+TRBNUM->(DbCloseArea())
+
+aDirArq   := Directory(_cWfDir+"emp"+cEmpAnt+"\"+cDirHtml+"\"+cDirPasta+"\"+cDirUser+"*.*", ,Nil,.T.)
+
+If !Empty(aDirArq)
+	n			:= 1
+	_cPrimeiro 	:= cWFHTTP+cDirHtml2+aDirArq[1,1]
+	// Desenha a DIALOG para visualizar o relatorio.
+	define MSDialog oBrowser from 0, 0 to 600, 800 title 'Impressใo Mapa de Cota็ใo' pixel
+	oBrowser:lMaximized := .T.
+	
+	oPanel  := TPanel():New(0,0,'',oBrowser,, .T., .T.,, ,20,20,.T.,.T. )
+	oPanel:Align := CONTROL_ALIGN_TOP
+	
+	oPanel1 := TPanel():New(0,0,'',oBrowser,, .T., .T.,, ,250,250,.T.,.T. )
+	oPanel1:Align := CONTROL_ALIGN_TOP
+	
+	oNavigate := TIBrowser():New(100, 100, 600, 800, '', oPanel1)
+	oNavigate:Align := CONTROL_ALIGN_ALLCLIENT
+	oNavigate:Navigate(_cPrimeiro)
+	
+	//aAdd(aButtons, {"WEB", {|| EnvioEmail(aDados, cFile) }, "E-Mail"})
+	//aAdd(aButtons, {"WEB", {|| oNavigate:Print() }, "Print"})
+	//aAdd(aButtons, {"WEB", {|| _fPrint(cWFHTTP,cDirHtml2,cNomeFile) }, "Print"})
+	
+	//TButton():New( 172, 102, "Print", oDlg, {|| oTIBrowser:Print() },40,010,,,.F.,.T.,.F.,,.F.,,,.F. )
+	TButton():New( 005, 010, "Primeiro", oPanel, {|| _fPrim(oNavigate, _cPrimeiro, n:=1)	   					},40,010,,,.F.,.T.,.F.,,.F.,,,.F. )
+	TButton():New( 005, 060, "Proximo" , oPanel, {|| _fProx(oNavigate,aDirArq,cWFHTTP,cDirHtml2,)				},40,010,,,.F.,.T.,.F.,,.F.,,,.F. )
+	TButton():New( 005, 110, "Print"   , oPanel, {|| _fPrint(oNavigate,aDirArq,cWFHTTP,cDirHtml2)				},40,010,,,.F.,.T.,.F.,,.F.,,,.F. )
+	
+	Activate MSDialog oBrowser centered on init EnchoiceBar(oBrowser, {|| oBrowser:End()}, {|| oBrowser:End()},, aButtons)
+
+	For _nC	:= 1 to len(aDirArq)
+		fErase(_cWfDir+cDirHtml2+aDirArq[_nC,1])
+	Next _nC
+
+Else
+
+EndIf
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณFICOMR01  บAutor  ณMicrosiga           บ Data ณ  08/22/13   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+Static Function _fPrim(oNavigate, _cPrimeiro, n)
+
+Private n:=1
+oNavigate:Navigate(_cPrimeiro)
+
+Return(n)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณFICOMR01  บAutor  ณMicrosiga           บ Data ณ  08/22/13   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+Static Function _fProx(oNavigate,aDirArq,cWFHTTP,cDirHtml2)
+
+n++
+If n <= Len(aDirArq)
+	oNavigate:Navigate(cWFHTTP+cDirHtml2+aDirArq[n,1])
+Else
+	msgbox("fim dos arquivos")
+EndIf
+
+Return
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณFICOMR01  บAutor  ณMicrosiga           บ Data ณ  08/22/13   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+Static Function _fPrint(oNavigate,aDirArq,cWFHTTP,cDirHtml2)
+
+For _nP := 1 to Len(aDirArq)
+	_cAttach := cWFHTTP+cDirHtml2+aDirArq[_nP,1]
+	IF File("C:\Program Files\Internet Explorer\iexplore.exe")
+		WinExec("C:\Program Files\Internet Explorer\iexplore.exe "+_cAttach)
+	
+	ElseIF File("C:\Arquivos de programas\Internet Explorer\iexplore.exe")
+		WinExec("C:\Arquivos de programas\Internet Explorer\iexplore.exe "+_cAttach)
+	
+	ElseIF File("C:\Program Files\Google\Chrome\Application\chrome.exe")
+		WinExec("C:\Program Files\Google\Chrome\Application\chrome.exe "+_cAttach)
+	
+	ElseIF File("C:\Arquivos de programas\Google\Chrome\Application\chrome.exe")
+		WinExec("C:\Arquivos de programas\Google\Chrome\Application\chrome.exe "+_cAttach)
+	
+	ElseIF File("C:\Program Files\Mozilla Firefox\firefox.exe")
+		WinExec("C:\Program Files\Mozilla Firefox\firefox.exe "+_cAttach)
+	
+	ElseIF File("C:\Arquivos de programas\Mozilla Firefox\firefox.exe")
+		WinExec("C:\Arquivos de programas\Mozilla Firefox\firefox.exe "+_cAttach)
+	Else
+		msgbox("Nใo foi localizado nenhum navegador de internet instalado!!!", "Aten็ใo")
+	Endif
+Next _nP
+
+Return
+
+Return

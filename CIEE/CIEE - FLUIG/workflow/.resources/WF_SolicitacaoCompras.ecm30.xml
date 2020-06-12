@@ -1,0 +1,535 @@
+<list>
+  <ProcessDefinition>
+    <processDefinitionPK>
+      <companyId>1</companyId>
+      <processId>WF_SolicitacaoCompras</processId>
+    </processDefinitionPK>
+    <processDescription>Solicitação de Compras</processDescription>
+    <instruction>Solicitação para compras em geral.</instruction>
+    <active>true</active>
+    <publicProcess>false</publicProcess>
+    <volumeId>Default</volumeId>
+    <categoryId>CIEE</categoryId>
+    <managerEngineAllocationId></managerEngineAllocationId>
+    <managerEngineAllocationConfiguration></managerEngineAllocationConfiguration>
+    <snapshotFrequency>0</snapshotFrequency>
+    <baseDay>0</baseDay>
+    <baseMonth>0</baseMonth>
+    <periodId>Default</periodId>
+    <uniqueCardVersion>false</uniqueCardVersion>
+    <keyWord></keyWord>
+  </ProcessDefinition>
+  <ProcessDefinitionVersion>
+    <processDefinitionVersionPK>
+      <companyId>1</companyId>
+      <processId>Solicitação de Compras</processId>
+      <version>59</version>
+    </processDefinitionVersionPK>
+    <versionDescription></versionDescription>
+    <formId>184</formId>
+    <editionMode>true</editionMode>
+    <updateAttachmentsVersion>true</updateAttachmentsVersion>
+    <controlsAttachmentsSecurity>false</controlsAttachmentsSecurity>
+    <active>true</active>
+    <blockedVersion>false</blockedVersion>
+    <counterSign>false</counterSign>
+    <openInstances>0</openInstances>
+    <bpmnVersion>1</bpmnVersion>
+    <processStates/>
+    <favorito>false</favorito>
+  </ProcessDefinitionVersion>
+  <list>
+    <ProcessState>
+      <processStatePK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <sequence>4</sequence>
+      </processStatePK>
+      <stateName>Início</stateName>
+      <stateDescription>Início</stateDescription>
+      <instruction></instruction>
+      <deadlineTime>0</deadlineTime>
+      <joint>false</joint>
+      <agreementPercentage>0</agreementPercentage>
+      <engineAllocationId></engineAllocationId>
+      <engineAllocationConfiguration></engineAllocationConfiguration>
+      <selectColleague>0</selectColleague>
+      <initialState>true</initialState>
+      <notifyAuthorityDelay>true</notifyAuthorityDelay>
+      <notifyRequisitionerDelay>false</notifyRequisitionerDelay>
+      <allowanceAuthorityTime>3600</allowanceAuthorityTime>
+      <frequenceAuthorityTime>3600</frequenceAuthorityTime>
+      <allowanceRequisitionerTime>0</allowanceRequisitionerTime>
+      <frequenceRequisitionerTime>0</frequenceRequisitionerTime>
+      <transferAttachments>false</transferAttachments>
+      <subProcessId></subProcessId>
+      <formFolder>0</formFolder>
+      <notifyAuthorityFollowUp>false</notifyAuthorityFollowUp>
+      <notifyRequisitionerFollowUp>false</notifyRequisitionerFollowUp>
+      <automatic>false</automatic>
+      <positionX>372</positionX>
+      <positionY>24</positionY>
+      <forecastedEffortType>0</forecastedEffortType>
+      <forecastedEffort>0</forecastedEffort>
+      <notifyManagerFollowUp>false</notifyManagerFollowUp>
+      <notifyManagerDelay>false</notifyManagerDelay>
+      <allowanceManagerTime>0</allowanceManagerTime>
+      <frequenceManagerTime>0</frequenceManagerTime>
+      <inhibitTransfer>false</inhibitTransfer>
+      <periodId></periodId>
+      <stateType>0</stateType>
+      <bpmnType>10</bpmnType>
+      <signalId>0</signalId>
+      <counterSign>false</counterSign>
+      <openInstances>0</openInstances>
+      <destinationStates/>
+      <digitalSignature>false</digitalSignature>
+    </ProcessState>
+    <ProcessState>
+      <processStatePK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <sequence>6</sequence>
+      </processStatePK>
+      <stateName>Exclusivo</stateName>
+      <stateDescription>Exclusivo</stateDescription>
+      <joint>false</joint>
+      <initialState>false</initialState>
+      <transferAttachments>false</transferAttachments>
+      <subProcessId></subProcessId>
+      <formFolder>0</formFolder>
+      <automatic>true</automatic>
+      <positionX>360</positionX>
+      <positionY>128</positionY>
+      <inhibitTransfer>false</inhibitTransfer>
+      <stateType>1</stateType>
+      <bpmnType>120</bpmnType>
+      <signalId>0</signalId>
+      <openInstances>0</openInstances>
+      <destinationStates/>
+      <digitalSignature>false</digitalSignature>
+    </ProcessState>
+    <ProcessState>
+      <processStatePK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <sequence>10</sequence>
+      </processStatePK>
+      <stateName>Fim</stateName>
+      <stateDescription>Fim</stateDescription>
+      <instruction>Atividade final do processo</instruction>
+      <deadlineTime>0</deadlineTime>
+      <joint>false</joint>
+      <agreementPercentage>0</agreementPercentage>
+      <engineAllocationId></engineAllocationId>
+      <engineAllocationConfiguration></engineAllocationConfiguration>
+      <selectColleague>0</selectColleague>
+      <initialState>false</initialState>
+      <notifyAuthorityDelay>true</notifyAuthorityDelay>
+      <notifyRequisitionerDelay>false</notifyRequisitionerDelay>
+      <allowanceAuthorityTime>0</allowanceAuthorityTime>
+      <frequenceAuthorityTime>1</frequenceAuthorityTime>
+      <allowanceRequisitionerTime>0</allowanceRequisitionerTime>
+      <frequenceRequisitionerTime>0</frequenceRequisitionerTime>
+      <transferAttachments>false</transferAttachments>
+      <subProcessId></subProcessId>
+      <formFolder>0</formFolder>
+      <notifyAuthorityFollowUp>false</notifyAuthorityFollowUp>
+      <notifyRequisitionerFollowUp>false</notifyRequisitionerFollowUp>
+      <automatic>false</automatic>
+      <positionX>372</positionX>
+      <positionY>252</positionY>
+      <forecastedEffortType>0</forecastedEffortType>
+      <forecastedEffort>0</forecastedEffort>
+      <notifyManagerFollowUp>false</notifyManagerFollowUp>
+      <notifyManagerDelay>false</notifyManagerDelay>
+      <allowanceManagerTime>0</allowanceManagerTime>
+      <frequenceManagerTime>0</frequenceManagerTime>
+      <inhibitTransfer>false</inhibitTransfer>
+      <periodId></periodId>
+      <stateType>0</stateType>
+      <bpmnType>60</bpmnType>
+      <signalId>0</signalId>
+      <counterSign>false</counterSign>
+      <openInstances>0</openInstances>
+      <destinationStates/>
+      <digitalSignature>false</digitalSignature>
+    </ProcessState>
+  </list>
+  <list>
+    <ConditionProcessState>
+      <conditionProcessStatePK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <expressionOrder>1</expressionOrder>
+        <version>59</version>
+        <sequence>6</sequence>
+      </conditionProcessStatePK>
+      <condition>true</condition>
+      <destinationSequenceId>10</destinationSequenceId>
+    </ConditionProcessState>
+  </list>
+  <list>
+    <ProcessLink>
+      <processLinkPK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <linkSequence>7</linkSequence>
+      </processLinkPK>
+      <actionLabel></actionLabel>
+      <returnPermited>false</returnPermited>
+      <initialStateSequence>4</initialStateSequence>
+      <finalStateSequence>6</finalStateSequence>
+      <returnLabel></returnLabel>
+      <name></name>
+      <automaticLink>false</automaticLink>
+      <type>0</type>
+    </ProcessLink>
+    <ProcessLink>
+      <processLinkPK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <linkSequence>11</linkSequence>
+      </processLinkPK>
+      <actionLabel></actionLabel>
+      <returnPermited>false</returnPermited>
+      <initialStateSequence>6</initialStateSequence>
+      <finalStateSequence>10</finalStateSequence>
+      <returnLabel></returnLabel>
+      <name></name>
+      <automaticLink>false</automaticLink>
+      <type>0</type>
+    </ProcessLink>
+  </list>
+  <list/>
+  <list>
+    <WorkflowProcessEvent>
+      <workflowProcessEventPK>
+        <companyId>1</companyId>
+        <eventId>beforeStateEntry</eventId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+      </workflowProcessEventPK>
+      <eventDescription>function beforeStateEntry(sequenceId) {
+	var FIM = 10;
+	
+	if(sequenceId != FIM)
+		return;
+	
+	
+	var msgValidacaoNegocio 	= new java.lang.StringBuilder();
+	var dadosIntegracao     	= compilarDadosSolicitacao() ;
+	var retorno 		    	= integrarSolicitacao(dadosIntegracao) ;
+	
+    if( retorno[&quot;RETORNO&quot;] == &quot;0&quot; ){
+    	// Tguardando retorno do chamado
+    	// MovAnexoProtheus(sequenceId,dadosIntegracao[&quot;DocBranch&quot;]+retorno[&quot;ID&quot;],retorno[&quot;ANEXOID&quot;]);
+    }else{
+    	throw retorno[&quot;MOTIVO&quot;];
+    }	
+  	
+}
+
+function compilarDadosSolicitacao(){
+	var UUID = java.util.UUID.randomUUID();
+	var integracao  = [];	
+	
+	integracao[&quot;GlobalProduct&quot;]                     = &quot;TOTVS|EAI&quot;;    
+	integracao[&quot;GlobalFunctionCode&quot;]                = &quot;EAI&quot;;               
+	integracao[&quot;GlobalDocumentFunctionCode&quot;]        = &quot;CEAIA04&quot;;
+	integracao[&quot;GlobalDocumentFunctionDescription&quot;] = &quot;Integracao Fluig x Protheus - Solicit. de compras&quot;;
+	integracao[&quot;DocVersion&quot;] 						= &quot;1.0&quot;;
+	integracao[&quot;DocDateTime&quot;] 					    = consultarDataHoraAtual();
+	integracao[&quot;DocIdentifier&quot;] 					= UUID;
+	integracao[&quot;DocCompany&quot;] 						= hAPI.getCardValue(&quot;txtEmpresa&quot;);
+	integracao[&quot;DocBranch&quot;] 						= hAPI.getCardValue(&quot;txtFilial&quot;);
+	integracao[&quot;DocName&quot;] 						    = &quot;&quot;;
+	integracao[&quot;DocFederalID&quot;] 					    = &quot;&quot;;
+	integracao[&quot;DocType&quot;] 						    = &quot;1&quot;;
+	integracao[&quot;Identifier&quot;]                        = &quot;CEAIA04&quot;;
+	integracao[&quot;Version&quot;]                           = &quot;1.0&quot;;
+	integracao[&quot;FunctionCode&quot;]                      = &quot;U_CEAIA04&quot;;
+	integracao[&quot;ZA1_COD&quot;] 							= getValue(&quot;WKNumProces&quot;).toString()
+	integracao[&quot;ZA1_MATRIC&quot;] 						= hAPI.getCardValue(&quot;txtMatSolicitante&quot;);
+	integracao[&quot;ZA1_DATA&quot;] 							= &quot;&quot;
+	integracao[&quot;ZA1_DATA&quot;] 							= hAPI.getCardValue(&quot;txtDataSolicitacao&quot;);
+	integracao[&quot;ZA1_RAMAL&quot;] 						= hAPI.getCardValue(&quot;txtRamal&quot;);
+	integracao[&quot;ZA1_CR&quot;] 							= hAPI.getCardValue(&quot;txtCodCR&quot;);
+	integracao[&quot;ZA1_CRDESC&quot;] 						= hAPI.getCardValue(&quot;txtDescricaoCR&quot;);
+	integracao[&quot;ZA1_JUSTIF&quot;] 						= hAPI.getCardValue(&quot;dsJustificativa&quot;);
+	integracao[&quot;ZA1_APRO01&quot;] 						= (hAPI.getCardValue(&quot;cbSupervisor&quot;)== &quot;1&quot;? &quot;1&quot; : &quot;2&quot;);
+	integracao[&quot;ZA1_APRO02&quot;] 						= (hAPI.getCardValue(&quot;cbGerencia&quot;)== &quot;2&quot;? &quot;1&quot; : &quot;2&quot;);
+	integracao[&quot;ZA1_APRO03&quot;] 						= (hAPI.getCardValue(&quot;cbSuperintendencia&quot;)== &quot;3&quot;? &quot;1&quot; : &quot;2&quot;);
+	integracao[&quot;ZA1_APRO04&quot;] 						= (hAPI.getCardValue(&quot;cbPresidencia&quot;)== &quot;4&quot;? &quot;1&quot; : &quot;2&quot;);
+	integracao[&quot;ZA1_APRO05&quot;] 						= (hAPI.getCardValue(&quot;cbAreaTecnica&quot;)== &quot;5&quot;? &quot;1&quot; : &quot;2&quot;);
+	integracao[&quot;ZA1_RESESP&quot;] 						= hAPI.getCardValue(&quot;txtResultadosEsperados&quot;);
+	integracao[&quot;ZA1_VLREST&quot;] 						= hAPI.getCardValue(&quot;txtValEstimado&quot;);
+	integracao[&quot;ZA1_PRAZO&quot;] 						= hAPI.getCardValue(&quot;txtPrazoDesejado&quot;);
+	integracao[&quot;ZA1_CONSEQ&quot;] 						= hAPI.getCardValue(&quot;txtConsequencia&quot;);
+	integracao[&quot;ZA1_AQUCON&quot;] 						= hAPI.getCardValue(&quot;rdTpAquiCont&quot;);	
+	integracao[&quot;ITENS&quot;] 							= consultaDadosPaiFilho([&quot;txtSeqItem&quot;, &quot;txtDescItem&quot;, &quot;txtQtdeItem&quot;, &quot;txtUnidItem&quot;]); 			
+	return integracao;
+}
+
+function consultarDataHoraAtual(){
+	var dateFormat = new java.text.SimpleDateFormat(&quot;dd/MM/yyyy HH:mm:ss&quot;);
+	return dateFormat.format(new java.util.Date());
+}
+
+function consultaDadosPaiFilho(fields){
+	var nr_solicitacao 	= getValue(&quot;WKNumProces&quot;);
+	var cardData   		= hAPI.getCardData(nr_solicitacao);	
+	var it         		= cardData.keySet().iterator();
+	var listaFilho 		= new Array();
+	var fieldTemp  		= fields[0];
+
+	while (it.hasNext()) {
+		var key = it.next();
+		var campo = key.split(&quot;___&quot;);		
+
+		if (key.indexOf(&apos;___&apos;) &gt;= 0 &amp;&amp; campo[0] == fieldTemp) {
+			var idx = campo[1];
+			var row = new Object();
+			
+			for(var i=0; i&lt;fields.length; i++){
+				var name = fields[i] + &quot;___&quot; + idx;
+				row[fields[i]] = {value:hAPI.getCardValue(name), idx:idx, name:name};
+			}
+			listaFilho.push(row);
+		}		
+	}
+	return listaFilho;
+}
+
+function integrarSolicitacao(dadosIntegracao) {
+	//try {
+		var servico 		= ServiceManager.getService(&quot;protheus_ciee_axis&quot;); 
+        var bean    		= servico.getBean();
+        var locator 		= bean.instantiate(&quot;_190._2._10._10.CIEELocator&quot;);
+        var metodos 		= locator.getCIEESOAP();
+        var xml		       	= compilarXMLSolicitacao(dadosIntegracao);
+        var xmlRetornoItem 	= metodos.FSERVICE(xml);      
+        var retorno 		= extrairRetornoXML(xmlRetornoItem);
+      
+        return retorno;
+	/*	
+	} catch (e) {
+		var msgErro = &quot;Ocorreu um erro ao integrar a solicita��o de compras com protheus... &quot; + e.message;
+		log.info(msgErro);
+		return {erro:msgErro};
+	}
+	*/
+}
+
+function compilarXMLSolicitacao(integracao){
+	var itens  		= integracao[&quot;ITENS&quot;];
+	var xmlItens 	= &quot;&lt;ZA1DETAIL modeltype=&apos;FIELDS&apos;&gt;&quot;;
+	
+    for(var j in itens){
+    	var item = itens[j];    	
+    	xmlItens += &apos;&lt;ITEM id=&quot;&apos;+j.toString()+&apos;&quot;&gt;&apos;;    	
+    	xmlItens += &quot;&lt;ZA1_ITEM&gt;&quot; 	+ item.txtSeqItem.value 	+ &quot;&lt;/ZA1_ITEM&gt;&quot;;
+    	xmlItens += &quot;&lt;ZA1_DESC&gt;&quot; 	+ item.txtDescItem.value 	+ &quot;&lt;/ZA1_DESC&gt;&quot;;
+    	xmlItens += &quot;&lt;ZA1_QUANT&gt;&quot; 	+ item.txtQtdeItem.value 	+ &quot;&lt;/ZA1_QUANT&gt;&quot;;
+    	xmlItens += &quot;&lt;ZA1_UM&gt;&quot; 	+ item.txtUnidItem.value 	+ &quot;&lt;/ZA1_UM&gt;&quot;;
+    	xmlItens += &quot;&lt;/ITEM&gt;&quot;;
+    }
+    
+    xmlItens += &quot;&lt;/ZA1DETAIL&gt;&quot;;
+    
+	var xml = 
+		&quot;&lt;TOTVSIntegrator&gt;&quot; + 
+			&quot;&lt;GlobalProduct&gt;&quot;                     + integracao[&quot;GlobalProduct&quot;]                     + &quot;&lt;/GlobalProduct&gt;&quot; +
+			&quot;&lt;GlobalFunctionCode&gt;&quot;                + integracao[&quot;GlobalFunctionCode&quot;]                + &quot;&lt;/GlobalFunctionCode&gt;&quot; +
+			&quot;&lt;GlobalDocumentFunctionCode&gt;&quot;        + integracao[&quot;GlobalDocumentFunctionCode&quot;]        + &quot;&lt;/GlobalDocumentFunctionCode&gt;&quot; +
+			&quot;&lt;GlobalDocumentFunctionDescription&gt;&quot; + integracao[&quot;GlobalDocumentFunctionDescription&quot;] + &quot;&lt;/GlobalDocumentFunctionDescription&gt;&quot; +
+			&quot;&lt;DocVersion&gt;&quot;                        + integracao[&quot;DocVersion&quot;] 						+ &quot;&lt;/DocVersion&gt;&quot; +
+			&quot;&lt;DocDateTime&gt;&quot;                       + integracao[&quot;DocDateTime&quot;] 					    + &quot;&lt;/DocDateTime&gt;&quot; +
+			&quot;&lt;DocIdentifier&gt;&quot;                     + integracao[&quot;DocIdentifier&quot;] 					+ &quot;&lt;/DocIdentifier&gt;&quot; +
+			&quot;&lt;DocCompany&gt;&quot;                        + integracao[&quot;DocCompany&quot;] 						+ &quot;&lt;/DocCompany&gt;&quot; +
+			&quot;&lt;DocBranch&gt;&quot;                         + integracao[&quot;DocBranch&quot;] 						+ &quot;&lt;/DocBranch&gt;&quot; +
+			&quot;&lt;DocName&gt;&quot;                           + integracao[&quot;DocName&quot;] 						    + &quot;&lt;/DocName&gt;&quot; +
+			&quot;&lt;DocFederalID&gt;&quot;                      + integracao[&quot;DocFederalID&quot;] 					    + &quot;&lt;/DocFederalID&gt;&quot; +
+			&quot;&lt;DocType&gt;&quot;                           + integracao[&quot;DocType&quot;] 						    + &quot;&lt;/DocType&gt;&quot; +
+			&quot;&lt;Message&gt;&quot; +
+				&quot;&lt;Layouts&gt;&quot; +
+					&quot;&lt;Identifier&gt;&quot;   + integracao[&quot;Identifier&quot;]   + &quot;&lt;/Identifier&gt;&quot; +
+					&quot;&lt;Version&gt;&quot;      + integracao[&quot;Version&quot;]      + &quot;&lt;/Version&gt;&quot; +
+					&quot;&lt;FunctionCode&gt;&quot; + integracao[&quot;FunctionCode&quot;] + &quot;&lt;/FunctionCode&gt;&quot; +					  
+					&quot;&lt;Content&gt;&quot; +
+						&quot;&lt;CEAIA04 Operation=&apos;3&apos; version=&apos;1.01&apos;&gt;&quot; +
+							&quot;&lt;ZA1MASTER modeltype=&apos;FIELDS&apos;&gt;&quot; +							
+								&quot;&lt;ZA1_COD&gt;&quot; 	+ integracao[&quot;ZA1_COD&quot;] 	+ &quot;&lt;/ZA1_COD&gt;&quot; +
+								&quot;&lt;ZA1_MATRIC&gt;&quot; 	+ integracao[&quot;ZA1_MATRIC&quot;] 	+ &quot;&lt;/ZA1_MATRIC&gt;&quot; +
+								&quot;&lt;ZA1_DATA&gt;&quot; 	+ integracao[&quot;ZA1_DATA&quot;] 	+ &quot;&lt;/ZA1_DATA&gt;&quot; +
+								&quot;&lt;ZA1_RAMAL&gt;&quot; 	+ integracao[&quot;ZA1_RAMAL&quot;] 	+ &quot;&lt;/ZA1_RAMAL&gt;&quot; +
+								&quot;&lt;ZA1_CR&gt;&quot; 		+ integracao[&quot;ZA1_CR&quot;] 		+ &quot;&lt;/ZA1_CR&gt;&quot; +
+								&quot;&lt;ZA1_CRDESC&gt;&quot; 	+ integracao[&quot;ZA1_CRDESC&quot;] 	+ &quot;&lt;/ZA1_CRDESC&gt;&quot; +
+								&quot;&lt;ZA1_JUSTIF&gt;&quot; 	+ integracao[&quot;ZA1_JUSTIF&quot;] 	+ &quot;&lt;/ZA1_JUSTIF&gt;&quot; +
+								&quot;&lt;ZA1_APRO01&gt;&quot; 	+ integracao[&quot;ZA1_APRO01&quot;] 	+ &quot;&lt;/ZA1_APRO01&gt;&quot; +
+								&quot;&lt;ZA1_APRO02&gt;&quot; 	+ integracao[&quot;ZA1_APRO02&quot;] 	+ &quot;&lt;/ZA1_APRO02&gt;&quot; +
+								&quot;&lt;ZA1_APRO03&gt;&quot; 	+ integracao[&quot;ZA1_APRO03&quot;] 	+ &quot;&lt;/ZA1_APRO03&gt;&quot; +
+								&quot;&lt;ZA1_APRO04&gt;&quot; 	+ integracao[&quot;ZA1_APRO04&quot;] 	+ &quot;&lt;/ZA1_APRO04&gt;&quot; +
+								&quot;&lt;ZA1_APRO05&gt;&quot; 	+ integracao[&quot;ZA1_APRO05&quot;] 	+ &quot;&lt;/ZA1_APRO05&gt;&quot; +
+								&quot;&lt;ZA1_RESESP&gt;&quot; 	+ integracao[&quot;ZA1_RESESP&quot;] 	+ &quot;&lt;/ZA1_RESESP&gt;&quot; +
+								&quot;&lt;ZA1_VLREST&gt;&quot; 	+ integracao[&quot;ZA1_VLREST&quot;] 	+ &quot;&lt;/ZA1_VLREST&gt;&quot; +
+								&quot;&lt;ZA1_PRAZO&gt;&quot; 	+ integracao[&quot;ZA1_PRAZO&quot;] 	+ &quot;&lt;/ZA1_PRAZO&gt;&quot; +
+								&quot;&lt;ZA1_CONSEQ&gt;&quot; 	+ integracao[&quot;ZA1_CONSEQ&quot;] 	+ &quot;&lt;/ZA1_CONSEQ&gt;&quot; +
+								&quot;&lt;ZA1_AQUCON&gt;&quot; 	+ integracao[&quot;ZA1_AQUCON&quot;] 	+ &quot;&lt;/ZA1_AQUCON&gt;&quot; +								
+								 xmlItens +	
+							&quot;&lt;/ZA1MASTER&gt;&quot; +
+						&quot;&lt;/CEAIA04&gt;&quot; +					
+					&quot;&lt;/Content&gt;&quot; +
+				&quot;&lt;/Layouts&gt;&quot; +
+			&quot;&lt;/Message&gt;&quot; +
+		&quot;&lt;/TOTVSIntegrator&gt;&quot;;
+	
+	return xml;	
+}
+
+function extrairRetornoXML(strXml){
+	var xml = new XML(strXml);
+	var retorno = [];
+	
+	retorno[&quot;RETORNO&quot;]= &quot;1&quot;;
+	retorno[&quot;MOTIVO&quot;]= &quot;&quot;;
+	
+	for each(item in xml.LOGMASTER){
+		retorno[&quot;ID&quot;]		= item.ID;
+		retorno[&quot;RETORNO&quot;]	= item.RETORNO
+		retorno[&quot;ANEXOID&quot;]	= item.ANEXOID;
+		if(item.RETORNO != &quot;0&quot;){
+			retorno[&quot;MOTIVO&quot;]=  item.MOTIVO
+		}
+	}
+	
+	return retorno;
+}
+
+function MovAnexoProtheus(sequenceId,CodDocProtheus,FolderProtheus){
+	
+if (sequenceId == 4) {
+    var calendar = java.util.Calendar.getInstance().getTime();
+    var docs = hAPI.listAttachments();
+    for (var i = 0; i &lt; docs.size(); i++) {
+        var doc = docs.get(i);
+         
+        if (doc.getDocumentType() != &quot;7&quot;) {
+            continue;
+        }     
+        
+        doc.setParentDocumentId(FolderProtheus.toint());
+        //doc.setDocumentId(1000);
+        doc.setDocumentType(&quot;3&quot;); 
+        doc.setExternalDocumentId(CodDocProtheus);
+        //doc.setVersionDescription(&quot;Processo: &quot; + getValue(&quot;WKNumProces&quot;));
+        doc.setExpires(false);
+        doc.setCreateDate(calendar);
+        doc.setInheritSecurity(true);
+        doc.setTopicId(1);
+        doc.setUserNotify(false);
+        doc.setValidationStartDate(calendar);
+        doc.setVersionOption(&quot;0&quot;);
+        //doc.setDocumentDescription(&quot;Sol. Baixa e Transf. Processo: &quot; + getValue(&quot;WKNumProces&quot;));
+        doc.setUpdateIsoProperties(true);
+       
+        hAPI.publishWorkflowAttachment(doc);
+    }
+}
+	
+}</eventDescription>
+    </WorkflowProcessEvent>
+  </list>
+  <list/>
+  <list>
+    <SwimLane>
+      <color>82b0b7</color>
+      <height>157</height>
+      <width>985</width>
+      <positionX>0</positionX>
+      <positionY>0</positionY>
+      <stateName>Solicitante</stateName>
+      <type>2</type>
+      <parentSequence>0</parentSequence>
+      <swimLanePK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <sequence>1</sequence>
+      </swimLanePK>
+    </SwimLane>
+    <SwimLane>
+      <color>adc9ac</color>
+      <height>145</height>
+      <width>985</width>
+      <positionX>0</positionX>
+      <positionY>156</positionY>
+      <stateName>Protheus</stateName>
+      <type>2</type>
+      <parentSequence>0</parentSequence>
+      <swimLanePK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <sequence>2</sequence>
+      </swimLanePK>
+    </SwimLane>
+  </list>
+  <list>
+    <ProcessComponGraf>
+      <componType>1</componType>
+      <positionX>180</positionX>
+      <positionY>53</positionY>
+      <processComponGrafPK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <componGrafSequence>8</componGrafSequence>
+      </processComponGrafPK>
+      <stateName>Solicitação de compas</stateName>
+    </ProcessComponGraf>
+    <ProcessComponGraf>
+      <componType>1</componType>
+      <positionX>480</positionX>
+      <positionY>204</positionY>
+      <processComponGrafPK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <componGrafSequence>12</componGrafSequence>
+      </processComponGrafPK>
+      <stateName>Solicitação incluída no Protheus</stateName>
+    </ProcessComponGraf>
+  </list>
+  <list>
+    <ProcessLinkAssoc>
+      <processLinkAssocPK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <linkSequence>9</linkSequence>
+      </processLinkAssocPK>
+      <initialStateSequence>8</initialStateSequence>
+      <finalStateSequence>4</finalStateSequence>
+    </ProcessLinkAssoc>
+    <ProcessLinkAssoc>
+      <processLinkAssocPK>
+        <companyId>1</companyId>
+        <processId>WF_SolicitacaoCompras</processId>
+        <version>1</version>
+        <linkSequence>13</linkSequence>
+      </processLinkAssocPK>
+      <initialStateSequence>12</initialStateSequence>
+      <finalStateSequence>10</finalStateSequence>
+    </ProcessLinkAssoc>
+  </list>
+  <list/>
+  <list/>
+  <list/>
+  <list/>
+</list>

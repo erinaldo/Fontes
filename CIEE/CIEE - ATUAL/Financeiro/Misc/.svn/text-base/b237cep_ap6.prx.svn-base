@@ -1,0 +1,29 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+User Function b237cep()        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("CALIAS,_CEP,")
+
+///// PROGRAMA PARA ZERAR O SUFIXO DO CEP QUANDO ESTE ESTIVER EM BRANCO
+///// PAGFOR - POSICOES ( 88 - 95 )
+_aArea := GetArea()     
+_aAreaE2 := SE2->(GetArea())
+_aAreaEA := SEA->(GetArea())
+
+cALIAS  :=  Alias()
+
+_CEP  :=  STRZERO(VAL(SUBSTR(SA2->A2_CEP,1,5)),5,0)+STRZERO(VAL(SUBSTR(SA2->A2_CEP,6,3)),5,0)
+
+SEA->(RestArea(_aAreaEA))
+SE2->(RestArea(_aAreaE2))
+RestArea(_aArea)
+
+// Substituido pelo assistente de conversao do AP6 IDE em 15/07/02 ==> __return(_CEP)
+Return(_CEP)        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02

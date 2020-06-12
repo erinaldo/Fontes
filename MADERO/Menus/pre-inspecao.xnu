@@ -1,0 +1,91 @@
+<ApMenu>
+	<DocumentProperties>
+		<Module></Module>
+		<Version>10.1</Version>
+	</DocumentProperties>
+	<Menu Status="Enable">
+		<Title lang="pt">&Atualizações</Title>
+		<Title lang="es">&Actualizaciones</Title>
+		<Title lang="en">&Updates</Title>
+		<Menu Status="Enable">
+			<Title lang="pt">Pre Inspeção Madero</Title>
+			<Title lang="es">Pre Inspeção Madero</Title>
+			<Title lang="en">Pre Inspeção Madero</Title>
+			<MenuItem Status="Enable">
+				<Title lang="pt">Frigorifico</Title>
+				<Title lang="es">Frigorifico</Title>
+				<Title lang="en">Frigorifico</Title>
+				<Function>MQIE100FRI</Function>
+				<Type>03</Type>
+				<Access>xxxxxxxxxx</Access>
+				<Module>02</Module>
+				<Owner>0</Owner>
+				<KeyWord>
+					<KeyWord lang="pt">                         </KeyWord>
+					<KeyWord lang="es">                         </KeyWord>
+					<KeyWord lang="en">                         </KeyWord>
+				</KeyWord>
+			</MenuItem>
+			<MenuItem Status="Enable">
+				<Title lang="pt">Hortifruti</Title>
+				<Title lang="es">Hortifruti</Title>
+				<Title lang="en">Hortifruti</Title>
+				<Function>MQIE100HOR</Function>
+				<Type>03</Type>
+				<Access>xxxxxxxxxx</Access>
+				<Module>02</Module>
+				<Owner>0</Owner>
+				<KeyWord>
+					<KeyWord lang="pt">                         </KeyWord>
+					<KeyWord lang="es">                         </KeyWord>
+					<KeyWord lang="en">                         </KeyWord>
+				</KeyWord>
+			</MenuItem>
+			<MenuItem Status="Enable">
+				<Title lang="pt">Mercearia</Title>
+				<Title lang="es">Mercearia</Title>
+				<Title lang="en">Mercearia</Title>
+				<Function>MQIE100MER</Function>
+				<Type>03</Type>
+				<Access>xxxxxxxxxx</Access>
+				<Module>02</Module>
+				<Owner>0</Owner>
+				<KeyWord>
+					<KeyWord lang="pt">                         </KeyWord>
+					<KeyWord lang="es">                         </KeyWord>
+					<KeyWord lang="en">                         </KeyWord>
+				</KeyWord>
+			</MenuItem>
+			<MenuItem Status="Enable">
+				<Title lang="pt">Administração</Title>
+				<Title lang="es">Administração</Title>
+				<Title lang="en">Administração</Title>
+				<Function>MQIE100</Function>
+				<Type>03</Type>
+				<Access>xxxxxxxxxx</Access>
+				<Module>02</Module>
+				<Owner>0</Owner>
+				<KeyWord>
+					<KeyWord lang="pt">                         </KeyWord>
+					<KeyWord lang="es">                         </KeyWord>
+					<KeyWord lang="en">                         </KeyWord>
+				</KeyWord>
+			</MenuItem>
+		</Menu>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Consultas</Title>
+		<Title lang="es">&Consultas</Title>
+		<Title lang="en">&Queries</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Relatorios</Title>
+		<Title lang="es">&Informes</Title>
+		<Title lang="en">&Reports</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Miscelanea</Title>
+		<Title lang="es">&Miscelanea</Title>
+		<Title lang="en">&Miscellaneous</Title>
+	</Menu>
+</ApMenu>

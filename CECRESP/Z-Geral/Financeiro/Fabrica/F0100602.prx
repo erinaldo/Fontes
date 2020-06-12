@@ -1,0 +1,629 @@
+//#INCLUDE "finr930.ch"
+#INCLUDE "Protheus.ch"
+
+/*/{Protheus.doc} F0100602
+	RelatСrio que apresenta aglutinaГЦo de rateio por centro de custos
+@type function
+@from	FINR930	
+@author	CМcero J. Silva
+@version 1.0	
+@since	19/01/2017
+@obs	ObservaГЦo complementar referente a documentaГЦo	
+@project TEZME400000101_EF_002
+@menu	Aglutina Impostos	
+@history	Data e descriГЦo de alteraГУes	
+/*/
+User Function F0100602()
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Declaracao de Variaveis                                             Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+Local cDesc1      := "Imprime relacao de titulos a pagar de impostos "
+Local cDesc2      := "(Pis, Cofins e Csll), exibindo os titulos que "
+Local cDesc3      := "originaram aglutinacao e o titulo aglutinador."
+Local cPict       := ""
+Local titulo      := "Aglutinacao de Impostos a Pagar"
+Local nLin        := 80
+Local Cabec1      := "" 
+Local Cabec2      := ""
+Local imprime		:= .T.
+
+Private lEnd         := .F.
+Private lAbortPrint  := .F.
+Private CbTxt        := ""
+Private limite       := 132
+Private tamanho      := "M"
+Private nomeprog     := "finr930"
+Private nTipo        := 18
+Private aReturn      := { "Zebrado", 1, "Administracao", 2, 2, 1, "", 1}  //###
+Private nLastKey     := 0
+Private cbcont       := 00
+Private CONTFL       := 01
+Private m_pag        := 01
+Private wnrel        := "finr930"
+Private cString      := "SE5"
+Private cPerg		:= "FIN930"
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Verifica as perguntas selecionadas                    Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+SetKey (VK_F12,{|a,b| AcessaPerg(cPerg,.T.)})
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Variaveis utilizadas para parametros                  Ё
+//Ё mv_par01		 // Do Processo?                        Ё
+//Ё mv_par02		 // Ate Processo?                       Ё
+//Ё mv_par03		 // De Emissao?                         Ё
+//Ё mv_par04		 // Ate Emissao?                        Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+Pergunte(cPerg,.F.)
+
+dbSelectArea("SE5")
+dbSetOrder(1)
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Monta a interface padrao com o usuario...                           Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+wnrel := SetPrint(cString,NomeProg,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.T.,,.F.,Tamanho,,.T.)
+
+If nLastKey == 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Return
+Endif
+
+nTipo := If(aReturn[4]==1,15,18)
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Processamento. RPTSTATUS monta janela com a regua de processamento. Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+RptStatus({|| Fr930Imp(Cabec1,Cabec2,Titulo,nLin) },Titulo)
+
+Return
+
+/*/
+эээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээээ
+╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠
+╠╠иммммммммммяммммммммммкмммммммяммммммммммммммммммммкммммммяммммммммммммм╩╠╠
+╠╠╨Fun┤└o    ЁFr930Imp  ╨ Autor Ё Nilton Pereira     ╨ Data Ё  22/02/05   ╨╠╠
+╠╠лммммммммммьммммммммммймммммммоммммммммммммммммммммйммммммоммммммммммммм╧╠╠
+╠╠╨Descri┤└o Ё Funcao auxiliar chamada pela RPTSTATUS. A funcao RPTSTATUS ╨╠╠
+╠╠╨          Ё monta a janela com a regua de processamento.               ╨╠╠
+╠╠лммммммммммьмммммммммммммммммммммммммммммммммммммммммммммммммммммммммммм╧╠╠
+╠╠╨Uso       Ё Programa principal                                         ╨╠╠
+╠╠хммммммммммомммммммммммммммммммммммммммммммммммммммммммммммммммммммммммм╪╠╠
+╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠╠
+ъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъъ
+/*/
+
+Static Function Fr930Imp(Cabec1,Cabec2,Titulo,nLin)
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Declaracao de Variaveis                                             Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+Local cArqTRB		:= ""
+Local nValSub		:= 0
+Local nValTot		:= 0
+Local aCamposSE5	:= {}
+Local cProcesso		:= ""
+Local lQuebraPro	:= .T.
+Local cChaveAGP		:= ""
+Local cCodRet       := ""
+Local nX:= 1
+Local nTamProc		:= TamSX3( "E5_AGLIMP"  )[1]
+Local nTamFil 		:= FinTamSXG("033",TAMSX3("E5_FILIAL")[1])[1]
+Local nColPrefixo
+Local nColNumero
+Local nColParcela
+Local nColTipo
+Local nColCodigo
+Local nColLoja
+Local nColNome
+Local nColNaturez
+Local nColEmissao
+Local nColVencto
+Local nColCodRet
+Local nColValor
+
+Private cUniao   := PADR(GetMV("MV_UNIAO"),Len(SA2->A2_COD))
+Private cNatPis  := GetMv("MV_PISNAT",.F.,"PIS")
+Private cNatCof  := GetMv("MV_COFINS",.F.,"COF")
+Private cNatCsl  := GetMv("MV_CSLL",.F.,"CSL")
+Private cNatIrf  := &(GetMv("MV_IRF"))
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Monta estrutura do arquivo temporario (CodeBase)                    Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+
+aCamposSE5	:= {{"FILIAL"   ,"C",TamSx3("E5_FILIAL")[1]	,0 },;
+				{"PREFIXO"	,"C",TamSx3("E5_PREFIXO")[1],0 },;
+				{"NUM"		,"C",TamSx3("E5_NUMERO")[1] ,0 },;
+				{"PARCELA"	,"C",TamSx3("E5_PARCELA")[1],0 },;
+				{"TIPO"		,"C",TamSx3("E5_TIPO")[1]	,0 },;
+				{"CODIGO"	,"C",TamSx3("E5_CLIFOR")[1]	,0 },;
+				{"LOJA"		,"C",TamSx3("E5_LOJA")[1]	,0 },;
+				{"NOMEFOR"	,"C",TamSx3("E2_NOMFOR")[1]	,0 },;
+				{"EMISSAO"	,"D",TamSx3("E5_DTDIGIT")[1],0 },;
+				{"VENCTO"	,"D",TamSx3("E5_VENCTO")[1]	,0 },;
+				{"PROCESSO"	,"C",TamSx3("E5_AGLIMP")[1]	,0 },;
+				{"NATUREZA","C",TamSx3("E5_NATUREZ")[1]	,0 },;
+				{"CODRET"	,"C",TamSx3("E2_CODRET")[1]	,0 },;
+				{"VALOR"	,"N",TamSx3("E5_VALOR")[1]	,2 },;
+				{"PERC"	    ,"N",TamSx3("EZ_PERC")[1]	,TamSx3("EZ_PERC")[2] },;
+				{"CCUSTO"	,"C",TamSx3("EZ_CCUSTO")[1]	,0 },;
+				{"GERADOR"	,"C",2						,0 }}
+				
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Monta o arquivo temporario com a soma dos titulos das filiais       Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды	
+cArqTRB := CriaTrab( aCamposSE5 )
+dbUseArea( .T.,, cArqTRB, "TRB", .T., .F. )
+//IndRegua("TRB",cArqTRB,"PROCESSO+CODRET+NATUREZA+GERADOR+PREFIXO+NUM+PARCELA+TIPO",,,)
+IndRegua("TRB",cArqTRB,"PROCESSO+PREFIXO+NUM+PARCELA+GERADOR+NATUREZA+CCUSTO",,,)
+
+dbSetIndex( cArqTRB+OrdBagExt())
+
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё A fun┤└o SomaAbat reabre o SE2 com outro nome pela ChkFile, pois Ё
+//Ё o filtro do SE2, desconsidera os abatimentos							|
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+SomaAbat("","","","P")
+	//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Monta condicao de query para execucao no SE5.                       Ё
+	//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды		
+cQuery := "SELECT A2_COD CODIGO,A2_LOJA LOJA,A2_NOME NOMEFOR,E5_PREFIXO PREFIXO,"
+cQuery += "E5_NUMERO NUM,E5_PARCELA PARCELA,E5_TIPO TIPO,E5_DTDIGIT EMISSAO,E5_VENCTO VENCTO,"
+cQuery += "E5_VALOR VALOR,E5_AGLIMP PROCESSO, E5_NATUREZ NATUREZA, "
+cQuery += "E2_PREFIXO,E2_NUM,E2_PARCELA,E2_TIPO,E2_FORNECE,E2_LOJA, E2_EMISSAO, E2_CODRET CODRET, E2_FILIAL FILIAL "
+cQuery += "FROM " + RetSqlName("SE5")+" SE5 "
+cQuery += "INNER JOIN " + RetSqlName("SE2")+ " SE2 ON "
+cQuery += " SE5.E5_FILIAL = SE2.E2_FILIAL"
+cQuery += " AND SE5.E5_PREFIXO = SE2.E2_PREFIXO"
+cQuery += " AND SE5.E5_NUMERO  = SE2.E2_NUM"
+cQuery += " AND SE5.E5_PARCELA = SE2.E2_PARCELA"
+cQuery += " AND SE5.E5_TIPO    = SE2.E2_TIPO,"
+cQuery += 		    RetSqlName("SA2")+" SA2 "
+cQuery += " WHERE SA2.A2_FILIAL   = '" + xFilial("SA2") + "'"
+cQuery += " AND SE5.D_E_L_E_T_  <> '*' "
+cQuery += " AND SA2.D_E_L_E_T_  <> '*' "
+cQuery += " AND SE2.D_E_L_E_T_  <> '*' "
+cQuery += " AND SE5.E5_SITUACA  <> 'C' "
+cQuery += " AND SE5.E5_CLIFOR  =  SA2.A2_COD"
+cQuery += " AND SE5.E5_LOJA	  =  SA2.A2_LOJA"
+cQuery += " AND SE5.E5_DATA  between '" + DTOS(mv_par03)  + "' AND '" + DTOS(mv_par04) + "'"
+cQuery += " AND SE5.E5_TIPODOC IN ('VL','BA','CP','V2') "
+cQuery += " AND SE5.E5_AGLIMP <> '"+Space(Len(SE5->E5_AGLIMP))+"' "
+cQuery += " AND SE5.E5_AGLIMP>='"+mv_par01+"' "
+cQuery += " AND SE5.E5_AGLIMP<='"+mv_par02+"' "
+cQuery += " AND SE5.E5_TIPO IN ('"+MVPAGANT+"','"+MV_CPNEG+"','"+MVISS+"','"+MVTAXA+"','"+MVTXA+"','"+MVINSS +"','SES') "
+cQuery := ChangeQuery(cQuery)                
+
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Gera temporario com o resultado da query do SE5                     Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды			
+dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), 'TR1', .F., .T.)
+TcSetField("TR1","EMISSAO"   ,"D", 08,0)
+TcSetField("TR1","E2_EMISSAO","D", 08,0)
+TcSetField("TR1","VENCTO"    ,"D", 08,0)
+
+	//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Monta condicao de query para execucao no SE2.                       Ё
+	//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды				
+cQuery := "SELECT A2_COD CODIGO,A2_LOJA LOJA,A2_NOME NOMEFOR,E2_PREFIXO PREFIXO, "
+cQuery += "E2_NUM NUM,E2_NUM PROCESSO,E2_PARCELA PARCELA,E2_TIPO TIPO,E2_EMISSAO EMISSAO, "
+cQuery += "E2_VENCTO VENCTO,E2_VALOR VALOR,E2_NATUREZ NATUREZA,E2_CODRET CODRET, E2_FILIAL FILIAL "
+cQuery += "FROM "+RetSqlName("SE2")+" SE2,"
+cQuery +=         RetSqlName("SA2")+" SA2 "
+cQuery += "WHERE SE2.D_E_L_E_T_ <> '*' AND SA2.D_E_L_E_T_ <> '*' "
+cQuery += "AND SE2.E2_FILIAL = '" + xFilial("SE2") + "' "
+cQuery += "AND SA2.A2_FILIAL = '" + xFilial("SA2") + "' "
+cQuery += "AND SE2.E2_FORNECE = SA2.A2_COD "
+cQuery += "AND SE2.E2_LOJA = SA2.A2_LOJA "
+cQuery += "AND SE2.E2_FORNECE LIKE '"+Alltrim(cUniao)+"%' "
+//cQuery += "AND SE2.E2_TIPO IN "+FORMATIN(MVTAXA,,3)+" "
+cQuery += "AND SE2.E2_SALDO > 0 "
+cQuery += "AND (SE2.E2_NATUREZ LIKE '"+ cNatPIS +"%' "
+cQuery += "OR SE2.E2_NATUREZ LIKE '"+ cNatCOF +"%' "
+cQuery += "OR SE2.E2_NATUREZ LIKE '"+ cNatIRF +"%' "
+cQuery += "OR SE2.E2_NATUREZ LIKE '"+ cNatCSL +"%' ) "
+cQuery += "AND SE2.E2_EMISSAO between '" + DTOS(mv_par03)  + "' AND '" + DTOS(mv_par04) + "'"
+cQuery += "AND SE2.E2_NUM>='"+mv_par01+"' "
+cQuery += "AND SE2.E2_NUM<='"+mv_par02+"' "
+cQuery += "AND (SE2.E2_NUMTIT LIKE 'FINA378%' "
+cQuery += "OR SE2.E2_NUMTIT LIKE 'FINA376%') "
+cQuery := ChangeQuery(cQuery)     
+
+                                     
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Gera temporario com o resultado da query do SE2                     Ёadmin
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды			
+dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), 'TR2', .F., .T.)
+TcSetField("TR2","EMISSAO"   ,"D", 08,0)
+TcSetField("TR2","VENCTO"    ,"D", 08,0)
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Grava TRB com os arquivos resultates do filtro do SE5 e SE2         Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+TR2->( dbGotop() )
+Do While TR2->( !EoF() )
+	RecLock("TRB",.T.)
+	TRB->FILIAL		:= TR2->FILIAL
+	TRB->CODIGO		:= TR2->CODIGO
+	TRB->LOJA		:= TR2->LOJA
+	TRB->NOMEFOR	:= TR2->NOMEFOR
+	TRB->PREFIXO	:= TR2->PREFIXO
+	TRB->NUM		:= TR2->NUM
+	TRB->PARCELA	:= TR2->PARCELA
+	TRB->TIPO		:= TR2->TIPO
+	TRB->EMISSAO	:= TR2->EMISSAO
+	TRB->PROCESSO	:= TR2->PROCESSO
+	TRB->NATUREZA	:= TR2->NATUREZA
+	TRB->VALOR		:= TR2->VALOR
+	TRB->VENCTO		:= TR2->VENCTO
+	TRB->GERADOR	:= "20"
+	TRB->CCUSTO		:= ""
+	TRB->CODRET		:= TR2->CODRET
+	TRB->( MsUnlock() )
+
+	// Pesquisar o rateio do TITULO AGLUTINADO e gravar na TRB
+	cChaveSEZ := TR2->PREFIXO + PadL( TR2->NUM, nTamProc ) + TR2->PARCELA + TR2->TIPO + TR2->CODIGO + TR2->LOJA
+	F01006C('SEZ',1,cChaveSEZ)
+	Do While SEZ->( !EoF() )	// Somente grava o TX aglutinado se corresponder ao titulo aglutinador
+		If xFilial("SEZ")+SEZ->EZ_PREFIXO + PadL( SEZ->EZ_NUM, nTamProc ) + SEZ->EZ_PARCELA + SEZ->EZ_TIPO + SEZ->EZ_CLIFOR + SEZ->EZ_LOJA  == xFilial("SEZ")+cChaveSEZ
+			If	RecLock("TRB",.T.)
+				TRB->FILIAL		:= SEZ->EZ_FILIAL
+				TRB->CODIGO		:= SEZ->EZ_CLIFOR
+				TRB->LOJA		:= SEZ->EZ_LOJA
+				TRB->NOMEFOR	:= TR2->NOMEFOR
+				TRB->PREFIXO	:= SEZ->EZ_PREFIXO
+				TRB->NUM		:= SEZ->EZ_NUM
+				TRB->PARCELA	:= SEZ->EZ_PARCELA
+				TRB->TIPO		:= SEZ->EZ_TIPO
+				TRB->PROCESSO	:= TR2->PROCESSO
+				TRB->NATUREZA	:= SEZ->EZ_NATUREZ
+				TRB->VALOR		:= SEZ->EZ_VALOR
+				TRB->GERADOR	:= "25"
+				TRB->PERC		:= SEZ->EZ_PERC
+				TRB->CCUSTO		:= SEZ->EZ_CCUSTO
+				TRB->CODRET		:= TR2->CODRET
+				TRB->( MsUnlock() )
+			EndIf
+		EndIf
+		SEZ->(dbSkip())
+	EndDo
+
+	cChaveAGP := PadL( TR2->PROCESSO, nTamProc ) + TR2->NATUREZA + TR2->TIPO + TR2->CODIGO + TR2->LOJA + TR2->CODRET
+	
+	TR1->( dbGoTop() )
+	Do While TR1->( !EoF() )	// Somente grava o TX aglutinado se corresponder ao titulo aglutinador
+		If PadL( TR1->PROCESSO, nTamProc ) + TR1->NATUREZA + TR1->TIPO + TR1->CODIGO + TR1->LOJA + TR1->CODRET  == cChaveAGP
+			If	RecLock("TRB",.T.)
+				TRB->FILIAL		:= TR1->FILIAL
+				TRB->CODIGO		:= TR1->CODIGO
+				TRB->LOJA		:= TR1->LOJA
+				TRB->NOMEFOR	:= TR1->NOMEFOR
+				TRB->PREFIXO	:= TR1->PREFIXO
+				TRB->NUM		:= TR1->NUM
+				TRB->PARCELA	:= TR1->PARCELA
+				TRB->TIPO		:= TR1->TIPO
+				TRB->EMISSAO	:= TR1->E2_EMISSAO
+				TRB->PROCESSO	:= TR1->PROCESSO
+				TRB->NATUREZA	:= TR1->NATUREZA
+				TRB->VALOR		:= TR1->VALOR
+				TRB->VENCTO		:= TR1->VENCTO
+				TRB->GERADOR	:= "30"
+				TRB->CCUSTO		:= ""
+				TRB->CODRET		:= U_F01006A(TR1->(PREFIXO+NUM+PARCELA+TIPO+CODIGO+LOJA))
+				TRB->( MsUnlock() )
+			EndIf
+			
+			cChaveSEZ := TR1->PREFIXO + PadL( TR1->NUM, nTamProc ) + TR1->PARCELA + TR1->TIPO + TR1->CODIGO + TR1->LOJA
+			
+			// Pesquisar o rateio do TITULO AGLUTINADOR e gravar na TRB
+			F01006C('SEZ',1,cChaveSEZ)
+			Do While SEZ->( !EoF() )	// Somente grava o TX aglutinado se corresponder ao titulo aglutinador
+				If xFilial("SEZ") + SEZ->EZ_PREFIXO + PadL( SEZ->EZ_NUM, nTamProc ) + SEZ->EZ_PARCELA + SEZ->EZ_TIPO + SEZ->EZ_CLIFOR + SEZ->EZ_LOJA  == xFilial("SEZ") + cChaveSEZ
+					If	RecLock("TRB",.T.)
+						TRB->FILIAL		:= SEZ->EZ_FILIAL
+						TRB->CODIGO		:= SEZ->EZ_CLIFOR
+						TRB->LOJA		:= SEZ->EZ_LOJA
+						TRB->NOMEFOR	:= TR1->NOMEFOR
+						TRB->PREFIXO	:= SEZ->EZ_PREFIXO
+						TRB->NUM		:= SEZ->EZ_NUM
+						TRB->PARCELA	:= SEZ->EZ_PARCELA
+						TRB->TIPO		:= SEZ->EZ_TIPO
+						TRB->PROCESSO	:= TR1->PROCESSO
+						TRB->NATUREZA	:= SEZ->EZ_NATUREZ
+						TRB->VALOR		:= SEZ->EZ_VALOR
+						TRB->GERADOR	:= "35"
+						TRB->PERC		:= SEZ->EZ_PERC
+						TRB->CCUSTO		:= SEZ->EZ_CCUSTO
+						TRB->CODRET		:= U_F01006A(TR1->(PREFIXO+NUM+PARCELA+TIPO+CODIGO+LOJA))
+						TRB->( MsUnlock() )
+					EndIf
+				EndIf
+				SEZ->(dbSkip())
+			EndDo		
+		EndIf
+		TR1->(dbSkip())
+	EndDo
+	TR2->( dbSkip() )
+EndDo
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Seta a regua com a quantidade de arquivos resultantes               Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+SetRegua(TRB->(RecCount()))
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Apaga arquivos temporarios gerados no filtro                        Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+TR1->(dbCloseArea())
+TR2->(dbCloseArea())
+
+nTamFil		:= nTamFil - IIf(nTamFil > 9,8,nTamFil)
+nColPrefixo	:= 9 + nTamFil
+nColNumero	:= 14 + nTamFil
+nColParcela	:= 28 + nTamFil
+nColTipo	:= 32 + nTamFil
+nColCodigo  := 38 + nTamFil
+nColLoja	:= 46 + nTamFil
+nColNome	:= 50 + nTamFil
+nColNaturez := 71 + nTamFil
+nColEmissao	:= 82 + nTamFil
+nColVencto	:= 93 + nTamFil
+nColCodRet	:= 105 + nTamFil
+nColValor	:= 120 + nTamFil
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Monta cabec e titulo conforme ordem selecionada                     Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+titulo      := "RelaГЦo de Titulos Movimentados por AglutinaГЦo"
+lSubtitulo  := .t.
+lUnico		:= .t.
+If TamSX3( "E5_FILIAL"  )[1] > 9 //Gestao Corporativa
+	CabecFil	:= Padr("Filial",nTamFil)
+Else	
+	CabecFil	:= Padr("Filial",9)
+EndIf
+Cabec1      := CabecFil +"Prf. Num.          Pc. Tipo  Cd.For. Lj  Nome Fornecedor      Natureza   Dt.Emissao Dt.Vencto.  Cod.Ret.           Valor"
+Cabec2		:= CabecFil +"                                                              Nat. CC    Centro Custo           % Rateio           Valor CC"
+//Filial  Prf. Num.          Pc. Tipo  Cd.For. Lj  Nome Fornecedor      Nat.       Dt.Emissao Dt.Vencto.  Cod.Ret.           Valor
+//                                                                      Natureza   C. Custo               % Rateio           Valor CC
+//01      AGL  9999999999999 1   123   999999  99  99999999999999999999 9999999999 99/99/9999 99/99/9999  999999         99,999,999.99
+//1       9    14            28  32    38      46  50                   71         82         93          105            120
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Processa o arquivo temporario gerado efetuando a impressao          Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+dbSelectArea("TRB")
+dbGoTop()
+While !EOF()
+	//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Verifica o cancelamento pelo usuario...                             Ё
+	//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	If lAbortPrint
+		@nLin,00 PSAY "*** CANCELADO PELO OPERADOR ***"
+		Exit
+	Endif
+	//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Impressao do cabecalho do relatorio. . .                            Ё
+	//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	If nLin > 58
+		Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+		nLin := 8
+	Endif
+	//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Incrementa regua de processamento                                   Ё
+	//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	IncRegua(TRB->(PREFIXO+NUM+PARCELA+TIPO))
+	
+	cProcesso := TRB->PROCESSO
+
+	if(TRB->GERADOR == "20")
+		//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+		//Ё Imprime a quebra por processo                                       Ё
+		//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды	
+		If lQuebraPro
+			lQuebraPro := .F.
+			nLin    := nLin + 1
+			@nLin, 001 PSAY "Processo : " + TRB->PROCESSO
+			nLin    := nLin + 1
+			@nLin,000 PSAY __PrtThinLine()
+			nLin    := nLin + 1
+		Endif
+		
+		//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+		//Ё Imprime primeiro titulo aglutinado                                  Ё
+		//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+		@nLin, 001 PSAY "Titulo Aglutinado : "
+		nLin    := nLin + 1
+		@nLin, 001      	PSAY TRB->FILIAL
+		@nLin, nColPrefixo 	PSAY TRB->PREFIXO
+		@nLin, nColNumero 	PSAY TRB->NUM
+		@nLin, nColParcela 	PSAY TRB->PARCELA
+		@nLin, nColTipo 	PSAY TRB->TIPO
+		@nLin, nColCodigo 	PSAY TRB->CODIGO
+		@nLin, nColLoja 	PSAY TRB->LOJA
+		@nLin, nColNome 	PSAY Substr(TRB->NOMEFOR,1,20)
+		@nLin, nColNaturez 	PSAY TRB->NATUREZA
+		@nLin, nColEmissao 	PSAY TRB->EMISSAO
+		@nLin, nColVencto 	PSAY TRB->VENCTO
+		@nLin, nColCodRet 	PSAY TRB->CODRET
+		@nLin, nColValor 	PSAY TRB->VALOR PICTURE Tm(TRB->VALOR ,15)
+		nLin    := nLin + 1
+	EndIf	
+	
+	//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Imprime RATEIO do primeiro titulo aglutinado						Ё
+	//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды	
+	if(TRB->GERADOR == "25")
+		@nLin, nColNaturez 	PSAY TRB->NATUREZA
+		@nLin, nColEmissao 	PSAY TRB->CCUSTO
+		@nLin, nColCodRet 	PSAY Transform( TRB->PERC * 100, "@E 999.99") + "%"
+		@nLin, nColValor 	PSAY TRB->VALOR PICTURE Tm(TRB->VALOR ,15)
+		nLin    := nLin + 1
+	EndIf 
+
+	//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Processa todas as baixas que geraram a aglutinacao                  Ё
+	//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	If(TRB->GERADOR == "30")
+		if lSubtitulo
+			lSubtitulo := .F.
+			@nLin, 001 PSAY "Titulos que compoem o Aglutinado: "
+			nLin    := nLin + 1
+		EndIf
+		@nLin, 001      	PSAY TRB->FILIAL
+		@nLin, nColPrefixo 	PSAY TRB->PREFIXO
+		@nLin, nColNumero 	PSAY TRB->NUM
+		@nLin, nColParcela 	PSAY TRB->PARCELA
+		@nLin, nColTipo 	PSAY TRB->TIPO
+		@nLin, nColCodigo 	PSAY TRB->CODIGO
+		@nLin, nColLoja 	PSAY TRB->LOJA
+		@nLin, nColNome 	PSAY Substr(TRB->NOMEFOR,1,20)
+		@nLin, nColNaturez 	PSAY TRB->NATUREZA
+		@nLin, nColEmissao 	PSAY TRB->EMISSAO
+		@nLin, nColVencto 	PSAY TRB->VENCTO
+		@nLin, nColCodRet 	PSAY TRB->CODRET
+		@nLin, nColValor 	PSAY TRB->VALOR PICTURE Tm(TRB->VALOR ,15)
+		nValSub += TRB->VALOR
+		nLin    := nLin + 1
+	EndIf
+
+	If(TRB->GERADOR == "35")
+		@nLin, nColNaturez 	PSAY TRB->NATUREZA
+		@nLin, nColEmissao 	PSAY TRB->CCUSTO
+		@nLin, nColCodRet 	PSAY Transform( TRB->PERC * 100, "@E 999.99") + "%"
+		@nLin, nColValor 	PSAY TRB->VALOR PICTURE Tm(TRB->VALOR ,15)
+		nLin    := nLin + 1
+	EndIf
+	
+	TRB->(DbSkip())
+	
+	//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+	//Ё Caso seja outro processo, efetua a quebra e imprime o sub-total     Ё
+	//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+	If cProcesso <> TRB->PROCESSO
+		lQuebraPro := .T.
+		lSubtitulo := .T.
+		lUnico		:= .f.
+		@nLin, 067 PSAY __PrtThinLine()
+		nLin       := nLin + 1
+		@nLin, 067 PSAY "Sub-Total (Processo) " + cProcesso + " :"  //
+		@nLin, nColValor PSAY nValSub PICTURE Tm(TRB->VALOR ,15)
+		nLin       := nLin + 1
+		nValTot    += nValSub
+		nValSub    := 0
+	Endif
+Enddo
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Imprime totalizar do relatorio. . .                                 Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+If lUnico
+	@nLin, 067 PSAY __PrtThinLine()
+	nLin       := nLin + 1
+	@nLin, 067 PSAY "Sub-Total (Processo) " + cProcesso + " :"  //
+	@nLin, nColValor PSAY nValSub PICTURE Tm(TRB->VALOR ,15)
+	nLin       := nLin + 1
+EndIf
+If nValTot > 0
+	nLin    := nLin + 1
+	@nLin, 083 PSAY "Total Geral :"
+	@nLin, nColValor PSAY nValTot PICTURE Tm(TRB->VALOR ,15)
+	nLin    := nLin + 1
+	@nLin,000 PSAY __PrtThinLine()
+	nLin    := nLin + 1
+Endif
+		   
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Finaliza a execucao do relatorio...                                 Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+SET DEVICE TO SCREEN
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Efetua limpeza dos filtros e dos arquivos temporarios...            Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+dbSelectArea("SE2")
+dbCloseArea()
+ChKFile("SE2")
+dbSelectArea("SE2")
+dbSetOrder(1)
+dbSelectArea("SE5")
+dbCloseArea()
+ChKFile("SE5")
+dbSelectArea("SE5")
+dbSetOrder(1)
+TRB->(dbCloseArea())
+
+//зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Se impressao em disco, chama o gerenciador de impressao...          Ё
+//юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+If aReturn[5]==1
+	dbCommitAll()
+	SET PRINTER TO
+	OurSpool(wnrel)
+Endif
+
+MS_FLUSH()
+
+Return
+
+/*/{Protheus.doc} F01006A
+Localizo no SE2 o codigo de retencao do titulo que foi baixado pela aglutinacao 
+Fonte de origem RetCodRet
+@type function
+@author Mauricio Pequim
+@since 20/09/05
+@version 1.0
+@param cChave
+@return ${return}, ${return_description}
+@example
+(examples)
+@see (links_or_references)
+/*/
+User Function F01006A(cChave)
+
+Local aArea		:= GetArea()
+Local cCodRet	:= ""
+
+dbSelectArea("__SE2")
+__SE2->(dbSetOrder(1))
+If __SE2->(MsSeek(xFilial("SE2")+cChave))
+	cCodRet := __SE2->E2_CODRET
+Endif
+
+RestArea(aArea)
+
+Return cCodRet
+
+
+
+Static Function FinTamSXG(cGrupo,nTamPad)
+Local aRet
+
+DbSelectArea("SXG")
+DbSetOrder(1)
+
+IF DbSeek(cGrupo)
+	aRet := TamSXG(cGrupo)
+Else
+	aRet := {nTamPad,"@!",nTamPad,nTamPad}
+Endif
+
+Return aRet
+
+Static Function F01006C(cTabela,nOrder,cChave)
+
+dbSelectArea(cTabela)
+(cTabela)->(dbSetOrder(nOrder))
+lachou := (cTabela)->(MsSeek(xFilial(cTabela)+cChave))
+
+Return lachou
+ 

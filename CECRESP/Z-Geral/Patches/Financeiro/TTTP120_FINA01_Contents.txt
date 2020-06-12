@@ -1,0 +1,31 @@
+Geração de pacote de atualização
+Parâmetros da solicitação
+Servidor    : Aguassanta TESTE
+Ambiente    : R8XNQC_COMP_TESTE
+Validando a existência do(s) recurso(s) no RPO
+Processo    : Por fontes selecionados em projetos
+Selecionados: 24 fontes(s)
+            : F040ADLE-PE.prw
+            : F040URET-PE.prw
+            : F050ALT-PE.prw
+            : F050ROT-PE.prw
+            : F090FIL-PE.prw
+            : F240FIL-PE.prw
+            : FA050DEL-PE.prw
+            : FA050FIN-PE.prw
+            : FA050UPD-PE.prw
+            : FA080TIT-PE.prw
+            : ASFINA01.prw
+            : ASFINA02.prw
+            : ASFINA03.prw
+            : ASFINA04.prw
+            : ASFINA05.prw
+            : ASFINA06.prw
+            : ASFINA07.prw
+            : ASFINA08.prw
+            : ASFINA09.prw
+            : ASFINA10.prw
+            : ASFINA11.prw
+            : ASFINA12.prw
+            : MTA095MNU-PE.prw
+            : ASCOMA05.prw

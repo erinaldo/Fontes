@@ -1,0 +1,51 @@
+<ApMenu>
+	<DocumentProperties>
+		<Module></Module>
+		<Version>10.1</Version>
+	</DocumentProperties>
+	<Menu Status="Enable">
+		<Title lang="pt">&Atualizações</Title>
+		<Title lang="es">&Actualizaciones</Title>
+		<Title lang="en">&Updates</Title>
+		<Menu Status="Enable">
+			<Title lang="pt">Administração de Compras</Title>
+			<Title lang="es">Administracion de Compras</Title>
+			<Title lang="en">Purchase Administration</Title>
+			<ItemId>0000000153</ItemId>
+			<MenuItem Status="Enable">
+				<Title lang="pt">Madero Grupos de Aprovaç.</Title>
+				<Title lang="es">Grupos de Aprobac.</Title>
+				<Title lang="en">Approv.groups</Title>
+				<Function>MATA114MDR</Function>
+				<Type>03</Type>
+				<Tables>SAL</Tables>
+				<Tables>SC7</Tables>
+				<Tables>DBL</Tables>
+				<Access>xxxxxxxxxx</Access>
+				<Module>02</Module>
+				<Owner>2</Owner>
+				<ItemId>0000000160</ItemId>
+				<KeyWord>
+					<KeyWord lang="pt">Aprovação,liberação,gerente,diretor,responsável,</KeyWord>
+					<KeyWord lang="es">Aprobacion,autorizacion,gerente,director,responsable</KeyWord>
+					<KeyWord lang="en">Approval,approval,manager,director,resp.party</KeyWord>
+				</KeyWord>
+			</MenuItem>
+		</Menu>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Consultas</Title>
+		<Title lang="es">&Consultas</Title>
+		<Title lang="en">&Queries</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Relatorios</Title>
+		<Title lang="es">&Informes</Title>
+		<Title lang="en">&Reports</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Miscelanea</Title>
+		<Title lang="es">&Miscelanea</Title>
+		<Title lang="en">&Miscellaneous</Title>
+	</Menu>
+</ApMenu>

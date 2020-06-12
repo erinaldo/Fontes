@@ -1,0 +1,366 @@
+<ApMenu>
+	<DocumentProperties>
+		<Module></Module>
+		<Version>10.1</Version>
+	</DocumentProperties>
+	<Menu Status="Enable">
+		<Title lang="pt">&Atualizações</Title>
+		<Title lang="es">&Actualizaciones</Title>
+		<Title lang="en">&Updates</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Consultas</Title>
+		<Title lang="es">&Consultas</Title>
+		<Title lang="en">&Queries</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Relatorios</Title>
+		<Title lang="es">&Informes</Title>
+		<Title lang="en">&Reports</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Miscelanea</Title>
+		<Title lang="es">&Miscelanea</Title>
+		<Title lang="en">&Miscellaneous</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Especificos</Title>
+		<Title lang="es">&Especificos</Title>
+		<Title lang="en">&Especificos</Title>
+		<Menu Status="Enable">
+			<Title lang="pt">Madero</Title>
+			<Title lang="es">Madero</Title>
+			<Title lang="en">Madero</Title>
+			<Menu Status="Enable">
+				<Title lang="pt">Ws</Title>
+				<Title lang="es">Ws</Title>
+				<Title lang="en">Ws</Title>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Putunidades</Title>
+					<Title lang="es">Putunidades</Title>
+					<Title lang="en">Putunidades</Title>
+					<Function>TKPUTUNID</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Putprodutos</Title>
+					<Title lang="es">Putprodutos</Title>
+					<Title lang="en">Putprodutos</Title>
+					<Function>TKPUTPRODS</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Putprodutosatuvar</Title>
+					<Title lang="es">Putprodutosatuvar</Title>
+					<Title lang="en">Putprodutosatuvar</Title>
+					<Function>TKPUTPAT</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Putimposto</Title>
+					<Title lang="es">Putimposto</Title>
+					<Title lang="en">Putimposto</Title>
+					<Function>TKPUTIMP</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Putcomposicao</Title>
+					<Title lang="es">Putcomposicao</Title>
+					<Title lang="en">Putcomposicao</Title>
+					<Function>TKPUTCOMPO</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Putcliente</Title>
+					<Title lang="es">Putcliente</Title>
+					<Title lang="en">Putcliente</Title>
+					<Function>TKPUTCLIE</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Putvendedor</Title>
+					<Title lang="es">Putvendedor</Title>
+					<Title lang="en">Putvendedor</Title>
+					<Function>TKPUTVEND</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Putrecebimentos</Title>
+					<Title lang="es">Putrecebimentos</Title>
+					<Title lang="en">Putrecebimentos</Title>
+					<Function>TKPUTRECEB</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Getpedidos</Title>
+					<Title lang="es">Getpedidos</Title>
+					<Title lang="en">Getpedidos</Title>
+					<Function>TKGETPED</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Getautorizacao</Title>
+					<Title lang="es">Getautorizacao</Title>
+					<Title lang="en">Getautorizacao</Title>
+					<Function>AWS012</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Getproducao</Title>
+					<Title lang="es">Getproducao</Title>
+					<Title lang="en">Getproducao</Title>
+					<Function>AWS013</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+			</Menu>
+			<Menu Status="Enable">
+				<Title lang="pt">Cadastros</Title>
+				<Title lang="es">Cadastros</Title>
+				<Title lang="en">Cadastros</Title>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Log</Title>
+					<Title lang="es">Log</Title>
+					<Title lang="en">Log</Title>
+					<Function>AWS002</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Amar. Produtos X Filiais</Title>
+					<Title lang="es">Amar. Produtos X Filiais</Title>
+					<Title lang="en">Amar. Produtos X Filiais</Title>
+					<Function>AWS001</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Ativação de Produtos</Title>
+					<Title lang="es">Ativação de Produtos</Title>
+					<Title lang="en">Ativação de Produtos</Title>
+					<Function>AWS003</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Produtos X Impostos</Title>
+					<Title lang="es">Produtos X Impostos</Title>
+					<Title lang="en">Produtos X Impostos</Title>
+					<Function>AWS004</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Clientes X Filiais</Title>
+					<Title lang="es">Clientes X Filiais</Title>
+					<Title lang="en">Clientes X Filiais</Title>
+					<Function>AWS005</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Estrutura de Produtos</Title>
+					<Title lang="es">Estrutura de Produtos</Title>
+					<Title lang="en">Estrutura de Produtos</Title>
+					<Function>AWS006</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Cond. Pagamento</Title>
+					<Title lang="es">Cond. Pagamento</Title>
+					<Title lang="en">Cond. Pagamento</Title>
+					<Function>AWS008</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Vendas</Title>
+					<Title lang="es">Vendas</Title>
+					<Title lang="en">Vendas</Title>
+					<Function>AWS011</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Producao</Title>
+					<Title lang="es">Producao</Title>
+					<Title lang="en">Producao</Title>
+					<Function>AWS014</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+			</Menu>
+			<Menu Status="Enable">
+				<Title lang="pt">Ctb</Title>
+				<Title lang="es">Ctb</Title>
+				<Title lang="en">Ctb</Title>
+				<MenuItem Status="Enable">
+					<Title lang="pt">Filial X Cc</Title>
+					<Title lang="es">Filial X Cc</Title>
+					<Title lang="en">Filial X Cc</Title>
+					<Function>ACTB001</Function>
+					<Type>03</Type>
+					<Access>xxxxxxxxxx</Access>
+					<Module>05</Module>
+					<Owner>0</Owner>
+					<KeyWord>
+						<KeyWord lang="pt">                         </KeyWord>
+						<KeyWord lang="es">                         </KeyWord>
+						<KeyWord lang="en">                         </KeyWord>
+					</KeyWord>
+				</MenuItem>
+			</Menu>
+		</Menu>
+	</Menu>
+</ApMenu>

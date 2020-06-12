@@ -1,0 +1,383 @@
+#INCLUDE "rwmake.ch"
+#INCLUDE "PROTHEUS.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ FA050FIN º Autor ³ Andy               º Data ³  11/04/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Ponto de Entrada executado na rotina Inclusao Títulos de   º±±
+±±º          ³ Contas a Pagar FINA050, que verifica se o titulo sera      º±±
+±±º          ³ gravado somente se houver registros em SEV p/ E2_MUTNATU==1º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ CIEE                                                       º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³FA050FIN  ºAutor  ³Nelson Breanza      º Data ³  06/09/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Gera a tabela SV3, a partir da inclusao do contas a pagar  º±±
+±±º          ³ com rateio, iguala a natureza com o plano de contas.       º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ PROTHEUS 8.11 - Exclusivo CIEE                             º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function FA050FIN()
+
+LOCAL _aStru 	:= {}
+Local _cAlias 	:= GetArea()
+Local cNat888 	:= SuperGetMV("CI_NAT888",.T.,"88888888",), cNat999 := SuperGetMV("CI_NAT999",.T.,"99999999",)
+		
+If SE2->E2_RATEIO == "S"
+	
+	dbSelectArea("CV4")
+	dbSetOrder(1)
+	If CV4->(MsSeek(Alltrim(SE2->E2_ARQRAT)))
+		AADD(_aStru,{"xFILIAL",  "C",  2,0})
+		AADD(_aStru,{"xPREFIXO", "C",  3,0})
+		AADD(_aStru,{"xTITULO",  "C",  9,0})
+		AADD(_aStru,{"xPARCELA", "C",  1,0})
+		AADD(_aStru,{"xFORNEC",  "C",  6,0})
+		AADD(_aStru,{"xLOJA",    "C",  2,0})
+		AADD(_aStru,{"xTIPO",    "C",  3,0})
+		AADD(_aStru,{"xVALOR",   "N", 17,2})
+		AADD(_aStru,{"xNATUREZ", "C", 10,0})
+		AADD(_aStru,{"xRECPAG",  "C",  1,0})
+		AADD(_aStru,{"xPERRAT",  "N",  11,7})
+		AADD(_aStru,{"xRATCC",   "C",  1,0})
+		AADD(_aStru,{"xIDENT",   "C",  1,0})
+		dArqTrb := CriaTrab(_aStru,.T.)
+		dbUseArea(.T.,,dArqTrb,"TRT",.T.)
+		IndRegua("TRT",dArqTrb,"xFILIAL+xNATUREZ",,,"Criando Arquivo...")
+		
+		/*alteracao Emerson*/
+		DbSelectArea("TMP1")
+		TMP1->(DbGotop())
+	
+		DbSelectArea("CTJ")
+		CTJ->(DbGotop())
+	
+		DbSelectArea("CV4")
+		CV4->(DbSetOrder(1))
+		
+		While ALLTRIM(CV4->CV4_FILIAL+DTOS(CV4_DTSEQ)+CV4_SEQUEN) == ALLTRIM(SE2->E2_ARQRAT)
+	
+			/*alteracao Emerson*/
+			RecLock("CV4",.F.)
+			CV4->CV4_ENCARG := TMP1->CTJ_ENCARG
+			MsUnLock()
+	
+			DBSELECTAREA("CT1")
+			CT1->(DBSETORDER(2))
+			CT1->(DBGOTOP())
+			IF CT1->(DBSEEK(xFILIAL("CT1")+ALLTRIM(CV4->CV4_ITEMD)))
+				DBSELECTAREA("TRT")
+				TRT->(DBSETORDER(1))
+				TRT->(DBGOTOP())
+				IF TRT->(DBSEEK(xFILIAL("SE2")+ALLTRIM(CT1->CT1_NATURE)))
+					RECLOCK("TRT",.F.)
+				ELSE
+					RECLOCK("TRT",.T.)
+				ENDIF
+				TRT->xFILIAL   := SE2->E2_FILIAL
+				TRT->xPREFIXO  := SE2->E2_PREFIXO
+				TRT->xTITULO   := SE2->E2_NUM
+				TRT->xPARCELA  := SE2->E2_PARCELA
+				TRT->xFORNEC   := SE2->E2_FORNECE
+				TRT->xLOJA     := SE2->E2_LOJA                                           
+				TRT->xTIPO     := SE2->E2_TIPO
+				TRT->xVALOR    := TRT->xVALOR+(CV4->CV4_VALOR-TMP1->CTJ_ENCARG)
+				TRT->xNATUREZ  := ALLTRIM(CT1->CT1_NATURE)
+				TRT->xRECPAG   := "P"
+				TRT->xPERRAT   := TRT->XPERRAT+((CV4->CV4_VALOR-TMP1->CTJ_ENCARG)/SE2->E2_VALOR)
+				TRT->xRATCC    := "2"
+				TRT->xIDENT    := "1"
+	        	MSUNLOCK()
+			ENDIF
+			CV4->(DBSKIP())
+			TMP1->(DBSKIP())
+		END
+		
+		DbSelectArea("TRT")
+		TRT->(DBGOTOP())
+
+		DO WHILE !TRT->(EOF())
+			dbselectarea("SEV")
+			DBSETORDER(1)
+			RECLOCK("SEV",.T.)
+			SEV->EV_FILIAL  := TRT->xFILIAL
+			SEV->EV_PREFIXO := TRT->xPREFIXO
+			SEV->EV_NUM     := TRT->xTITULO
+			SEV->EV_PARCELA := TRT->xPARCELA
+			SEV->EV_CLIFOR  := TRT->xFORNEC
+			SEV->EV_LOJA    := TRT->xLOJA
+			SEV->EV_TIPO    := TRT->xTIPO
+			SEV->EV_VALOR   := TRT->xVALOR
+			SEV->EV_NATUREZ := TRT->xNATUREZ
+			SEV->EV_RECPAG  := TRT->xRECPAG
+			SEV->EV_PERC    := TRT->xPERRAT
+			SEV->EV_RATEICC := TRT->xRATCC
+			SEV->EV_IDENT   := TRT->xIDENT
+			SEV->(MSUNLOCK())
+		    TRT->(DBSKIP())
+		ENDDO
+
+		DBSELECTAREA("TRT")
+	   	Dbgotop()
+		If ALLTRIM(TRT->xPREFIXO) == "FL"
+	   		DO WHILE !TRT->(EOF()) 
+	   			dbselectarea("PAB") 
+				DBSETORDER(1)
+				RECLOCK("PAB",.T.)
+				PAB->PAB_FILIAL  := TRT->xFILIAL
+				PAB->PAB_PREFIX  := TRT->xPREFIXO
+				PAB->PAB_NUM     := TRT->xTITULO
+				PAB->PAB_TIPO    := TRT->xTIPO
+				PAB->PAB_CLIFOR  := TRT->xFORNEC
+				PAB->PAB_LOJA    := TRT->xLOJA
+				PAB->PAB_VALOR   := TRT->xVALOR
+				PAB->PAB_NATURE  := TRT->xNATUREZ
+				PAB->PAB_RECPAG  := TRT->xRECPAG
+				PAB->PAB_PERC    := TRT->xPERRAT
+				PAB->(MSUNLOCK())
+			    TRT->(DBSKIP())
+			ENDDO
+		Endif
+
+		Reclock("SE2",.F.)
+		SE2->E2_MULNATU := "1" 	
+		SE2->(MsUnlock())
+	EndIf	
+Else
+
+	If ALLTRIM(SE2->E2_PREFIXO) == "FL"
+
+		DbSelectArea("PA9")
+		DbSetOrder(1)
+		If DbSeek(xFilial("PA9")+SE2->(E2_PREFIXO+E2_NUM+E2_TIPO+E2_FORNECE+E2_LOJA) )
+			DBSELECTAREA("CT1")
+			DBSETORDER(2)
+			DBGOTOP()
+			IF DBSEEK(xFilial("CT1")+PA9->PA9_CTADEB)
+				If !EMPTY(CT1->CT1_NATURE)
+					_cNatureza	:= CT1->CT1_NATURE
+				Else
+					_cNatureza	:= cNat999				//"9.99.99"
+				ENdif	
+			ENDIF
+	
+			DbSelectArea("PAB") 
+			RECLOCK("PAB",.T.)
+			PAB->PAB_FILIAL  := xFilial("PAB")
+			PAB->PAB_PREFIX  := SE2->E2_PREFIXO
+			PAB->PAB_NUM     := SE2->E2_NUM
+			PAB->PAB_TIPO    := SE2->E2_TIPO
+			PAB->PAB_CLIFOR  := SE2->E2_FORNECE
+			PAB->PAB_LOJA    := SE2->E2_LOJA
+			PAB->PAB_VALOR   := PA9->PA9_VALOR
+			PAB->PAB_NATURE  := _cNatureza
+			PAB->PAB_RECPAG  := "P"
+			PAB->PAB_PERC    := 1
+			PAB->(MSUNLOCK())
+		EndIf
+
+		dbselectarea("PAB") 
+		DBSETORDER(1)
+		If DbSeek(xFilial("PAB")+SE2->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA))
+			dbselectarea("SEV")
+			DBSETORDER(1)
+			RECLOCK("SEV",.T.)
+			SEV->EV_FILIAL  := PAB->PAB_FILIAL
+			SEV->EV_PREFIXO := PAB->PAB_PREFIX
+			SEV->EV_NUM     := PAB->PAB_NUM
+			SEV->EV_PARCELA := ""
+			SEV->EV_CLIFOR  := PAB->PAB_CLIFOR
+			SEV->EV_LOJA    := PAB->PAB_LOJA
+			SEV->EV_TIPO    := PAB->PAB_TIPO
+			SEV->EV_VALOR   := PAB->PAB_VALOR
+			SEV->EV_NATUREZ := PAB->PAB_NATURE
+			SEV->EV_RECPAG  := PAB->PAB_RECPAG
+			SEV->EV_PERC    := PAB->PAB_PERC
+			SEV->EV_RATEICC := "2"
+			SEV->EV_IDENT   := "1"
+			SEV->(MSUNLOCK())
+		Endif
+
+		Reclock("SE2",.F.)
+		SE2->E2_MULNATU := "1" 
+		SE2->E2_NATUREZ	:= cNat888		//"8.88.88"
+		SE2->(MsUnlock())
+
+	EndIf
+ENDIF
+
+If Select("TRT") > 0
+	TRT->(DbCloseArea())
+EndIf
+
+// Incluido em 01/10/2013 - Chama alteração das datas de Contabilização
+MsAguarde({|lEnd| U_AltChavCT2()}, "Alterando as Datas de Contabilização...", "Aguarde", .F.)
+
+RestArea(_cAlias)
+
+RETURN
+
+/* INCLUIDO EM 01/10/2013 - AJUSTE CONTABILIZAÇÃO DE TÍTULOS COM DESDOBRAMENTO	- INICIO
+//================================================================================================================================================
+// Esta sequencia foi customizada seguindo a premissa de que toda contabilização por Desdobramento tem sua data regida pelo regime de competência.
+// O registro contábil terá sua data alterada segundo esta premissa, utilizando a diferença entre a data de vencimento e a de emissão da primeira
+// parcela, diferença esta que será aplicada nas outras parcelas, subtraindo a data de vencimento por esta diferença
+// então temos: dt.contabilização = Data Valida ( dt.vencto da parcela - ( dt.vencto 1a.pc - dt.emissao 1a.pc) )
+// exemplo: dt.vencto 1a.pc = 01/10/2013 # dt.emissão 1a.pc = 25/09/2013 # dt.vencto parcela = 01/11/2013
+//          portanto data de contabilização = 25/10/2013
+// Este procedimento teve de ser adotado porque não há como identificar a condição de pagamento que foi utilizada no Desdobramento
+//================================================================================================================================================ */
+User Function AltChavCT2()
+
+Local _dDtMOvto := SE2->E2_EMISSAO, _cCT2Key := "", cQuery := ""
+Local _cDocto 	:= "", _cDocAnt := "", _nCT2Rec := 0
+Local aAreaCT2 	:= {}
+Local aAreaSE2 	:= {}
+Local _cCT2Chave:= ""
+Local _lFirst	:= .T.
+Local _nDifDias := 0
+Local _aChavCT2 := {}
+Local _cMsg		:= ""
+
+If SE2->E2_DESDOBR$"1#S"
+
+	aAreaCT2 := CT2->(GetArea())
+	aAreaSE2 := SE2->(GetArea())
+	
+	_cCT2Chave := CT2->(CT2_FILIAL+DtoS(CT2_DATA)+CT2_LOTE+CT2_SBLOTE+CT2_DOC)
+	_cCT2Key := ""
+	
+	dbSelectArea("CT2")
+	CT2->(dbSetOrder(1))
+	If CT2->(MsSeek(_cCT2Chave))
+	
+		_dDtMOvto := CT2->CT2_DATA
+		_lFirst	  := .T.
+		_nDifDias := 0
+		
+		While CT2->(!Eof()) .And. CT2->(CT2_FILIAL+DtoS(CT2_DATA)+CT2_LOTE+CT2_SBLOTE+CT2_DOC)==_cCT2Chave
+	
+			If CT2->CT2_DC<>"4"
+	
+				If _cCT2Key != CT2->CT2_KEY
+
+					_cCT2Key := CT2->CT2_KEY
+
+					cQuery := "SELECT E2_VENCTO, E2_EMISSAO "
+					cQuery +=   "FROM "+RetSqlName("SE2")+" "
+					cQuery +=  "WHERE D_E_L_E_T_='' "
+					cQuery +=    "AND E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA = '"+_cCT2Key+"' "
+					cQuery := ChangeQuery(cQuery)
+
+					If Select("TRB")>0
+						TRB->(dbCloseArea())
+					EndIf
+
+					dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),'TRB',.T.,.T.)
+
+					DbSelectarea("TRB")
+					TRB->(dbGoTop())
+					If !TRB->(Eof().And.Bof())
+
+						// se for primeira parcela calcula diferença entre Dt.Vencto e Dt.Emissão para calcular a data de contabilização
+						If _lFirst
+
+							_nDifDias := StoD(TRB->E2_VENCTO)-StoD(TRB->E2_EMISSAO)
+							_lFirst   := .F.
+							aAdd( _aChavCT2, CT2->(CT2_FILIAL+"     |"+DtoC(CT2_DATA)+" |"+CT2_LOTE+" |"+CT2_SBLOTE+"      |"+CT2_DOC) )
+							_cDocAnt := CT2->(CT2_FILIAL+DtoS(CT2_DATA)+CT2_LOTE+CT2_SBLOTE+CT2_DOC)
+
+						Else
+
+							_dDtMovto := DataValida( StoD(TRB->E2_VENCTO) - _nDifDias , .F. )		// Calcula data de contabilização
+						
+							cQuery := "SELECT MAX(CT2_DOC) DOCTO "
+							cQuery +=   "FROM "+RetSqlName("CT2")+" "
+							cQuery +=  "WHERE D_E_L_E_T_='' "
+							cQuery +=    "AND CT2_FILIAL+CT2_DATA+CT2_LOTE+CT2_SBLOTE='"+CT2->(CT2_FILIAL+DtoS(_dDtMovto)+CT2_LOTE+CT2_SBLOTE)+"' "
+							cQuery := ChangeQuery(cQuery)
+							If Select("TRB")>0
+								TRB->(dbCloseArea())
+							EndIf
+							dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),'TRB',.T.,.T.)
+							
+							dbSelectArea("TRB")
+							TRB->(dbGoTop())
+                    	
+							_cDocto := If(TRB->(Eof()),"000001",Soma1(TRB->DOCTO))
+
+							TRB->(dbCloseArea())
+
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+	
+			If CT2->CT2_DATA != _dDtMovto
+
+				CT2->(dbSkip())
+
+				_nCT2Rec := Iif(CT2->(!Eof()),CT2->(Recno()),0)
+
+				CT2->(dbSkip(-1))
+
+				RecLock("CT2",.F.)
+				CT2->CT2_DATA	:= _dDtMovto
+				CT2->CT2_DOC	:= _cDocto
+				CT2->(MsUnLock())
+
+				If CT2->(CT2_FILIAL+DtoS(CT2_DATA)+CT2_LOTE+CT2_SBLOTE+CT2_DOC) <>_cDocAnt
+					aAdd( _aChavCT2, CT2->(CT2_FILIAL+"     |"+DtoC(CT2_DATA)+" |"+CT2_LOTE+" |"+CT2_SBLOTE+"      |"+CT2_DOC) )
+					//aAdd( _aChavCT2, CT2->("Filial:"+CT2_FILIAL+" | Data:"+DtoC(CT2_DATA)+" | Lote:"+CT2_LOTE+" | Sub-Lote:"+CT2_SBLOTE+" | Documento:"+CT2_DOC) )
+					_cDocAnt := CT2->(CT2_FILIAL+DtoS(CT2_DATA)+CT2_LOTE+CT2_SBLOTE+CT2_DOC)
+				EndIf
+
+				If _nCT2Rec>0
+					CT2->(dbGoTo(_nCT2Rec))
+				Else
+					CT2->(dbGoBottom())
+				EndIf
+
+			Else
+				CT2->(dbSkip())
+			EndIf
+	
+		EndDo
+					
+	EndIf
+
+	RestArea(aAreaCT2)
+	RestArea(aAreaSE2)
+
+EndIf
+
+If Len(_aChavCt2)>0
+
+	_cMsg := "Os Lotes Contábeis gerados são: " + CRLF +;
+	         "(caso necessite, copie e cole a relação abaixo)"    + CRLF +;
+	         "FILIAL |DATA     |LOTE   |SUB-LOTE |DOCUMENTO"            + CRLF
+
+	For _nI:=1 to Len(_aChavCT2)
+		_cMsg += _aChavCT2[_nI] + CRLF
+	Next _nI
+
+	Aviso( "RELAÇÃO DE LOTES GERADOS" , _cMsg , {"OK"} , 3 )
+
+EndIf
+	
+// INCLUIDO EM 01/10/2013 - AJUSTE CONTABILIZAÇÃO DE TÍTULOS COM DESDOBRAMENTO	- FINAL
+
+RETURN

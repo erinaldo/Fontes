@@ -1,0 +1,70 @@
+<ApMenu>
+	<DocumentProperties>
+		<Module></Module>
+		<Version>10.1</Version>
+	</DocumentProperties>
+	<Menu Status="Enable">
+		<Title lang="pt">&Atualizações</Title>
+		<Title lang="es">&Actualizaciones</Title>
+		<Title lang="en">&Updates</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Consultas</Title>
+		<Title lang="es">&Consultas</Title>
+		<Title lang="en">&Queries</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Relatorios</Title>
+		<Title lang="es">&Informes</Title>
+		<Title lang="en">&Reports</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Miscelanea</Title>
+		<Title lang="es">&Miscelanea</Title>
+		<Title lang="en">&Miscellaneous</Title>
+	</Menu>
+	<Menu Status="Enable">
+		<Title lang="pt">&Especificos</Title>
+		<Title lang="es">&Especificos</Title>
+		<Title lang="en">&Especificos</Title>
+		<Menu Status="Enable">
+			<Title lang="pt">Ws</Title>
+			<Title lang="es">Ws</Title>
+			<Title lang="en">Ws</Title>
+			<MenuItem Status="Enable">
+				<Title lang="pt">Inventário</Title>
+				<Title lang="es">Inventario</Title>
+				<Title lang="en">Inventory</Title>
+				<Function>MATA270</Function>
+				<Type>01</Type>
+				<Tables>SB1</Tables>
+				<Tables>SB2</Tables>
+				<Tables>SB7</Tables>
+				<Tables>SB9</Tables>
+				<Access>xxxxxxxxxx</Access>
+				<Module>04</Module>
+				<Owner>4</Owner>
+				<KeyWord>
+					<KeyWord lang="pt">Contagem                 </KeyWord>
+					<KeyWord lang="es">Recuento                 </KeyWord>
+					<KeyWord lang="en">Counting                 </KeyWord>
+				</KeyWord>
+			</MenuItem>
+			<MenuItem Status="Enable">
+				<Title lang="pt">Mov. Interna</Title>
+				<Title lang="es">Mov. Interna</Title>
+				<Title lang="en">Mov. Interna</Title>
+				<Function>MATA241</Function>
+				<Type>01</Type>
+				<Access>xxxxxxxxxx</Access>
+				<Module>04</Module>
+				<Owner>0</Owner>
+				<KeyWord>
+					<KeyWord lang="pt">                         </KeyWord>
+					<KeyWord lang="es">                         </KeyWord>
+					<KeyWord lang="en">                         </KeyWord>
+				</KeyWord>
+			</MenuItem>
+		</Menu>
+	</Menu>
+</ApMenu>

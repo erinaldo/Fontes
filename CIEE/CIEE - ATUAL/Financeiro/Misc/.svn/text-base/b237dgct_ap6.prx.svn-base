@@ -1,0 +1,70 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+User Function b237dgct()        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_RETDIG,_DIG1,_DIG2,_DIG3,_DIG4,_DIG5")
+SetPrvt("_DIG6,_DIG7,_MULT,_RESUL,_RESTO,_DIGITO")
+
+_aArea := GetArea()
+_aAreaE2 := SE2->(GetArea())
+//_aAreaEA := SEA->(GetArea())
+
+////  PROGRAMA PARA CALCULO DO DIGITO DE CONTROLE DA CONTA FORNECEDOR BRADESCO
+////  PAGFOR POSICAO ( 118 - 119 )
+
+//_cCnt := SubStr(_cConta, 1, len(_cConta) - 1)
+//_cDg  := SubStr(_cConta, len(_cConta), 1)
+_cConta := AllTrim(SE2->E2_CTAFOR)
+_cCnt := IIf (SE2->E2_BANCO == "399", SubStr(_cConta, 1, len(_cConta) - 2), SubStr(_cConta, 1, len(_cConta) - 1))
+_cDg  := IIf (SE2->E2_BANCO == "399", SubStr(_cConta, len(_cConta) -1), SubStr(_cConta, len(_cConta), 1))
+_RETDIG := "  "
+
+IF SE2->E2_MODELO == "31"
+	IF SUBSTR(SE2->E2_CODBAR,1,3) == "237"
+		_RETDIG := " "
+		_DIG1   := SUBSTR(SE2->E2_CODBAR,37,1)
+		_DIG2   := SUBSTR(SE2->E2_CODBAR,38,1)
+		_DIG3   := SUBSTR(SE2->E2_CODBAR,39,1)
+		_DIG4   := SUBSTR(SE2->E2_CODBAR,40,1)
+		_DIG5   := SUBSTR(SE2->E2_CODBAR,41,1)
+		_DIG6   := SUBSTR(SE2->E2_CODBAR,42,1)
+		_DIG7   := SUBSTR(SE2->E2_CODBAR,43,1)
+		_MULT   := (VAL(_DIG1)*2) +  (VAL(_DIG2)*7) +  (VAL(_DIG3)*6) +   (VAL(_DIG4)*5) +  (VAL(_DIG5)*4) +  (VAL(_DIG6)*3)  + (VAL(_DIG7)*2)
+		_RESUL  := INT(_MULT /11 )
+		_RESTO  := INT(_MULT % 11)
+		_DIGITO := STRZERO((11 - _RESTO),1,0)
+		_RETDIG := IF( _resto == 0,"0",IF(_resto == 1,"P",_DIGITO))
+	ELSEIF SUBSTR(SE2->E2_LD,1,3) == "237"
+		_RETDIG := " "
+		_DIG1   := SUBSTR(SE2->E2_LD,24,1)
+		_DIG2   := SUBSTR(SE2->E2_LD,25,1)
+		_DIG3   := SUBSTR(SE2->E2_LD,26,1)
+		_DIG4   := SUBSTR(SE2->E2_LD,27,1)
+		_DIG5   := SUBSTR(SE2->E2_LD,28,1)
+		_DIG6   := SUBSTR(SE2->E2_LD,29,1)
+		_DIG7   := SUBSTR(SE2->E2_LD,30,1)
+		_MULT   := (VAL(_DIG1)*2) +  (VAL(_DIG2)*7) +  (VAL(_DIG3)*6) +   (VAL(_DIG4)*5) +  (VAL(_DIG5)*4) +  (VAL(_DIG6)*3)  + (VAL(_DIG7)*2)
+		_RESUL  := INT(_MULT /11 )
+		_RESTO  := INT(_MULT % 11)
+		_DIGITO := STRZERO((11 - _RESTO),1,0)
+		_RETDIG := IF( _resto == 0,"0",IF(_resto == 1,"P",_DIGITO))
+	ELSEIF !EMPTY(_cDg) .and. SUBSTR(SE2->E2_CODBAR,1,3) == "237"
+		_RETDIG := STRZERO(VAL(_cDg),1,0)
+	ENDIF
+ELSE
+//	_RETDIG := STRZERO(VAL(_cDg),1,0)
+	_RETDIG := IIf(SE2->E2_BANCO == '399', STRZERO(VAL(_cDg),2,0), STRZERO(VAL(_cDg),1,0))
+ENDIF
+
+//SEA->(RestArea(_aAreaEA))
+SE2->(RestArea(_aAreaE2))
+RestArea(_aArea)
+
+Return(_RETDIG)

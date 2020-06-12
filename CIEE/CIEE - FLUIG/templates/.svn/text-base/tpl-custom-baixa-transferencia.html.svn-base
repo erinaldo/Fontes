@@ -1,0 +1,214 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+		<title>Ativo</title>
+		<style>
+			BODY {
+			FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10pt
+			}
+			DIV {
+			FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10pt
+			}
+			TABLE {
+			FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10pt
+			}
+			TD {
+			FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10pt
+			}
+			FORM {
+			MARGIN: 0px
+			}
+			A:link {
+			COLOR: #2d2dcb
+			}
+			A:visited {
+			COLOR: #2d2dcb
+			}
+			A:active {
+			COLOR: #2d2dcb
+			}
+			A:hover {
+			COLOR: #2d2dcb
+			}
+			INPUT {
+			FONT-FAMILY: Courier; FONT-SIZE: 12px
+			}
+			SELECT {
+			FONT-FAMILY: Verdana,Arial,Helvetica,sans-serif; FONT-SIZE: 12px
+			}
+			.Yellow {
+			BACKGROUND-COLOR: #e8e028
+			}	
+			.NormalYellow {
+			COLOR: #e8e028; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 13px
+			}
+			.TableRowYellow {
+			BACKGROUND-COLOR: #FFFFCC; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; VERTICAL-ALIGN: top
+			}
+			.NormalRedBold {
+			COLOR: #ff0000; FONT-FAMILY: Verdana,Arial,Helvetica,sans-serif; FONT-SIZE: 13px; FONT-WEIGHT: bold
+			}
+			.NormalCommentField {
+			FONT-FAMILY: Courier; FONT-SIZE: 12px
+			}
+			.NormalBold {
+			FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10pt; FONT-WEIGHT: bold
+			}
+			.Mini {
+			FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px
+			}
+			.MiniError {
+			COLOR: #ff3333; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px
+			}
+			.MidleBold {
+			FONT-FAMILY: Verdana,Arial,Helvetica,sans-serif; FONT-SIZE: 14px; FONT-WEIGHT: bold
+			}
+			.Small {
+			FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px
+			}
+			.SmallRight {
+			FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-ALIGN: right
+			}
+			.SmallBold {
+			BACKGROUND-COLOR:#FFFFFF;COLOR:#000000;FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; FONT-WEIGHT: bold
+			}
+			.SmallBoldHeight {
+			FONT-FAMILY: Verdana,Arial,Helvetica,sans-serif; FONT-SIZE: 12px; FONT-WEIGHT: bold; LINE-HEIGHT: 17px
+			}
+			.TitleSmall {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 18px; FONT-WEIGHT: normal; LINE-HEIGHT: 20px; TEXT-ALIGN: left
+			}
+			.TitleSmallRight {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 18px; FONT-WEIGHT: normal; LINE-HEIGHT: 20px; TEXT-ALIGN: right
+			}
+			.TitleSmallCenter {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 18px; FONT-WEIGHT: normal; LINE-HEIGHT: 20px; TEXT-ALIGN: center
+			}
+			.TitleSmallSalmon {
+			COLOR: #ffbfbf; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 18px; FONT-WEIGHT: normal; LINE-HEIGHT: 20px
+			}
+			.TitleMedium {
+			COLOR: #979797; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 22px; FONT-WEIGHT: normal; LINE-HEIGHT: 24px; TEXT-ALIGN: left
+			}
+			.TitleMediumBold {
+			COLOR: #979797; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 22px; FONT-WEIGHT: bold; LINE-HEIGHT: 24px; TEXT-ALIGN: left
+			}
+			.TitleMediumRight {
+			COLOR: #979797; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 22px; FONT-WEIGHT: normal; LINE-HEIGHT: 24px; TEXT-ALIGN: right
+			}
+			.TitleMediumCenter {
+			COLOR: #979797; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 22px; FONT-WEIGHT: normal; LINE-HEIGHT: 24px; TEXT-ALIGN: center
+			}
+			.TitleBig {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 24px; FONT-WEIGHT: normal; LINE-HEIGHT: 26px; TEXT-ALIGN: left
+			}
+			.TitleBigRight {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 24px; FONT-WEIGHT: normal; LINE-HEIGHT: 26px; TEXT-ALIGN: right
+			}
+			.TitleBigCenter {
+			BACKGROUND-COLOR: #f7f7f7;COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 24px; FONT-WEIGHT: normal; LINE-HEIGHT: 26px; TEXT-ALIGN: center
+			}
+			.TitlePopupWhite {
+			COLOR: #ffffff; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 16px; FONT-WEIGHT: normal; LINE-HEIGHT: 18px; TEXT-ALIGN: right
+			}
+			.TableColumnTitle {
+			BACKGROUND-COLOR: #FFFF99; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 14px; FONT-WEIGHT: bold; VERTICAL-ALIGN: top
+			}
+			.TableColumnTitleCenter {
+			BACKGROUND-COLOR: #ffddcb; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; FONT-WEIGHT: bold; TEXT-ALIGN: center; VERTICAL-ALIGN: top
+			}
+			.TableRowGrey {
+			BACKGROUND-COLOR: #f7f7f7; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; VERTICAL-ALIGN: top
+			}
+			.TableRowGreyCenter {
+			BACKGROUND-COLOR: #f7f7f7; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-ALIGN: center; VERTICAL-ALIGN: top
+			}
+			.TableRowGreyForm {
+			BACKGROUND-COLOR: #f7f7f7; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; HEIGHT: 22px
+			}
+			.TableRowErrorForm {
+			BACKGROUND-COLOR: #ff3333; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; HEIGHT: 22px
+			}
+			.TableRowGreyTitleMedium {
+			BACKGROUND-COLOR: #f7f7f7; COLOR: #979797; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 19px; VERTICAL-ALIGN: top
+			}
+			.TableRowGreyDark {
+			BACKGROUND-COLOR: #ececec; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; VERTICAL-ALIGN: top
+			}
+			.TableRowGreyDarkMini {
+			BACKGROUND-COLOR: #ececec; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px; VERTICAL-ALIGN: top
+			}
+			.TableRowGreyMini {
+			BACKGROUND-COLOR: #f7f7f7; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px; VERTICAL-ALIGN: top
+			}
+			.TableRowSalmon {
+			BACKGROUND-COLOR: #fff2eb; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; VERTICAL-ALIGN: top
+			}
+			.TableRowSalmonCenter {
+			BACKGROUND-COLOR: #fff2eb; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-ALIGN: center; VERTICAL-ALIGN: top
+			}
+			.TableRowSalmonForm {
+			BACKGROUND-COLOR: #fff2eb; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; HEIGHT: 22px
+			}
+			.TableRowSalmonFormMini {
+			BACKGROUND-COLOR: #fff2eb; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px
+			}
+			.TableRowWhite {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; VERTICAL-ALIGN: top
+			}
+			.TableRowWhiteCenter {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; TEXT-ALIGN: center; VERTICAL-ALIGN: top
+			}
+			.TableRowWhiteForm {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; HEIGHT: 22px
+			}
+			.TableRowWhiteMini {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px; VERTICAL-ALIGN: top
+			}
+			.TableRowWhiteMini2 {
+			COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px; VERTICAL-ALIGN: top
+			}
+			.TableRowBlueTitleMedium {
+			BACKGROUND-COLOR: #000000; COLOR: #FFCC00; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 19px; VERTICAL-ALIGN: top
+			}
+			.TableRowBlueDark {
+			BACKGROUND-COLOR: #000000; COLOR: #FFCC00; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 14px; VERTICAL-ALIGN: top
+			}
+			.TableRowBlueDarkMini {
+			BACKGROUND-COLOR: #4ba2d7; COLOR: #FFCC00; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px; VERTICAL-ALIGN: top;FONT-WEIGHT: bold
+			}
+			.TableRowBlueMini {
+			BACKGROUND-COLOR: #000000; COLOR: #FFCC00; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 10px; VERTICAL-ALIGN: top
+			}
+			.TableRowBlue {
+			BACKGROUND-COLOR: #000000; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 12px; VERTICAL-ALIGN: top
+			}
+			.style14 {font-size: 12px; font-weight: bold; }
+		</style>
+	</head>
+
+
+	<body>
+		<FORM name="APROV_SC" id="APROV_SC" action="WFHTTPRET.APL" method="post">
+		<table width="100%" height="23" border="0" vspace="0" hspace="0" cellspacing="0" cellpadding="0">
+		<tr> 
+		<td bgcolor="#FFFFFF" rowspan="2" style="font-size: 8pt"> 
+		<p align="left">
+		<img src="http://www.ciee.org.br/portal/media/img50anos/logo_50anos_png.png" width="230" height="80" ></p>
+		</td>
+		<td width="30%" bgcolor="#014282" style="font-size: 8pt" height="20"> 
+		<p align="right">
+		<font face="Arial" size="4" color="#FFFFFF"><span style="background-color: #014282">Workflow Protheus</span></font></p>
+		</td>
+		</tr>
+		<tr> 
+		<td width="100%" bgcolor="#FFFFFF" style="font-size: 8pt">&nbsp;</td>
+		</tr>
+		</table>
+		<br>
+		<br>
+		
+		${WDK_Tabela_Ativos}
+		
+	</body>
+</html>

@@ -1,0 +1,4612 @@
+#Include "PROTHEUS.CH"
+#Include "FONT.CH"
+#Include "COLORS.CH"
+#Include "FINA565.CH"
+#INCLUDE "FILEIO.CH"
+
+Static lF565TPliq 
+Static dLastPcc  := CTOD("22/06/2015")
+Static lIsIssBx := FindFunction("IsIssBx")
+Static _oFINA5651
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪目北
+北矲un噭o    ?FINA565  ?Autor ?Mauricio Pequim Jr    ?Data ?21.01.98  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪拇北
+北矰escricao ?Programa de Liquidacao                                      潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁北
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌
+/*/
+Function FINA565(nPosArotina,aRotAuto)
+
+Local lPanelFin := IsPanelFin()
+Local lFa565Rot := Existblock("FA565ROT")
+Local aPergs	 := {}
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Alguns pontos de entrada foram incluidos para necessidades   ?
+//?especificas na empresa 4K, pois devido ao alto volume de che-?
+//?ques a liquidar existe a necessidade de alguns controles para?
+//?lelos em relacao a manipulacao dos registros e log de usuari-?
+//?os.                                               			 ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+Private aPos   := {  15,  1, 70, 315 }
+Private cCadastro := STR0001 //"Liquida噭o"
+Private cLote
+Private aRotina := MenuDef()
+Private aDiario := {}
+Private cCodDiario:= ""
+Private lF565Auto := ( aRotAuto <> NIL ) 
+
+Default nPosArotina := 0  
+Default lF565TPliq := ExistBlock("F565TPliq")
+
+Fa565MotBx("LIQ","LIQUIDACAO","ANSS")
+
+SetKey (VK_F12,{|a,b| AcessaPerg("FIN565",.T.)})
+Pergunte("FIN565",.F.)
+
+If nPosArotina > 0 // Sera executada uma opcao diretamento de aRotina, sem passar pela mBrowse
+	dbSelectArea("SE2")
+	bBlock := &( "{ |a,b,c,d,e| " + aRotina[ nPosArotina,2 ] + "(a,b,c,d,e) }" )
+	Eval( bBlock, Alias(), (Alias())->(Recno()),nPosArotina)
+Else
+mBrowse( 6, 1,22,75,"SE2",,"!E2_SALDO",,,,FA040Legenda("SE2"))
+
+Endif
+If SuperGetMv("MV_CMC7FIN") == "S"
+	If nHdlCmC7 >= 0
+		CMC7Fec(nHdlCmC7,SuperGetMv("MV_CMC7PRT"))
+	Endif
+Endif
+Return(.T.)
+
+/*/
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噮o    矨565Liquid?Autor ?Mauricio Pequim Jr.   ?Data ?1.01.98  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噮o ?Programa de Inclusao de Liquida噭o                         潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso      ?FINA565                                                    潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function A565Liquid( cAlias, nReg, nOpcx )
+Local lPanelFin := IsPanelFin()
+Local lRetorno 	:= .T.
+Local lContinua	:= .T.
+Local nOpca    	:= 0
+Local nCntFor 	:= 0
+Local nCond		:= 0
+Local aCRA	   	:= {STR0004,STR0005,STR0006}  //"Confirma"###"Redigita"###"Abandona"
+Local aParcelas := {}
+Local cChave
+Local cMoeda
+Local cIData	:= "  "
+Local aTam		:= TamSx3("E2_NUM")
+Local oDlg
+Local oDlg2
+Local oFnt
+Local oNrDoc
+Local oValorMax
+Local oValor	 := 0
+Local oQtdTit 	 := 0
+Local cVar
+Local cMoeda565
+Local aMoedas	 := {}
+Local TRB		 := ""
+Local cVar1 	:= cIntervalo := STR0063		//"01 EMISSAO   "
+Local aIntervalo := { STR0063, STR0064 }		//"01 EMISSAO   "###"02 VENCIMENTO"
+Local aNrDoc	 := {}
+Local oMark
+Local nTamTit	 := TamSX3("E2_PREFIXO")[1]+TamSX3("E2_NUM")[1]+TamSX3("E2_PARCELA")[1]+TamSX3("E2_TIPO")[1]
+Local nTamChave	 := TamSX3("E2_FILIAL")[1]+TamSX3("E2_FORNECE")[1]+TamSX3("E2_LOJA")[1]+nTamTit
+Local cSimb		 := ""
+
+Local lA565Col	 := ExistBlock("A565COL") // Permite a alteracao de aCols, aHeader
+Local oValorDe
+Local oValorAte
+Local aTamBco 	 := TamSx3("E2_BCOCHQ")
+Local aTamAge 	 := TamSx3("E2_AGECHQ")
+Local aTamCta 	 := TamSx3("E2_CTACHQ")
+LOCAL nHdlLock 	 := -1
+Local lF565NUM 	 := ExistBlock("F565NUM")
+Local cFilSX6
+Local aAltera 	 := {}
+Local aAreaSe2 	 := SE2->(GetArea())
+Local cX
+Local lF565Can 	 := Existblock("F565CAN")
+Local lF565Con 	 := Existblock("F565CON")
+Local cForn565
+Local E2_TIPO
+Local oCbx
+Local oCbx2
+Local aOutrMoed  := {STR0135,STR0136} //"1 - Converte"###"2 - Nao Considera"
+Local cOutrMoed  := STR0136 //"2 - Nao Considera"
+Local nX 		 := 0
+Local oTimer
+Local nTimeOut   := SuperGetMv("MV_FATOUT",,900)*1000 // Estabelece 15 minutos para que o usuarios selecione
+Local aBut565 := {}
+Local cDsFornece := ""
+Local lPrjCni   :=  ValidaCNI()
+Local nLinIni := 0
+Local nColIni := 0
+Local nLinFin := 0
+Local nColFin := 0
+
+
+Private aCampos 	 := {	{"MARCA"   	,"C", 2,0},;
+							{"TITULO"	,"C",nTamTit+3,0},;
+							{"MOEDAO"	,"N", 2,0},;			//Moeda do Titulo
+							{"CTMOED"	,"N",10,4},;			//Moeda do Titulo
+							{"VALORI"	,"N",15,2},;			//Valor original do titulo 		
+							{"ABATIM"	,"N",15,2},;
+							{"BAIXADO"	,"N",15,2},;
+							{"VALCVT"	,"N",15,2},;			//Valor convertido para a moeda escolhida
+							{"JUROS"		,"N",15,2},;
+							{"VLMULTA"	,"N",15,2},;
+							{"DESCON"	,"N",15,2},;
+							{"VALLIQ"	,"N",15,2},;
+							{"EMISSAO"	,"D",08,0},;
+							{"VENCTO"	,"D",08,0},;
+							{"ACRESC"	,"N",15,2},;
+							{"DECRESC"	,"N",15,2},;
+							{"CHAVE"		,"C",nTamChave,0},;
+							{"CHAVE2"	,"C",nTamChave,0}}
+	
+Private aCpoBro	 := {	{ "MARCA"  ,, " ","  "},;
+							{	"TITULO" ,, STR0079,"@X"},;  //"Nero Tulo"
+							{	"MOEDAO"	,, STR0134,"@E 99"},; //"Moeda"
+							{  "CTMOED"	,, STR0139,"@E 9,999.9999"},;	 //"Cotacao"
+							{	"VALORI"	,, STR0080,"@E 9,999,999,999.99"},;  //"Vlr.Original"
+							{	"ABATIM"	,, STR0082,"@E 9,999,999,999.99"},;  //"Vlr.Abatim."
+							{	"BAIXADO",, STR0106,"@E 9,999,999,999.99"},;  //"Vlr.Baixado"
+							{	"VALCVT"	,, STR0138,"@E 9,999,999,999.99"},;  //"Valor em "
+							{	"JUROS"	,, STR0081,"@E 9,999,999,999.99"},;  //"Vlr.Juros"
+							{	"DESCON" ,, STR0083,"@E 9,999,999,999.99"},;  //"Vlr.Descon."
+							{	"VALLIQ"	,, STR0084,"@E 9,999,999,999.99"},;  //"Vlr.Liquidar"
+							{	"EMISSAO",, STR0085,"@X"},;  //"Data Emiss苚"
+							{	"VENCTO" ,, STR0086,"@X"}}  //"Data Vencimento"
+	
+
+
+Private nUsado2	 := 0
+Private cLiquid	 := Space(6)
+Private CurLen
+Private nIntervalo:= 1
+Private dData565I :=dDataBase
+Private dData565F :=dDataBase
+Private dBaixa	  :=dDataBase
+Private cFornece  := Criavar ("E2_FORNECE",.F.)
+Private cLoja     := Criavar ("E2_LOJA",.F.)
+Private cFornDE 	:= cFornece
+Private cLojaDE   := cLoja
+Private cFornAte  := cFornece
+Private cLojaAte  := cLoja
+Private cNomeForn := CriaVar ("E2_NOMFOR")
+Private nMoeda 	  := 1
+Private nValor 	  := 0
+Private nQtdTit   := 0
+Private nValorMax := 0				// valor maximo de liquidacao (digitado)
+Private nValorDe  := 0 			   // valor inicial dos titulos
+Private nValorAte :=  9999999999.99 // Valor final dos titulos
+Private nValorLiq := 0				// valor da liquidacao ap mBrowse
+Private nNroParc  := 0				// numero de parcelas digitadas
+Private cCondicao := Space(3)		// numero de parcelas automaticas
+Private cNatureza := Criavar ("E2_NATUREZ")
+Private nPosAtu	:= 0
+Private nPosAnt	:= 9999
+Private nColAnt	:= 9999
+Private aHeader   := {}
+Private aCols  	:= {}
+Private cMarca    := GetMark()
+Private lInverte  := .F.
+Private cTipo	 	:= Criavar ("E2_TIPO")
+Private cParc565  := F565Parc()	// controle de parcela (E2_PARCELA)
+Private nSaldoBx  := 0
+Private lReliquida:= IIF(nOpcx == 2,.F.,.T.)
+Private l565Fil   := ExistBlock("FA565FIL")
+Private oDlgKco
+Private nValorAcr := 0				// valor da liquidacao ap mBrowse
+Private nValorDcr := 0				// valor da liquidacao ap mBrowse
+Private nValorTot := 0
+Private cNumDe	  	:= CriaVar("E2_NUM")
+Private cNumAte	:= cNumDe
+Private cPrefDe	:= CriaVar("E2_PREFIXO")
+Private cPrefAte  := cPrefDe
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Recupera o numero do lote contabil.	                         ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+LoteCont( "FIN" )
+Private oGet
+Private oValorLiq
+Private oValorAcr
+Private oValorDcr
+Private oValorTot
+Private oNroParc        
+Private lOpenCmc7
+Private oFornAte
+Private oLojaAte
+
+If !CtbValiDt(,dDatabase,,,,{"FIN001"},)
+	Return
+EndIf
+
+DEFINE FONT oFnt NAME "Arial" SIZE 12,14 BOLD
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Inicializa array com as moedas existentes.					 ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+aMoedas := FDescMoed()  
+
+If Existblock("FA565ADDCPO")
+	ExecBlock("FA565ADDCPO",.F.,.F.)
+Endif     
+
+If lPrjCni
+	//N鉶 permite Liquidar titulos com solicita鏰o de transferencia pendente
+	If !Empty(SE2->E2_NUMSOL)
+		MsgAlert(STR0183 + Chr(13)+Chr(10) + STR0184)		//"Opera玢o n鉶 permitida !!"###"Titulo possui solicita玢o de Transfer阯cia."
+		Return
+	Endif
+Endif    
+
+DbSelectArea(cAlias)
+cAlias    := "SE2"
+cFornece  := SE2->E2_FORNECE
+cForn565	 := cFornece
+cLoja     := SE2->E2_LOJA
+cFornDE 	 := SE2->E2_FORNECE
+cLojaDE   := SE2->E2_LOJA
+cFornAte  := SE2->E2_FORNECE
+cLojaAte  := SE2->E2_LOJA
+cNomeForn := SE2->E2_NOMFOR
+dData565I := SE2->E2_EMIS1
+dData565F := dDataBase
+If Empty(cPrefAte)
+	cPrefAte := "ZZZ"
+Endif
+If Empty(cNumAte)
+	cNumAte := Replicate("Z",TamSx3("E2_NUM")[1])
+Endif
+
+M->E2_TIPO := cTipo
+
+While .T.
+
+	cFilSX6	:= SX6->X6_FIL
+	nValTot	:= 0
+	nOpca   := 0
+
+	If nOpcx == 6
+		cCadastro := STR0074		// "Reliquida噭o"
+	Endif
+   
+	aSize := MSADVSIZE()
+	If lPanelFin  //Chamado pelo Painel Financeiro			
+		dbSelectArea(cAlias)
+		oPanelDados := FinWindow:GetVisPanel()
+		oPanelDados:FreeChildren()
+		aDim := DLGinPANEL(oPanelDados)
+		DEFINE MSDIALOG oDlg OF oPanelDados:oWnd FROM 0,0 To 0,0 PIXEL STYLE nOR( WS_VISIBLE, WS_POPUP )									
+		
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Observacao Importante quanto as coordenadas calculadas abaixo: ?
+		//?-------------------------------------------------------------- ?		
+		//?a funcao DlgWidthPanel() retorna o dobro do valor da area do	 ?
+		//?painel, sendo assim este deve ser dividido por 2 antes da sub- ?
+		//?tracao e redivisao por 2 para a centralizacao. 					 ?	
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁		
+		nEspLarg := ((DlgWidthPanel(oPanelDados)/2) - 178) /2		 					
+		nEspLin  := 0
+				
+	Else   
+		nEspLarg := 7 
+   		nEspLin  := 5  	
+   	
+		DEFINE MSDIALOG oDlg FROM	130,0 TO 440,380 TITLE cCadastro PIXEL
+	Endif
+	oDlg:lMaximized := .F.
+	oPanel := TPanel():New(0,0,'',oDlg,, .T., .T.,, ,20,20)
+	oPanel:Align := CONTROL_ALIGN_ALLCLIENT    
+					
+	@ nEspLin, nEspLarg TO 133+nEspLin, 178+nEspLarg OF oPanel PIXEL
+	nEspLarg := nEspLarg -7
+	
+	@ 001+nEspLin, 014+nEspLarg SAY STR0070	SIZE 40, 7 OF oPanel PIXEL   //"Fornecedor De"
+	@ 001+nEspLin, 070+nEspLarg SAY STR0072	SIZE 20, 7 OF oPanel PIXEL   //"Loja De"
+	@ 001+nEspLin, 104+nEspLarg SAY STR0071	SIZE 40, 7 OF oPanel PIXEL   //"Fornecedor Ate"
+	@ 001+nEspLin, 160+nEspLarg SAY STR0073	SIZE 20, 7 OF oPanel PIXEL   //"Loja Ate"
+		
+	@ 019+nEspLin, 014+nEspLarg SAY STR0013	SIZE 40, 7 OF oPanel PIXEL   //"Gerar p/ Fornecedor"
+	@ 019+nEspLin, 070+nEspLarg SAY STR0014	SIZE 40, 7 OF oPanel PIXEL   //"Loja"
+	@ 037+nEspLin, 014+nEspLarg SAY STR0015	SIZE 40, 7 OF oPanel PIXEL   //"Valor Maximo"
+	@ 037+nEspLin, 075+nEspLarg SAY STR0107	SIZE 50, 7 OF oPanel PIXEL   //"Titulos no valor de"
+	@ 037+nEspLin, 130+nEspLarg SAY STR0108	SIZE 40, 7 OF oPanel PIXEL   //"Ate o valor de"
+
+	@ 055+nEspLin, 014+nEspLarg SAY STR0016	SIZE 40, 7 OF oPanel PIXEL   //"Moeda"
+	@ 055+nEspLin, 075+nEspLarg SAY STR0137	SIZE 40, 7 OF oPanel PIXEL   //"Outras Moedas"
+	@ 080+nEspLin, 014+nEspLarg SAY STR0065 SIZE 40, 7 OF oPanel PIXEL   //"Intervalo por"
+	@ 080+nEspLin, 075+nEspLarg SAY STR0066 SIZE 40, 7 OF oPanel PIXEL   //"Data de"
+	@ 080+nEspLin, 130+nEspLarg SAY STR0067 SIZE 40, 7 OF oPanel PIXEL   //"Ate"
+
+	@ 108+nEspLin, 014+nEspLarg SAY STR0157	SIZE 40, 7 OF oPanel PIXEL   //"Pref De"
+	@ 108+nEspLin, 045+nEspLarg SAY STR0067 SIZE 40, 7 OF oPanel PIXEL   //"Ate"
+	@ 108+nEspLin, 075+nEspLarg SAY STR0158 SIZE 40, 7 OF oPanel PIXEL   //"Titulo de"
+	@ 108+nEspLin, 130+nEspLarg SAY STR0067 SIZE 40, 7 OF oPanel PIXEL   //"Ate"
+
+	@ 009+nEspLin, 014+nEspLarg MSGET cFornDe	F3 "FOR" SIZE 52, 08 OF oPanel PIXEL Hasbutton
+	@ 009+nEspLin, 070+nEspLarg MSGET cLojaDe	SIZE 20, 08 OF oPanel PIXEL
+
+	@ 009+nEspLin, 104+nEspLarg MSGET oFornAte	VAR cFornAte F3 "FOR" SIZE 52, 08 OF oPanel PIXEL Hasbutton
+	@ 009+nEspLin, 160+nEspLarg MSGET oLojaAte	VAR cLojaAte SIZE 20, 08 OF oPanel PIXEL
+
+	@ 027+nEspLin, 014+nEspLarg MSGET cForn565	F3 "FOR" 	Valid a565Forn(cForn565,cLoja,.F.) SIZE 52, 08 OF oPanel PIXEL Hasbutton
+	@ 027+nEspLin, 070+nEspLarg MSGET cLoja					Valid a565Forn(cForn565,cLoja,.F.) SIZE 20, 08 OF oPanel PIXEL
+		
+	@ 045+nEspLin, 014+nEspLarg MSGET oValorMax 	VAR nValorMax	Picture "@E 9,999,999,999.99" SIZE 60, 08 OF oPanel PIXEL hasbutton
+	@ 045+nEspLin, 075+nEspLarg MSGET oValorDe 		VAR nValorDe	Picture "@E 9,999,999,999.99" SIZE 52, 08 OF oPanel PIXEL hasbutton
+	@ 045+nEspLin, 130+nEspLarg MSGET oValorAte 	VAR nValorAte 	Picture "@E 9,999,999,999.99" SIZE 52, 08 OF oPanel PIXEL hasbutton
+	
+	@ 063+nEspLin, 014+nEspLarg MSCOMBOBOX oCbx 	VAR cMoeda565	ITEMS aMoedas   	SIZE 60, 54 OF oPanel PIXEL 
+	@ 063+nEspLin, 075+nEspLarg MSCOMBOBOX oCbx2	VAR cOutrMoed	ITEMS aOutrMoed   	SIZE 60, 54 OF oPanel PIXEL
+	@ 089+nEspLin, 014+nEspLarg MSCOMBOBOX oCbx1 	VAR cIntervalo ITEMS aIntervalo 	SIZE 60, 54 OF oPanel PIXEL
+	@ 089+nEspLin, 075+nEspLarg MSGET dData565I		Valid !Empty(dData565I)	SIZE 52, 08 OF oPanel PIXEL Hasbutton
+	@ 089+nEspLin, 130+nEspLarg MSGET dData565F		Valid !Empty(dData565F) .and. dData565F >= dData565I 	.and. ;
+																	If(val(substr(cIntervalo,1,2))=1,dData565F <= dDataBase,.T.);
+													SIZE 52, 08 OF oPanel PIXEL Hasbutton
+
+	@ 116+nEspLin, 014+nEspLarg MSGET cPrefDe	SIZE 20, 08 OF oPanel PIXEL
+	@ 116+nEspLin, 045+nEspLarg MSGET cPrefAte	VALID cPrefAte >= cPrefDe SIZE 20, 08 OF oPanel PIXEL
+	@ 116+nEspLin, 075+nEspLarg MSGET cNumDe	SIZE 52, 08 OF oPanel PIXEL
+	@ 116+nEspLin, 130+nEspLarg MSGET cNumAte	VALID cNumAte >= cNumDe SIZE 52, 08 OF oPanel PIXEL
+	
+	If lPanelFin  //Chamado pelo Painel Financeiro			
+		oDlg:Move(aDim[1],aDim[2],aDim[4]-aDim[2], aDim[3]-aDim[1])			
+		ACTIVATE MSDIALOG oDlg ON INIT FaMyBar(oDlg,;
+		{||cVar:=cMoeda565,cVar1:=cIntervalo,cFornece:=cForn565,cTipo:=M->E2_TIPO,;
+		 IF(Fa565OK1() .And. a565Forn(cForn565,cLoja,.T.) ,(If(A565YesNo(),(nOpca:=1,oDlg:End()),nOpca:=0)),nOpca:=2)},;		
+		{||oDlg:End(),nOpca:=0})		
+		
+		cAlias := FinWindow:cAliasFile
+		dbSelectArea(cAlias)
+		FinVisual(cAlias,FinWindow,(cAlias)->(Recno()),.T.)
+
+    Else		
+	
+		DEFINE SBUTTON FROM 141, 114 TYPE 1 ACTION ;
+			(cVar:=cMoeda565,cVar1:=cIntervalo,cFornece:=cForn565,cTipo:=M->E2_TIPO,IF(Fa565OK1() .And. a565Forn(cForn565,cLoja,.T.),(If(A565YesNo(),(nOpca:=1,oDlg:End()),nOpca:=0)),nOpca:=2)) ENABLE OF oPanel
+		DEFINE SBUTTON FROM 141, 149 TYPE 2 ACTION { || oDlg:End(), nOpca:=0 } ENABLE OF oPanel
+	
+		ACTIVATE MSDIALOG oDlg CENTERED
+	Endif	
+
+	If nOpca == 0
+		If Existblock("FA565OUT")
+			Execblock("FA565OUT",.F.,.F.)
+		Endif
+		Exit
+	EndIf
+	If nOpca == 2
+		Loop
+	EndIf
+	
+	//////////////////////////////////////////////////////////////////////////////////////////
+	// Caso o range 'De/Ate Fornecedor' tenha mais de um codigo, 							//
+	// o nome deve ser atualizado com o codigo do fornec. informado no campo "Gerar P/: "	//
+	//////////////////////////////////////////////////////////////////////////////////////////
+	DbSelectArea('SA2')
+	SA2->(DbSetOrder(1))
+	If SA2->(DbSeek(xFilial("SA2")+cFornece+cLoja)) .And. AllTrim(SA2->A2_NREDUZ) != AllTrim(cNomeForn)
+		cNomeForn := SA2->A2_NREDUZ
+	EndIf
+	nMoeda := Val(Substr(cVar,1,2))
+	cSimb := Pad(SuperGetmv("MV_SIMB"+Alltrim(STR(nMoeda))),4)
+	nIntervalo := Val(Substr(cVar1,1,2))
+	nChoice := 	Val(Substr(cOutrMoed,1,1))
+	//Coloco o simbolo da moeda para qual vou gerar os titulos
+	//no titulo das colunas
+	For nX := 8 to 11
+		aCpoBro [nX,3] += 	cSimb
+	Next	
+
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?POR MAIS ESTRANHO QUE PARE�A, ESTA FUNCAO DEVE SER CHAMADA AQUI! ?
+	//?                                                                 ?
+	//?A fun噭o SomaAbat reabre o SE2 com outro nome pela ChkFile para  ?
+	//?efeito de performance. Se o alias auxiliar para a SumAbat() n刼  ?
+	//?estiver aberto antes da IndRegua, ocorre Erro de & na ChkFile,   ?
+	//?pois o Filtro do SE2 uptrapassa 255 Caracteres.                  ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	SomaAbat("","","","P")
+
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Cria indice condicional										        ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	DbSelectArea ("SE2")
+	DbSetOrder(1)
+	cAlias	:= "SE2"
+	cIndex	:= CriaTrab(nil,.f.)
+	cChave	:= IndexKey()
+	IndRegua("SE2",cIndex,cChave,,a565ChecF(nChoice),STR0019)  //"Selecionando Registros..."
+	nIndex := RetIndex("SE2")
+	DbSelectArea(cAlias)
+	DbSetOrder(nIndex+1)
+	MsSeek(xFilial("SE2"))
+	DbGoTop()
+	If Eof() .and. Bof()
+		Help(" ",1,"RECNO")
+
+		DbSelectArea("SE2")
+		RetIndex("SE2")
+		Set Filter to
+		DbGoTop()
+		FErase(cIndex+OrdBagExt())
+		Loop
+	Endif
+
+	cLiquid	:= Soma1(GetMv("MV_NUMLIQP"),6)
+
+	While !MayIUseCode( "E2_NUMLIQP"+xFilial("SE2")+cLiquid )  //verifica se esta na memoria, sendo usado
+		cLiquid := Soma1(cLiquid)									   	// busca o proximo numero disponivel 
+	End
+
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Ponto de entrada para manipulacao do numero de             ?
+	//?liquidacao. Deve retornar um novo nro de liquidacao        ?
+	//?e ja deve gravar no parametro MV_NUMLIQP para nao causar    ?
+	//?duplicidade na numeracao. O ponto deve ser executado nesse ?
+	//?ponto para nao perder a numeracao desnecessariamente caso  ?
+	//?nao haja titulos a serem selecionados.                     ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	IF ( lF565Num )
+		While .T.
+			cLiquid := ExecBlock("F565NUM",.F.,.F.)
+			If !MayIUseCode("E2_NUMLIQ"+xFilial("SE2")+cLiquid)  //verifica se esta na memoria, sendo usado
+																			// busca o proximo numero disponivel 
+				Help(" ",1,"A460LIQ")
+			Else
+				Exit
+			EndIf
+		End
+	Endif	
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Cria Arquivo Temporario						 ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	Fa565Gerarq(aCampos)
+
+	nOpca		:= 0
+	nValor  	:= 0	// Valor total dos titulos,mostrado no rodape do browse
+	nValCruz	:= 0	// Acumula Valor original na moeda nacional
+	nJuros	:= 0
+	nDesc		:= 0
+	nAbatim	:= 0
+	nQtdTit 	:= 0	// Quantidade de titulos,mostrado no rodape do browse
+	lContinua:= .T.
+	cAlias	:= "TRB"
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+	//?Carrega Registros do Arquivo Temporario		  ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+	Fa565Repl()
+
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Monta MarkBrowse para selecionar os titulos p/ liquidacao    ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	nOpca := 0
+	dbSelectArea("TRB")
+	If nValorMax > 0
+		DBEVAL({ |a| FA565DBEVA(nValorMax,@nQtdTit)})
+	Endif
+	
+	dbSelectArea("TRB")
+	dbGotop()
+	
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//矷nclus鉶 da pesquisa em substitui玢o da anterior para     ?
+	//硆etornar o nome do fornecedor definido no campo do        ?
+	//砯ormul醨io "Gerar para", ao inv閟 do c骴igo de fornecedor ?
+	//硃osionado na browse.                                      ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	//cDsFornece := GetAdvfVal("SA2","A2_NOME",xFilial("SA2")+cFornece,1)
+	dbSelectArea("SA2")
+	dbSetOrder(1)
+	If dbSeek(xFilial("SA2")+cFornece+cLoja)
+		While !SA2->(Eof()) .And. xFilial("SA2")+cFornece+cLoja == SA2->(A2_FILIAL+A2_COD+A2_LOJA)
+	      If SA2->A2_NREDUZ == cNomeForn
+		   	cDsFornece := SA2->A2_NOME
+		   	Exit
+			EndIf
+	   	SA2->(dbSkip())
+		EndDo
+	Endif
+	
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Faz o calculo automatico de dimensoes de objetos     ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	aSize := MSADVSIZE()
+
+	oSize := FWDefSize():New(.T.)
+
+	oSize:AddObject("MASTER",100,100,.T.,.T.)
+	oSize:lLateral := .F.				
+	oSize:lProp := .T.
+	
+	oSize:Process()
+
+	DEFINE MSDIALOG oDlgKco TITLE cCadastro PIXEL FROM oSize:aWindSize[1],oSize:aWindSize[2] To oSize:aWindSize[3],oSize:aWindSize[4] OF oMainWnd
+	oTimer:= TTimer():New(nTimeOut,{|| oDlgKco:End() },oDlgKco) // Ativa timer
+	oTimer:Activate()
+
+	nLinIni := oSize:GetDimension("MASTER","LININI")
+	nColIni := oSize:GetDimension("MASTER","COLINI")
+	nLinFin := oSize:GetDimension("MASTER","LINEND")
+	nColFin := oSize:GetDimension("MASTER","COLEND")
+
+	@ nLinIni + 001, 002  To nLinIni+045,nColFin PIXEL OF oDlgKco
+	
+	@ nLinIni + 003, 005 Say STR0053		FONT oDlgKco:oFont  PIXEL Of oDlgKco  //"Nro. Liquida噭o "
+	@ nLinIni + 003, 060 Say cLiquid Picture "@!"	FONT oFnt COLOR CLR_HBLUE PIXEL Of oDlgKco
+	
+	@ nLinIni + 012, 005 Say STR0020 + cFornece + " - " + cDsFornece	FONT oDlgKco:oFont  PIXEL Of oDlgKco //"Fornecedor  "
+	@ nLinIni + 012, 170 Say STR0021 + cLoja							FONT oDlgKco:oFont  PIXEL Of oDlgKco //"Loja  "
+	@ nLinIni + 030, 005 Say STR0022 + AllTrim(Str(nMoeda,2,0))		FONT oDlgKco:oFont  PIXEL Of oDlgKco //"Moeda  "
+	@ nLinIni + 021, 005 Say STR0023 + Dtoc(dData565I) 				FONT oDlgKco:oFont  PIXEL Of oDlgKco //"Emiss刼 de  "
+	@ nLinIni + 021, 080 Say STR0024 + Dtoc(dData565F)				FONT oDlgKco:oFont  PIXEL Of oDlgKco //"at? "
+
+	//Coluna 2
+	@ nLinIni + 003, 200 Say STR0025 		SIZE 50,8 FONT oDlgKco:oFont PIXEL Of oDlgKco  //"Valor Digitado "
+	@ nLinIni + 003, 280 Say oValorMax	VAR nValorMax	Picture "@E 999,999,999.99" FONT oDlgKco:oFont PIXEL Of oDlgKco
+	@ nLinIni + 012, 200 Say STR0026		SIZE 50,8 FONT oDlgKco:oFont PIXEL Of oDlgKco  //"Valor Selecionado "
+	@ nLinIni + 012, 280 Say oValor   	VAR nValor		Picture "@E 999,999,999.99" FONT oDlgKco:oFont PIXEL Of oDlgKco
+	@ nLinIni + 021, 200 Say STR0027		SIZE 50,8 FONT oDlgKco:oFont PIXEL Of oDlgKco  //"Qtde Titulos "
+	@ nLinIni + 021, 280 Say oQtdTit  	VAR nQtdTit  	Picture "9999"  				 FONT oDlgKco:oFont PIXEL Of oDlgKco
+
+	oMark 		:= MsSelect():New("TRB","MARCA","",aCpoBro,.F.,@cMarca,{nLinIni + 48, nColIni, nLinFin, nColFin},"xFilial('SE2')","xFilial('SE2')")
+	oMark:bMark := {||A565Exibe(cMarca,oValor,oQtdTit)}
+	oMark:bAval	:= {||Fa565bAval(cMarca,oValor,oQtdTit,oMark)}
+	oMark:oBrowse:lhasMark := .t.
+	oMark:oBrowse:lCanAllmark := .t.
+	oMark:oBrowse:bAllMark := { || A565Inverte(cMarca,oValor,oQtdTit,.T.,oMark)}
+
+	If lPanelFin  //Chamado pelo Painel Financeiro			
+		aBut565 := {}
+	   	AADD(aBut565,{"PESQUISA",{||Fa565Pesq(oMark)}, STR0095,STR0095}) //"Pesquisar..(CTRL-P)"###"Pesquisar"
+		AADD(aBut565,{"NOTE",{||Fa565Edit(oValor,oQtdTit)}, STR0094,STR0094}) //"Edita Registro..(CTRL-E)"###"Editar"
+	   
+		ACTIVATE MSDIALOG oDlgKco ON INIT FaMyBar(oDlgKco,  {|| nOpca := 1,oDlgKco:End()},; 
+															{|| nOpca := 2,oDlgKco:End()},aBut565) VALID (oTimer:End(),.T.)
+	Else
+		ACTIVATE MSDIALOG oDlgKco ON INIT Fa565Bar(oDlgKco, {|| nOpca := 1,oDlgKco:End()},;
+															{|| nOpca := 2,oDlgKco:End()},oMark,oValor,oQtdTit) VALID (oTimer:End(),.T.)
+	Endif
+
+	If nOpca == 2 .or. nOpca == 0
+		If Existblock("F565SAID")
+			Execblock("F565SAID",.F.,.F.)
+		EndIf
+
+		FreeUsedCode()  //libera codigos de correlativos reservados pela MayIUseCode()
+
+		If Select("TRB") > 0
+			DbSelectArea("TRB")
+			DbCloseArea()
+		Endif
+		
+		//Deleta tabela tempor醨ia caso j?exista
+		If _oFINA5651 <> Nil
+			_oFINA5651:Delete()
+			_oFINA5651 := Nil
+		Endif
+
+		DbSelectArea("SE2")
+		// Destrava os registros.
+		dbGoTop()
+		While !EOF()
+			SE2->(MsUnlock())
+			dbSkip()
+		End
+		//Retira o Filtro
+		RetIndex("SE2")
+		Set Filter to
+		DbGoTop()
+		fErase(cIndex+OrdBagExt())
+		Exit
+	EndIf
+	
+	If SuperGetMV( "MV_FINCTAL", .T., "1" ) == "2"
+		MsgInfo(STR0185 + AllTrim(Str(nMoeda)) + ".",STR0186)		//"Para a liquida玢o ser?adotado o aprovador padr鉶 para a moeda: " ### "Controle de al鏰das ativo"
+	Endif
+	
+	DbSelectArea("TRB")
+
+	If Existblock("F565GRV")
+		Execblock("F565GRV",.F.,.F.)
+	Endif	
+
+	If nValor == 0
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Efetuar a liquida噭o qdo um Titulo NCC deduzir at?zero seu  ?
+		//?Titulo original correspondente (Argentina).                  ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪Lucas哪?
+		If cPaisLoc == "ARG"
+			a565Grava({},{})
+		EndIf
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Restaura os indices 							             ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+		If Select("TRB") > 0
+			DbSelectArea("TRB")
+			DbCloseArea()
+		Endif
+		
+		//Deleta tabela tempor醨ia caso j?exista
+		If _oFINA5651 <> Nil
+			_oFINA5651:Delete()
+			_oFINA5651 := Nil
+		Endif
+
+		DbSelectArea("SE2")
+		// Destrava os registros.
+		dbGoTop()
+		While !EOF()
+			SE2->(MsUnlock())
+			dbSkip()
+		End
+		//Retira o Filtro
+		RetIndex("SE2")
+		Set Filter to
+		DbGoTop()
+		fErase (cIndex+OrdBagExt())
+		Exit
+	EndIf
+	nUsado2 := 0
+	cMoeda := AllTrim(Str(nMoeda,2))
+	Aadd(aHeader,{STR0069,"E2_PREFIXO","!!!",3,0,"AllWaysTrue()","?,"C","SE2" } )   				//"PREFIXO "
+	Aadd(aHeader,{STR0159,"E2_TIPO","@!"	,3,0,"FA565TIPO()","?,"C","SE2" } )   					//"TIPO" 
+	Aadd(aHeader,{STR0029,"E2_BCOCHQ","@!"	,aTamBco[1],0,"AllWaysTrue()","?,"C","SE2" } )   	//"BCO. "
+	Aadd(aHeader,{STR0030,"E2_AGECHQ","@!"	,aTamAge[1],0,"AllwaysTrue()","?,"C","SE2" } )   	//"AGENCIA"
+	Aadd(aHeader,{STR0031,"E2_CTACHQ","@!"	,aTamCta[1],0,"AllwaysTrue()","?,"C","SE2" } )   	//"CONTA"
+	Aadd(aHeader,{STR0032,"E2_NUM","@!"	,aTam[1],0,"a565NumChq()","?,"C","SE2" } )   				//"NRO. CHEQUE"
+	Aadd(aHeader,{STR0033,"E2_VENCTO"," ",8,0,"a565DataOK()","?,"D","SE2" } )   					//"DATA BOA"
+	Aadd(aHeader,{STR0034,"E2_VLCRUZ","@E 9999,999,999.99",14,2,"A565Valor()","?,"N","SE2" } )	//"VALOR"
+	Aadd(aHeader,{STR0116,"E2_ACRESC","@E 999,999.99",10,2,"A565Valor()","?,"N","SE2" } ) 	  	//"ACRESCIIMOS"
+	Aadd(aHeader,{STR0117,"E2_DECRESC","@E 999,999.99",10,2,"A565Valor()","?,"N","SE2" } )	   //"DECRESCIMOS"
+	Aadd(aHeader,{STR0118,"E2_VALOR","@E 9999,999,999.99",14,2,"AllwaysTrue()","?,"N","SE2" } ) //"VALOR TOTAL"
+			
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Monta array com os campos alteraveis na getdados. O ultimo campo sera?
+	//?apenas para mostrar o valor final do cheque (valor+acres-Decres)     ?
+	//?na posicao 10 do aheader.                                            ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	If lA565Col
+		ExecBlock("A565COL", .F., .F. )
+	Endif
+	
+	For nCntFor := 1 to Len(aHeader)
+		If nCntFor != 11
+			Aadd(aAltera,aHeader[nCntFor,2])
+		Endif
+	Next nCntFor
+
+	nUsado2 := Len(aHeader)
+	aCols   := Array( 1 , (nUsado2+1) )
+	aCols[1,nUsado2+1] := .F.
+	For nCntFor := 1 To nUsado2
+		aCols[1,nCntFor] := CriaVar(aHeader[nCntFor,2],.T.)
+	Next nCntFor
+		
+	nOpca := 0
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Faz o calculo automatico de dimensoes de objetos     ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	
+	oSize := FWDefSize():New(.T.)
+
+	oSize:AddObject("MASTER",100,100,.T.,.T.)
+	oSize:lLateral := .F.				
+	oSize:lProp := .T.
+	
+	oSize:Process()
+
+	DEFINE MSDIALOG oPanel2 TITLE cCadastro PIXEL FROM oSize:aWindSize[1],oSize:aWindSize[2] To oSize:aWindSize[3],oSize:aWindSize[4] OF oMainWnd
+
+	nLinIni := oSize:GetDimension("MASTER","LININI")
+	nColIni := oSize:GetDimension("MASTER","COLINI")
+	nLinFin := oSize:GetDimension("MASTER","LINEND")
+	nColFin := oSize:GetDimension("MASTER","COLEND")
+
+	@ nLinIni + 001, 002  To nLinIni+024,nColFin PIXEL OF oPanel2
+	
+	@ nLinIni+003 , 004 SAY STR0053	             		FONT oPanel2:oFont 				PIXEL Of oPanel2	//"Nro. Liquida噭o "
+	@ nLinIni+003 , 060 SAY cLiquid	Picture "@!"		FONT oFnt COLOR CLR_BLUE		PIXEL Of oPanel2
+	@ nLinIni+003 , 200 SAY STR0023	+ Dtoc(dData565I) 	FONT oPanel2:oFont				PIXEL Of oPanel2	//"Emiss刼 de  "
+	@ nLinIni+003 , 275	SAY STR0024	+ Dtoc(dData565F)	FONT oPanel2:oFont				PIXEL Of oPanel2	//"at? "
+
+	@ nLinIni+012 , 004 SAY STR0020	+ cFornece			FONT oPanel2:oFont				PIXEL Of oPanel2	//"Cliente  "
+	@ nLinIni+012 , 060 SAY STR0021						FONT oPanel2:oFont  			PIXEL Of oPanel2	//"Loja  "
+	@ nLinIni+012 , 075 MSGET cLoja F3 "SA1" SIZE 20,6	FONT oPanel2:oFont				PIXEL Of oPanel2	READONLY  hasbutton
+	@ nLinIni+012 , 200	SAY STR0036			 SIZE 25,6	FONT oPanel2:oFont				PIXEL Of oPanel2  //"Valor  "
+	@ nLinIni+012 , 260 SAY nValor Picture "@E 999,999,999.99" FONT oPanel2:oFont 		PIXEL Of oPanel2
+
+	//Linha Separador
+	@ nLinIni+025, 002  To nLinIni+070,nColFin PIXEL OF oPanel2
+	
+	@ nLinIni+028 , 004	SAY STR0037	SIZE 40,8 FONT oPanel2:oFont PIXEL Of oPanel2  //"Condicao  "
+	@ nLinIni+041 , 004 SAY STR0068	SIZE 40,8 FONT oPanel2:oFont PIXEL Of oPanel2  //"Tipo"
+	@ nLinIni+054 , 004	SAY STR0038	SIZE 40,8 FONT oPanel2:oFont PIXEL Of oPanel2  //"Natureza  "
+
+	@ nLinIni+028,  060 MSGET cCondicao		F3 "SE4" Picture "!!!" SIZE 10,8 FONT oPanel2:oFont;
+		Valid IIf( Empty(cCondicao) , .T. , ;
+		(ExistCpo("SE4",cCondicao) .and. SE4->E4_TIPO != "9")) .and. ;
+		A565Cond(cCondicao,nUsado2) hasbutton PIXEL Of oPanel2
+
+	@ nLinIni+041, 060 MSGET M->E2_TIPO	 		F3 "05";
+		Picture "!!!" SIZE 10,8 FONT oPanel2:oFont ;
+		Valid Empty(M->E2_TIPO) .or. FA565Tipo(@M->E2_TIPO) hasbutton PIXEL Of oPanel2
+
+	@ nLinIni+054, 060 MSGET cNatureza		F3 "SED" Valid A565NATUR(cNatureza) SIZE 40,8 FONT oPanel2:oFont hasbutton PIXEL Of oPanel2
+
+	@ nLinIni+028 , 200 SAY STR0040	SIZE 35,6 FONT oPanel2:oFont  PIXEL Of oPanel2 //"Qtde Parcelas  "
+	@ nLinIni+028 , 280	SAY oNroParc 	VAR nNroParc 	Picture "999" FONT oPanel2:oFont PIXEL Of oPanel2
+	@ nLinIni+036 , 200	SAY STR0039	SIZE 35,6 FONT oPanel2:oFont  PIXEL Of oPanel2 //"Valor Total  "
+	@ nLinIni+036 , 280 SAY oValorLiq	VAR nValorLiq	Picture "@E 999,999,999.99" SIZE 50,8 FONT oPanel2:oFont PIXEL Of oPanel2
+	@ nLinIni+044 , 200	SAY STR0119	SIZE 35,6 FONT oPanel2:oFont  PIXEL Of oPanel2 //"Acrescimos"
+	@ nLinIni+044 , 280 SAY oValorAcr	VAR nValorAcr	Picture "@E 999,999,999.99" SIZE 50,8 FONT oPanel2:oFont PIXEL Of oPanel2 
+	@ nLinIni+052 , 200	SAY STR0120	SIZE 35,6 FONT oPanel2:oFont  PIXEL Of oPanel2 //"Decrescimos"
+	@ nLinIni+052 , 280	SAY oValorDcr	VAR nValorDcr	Picture "@E 999,999,999.99" SIZE 50,8 FONT oPanel2:oFont PIXEL Of oPanel2 
+	@ nLinIni+060 , 200	SAY STR0121	SIZE 35,6 FONT oPanel2:oFont  PIXEL Of oPanel2 //"Total Geral"
+	@ nLinIni+060 , 280	SAY oValorTot	VAR nValorTot	Picture "@E 999,999,999.99" SIZE 50,8 FONT oPanel2:oFont PIXEL Of oPanel2 
+	
+	oGet := MsGetDados():New(nLinIni+72,nColIni,nLinFin,nColFin,nOpcx,"A565OK","A565TudoOK","",.T.,aAltera,,,200)
+	
+	If lPanelFin  //Chamado pelo Painel Financeiro			
+	   ACTIVATE MSDIALOG oPanel2 ON INIT FaMyBar(oPanel2,{||cTipo:=M->E2_TIPO,nOpca:=1,if(oGet:TudoOk(),oPanel2:End(),nOpca:=0)},{||oPanel2:End()})
+	Else
+		ACTIVATE MSDIALOG oPanel2 ON INIT EnchoiceBar(oPanel2,{||cTipo:=M->E2_TIPO,nOpca:=1,if(oGet:TudoOk(),oPanel2:End(),nOpca:=0)},{||oPanel2:End()})
+	Endif
+	SetKey(14,NIL)
+	If ( nOpcA == 1 .And. !Empty(aCols))
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		//?Atualiza Parametro de Ultimo Numero de Liquidacao       ?
+		//?Somente se nao existir o ponto de entrada, pois o mesmo ?
+		//?ja atualiza o parametro                                 ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		If !lF565Num     
+			If GetMv("MV_NUMLIQP") < cLiquid
+				RecLock("SX6",.F.)
+				Replace X6_CONTEUD with cLiquid
+				Replace X6_CONTSPA with cLiquid
+				Replace X6_CONTENG with cLiquid				
+				MsUnlock()
+			Endif
+    	Endif
+		a565Grava(aHeader,aCols)
+	EndIf
+
+	If nOpca != 1		// cancelamento da operacao
+		If lF565Can
+			Execblock("F565CAN",.F.,.F.)		// P.E para log cancelamento
+		Elseif lF565CON
+			Execblock("F565CON",.F.,.F.)		// P.E para log confirmacao
+		Endif
+	Endif		
+
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Restaura os indices								             ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	If Select("TRB") > 0
+		DbSelectArea("TRB")
+		DbCloseArea()
+	Endif
+	
+	//Deleta tabela tempor醨ia caso j?exista
+	If _oFINA5651 <> Nil
+		_oFINA5651:Delete()
+		_oFINA5651 := Nil
+	Endif
+
+	MsUnlockAll()
+	
+	//Retira o Filtro
+	RetIndex("SE2")
+	Set Filter to
+	dbGoTop()
+	fErase (cIndex+OrdBagExt())
+	Exit
+End
+
+FreeUsedCode()  //libera codigos de correlativos reservados pela MayIUseCode()
+RELEASE FONT oFnt
+cCadastro := STR0001  // "Liquida噭o"
+SE2->(RestArea(aAreaSe2))
+
+Return
+
+/*/
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噮o    矨565Forn  ?Autor ?Mauricio Pequim Jr.   ?Data ?2.01.98  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噮o ?Verifica dados do Fornecedor                               潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe   ?A565Forn (cFornecedor,cLoja)                               潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso      ?FINA565                                                    潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+STATIC Function A565Forn(cFornecedor,cLoja,lTudoOK)
+Local aArea	:= GetArea()
+Local lRet	:= .T.
+
+//------------------------------------------------------------------------------------------
+// Validacao de confirmacao de tela e obrigatoriedade do preenchimento do fornecedor e loja
+//------------------------------------------------------------------------------------------
+If lTudoOK .And. (Empty(cFornecedor) .Or. Empty(cLoja))
+	Help("  ",1,"A565FORN",,STR0187,1,0) //"Informe o c骴igo do fornecedor e loja."
+	lRet := .F.
+
+ElseIf !Empty(cFornecedor)
+	DbSelectArea("SA2")
+	SA2->(DbSetOrder(1))
+	If SA2->(DbSeek(xFilial("SA2")+cFornecedor+AllTrim(cLoja)))
+		//------------------------------------------------------------------------
+		// Avalia se o fornecedor esta bloqueado se informado o fornecedor e loja
+		//------------------------------------------------------------------------
+		If !Empty(cLoja) .And. SA2->A2_MSBLQL == "1"
+			Help(" ",1,"A565FORN",,STR0188,1,0) //"O c骴igo de fornecedor e loja informados para gera玢o est鉶 bloqueados."
+			lRet := .F.
+		EndIf
+	Else
+		Help(" ",1,"A565FORN",,STR0189,1,0) //"O c骴igo de fornecedor e loja informados n鉶 est鉶 cadastrados no sistema."
+		lRet := .F.
+	Endif
+Endif
+
+RestArea(aArea)
+
+Return(lRet)
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矨565OK    ?Autor ?Mauricio Pequim Jr    ?Data ?22/01/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o 砎alida Linha do Getdados   								  			  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?A565OK()												  	  				  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function a565OK()
+Local lRet := .T.
+Local nCont
+Local cAtual := aCols[n,3]+aCols[n,4]+aCols[n,5]+aCols[n,6]
+Local lOk := .F.
+Local lRetPE
+Local nCont2
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se o linha foi deletada, liberando a movimentacao   ?
+//?para as outras linhas													  ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+If aCols[n,nUsado2+1]
+	Return .T.
+EndIf
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se o Valor do cheque = 0                            ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+If aCols[n,8] = 0
+	Return .F.
+EndIf
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se n刼 existem campos em branco, descartando o      ?
+//?campo prefixo.                                               ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+For nCont2 := 2 to 8
+	If Empty (aCols[n,nCont2] )
+		if ! lOk
+			Help(" ",1,"A460VAZIOS")
+			Return .F.
+		EndIf
+	EndIf
+Next nCont2
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se data n刼 ?menor que database                    ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+If !aCols[n,nUsado2+1]
+	If aCols[n,7] < dDataBase
+		Help(" ",1,"A460DTCHEQ")
+		Return .F.
+	EndIf
+EndIf
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Ponto de Entrada para desativar valida玢o da Numera玢o       ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+
+If Existblock("FA565LOK")
+	lRetPE := Execblock("FA565LOK",.F.,.F.)
+	If ValType(lRetPE) == "L"
+		Return lRetPE
+	Endif
+Else	
+	If !aCols[n,nUsado2+1]
+		For nCont := 1 to Len (aCols)
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Verifica se Cheque ja existe						              ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+			If !aCols[nCont,nUsado2+1]
+				If	 aCols[nCont,3]+aCols[nCont,4]+aCols[nCont,5]+aCols[nCont,6] == cAtual .And. nCont <> n
+					Help(" ",1,"A460EXISTE")
+					Return .F.
+				EndIf
+			EndIf
+		Next nCont
+	EndIf
+Endif	
+                                            
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Ponto de entrada para validacao da linha pelo usuario.       ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+If Existblock("A565VALLIN")
+	lRetPE := Execblock("A565VALLIN",.F.,.F.)
+	If ValType(lRetPE) == "L"
+		Return lRetPE
+	Endif
+Endif
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se Cheque nao excedeu o valor total da liquida噭o   ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+A565VALOR(.F.)
+Return lRet
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矨565TudoOK?Autor ?Mauricio Pequim Jr    ?Data ?22/01/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o 砎alida Toda a Getdados   											  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?A565TudoOK()															  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565																	  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function a565TudoOK()
+Local lRet := .T.
+Local nCont := 0
+Local nCont2 := 0
+Local lOk := .F.  
+Local cpref                         
+Local cNumChq
+Local aChq := {}
+Local lRetPE := .F.
+
+//294 - Natureza Sintetica e Analitica
+If !(FinVldNat( .F., cNatureza ))
+	Return .F.
+EndIf
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se n刼 existem campos em branco ou zerados          ?
+//?(somente possivel no calculo automatico de parcelas ).       ?
+//?Descartando o campo prefixo.                                 ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+For nCont := 1 to Len (aCols)
+	For nCont2 := 2 to 8
+		If Empty (aCols[nCont,nCont2] ) .and. !( aCols[nCont,nUsado2+1] )
+			if ! lOk
+				Help(" ",1,"A460VAZIOS")
+				Return .F.
+			EndIf
+		EndIf
+	Next nCont2
+Next nCont
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se data n刼 ?menor que database ou que a data      ?
+//?da linha acima															  ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+For nCont := 1 to Len (aCols)
+	If ! (aCols[nCont,nUsado2+1])
+		If aCols[nCont,7] < dDataBase
+			Help(" ",1,"A460DTCHEQ")
+			Return .F.
+		EndIf
+	EndIf
+Next nCont
+
+If Existblock("FA565LOK")
+	lRetPE := Execblock("FA565LOK",.F.,.F.)
+Endif             
+if !lRetPE
+	For nCont := 1 To len (aCols)      
+		cpref:= Alltrim(aCols[ncont][1])   
+		cNumChq:= Alltrim(aCols[ncont][6])    
+   		If aScan(aChq,{|x| x[1]==cpref .AND. x[2]==cNumChq}) > 0
+    		MsgInfo("Existem t韙ulos com Prefixo e Cheques iguais")    
+    		lret := .F.
+		EndIF 
+		Aadd(aChq, {cPref,cNumChq} )
+	Next nCont
+Endif
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se Cheques nao excederam o valor total da liquida噭o?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+A565Valor(.F.)
+If ( nValorLiq + nValorAcr - nValorDcr ) > nValor
+	MsgInfo(STR0182,STR0051)
+EndIf
+
+If ExistBlock("F565TOK")
+	lRet := ExecBlock("F565TOK",.f.,.f.)
+Endif
+
+Return lRet
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矨565NumChq?Autor ?Mauricio Pequim Jr    ?Data ?22/01/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o 砃umera cheques automaticamente se parcelamento automatico	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?A565NumChq()														  	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565																	  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function a565NumChq()
+
+Local nCont := 0
+Local cBco	:= 0
+Local cAge	:= 0
+Local cNCon	:= 0
+Local cNChq	:= 0
+Local lInicial := .F.
+Local cPrefixo := space(03)
+Local nTamNum := TamSX3( "E1_NUM" )[ 1 ]
+Local nTamPref := TamSX3( "E1_PREFIXO" )[ 1 ] 
+
+cParc565 := F565Parc()
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica existencia de titulo com mesmo numero				 ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+If !(A565VerNum(aCols[n,1],M->E2_NUM,aCols[n,2]))
+	Help(" ",1,"A460EXISTE",,M->E2_NUM,3,1)
+	Return .f.
+EndIf
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Se parcelamento automatico e se primeira linha do aCols		  ?
+//?numera cheque automaticamente							      ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+aCols[n,6] :=  M->E2_NUM
+   
+If ( !Empty (cCondicao) ) .and. n == 1 .and. Len(aCols) > 1 .and. Empty (aCols[2,6])
+
+	lInicial := .T.
+
+	cBco := aCols[1,3]
+	cAge := aCols[1,4]
+	cNcon := aCols[1,5]
+	cNChq := aCols[n,6]
+	cPrefixo := aCols[1,1]
+	If Empty(cPrefixo)
+		aCols[1,1]:="A"
+	   cPrefixo:= "A"
+	Endif
+	For nCont := 2 to Len (aCols)
+		cNChq    := Pad( Soma1( AllTrim( cNChq    ) ) , nTamNum  )		
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Verifica existencia de titulo com mesmo numero        		  ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+		IF !(A565VerNum(cPrefixo,cNChq,aCols[nCont,2]))
+			Help(" ",1,"A460EXISTE",,cNChq,3,1)
+			oGet:oBrowse:Refresh()
+			oGet:Refresh()
+			Return .f.
+		EndIf
+		aCols[nCont,1] := cPrefixo
+		aCols[nCont,3] := cBco
+		aCols[nCont,4] := cAge
+		aCols[nCont,5] := cNCon
+		aCols[nCont,6] := cNChq
+	Next nCont
+EndIf
+
+If lInicial
+	n := 1
+EndIf
+
+oGet:oBrowse:Refresh()
+oGet:Refresh()
+Return .T.
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矨565DataOK?Autor ?Mauricio Pequim Jr    ?Data ?22/01/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o 砎alida Data na Getdados   								  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?A565DataOK()											  	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function a565DataOK()
+
+Local lRet := .T.
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se data n刼 ?menor que database                    ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+If m->e2_vencto < dDataBase
+	Help(" ",1,"A460DTCHEQ")
+	lRet := .F.
+EndIf
+Return lRet
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矨565Valor ?Autor ?Mauricio Pequim Jr    ?Data ?22/01/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o 砈oma os Valores das Liquida噊es							  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?A565Valor()											  	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function a565Valor( lValida )
+
+Local lRet := .T. 
+Local nVlLiq := 0
+Local nVlAcr := 0
+Local nVlDcr := 0
+Local cVar
+Local nCont
+
+lValida := IIF(lValida == NIL, .T.,lValida)
+
+If lValida
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+	//?Caso o valor do decrescimo seja maior que o valor a   ?
+	//?da parcela, ou se tente digitar valor de acrescimo e  ?
+	//?decrescimo para a mesma parcela, retorna .F.        	 ?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+	cVar := ReadVar()	
+	DO CASE
+		Case Alltrim(cVar) == "M->E2_VLCRUZ"
+			nVlLiq	:= M->E2_VLCRUZ
+			nVlAcr	:= aCols[n,9]
+			nVlDcr	:= aCols[n,10]
+		Case Alltrim(cVar) == "M->E2_ACRESC"
+			nVlLiq	:= aCols[n,8]
+			nVlAcr	:= M->E2_ACRESC
+			nVlDcr	:= aCols[n,10]
+		Case Alltrim(cVar) == "M->E2_DECRESC"
+			nVlLiq	:= aCols[n,8]
+			nVlAcr	:= aCols[n,9]
+			nVlDcr	:= M->E2_DECRESC
+	ENDCASE
+	If nVlLiq < nVlDcr .or. (nVlAcr > 0 .and. nVlDcr > 0)
+		Return .F.
+	Endif
+	aCols[n,8] := nVlLiq
+	aCols[n,9] := nVlAcr
+	aCols[n,10] := nVlDcr
+Endif
+
+nValorLiq := 0
+nNroParc  := 0
+nValorAcr := 0
+nValorDcr := 0
+nValorTot := 0
+
+For nCont := 1 to Len(aCols)
+	//Valor total (Valor Parcela + Acresc - Decresc) - Apenas informativo
+	aCols[nCont,11] := aCols[nCont,8]+aCols[nCont,9]-aCols[nCont,10]
+	If !aCols[nCont,nUsado2+1]    // Soma apenas os ativos
+		nValorLiq  += aCols[nCont,8]
+		nValorAcr  += aCols[nCont,9]
+		nValorDcr  += aCols[nCont,10]				
+		nValorTot  += aCols[nCont,11]
+		nNroParc ++
+	EndIf
+Next nCont
+
+oValorLiq:Refresh()
+oValorAcr:Refresh()
+oValorDcr:Refresh()
+oValorTot:Refresh()
+oNroParc:Refresh()
+
+Return lRet
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矨565ChecF ?Autor ?Mauricio Pequim Jr.   ?Data ?22/01/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Sele噭o para a cria噭o do indice condicional				  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Fina565													  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function A565ChecF( nChoice )
+
+Local cFiltro := ""
+Local aTam    := TamSX3("E2_VALOR")
+
+If ExistBlock("FA565OWN")
+	cFiltro := ExecBlock("FA565OWN",.F.,.F.)
+Else
+	cFiltro := 'E2_FILIAL=="'+xFilial("SE2")+'" .And. '
+	cFiltro += 'E2_FORNECE + E2_LOJA>="'+cFornDe+cLojaDe+'".And.'
+	cFiltro += 'E2_FORNECE + E2_LOJA <= "'+cFornAte+cLojaAte+'".And.'
+	cFiltro += 'E2_PREFIXO>="'+cPrefDe+'".And.'
+	cFiltro += 'E2_PREFIXO<="'+cPrefAte+'".And.'
+	cFiltro += 'E2_NUM>="'+cNumDe+'".And.'
+	cFiltro += 'E2_NUM<="'+cNumAte+'".And.'
+
+	If nIntervalo == 1
+		cFiltro += 'DTOS(E2_EMIS1)>="'+DTOS(dData565I)+'".And.'
+		cFiltro += 'DTOS(E2_EMIS1)<="'+DTOS(dData565F)+'".And.'
+	Else
+		cFiltro += 'DTOS(E2_VENCTO)>="'+DTOS(dData565I)+'".And.'
+		cFiltro += 'DTOS(E2_VENCTO)<="'+DTOS(dData565F)+'".And.'
+	EndIf
+	
+	If nChoice == 2 //Nao converte outras moedas
+		cFiltro += 'StrZero(E2_MOEDA,2)=="'+StrZero(nMoeda,2)+'".And.'
+	Endif
+	
+    //谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+    //?AAF - Titulos originados no SIGAEFF n鉶 devem ser alterados   ?
+    //滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+    cFiltro += "!('SIGAEFF' $ E2_ORIGEM).AND."
+    cFiltro += "!('FINA667' $ E2_ORIGEM) .AND. "    
+    cFiltro += "!('FINA677' $ E2_ORIGEM) .AND. "    
+	
+	cFiltro += 'E2_SALDO>0.And.'
+	cFiltro += 'E2_VALOR >= ' + AllTrim(Str(nValorDe,aTam[1]+aTam[2]+1,aTam[2]))  + ' .And.'
+	cFiltro += 'E2_VALOR <= ' + AllTrim(Str(nValorAte,aTam[1]+aTam[2]+1,aTam[2])) + ' .And.'
+	cFiltro += 'DTOS(E2_EMISSAO)<="'+DTOS(dDataBase)+'".And.'
+	
+	cFiltro += '!(E2_TIPO$MVABATIM).And.'
+	
+	If !lReliquida 	//Liquida titulos n苚 liquidados anteriormente
+		cFiltro += 'Empty(E2_NUMLIQ).And.'
+	ElseIf lReliquida		// Reliquida嘺o
+		cFiltro += '!Empty(E2_NUMLIQ).And.'
+	Endif
+	
+	cFiltro += '!(E2_TIPO$"'+MVPROVIS+"/"+MVPAGANT+"/"+MV_CPNEG+'")'
+	
+	//-----------------------------------------------------
+	// Complemento de filtro - SIAFI
+	//-----------------------------------------------------
+	cFiltro += FinTemDH(.T. /*lFiltro*/,/*cAlias*/,.F. /*lHelp*/, .F./*lTop*/)
+
+	If l565Fil
+	   cFiltro += ExecBlock("FA565FIL",.F.,.F.)
+	Endif
+
+		//Para manter o titulo no filtro ate que se grave a baixa
+		If TcSrvType() == "AS/400"
+			cFiltro := "(("+cFiltro+").or.E2_OK='xx')"
+		Endif
+
+Endif	
+Return cFiltro
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲A565DBEVA?Autor ?Mauricio Pequim Jr	  ?Data ?18/12/00 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Trata o dbeval para marcar e desmarcar item				  	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?FA565DBEVA()												  			  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565DbEva( nValorMax, nQtdTit )
+
+If TRB->(MsRLock()) // Se conseguir travar o registro
+	If nValor < nValorMax .And. (VALLIQ+nValor) <= nValorMax
+		nValor += VALLIQ
+		TRB->MARCA := cMarca
+		nQtdTit++
+	Else
+		TRB->MARCA := " "
+	EndIf
+Endif
+Return Nil
+            
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o    矨565Grava ?Autor ?Mauricio Pequim Jr.   ?Data ?26.01.98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Programa de Atualizacao do SE2                             潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe   ?a565Grava (aHeader,aCols)                             	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砅arametros?aHeader e Acols                                            潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砋so       ?Generico                                                   潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function A565Grava( aHeader, aCols )
+
+Local cArquivo
+Local nTotal  :=0
+Local nHdlPrv :=0
+Local nCntFor := 0
+Local nAcols  := 0
+Local aArea   := { Alias() , IndexOrd() , Recno() }
+Local nSe2Rec := 0
+Local lHeadProva := .F.
+Local lPadrao := .F.
+Local cPadrao
+Local lContabiliza := .F.
+Local lDigita := .T.
+Local lAglutina := .T.
+Local lf565Val := ExistBlock("F565VAL")
+Local lf565SE2 := ExistBlock("F565SE2")
+Local aComplem := {}
+Local cSeek
+Local nSalDup := 0
+Local nValForte := 0
+Local nMCusto := Val(SuperGetMv("MV_MCUSTO"))
+Local nMvCusto:= nMCusto
+Local nTotBaixar  := nValorLiq	// Valor total dos t韙ulos selecionados.
+Local lF565NDF := ExistBlock("F565NDF")
+Local lGeraNCC := .T.
+Local nTitBxd	:= nQtdTit
+Local lBxAbatim := .F.
+Local aTam := TAMSX3("E2_FORNECE")
+Local cChave
+Local cChaveAba
+Local nX
+Local aTam1:= TAMSX3("E2_LOJA")
+Local aTam2:= TAMSX3("E2_NUM")
+Local aCaixaFin := xCxFina()
+Local lAcreDecre := .F.
+Local nValorTotal :=0
+Local nValPadrao :=0
+Local i
+Local lGeraNDF := .T.
+Local aPcc			:= {}
+
+//Rastreamento
+Local lRastro		:= FVerRstFin()
+Local aRastroOri	:= {}
+Local aRastroDes	:= {}
+Local nValProces	:= nValorLiq
+
+//FlagCTB
+Local aFlagCTB		:= {}
+Local lUsaFlag		:= SuperGetMV( "MV_CTBFLAG" , .T. /*lHelp*/, .F. /*cPadrao*/)
+
+//Controla o Pis Cofins e Csll na baixa (1-Retem PCC na Baixa(default) ou 2-Retem PCC na Emiss鉶)
+Local lPCCBaixa := SuperGetMv("MV_BX10925",.T.,"2") == "1"  
+Local lIRBaixa		:= .F. 
+Local aPccBaixa		:= {0,0,0,0}		//Pcc aqui
+Local aIRBaixa		:= {0,0} //IR aqui
+Local nPropPcc		:= 1
+Local nPropIR		:= 1
+Local nPis			:= 0
+Local nCofins		:= 0
+Local nCsll			:= 0
+Local nIRRF			:= 0
+Local nTotPis		:= 0
+Local nTotCofins	:= 0
+Local nTotCsll		:= 0
+Local nTotIr		:= 0
+Local nTotLiq		:= 0
+Local nPropIss		:= 0 
+Local nIss			:= 0
+Local nTotIss		:= 0
+Local nIssBaixa		:= 0
+Local nBasePcc		:= 0
+Local nBaseIR		:= 0
+Local nTotBasPcc	:= 0
+Local nTotBasIR		:= 0
+Local lCalcIssBx 	:= IIF(lIsIssBx, IsIssBx("P"), SuperGetMv("MV_MRETISS",.F.,"1") == "2" )
+Local lInssBx		:= SuperGetMv("MV_INSBXCP",.F.,"2") == "1"
+Local nTamSeq		:= TamSX3("E5_SEQ")[1]
+Local cSequencia	:= Replicate("0",nTamSeq)
+Local lAtuSldNat    := .T.
+Local lFinVDoc		:= IIF(GetNewPar("MV_FINVDOC","2")=="1",.T.,.F.)		//Controle de validacao de documentos obrigatorios
+
+//REESTRUTURACAO SE5
+Local oModelBxP	:= FWLoadModel("FINM020") //Model de baixas a pagar
+Local oSubFK2	:= Nil
+Local oSubFK6	:= Nil
+Local cLog		:= ""
+Local cChaveTit	:= ""
+Local cChaveFK7	:= ""
+Local cCamposE5	:= ""
+Local lRet		:= .T.
+Local nValJuros	:= 0
+Local nValDesco	:= 0
+Local nValCorre	:= 0
+Local nTxMoeda	:= 0
+Local nValAcres	:= 0
+Local nValDecre	:= 0
+Local cCodAprov := ""
+Local lCtrlALC	:= (SuperGetMV( "MV_FINCTAL", .T., "1" ) == "2")
+Local aPcc		:= {}
+Local nSalImp 	:= 0
+Local nI		:= 0
+
+Local lF565SE5	:= Existblock("F565SE5")
+Local aRecSe5	:= {}
+Local aAreaMNT	:= {}
+
+PRIVATE __LACO
+Private aDocsOri	:= {}
+Private aDocsDes	:= {}
+
+//verifica se existem os capos de valores de acrescimo e decrescimo no SE5
+lAcreDecre := .T.
+
+nSaldoBx := 0
+
+// Zerar variaveis para contabilizar os impostos da lei 10925.
+VALOR  :=0
+VALOR5 := 0
+VALOR6 := 0
+VALOR7 := 0                   
+
+//EECXFIN
+//Correcao Monetaria
+nCm := 0
+
+cCodAprov := ""
+If lCtrlAlc
+	cCodAprov := FA050Aprov(nMoeda)
+Endif
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Baixa dos titulos utilizados na liquida噭o			?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+DbSelectArea("TRB")
+TRB->(dbGoTop())
+
+While !TRB->(Eof())
+
+	DbSelectArea("TRB")
+	If TRB->MARCA == cMarca
+		DbSelectArea("SE2")
+		DbSetOrder(1)
+		If MsSeek(TRB->CHAVE)   
+			nSE2Rec := Recno()
+		Endif			
+		If SE2->(E2_FORNECE+E2_LOJA) < cFornDe+cLojaDe .And. ;
+			SE2->(E2_FORNECE+E2_LOJA) > cFornAte+cLojaAte
+			DbSelectArea("TRB")
+			TRB->(DbSkip())
+			Loop
+		Endif
+
+		//Verifica calculo de ISS na baixa para repassar ao titulos gerados pela liquida玢o.
+		
+		lBxAbatim := .F.
+
+		If TRB->VALLIQ >= nTotBaixar
+			RecLock("TRB")
+			Replace TRB->VALLIQ	with nTotBaixar
+			MsUnlock()
+			nSaldoBx := Round(NoRound(xMoeda(TRB->VALLIQ,nMoeda,TRB->MOEDAO,,3,,TRB->CTMOED),3),2)
+			nValBx	 := Round(NoRound(xMoeda(TRB->(VALLIQ-JUROS+DESCON),nMoeda,TRB->MOEDAO,,3,,TRB->CTMOED),3),2)
+
+			//Correcao Monetaria
+			nCm := 0
+			If TRB->MOEDAO > 1
+				nCm := FA565CORR(nValBx)
+			Endif
+
+			nValPadrao	:= nValBx
+			nAbatim		:= TRB->ABATIM
+			nSaldoE2	:= SE2->E2_SALDO - nValBx
+			If Str(nSaldoE2,17,2) == STR(nAbatim,17,2)
+				nValBx += nAbatim
+				nSaldoE2 -= nAbatim
+			Endif
+
+			//Corrige eventuais problemas de arredondamento da moeda
+			If ABS(nSaldoE2) <= 0.009
+				nSaldoE2 := 0
+			Endif
+
+			nTotBaixar := 0
+			nTitBxd--
+
+			//Tratamento PCC na Baixa 
+			//Proporcionalizo o valor baixado do principal com o valor do tiutlo.
+			//Em seguida proporcionaliza os impostos calculados na emissao e 
+			//que serao repassados as parcelas geradas da fatura
+			If cPaisLoc == "BRA" .AND. lPCCBaixa .And. Empty(SE2->E2_NUMBOR)
+				nPropPcc		:= nValPadrao/SE2->E2_VALOR
+				If dDataBase < dLastPcc
+					aPccBaixa[1]	+= SE2->E2_PIS * nPropPcc
+					aPccBaixa[2]	+=	SE2->E2_COFINS * nPropPcc
+					aPccBaixa[3]	+= SE2->E2_CSLL * nPropPcc
+					aPccBaixa[4]	+= SE2->E2_BASEPIS * nPropPcc
+				Else
+					nSalImp := salRefPag(SA2->A2_COD+SA2->A2_LOJA)
+					aPcc	:= newMinPcc(dDataBase, nSalImp,SE2->E2_NATUREZ,"P",SE2->E2_FORNECE+SE2->E2_LOJA)
+					aPccBaixa[1]	+= aPcc[2]
+					aPccBaixa[2]	+= aPcc[3]
+					aPccBaixa[3]	+= aPcc[4]
+					aPccBaixa[4]	+= nSalImp
+				EndIf			
+				
+			Endif
+            
+			//Tratamento IR na Baixa 
+			//Proporcionalizo o valor baixado do principal com o valor do tiutlo.
+			//Em seguida proporcionaliza os impostos calculados na emissao e 
+			//que serao repassados as parcelas geradas da fatura
+			If cPaisLoc == "BRA"
+				lIRBaixa := Posicione("SA2",1,xfilial("SA2") + SE2->(E2_FORNECE),"A2_CALCIRF") == "2" .And. ;
+				            Posicione("SED",1,xfilial("SED") + SE2->(E2_NATUREZ),"ED_CALCIRF") == "S" .And. ;
+							!(SE2->E2_TIPO $ MVPAGANT)
+			Endif
+
+			If cPaisLoc == "BRA" .AND. lIRBaixa
+				If dDataBase < dLastPcc
+					nPropIR	  	:= nValPadrao/SE2->E2_VALOR
+				Else
+					nSalImp 	:= salRefPag(SE2->E2_FORNECE+SE2->E2_LOJA)
+					nPropIR	  	:= nSalImp/(SE2->E2_VALOR + If(!lCalcIssBx,SE2->E2_ISS,0) + iF(!lInssBx,SE2->E2_INSS,0))
+				Endif
+				aIRBaixa[1]	+= SE2->E2_IRRF * nPropIR
+				aIRBaixa[2]	+= SE2->E2_BASEIRF * nPropIR				
+			Endif
+			
+			//Calculo de ISS na Baixa
+			If lCalcIssBx 
+				nPropIss	:= nValPadrao/SE2->E2_VALOR
+				nIssBaixa	+= SE2->E2_ISS
+			Endif
+
+		ElseIf TRB->VALLIQ < nTotBaixar
+			nSaldoBx   := Round(NoRound(xMoeda(TRB->VALLIQ,nMoeda,TRB->MOEDAO,,3,,TRB->CTMOED),3),2)
+			nValBx 	   := Round(NoRound(xMoeda(TRB->(VALLIQ-JUROS+DESCON),nMoeda,TRB->MOEDAO,,3,,TRB->CTMOED),3),2)
+			nValPadrao := nValBx
+			nAbatim    := TRB->ABATIM
+			nSaldoE2   :=	SE2->E2_SALDO - nValBx
+			If Str(nSaldoE2,17,2) == STR(nAbatim,17,2)
+				nValBx += nAbatim
+				nSaldoE2 -= nAbatim
+			Endif
+
+			//Corrige eventuais problemas de arredondamento da moeda
+			If ABS(nSaldoE2) <= 0.009
+				nSaldoE2 := 0
+			Endif
+
+			//Correcao Monetaria
+			nCm := 0
+			If TRB->MOEDAO > 1
+				nCm := 	FA565CORR(nValBx)
+			Endif
+
+			nTotBaixar -= TRB->VALLIQ
+			nTitBxd--
+
+			//Tratamento PCC na Baixa 
+			//Proporcionalizo o valor baixado do principal com o valor do tiutlo.
+			//Em seguida proporcionaliza os impostos calculados na emissao e 
+			//que serao repassados as parcelas geradas da fatura
+			If cPaisLoc == "BRA" .AND. lPCCBaixa .And. Empty(SE2->E2_NUMBOR)
+				nPropPcc		:= nValPadrao/SE2->E2_VALOR
+				If dDataBase < dLastPcc
+					aPccBaixa[1]	+= SE2->E2_PIS * nPropPcc
+					aPccBaixa[2]	+=	SE2->E2_COFINS * nPropPcc
+					aPccBaixa[3]	+= SE2->E2_CSLL * nPropPcc					
+				Else
+					nSalImp := salRefPag(SE2->E2_FORNECE+SE2->E2_LOJA)
+					aPcc	:= newMinPcc(dDataBase, nSalImp,SE2->E2_NATUREZ,"P",SE2->E2_FORNECE+SE2->E2_LOJA)
+					aPccBaixa[1]	+= aPcc[2]
+					aPccBaixa[2]	+= aPcc[3]
+					aPccBaixa[3]	+= aPcc[4]
+					aPccBaixa[4]	+= nSalImp
+				EndIf
+			Endif
+            
+			//Tratamento IR na Baixa 
+			//Proporcionalizo o valor baixado do principal com o valor do tiutlo.
+			//Em seguida proporcionaliza os impostos calculados na emissao e 
+			//que serao repassados as parcelas geradas da fatura
+			If cPaisLoc == "BRA"
+				lIRBaixa := Posicione("SA2",1,xfilial("SA2") + SE2->(E2_FORNECE),"A2_CALCIRF") == "2" .And. ;
+				            Posicione("SED",1,xfilial("SED") + SE2->(E2_NATUREZ),"ED_CALCIRF") == "S" .And. ;
+							!(SE2->E2_TIPO $ MVPAGANT)
+			Endif
+
+			If cPaisLoc == "BRA" .AND. lIRBaixa
+				If dDataBase < dLastPcc
+					nPropIR	  	:= nValPadrao/SE2->E2_VALOR
+				Else
+					nSalImp 	:= salRefPag(SE2->E2_FORNECE+SE2->E2_LOJA)
+					nPropIR	  	:= nSalImp/(SE2->E2_VALOR + If(!lCalcIssBx,SE2->E2_ISS,0) + iF(!lInssBx,SE2->E2_INSS,0))
+				Endif
+				aIRBaixa[1]	+= SE2->E2_IRRF * nPropIR
+				aIRBaixa[2]	+= SE2->E2_BASEIRF * nPropIR				
+			Endif
+
+			//Calculo de ISS na Baixa
+			If lCalcIssBx 
+				nPropIss	:= nValPadrao/SE2->E2_VALOR
+				nIssBaixa	+= SE2->E2_ISS
+			Endif
+
+		Endif
+		
+		// Grava taxa da moeda utilizada na liquidacao
+		If TRB->CTMOED > 0 .And. TRB->MOEDAO > 1
+			nTxMoeda := TRB->CTMOED
+		EndIf
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Baixa titulos no SE2, procurando por abatimentos e     ?
+		//?se for o caso, gera NDF para o Fornecedor quando valor ?
+		//?dos cheques for maior que o dos titulos selecionados	  ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+		DbSelectArea("SE2")
+		If MsSeek(TRB->CHAVE)
+			nSE2Rec := Recno()
+			If !Empty(SE2->E2_NUMLIQ) .and. lReliquida
+				cStatus := "R"
+			Else
+				cStatus := "B"
+			Endif
+			RecLock("SE2",.F.)
+			Replace E2_VALLIQ	With nSaldoBx
+			Replace E2_SALDO	With nSaldoE2
+			Replace E2_BAIXA	With dDataBase
+			Replace E2_MOVIMEN	With dDataBase
+			Replace E2_STATUS	With cStatus
+			Replace E2_TIPOLIQ	With cTipo
+			Replace E2_SDACRES	With 0
+			Replace E2_SDDECRE	With 0
+			Replace E2_JUROS	With TRB->JUROS
+			Replace E2_DESCONT	With TRB->DESCON
+			Replace E2_CORREC	With nCm
+			MsUnlock()
+			
+			If lAtuSldNat
+				AtuSldNat(SE2->E2_NATUREZ, SE2->E2_VENCREA, SE2->E2_MOEDA, "2", "P", SE2->E2_VALOR,SE2->E2_VLCRUZ, "-",,FunName(),"SE2",SE2->(Recno()),0)
+			Endif
+
+			//Rastreamento - Geradores
+			If lRastro
+				aadd(aRastroOri,{	SE2->E2_FILIAL,;
+										SE2->E2_PREFIXO,;
+										SE2->E2_NUM,;
+										SE2->E2_PARCELA,;
+										SE2->E2_TIPO,;
+										SE2->E2_FORNECE,;
+										SE2->E2_LOJA,;
+										SE2->E2_VALLIQ } )
+			Endif			
+
+			//Documentos 
+			IF lFinVDoc
+				If SE2->E2_TEMDOCS = "1"
+					aAdd(aDocsOri,{SE2->E2_FILIAL,;
+										SE2->E2_PREFIXO,;
+										SE2->E2_NUM,;
+										SE2->E2_PARCELA,;
+										SE2->E2_TIPO,;
+										SE2->E2_FORNECE,;
+										SE2->E2_LOJA } )
+				EndIf
+			EndIf
+
+			//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+			//?Baixar titulos de abatimento se for baixa total				 ?
+			//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+			IF nSaldoE2 == 0 .and. TRB->ABATIM > 0
+				dbSelectArea("__SE2")
+				dbSetOrder(6)
+				__SE2->(MsSeek(Left(TRB->CHAVE2,Len(TRB->CHAVE2)-3))) 
+				While !EOF() .And. E2_FILIAL+	E2_FORNECE+E2_LOJA+E2_PREFIXO+E2_NUM+E2_PARCELA == Left(TRB->CHAVE2,Len(TRB->CHAVE2)-3)
+					IF E2_TIPO $ MVABATIM
+						RecLock("__SE2")
+						Replace E2_SALDO	With 0
+						Replace E2_BAIXA	With dDataBase
+						Replace E2_MOVIMEN  With dDataBase
+						Replace E2_STATUS   With "B"
+						MsUnlock()
+						If lAtuSldNat
+							AtuSldNat(__SE2->E2_NATUREZ, __SE2->E2_VENCREA, __SE2->E2_MOEDA, "2", "P", __SE2->E2_VALOR,__SE2->E2_VLCRUZ, "+",,FunName(),"__SE2",__SE2->(Recno()),0)
+						Endif
+					EndIF           
+					dbSkip()
+				End
+			Endif
+			dbSelectArea("SE2")
+			DbSetOrder(1)
+			dbGoto(nSE2Rec)
+			//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+			//?Caso tenha processado todos os titulos marcados e     ?
+			//?exista residuo (valor dos cheques > valor dos titulos)?
+			//?Grava-se uma NCC para o Fornecedor                    ?
+			//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+			If ExistBlock("F565GerNDF")
+				lGeraNDF := ExecBlock("F565GerNDF",.F.,.F.)
+			Endif
+			If Round(nTotBaixar,2) > 0 .and. nTitBxd == 0 .and. lGeraNDF
+				A565VerPc(1,.T.,cLiquid)
+				RecLock("SE2",.T.)
+				Replace E2_FILIAL	With xFilial("SE2")
+				Replace E2_PREFIXO	With "LIQ"
+				Replace E2_NUM		With cLiquid
+				Replace E2_PARCELA	With cParc565
+				Replace E2_TIPO		With MV_CPNEG
+				Replace E2_EMISSAO	With dDataBase
+				Replace E2_VENCTO	With dDataBase
+				Replace E2_VENCREA	With DataValida(dDataBase)
+				Replace E2_SALDO	With nTotBaixar
+				Replace E2_VALOR	With nTotBaixar
+				Replace E2_VLCRUZ	With Round(NoRound(xMoeda(nTotBaixar,nMoeda,1,,3),3),2)
+				Replace E2_MOEDA	With nMoeda
+				Replace E2_FORNECE	With cFornece
+				Replace E2_LOJA		With cLoja
+				Replace E2_NOMFOR	With cNomeForn
+				Replace E2_NUMLIQ	With cLiquid
+				Replace E2_STATUS	With "A"
+				
+				If cPaisLoc <> "BRA"
+					Replace E2_SITUACA  	With "0"
+				Endif				
+				
+				Replace E2_VENCORI  With dDataBase
+				Replace E2_EMIS1    With dDataBase
+				Replace E2_NATUREZ	With cNatureza
+				Replace E2_FILORIG	With cFilAnt
+				Replace E2_MULTNAT	With "2"
+				Replace E2_CODAPRO	With cCodAprov
+				MsUnLock()
+				If lF565NDF
+					ExecBlock("F565NDF",.F.,.F.,{nSE2Rec})
+				Endif
+
+				//Rastreamento - Geradores
+				If lRastro
+					aadd(aRastroOri,{	SE2->E2_FILIAL,;
+											SE2->E2_PREFIXO,;
+											SE2->E2_NUM,;
+											SE2->E2_PARCELA,;
+											SE2->E2_TIPO,;
+											SE2->E2_FORNECE,;
+											SE2->E2_LOJA,;
+											SE2->E2_VALLIQ } )
+				Endif			
+
+				//Documentos 
+				IF lFinVDoc
+					If SE2->E2_TEMDOCS = "1"
+						aAdd(aDocsOri,{SE2->E2_FILIAL,;
+											SE2->E2_PREFIXO,;
+											SE2->E2_NUM,;
+											SE2->E2_PARCELA,;
+											SE2->E2_TIPO,;
+											SE2->E2_FORNECE,;
+											SE2->E2_LOJA } )
+					EndIf
+				EndIf
+
+				If mv_par01 == 1
+					lPadrao	:= VerPadrao("510")		//Emiss刼 de Contas a Pagar
+					If !lHeadProva .and. lPadrao .and. mv_par01 == 1
+						nHdlPrv := HeadProva( cLote,;
+						                      "FINA565",;
+						                      Substr( cUsuario, 7, 6 ),;
+						                      @cArquivo )
+
+						lHeadProva := .T.
+					EndIf
+					If lPadrao
+						If lUsaFlag  // Armazena em aFlagCTB para atualizar no modulo Contabil
+							aAdd( aFlagCTB, {"E2_LA", "S", "SE2", SE2->( Recno() ), 0, 0, 0} )
+						EndIf
+						
+						If UsaSeqCor()
+							AADD(aDiario,{"SE2",SE2->(recno()),cCodDiario,"E2_NODIA","E2_DIACTB"}) 
+						endif                  
+
+						nTotal += DetProva( nHdlPrv,;
+						                    "510",;
+						                    "FINA565",;
+						                    cLote,;
+						                    /*nLinha*/,;
+						                    /*lExecuta*/,;
+						                    /*cCriterio*/,;
+						                    /*lRateio*/,;
+						                    /*cChaveBusca*/,;
+						                    /*aCT5*/,;
+						                    /*lPosiciona*/,;
+						                    @aFlagCTB,;
+						                    /*aTabRecOri*/,;
+						                    /*aDadosProva*/ )
+					EndIf
+					If nTotal > 0 .AND. !lUsaFlag
+						RecLock("SE2")
+						SE2->E2_LA := "S"
+					Endif					
+				Endif	
+				dbGoto(nSE2Rec)
+			Endif
+		EndIf
+		SE2->(DbSetOrder(1))
+
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Atualiza o Cadastro de Fornecedores							  	  ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+		dbSelectArea("SE2")
+		dbSetOrder(1)
+		dbGoto(nSE2Rec)
+		dbSelectArea("SA2")
+		If MsSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA)
+			RecLock( "SA2" )
+			If SE2->E2_MOEDA > 1
+				nValPadrao := Round(NoRound(xMoeda(nValPadrao,1,SE2->E2_MOEDA,dDataBase,3),3),2)
+				nValPadrao := Round(NoRound(xMoeda(nValPadrao,SE2->E2_MOEDA,1,SE2->E2_EMISSAO,3),3),2)
+			Endif
+			IF SE2->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG
+				SA2->A2_SALDUP		:= A2_SALDUP - nValPadrao
+				SA2->A2_SALDUPM	:= A2_SALDUPM-xMoeda(nValPadrao,1,Val(GetMv("MV_MCUSTO")),SE2->E2_EMISSAO)
+      		Else
+				SA2->A2_SALDUP		:= A2_SALDUP + nValPadrao
+				SA2->A2_SALDUPM	:= A2_SALDUPM+xMoeda(nValPadrao,1,Val(GetMv("MV_MCUSTO")),SE2->E2_EMISSAO)
+			Endif
+			nAtraso:=dDataBase-SE2->E2_VENCTO
+			If nAtraso > 1
+				IF Dow(SE2->E2_VENCTO) == 1 .Or. Dow(SE2->E2_VENCTO) == 7
+					IF Dow(dDataBase) == 2 .and. nAtraso <= 2
+						nAtraso := 0
+					EndIF
+				EndIF
+				nAtraso:=IIF(nAtraso<0,0,nAtraso)
+				If SA2->A2_MATR < nAtraso
+					Replace A2_MATR With nAtraso
+				EndIf
+			Endif
+			SA2->(MsUnlock())	// Destrava SA2 apos alteracoes...
+		EndIf
+		DbSelectArea("SE2")
+		DbSetOrder(1)
+		dbGoto(nSE2Rec)
+		lContabiliza := Iif(mv_par01 == 1,.T.,.F.)
+
+		//Se houver integra玢o entre os m骴ulos Manuten玢o de Ativos e Financeiro
+		If FindFunction("NGBAIXASE2") .And. GetNewPar( "MV_NGMNTFI","N" ) == 'S' 
+			If AllTrim(SE2->E2_ORIGEM) $ "MNTA765/MNTA766" 
+				aAreaMNT	:= GetArea()
+				//Atualiza tabela TRX relacionada aos pagamentos e informa珲es da SE2
+				NGBAIXASE2(1)
+				RestArea( aAreaMNT )
+			EndIf
+		EndIf
+		
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		//?PONTO DE ENTRADA F565SE2                                      ?
+		//?Neste ponto de entrada dever?se retornar um array com os da- ?
+		//?dos de campo e conteo  com dados dos titulos geradores a    ?
+		//?serem gravados de forma complementar nos titulos gerados ap ?
+		//?a liquidacao.  									              ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		If lf565SE2
+			aComplem :=	ExecBlock("F565SE2",.f.,.f.,aComplem)
+		EndIf
+
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		//?Verifica se a contabiliza噭o ser?feita neste momen-?
+		//?Este programa utiliza os proprios lancamentos padro-?
+		//?nizados da emiss刼 / baixa de titulos a receber     ?
+		//?521 em diante, dependendo da carteira               ?
+		//?500 (Emiss刼 de Tulos a Receber)                  ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		cPadrao := "530"
+		lPadrao:= VerPadrao(cPadrao)
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Localiza a sequencia da baixa ( CP,BA,VL,V2)    			 ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+		aTipoDoc := {"CP","BA","VL","V2","LJ"}
+		nSequencia := 1
+		SE5->(dbSetOrder(2))
+		For nx:= 1 to len(aTipoDoc)
+			SE5->(MsSeek(xFilial("SE5") + aTipoDoc[nx] + SE2->E2_PREFIXO + SE2->E2_NUM + ;
+			SE2->E2_PARCELA + SE2->E2_TIPO))
+			While !SE5->(Eof())								.And.;
+					SE5->E5_FILIAL  == xFilial("SE2")	.And.;
+					SE5->E5_TIPODOC == aTipoDoc[nx]    	.And.;
+					SE5->E5_PREFIXO == SE2->E2_PREFIXO 	.And.;
+					SE5->E5_NUMERO  == SE2->E2_NUM		.And.;
+					SE5->E5_PARCELA == SE2->E2_PARCELA 	.And.;
+					SE5->E5_TIPO	 == SE2->E2_TIPO     .And.;
+					SE5->E5_CLIFOR  == SE2->E2_FORNECE 	.And.;
+					SE5->E5_LOJA    == SE2->E2_LOJA
+					
+				If PadL(AllTrim(cSequencia),nTamSeq,"0") < PadL(AllTrim(SE5->E5_SEQ),nTamSeq,"0")
+					cSequencia := SE5->E5_SEQ
+				Endif					
+				SE5->(dbSkip())
+			End
+		Next nx
+		If Len(AllTrim(cSequencia)) < nTamSeq
+			cSequencia := PadL(cSequencia,nTamSeq,"0")
+		Endif                                         
+		cSequencia := Soma1(cSequencia,nTamSeq)
+		
+		//Define os campos que n鉶 existem nas FKs e que ser鉶 gravados apenas na E5, para que a grava玢o da E5 continue igual
+		If !Empty(cCamposE5)
+			cCamposE5 += "|"
+		Endif
+		cCamposE5 += "{"
+		cCamposE5 += "{'E5_TIPO'		, SE2->E2_TIPO}"
+		cCamposE5 += ",{'E5_PREFIXO'	, SE2->E2_PREFIXO}"
+		cCamposE5 += ",{'E5_NUMERO'	, SE2->E2_NUM}"
+		cCamposE5 += ",{'E5_PARCELA'	, SE2->E2_PARCELA}"
+		cCamposE5 += ",{'E5_CLIFOR'	, SE2->E2_FORNECE}"
+		cCamposE5 += ",{'E5_LOJA'	, SE2->E2_LOJA}"
+		cCamposE5 += ",{'E5_DTDIGIT'	, dDataBase}"
+		cCamposE5 += ",{'E5_DTDISPO'	, dDataBase}"
+		cCamposE5 += ",{'E5_BENEF'	, SE2->E2_NOMFOR}"
+		cCamposE5 += ",{'E5_VLJUROS'	, " + cValToChar(Round(NoRound(xMoeda(TRB->JUROS,nMoeda,SE2->E2_MOEDA,,3),3),2))+"}"
+		cCamposE5 += ",{'E5_VLDESCO'	, " + cValToChar(Round(NoRound(xMoeda(TRB->DESCON,nMoeda,SE2->E2_MOEDA,,3),3),2))+"}"
+		cCamposE5 += ",{'E5_VLCORRE'	, " + cValToChar(Round(NoRound(xMoeda(nCm,nMoeda,SE2->E2_MOEDA,,3),3),2))+"}"
+
+		If lAcreDecre
+		
+			cCamposE5 += ",{'E5_VLACRES'	, " + cValToChar(Round(NoRound(xMoeda(TRB->ACRESC,nMoeda,SE2->E2_MOEDA,,3),3),2))+"}"
+			cCamposE5 += ",{'E5_VLDECRE'	, " + cValToChar(Round(NoRound(xMoeda(TRB->DECRESC,nMoeda,SE2->E2_MOEDA,,3),3),2))+"}"
+
+		Endif
+	
+		cCamposE5 += "}"		
+		
+		oModelBxP:SetOperation( 3 ) //Inclusao
+		oModelBxP:Activate()	
+		oModelBxP:SetValue( "MASTER", "E5_GRV", .T. ) //Informa se vai gravar SE5 ou n鉶
+		oModelBxP:SetValue( "MASTER", "E5_CAMPOS", cCamposE5 ) //Informa os campos da SE5 que ser鉶 gravados indepentes de FK5
+		oModelBxP:SetValue( "MASTER", "NOVOPROC", .T. ) //Informa que a inclus鉶 ser?feita com um novo n鷐ero de processo
+		
+		oSubFK2	:= oModelBxP:GetModel("FK2DETAIL")
+		oSubFK6	:= oModelBxP:GetModel("FK6DETAIL")
+		cChaveTit	:= xFilial("SE2") + "|" +  SE2->E2_PREFIXO + "|" + SE2->E2_NUM + "|" + SE2->E2_PARCELA + "|" + SE2->E2_TIPO + "|" + SE2->E2_FORNECE + "|" + SE2->E2_LOJA
+		cChaveFK7	:= FINGRVFK7("SE2", cChaveTit)
+		cChaveFk2	:= FWUUIDV4()
+		
+		//Dados do Processo - Define a chave da FK5 no IDORIG
+		oFKA := oModelBxP:GetModel("FKADETAIL")
+		If !oFKA:IsEmpty()
+			oFKA:AddLine()
+		Endif
+		oFKA:SetValue( "FKA_IDORIG", cChaveFk2 )
+		oFKA:SetValue( "FKA_TABORI", "FK2" )
+											
+		//Dados da baixa a pagar
+		oSubFK2:SetValue( "FK2_IDFK2"	, cChaveFk2 )
+		oSubFK2:SetValue( "FK2_DATA"		, dDataBase )
+		oSubFK2:SetValue( "FK2_VALOR"	, Round(NoRound(xMoeda(TRB->VALLIQ,nMoeda,1,,3),3),2) )
+		oSubFK2:SetValue( "FK2_NATURE"	, SE2->E2_NATUREZ )
+		oSubFK2:SetValue( "FK2_RECPAG"	, "P" )
+		oSubFK2:SetValue( "FK2_TPDOC"	, "BA" )
+		oSubFK2:SetValue( "FK2_HISTOR"	, STR0105 )
+		oSubFK2:SetValue( "FK2_VLMOE2"	, Round(NoRound(xMoeda(TRB->VALLIQ,nMoeda,SE2->E2_MOEDA,,3,,nTxMoeda),3),2) )
+		oSubFK2:SetValue( "FK2_SEQ"		, cSequencia )
+		oSubFK2:SetValue( "FK2_FILORI"	, SE2->E2_FILORIG )
+		oSubFK2:SetValue( "FK2_CCUSTO"	, SE2->E2_CCUSTO )
+		oSubFK2:SetValue( "FK2_MOEDA"	,StrZero(SE2->E2_MOEDA,2))
+		oSubFK2:SetValue( "FK2_TXMOED"	, nTxMoeda )
+		oSubFK2:SetValue( "FK2_MOTBX"	, "LIQ" )
+		oSubFK2:SetValue( "FK2_DOC"		, cLiquid )
+		oSubFK2:SetValue( "FK2_IDDOC"	, cChaveFK7 )
+		oSubFK2:SetValue( "FK2_ORIGEM"	, FUNNAME() )
+		
+		For i := 2 To 4
+			//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+			//?Atualiza a Movimenta噭o Banc爎ia	   				         ?
+			//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+			if i==2
+				cCpoTp  := "TRB->JUROS"
+				cTpDoc  := "JR"
+				cHistMov:= STR0104 //"Juros s/Receb.Titulo"
+			Elseif i==3
+				cCpoTp  :="TRB->DESCON"
+				cTpDoc  :="DC"
+				cHistMov:= STR0103 //"Desconto s/Receb.Titulo"
+			Elseif i==4
+				cCpoTp  := "nCm"
+				cTpDoc  := "CM"
+				cHistMov:= STR0174 //"Correcao Monet s/Pagto.Titulo"
+			Endif
+
+			If &cCpoTp != 0 
+				If !oSubFK6:IsEmpty()
+					//Inclui a quantidade de linhas necess醨ias
+					oSubFK6:AddLine()	
+					//Vai para linha criada
+					oSubFK6:GoLine( oSubFK6:Length() )	
+				Endif	
+				oSubFK6:SetValue( "FK6_FILIAL"	, FWxFilial("FK6") )
+		    	oSubFK6:SetValue( 'FK6_IDFK6'	, GetSxEnum('FK6','FK6_IDFK6') )
+		    	oSubFK6:SetValue( 'FK6_TABORI'	, 'FK2' )
+		    	oSubFK6:SetValue( 'FK6_TPDOC'	, cTpDoc )
+		    	oSubFK6:SetValue( 'FK6_VALCAL'	, &(cCpoTp) )  
+		    	oSubFK6:SetValue( 'FK6_VALMOV'	, &(cCpoTp)  )
+		    	oSubFK6:SetValue( 'FK6_RECPAG'	, "P" )
+		    	oSubFK6:SetValue( 'FK6_HISTOR'	, cHistMov )
+				oSubFK6:SetValue( 'FK6_IDORIG'	, cChaveFK2 )
+			EndIf
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				//?PONTO DE ENTRADA			                       ?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				If ExistBlock("SE5FI565")
+					ExecBlock('SE5FI565',.f.,.F.)
+				Endif
+		Next i
+		
+		If !(lUsaFlag .AND. lContabiliza .AND. lPadrao)
+			oSubFK2:SetValue( "FK2_LA"	, Iif(lContabiliza .and. lPadrao,"S","") )
+		EndIf
+			  		
+		If oModelBxP:VldData()
+		    oModelBxP:CommitData()
+			oModelBxP:DeActivate()
+			cCamposE5:=""
+		Else
+			lRet := .F.
+		    cLog := cValToChar(oModelBxP:GetErrorMessage()[4]) + ' - '
+		    cLog += cValToChar(oModelBxP:GetErrorMessage()[5]) + ' - '
+		    cLog += cValToChar(oModelBxP:GetErrorMessage()[6])        	
+		    
+		    
+		   	oModelBxP:DeActivate()
+		    Help( ,,"M020VALID",,cLog, 1, 0 )	 
+		Endif
+			
+		If lF565SE5
+			aRecSe5 := aClone(FIM020RSE5())
+		Endif
+
+ 		// Armazena em aFlagCTB para atualizar no modulo Contabil
+		If lUsaFlag .AND. lContabiliza .AND. lPadrao
+			aRecSe5 := aClone(FIM020RSE5())
+
+			For nI := 1 to Len(aRecSE5)
+				aAdd( aFlagCTB, {"E5_LA", "S", "SE5", aRecSE5[nI], 0, 0, 0} )
+			Next nI
+		EndIf
+				
+		If UsaSeqCor()
+			AADD(aDiario,{"SE5",SE5->(recno()),cCodDiario,"E5_NODIA","E5_DIACTB"}) 
+		endif
+			
+		If mv_par01 == 1   // Contabiliza On Line
+			ABATIMENTO := TRB->ABATIM
+			cAliasAnt := Alias()
+			DbSelectArea("SA2")
+			DbSetOrder(1)
+			MsSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA)
+			dbSelectArea(cAliasAnt)
+			If !lHeadProva .and. lPadrao
+				nHdlPrv := HeadProva( cLote,;
+				                      "FINA565",;
+				                      Substr( cUsuario, 7, 6 ),;
+				                      @cArquivo )
+
+				lHeadProva := .T.
+			EndIf
+
+			If lPadrao
+				nTotal += DetProva( nHdlPrv,;
+				                    cPadrao,;
+				                    "FINA565",;
+				                    cLote,;
+				                    /*nLinha*/,;
+				                    /*lExecuta*/,;
+				                    /*cCriterio*/,;
+				                    /*lRateio*/,;
+				                    /*cChaveBusca*/,;
+				                    /*aCT5*/,;
+				                    /*lPosiciona*/,;
+				                    @aFlagCTB,;
+				                    /*aTabRecOri*/,;
+				                    /*aDadosProva*/ )
+			EndIf
+		EndIf
+		MsUnlock()			
+		     
+		// Zerar ABATIMENTO para contabilizacao. 
+		ABATIMENTO := 0
+
+	EndIf
+	
+	DbSelectArea("TRB")
+	DbSkip()
+	
+	If nTotBaixar <= 0
+		// Zerar ABATIMENTO para contabilizacao. 
+		ABATIMENTO := 0
+		Exit
+	Endif
+End
+
+//Pront de entrada
+If lF565SE5
+	ExecBlock("F565SE5",.F.,.F.,{aRecSe5})
+Endif 
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Criacao dos titulos gerados pela liquidacao         ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+
+cPadrao	:= "510"
+lPadrao	:= VerPadrao("510")		//Emiss刼 de Contas a Pagar
+If (SE2->E2_PRETPIS <> "1"  .Or. SE2->E2_PRETCOF <> "1" .Or. SE2->E2_PRETCSL <> "1") .And. SE2->(E2_PIS -E2_VRETPIS) == 0
+	lPCCBaixa := .F.
+EndIf
+//PCC Baixa
+//Necessario somar o total da fatura antes da geracao do t韙ulo de liquidacao
+//para proporcionalizar o valor do PCC
+If lPCCBaixa .OR. lCalcIssBx 
+	For nCntFor:=1 To Len(aCols)
+		If !(aCols[nCntFor,nUsado2+1]) // .F. == Ativo  .T. == Deletado				
+			nTotLiq += aCols[nCntFor,8]	
+		Endif
+	Next						
+Endif
+
+For nCntFor := 1 To Len(aCols)
+	__LACO := nCntFor
+	If !(aCols[nCntFor,nUsado2+1])
+		cParc565 := F565Parc()
+
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		//?Busca parcela disponivel para titulo                ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+
+		A565VerPc(nCntFor,.F.)
+
+		//PCC Baixa
+		//Tratamento da proporcionalizacao dos impostos PCC
+		//para posterior gravacao na parcela gerada
+		If lPCCBaixa
+			nPropPcc		:= aCols[nCntFor,8] / nTotLiq
+			nPis			:= Round(NoRound(aPccBaixa[1] * nPropPcc,3),2)
+			nCofins		:= Round(NoRound(aPccBaixa[2] * nPropPcc,3),2)						
+			nCsll			:= Round(NoRound(aPccBaixa[3] * nPropPcc,3),2)
+			nBasePcc		:= Round(NoRound(aPccBaixa[4] * nPropPcc,3),2)
+			nTotPis		+= nPis
+			nTotCofins	+= nCofins
+			nTotCsll	+= nCsll
+			nTotBasPCC	+= nBasePcc
+			
+			//Acerto de eventuais problemas de arredondamento
+			If aPccBaixa[1] - nTotPis <= 0.01
+				nPis		+= aPccBaixa[1] - nTotPis
+			Endif
+
+			If aPccBaixa[2] - nTotCofins <= 0.01
+				nCofins	+= aPccBaixa[2] - nTotCofins
+			Endif
+
+			If aPccBaixa[3] - nTotCsll <= 0.01
+				nCSll		+= aPccBaixa[3] - nTotCsll
+			Endif
+
+			If aPccBaixa[4] - nTotBasPCC <= 0.01
+				nBasePcc	+= aPccBaixa[4] - nTotBasPCC
+			Endif
+
+		Endif
+		
+		//IR Baixa
+		//Tratamento da proporcionalizacao dos impostos PCC
+		//para posterior gravacao na parcela gerada
+		If lIRBaixa
+			nPropIR		:= aCols[nCntFor,8] / nTotLiq
+			nIrrf		:= Round(NoRound(aIRBaixa[1] * nPropIR,3),2)
+			nBaseIR		:= Round(NoRound(aIRBaixa[2] * nPropIR,3),2)
+			nTotIR		+= nIrrf
+			nTotBasIR	+= nBaseIR
+			
+			//Acerto de eventuais problemas de arredondamento
+			If aIRBaixa[1] - nTotIR <= 0.01
+				nIrrf		+= aIRBaixa[1] - nTotIR
+			Endif
+
+			If aIRBaixa[2] - nTotBasIR <= 0.01
+				nBaseIR	+= aIRBaixa[2] - nTotBasIR
+			Endif
+
+		Endif
+
+		//ISS Baixa
+		//Tratamento da proporcionalizacao do ISS
+		//para posterior gravacao na parcela gerada
+		If lCalcIssBx
+			nPropIss		:= aCols[nCntFor,8] / nTotLiq
+			nIss			:= Round(NoRound(nIssBaixa * nPropIss,3),2)
+			nTotIss		+= nIss
+			//Acerto de eventuais problemas de arredondamento
+			If nIssBaixa - nTotIss <= 0.01
+				nIss		+= nIssBaixa - nTotIss
+			Endif
+		Endif
+
+		DbSelectArea("SE2")
+		DbSetOrder(1)
+		RecLock("SE2",.T.)
+		SE2->E2_FILIAL		:= xFilial("SE2")
+		SE2->E2_PREFIXO	:= aCols[nCntFor,1]
+		SE2->E2_NUMLIQ	 	:= cLiquid					// Nro. da Liquidacao
+		SE2->E2_NUM	   	:= aCols[nCntFor,6]		// nro. do cheque
+		SE2->E2_TIPO   	:= aCols[nCntFor,2]		// Tipo
+		SE2->E2_BCOCHQ 	:= aCols[nCntFor,3]		// banco
+		SE2->E2_AGECHQ 	:= aCols[nCntFor,4]		// agencia
+		SE2->E2_CTACHQ 	:= aCols[nCntFor,5]		// conta
+		SE2->E2_SALDO  	:= aCols[nCntFor,8]		// valor do cheque			
+		SE2->E2_STATUS 	:= "A"
+		SE2->E2_PARCELA	:= cParc565
+		SE2->E2_FORNECE 	:= cFornece
+		SE2->E2_LOJA		:= cLoja
+		SE2->E2_NOMFOR		:= cNomeForn
+		SE2->E2_EMISSAO	:= dDataBase
+		SE2->E2_EMIS1		:= dDataBase
+		SE2->E2_VENCTO		:= aCols[nCntFor,7]		// data de vencimento
+		SE2->E2_VENCREA	:= DataValida(aCols[nCntFor,7],.T.)
+		SE2->E2_VENCORI	:= aCols[nCntFor,7]		// data de vencimento
+		SE2->E2_VALOR		:= aCols[nCntFor,8]		// valor do cheque
+		SE2->E2_VLCRUZ 	:= xMoeda (aCols[nCntFor,8],nMoeda,1,dDataBase)
+		SE2->E2_MOEDA		:= nMoeda
+		SE2->E2_NATUREZ	:= cNatureza
+		SE2->E2_MULTNAT	:= "2"		
+		SE2->E2_ACRESC 	:= aCols[nCntFor,9]		// acrescimo
+		SE2->E2_DECRESC	:= aCols[nCntFor,10]		// decrescimo
+		SE2->E2_SDACRES	:= aCols[nCntFor,9]		// acrescimo
+		SE2->E2_SDDECRE	:= aCols[nCntFor,10]		// decrescimo
+		SE2->E2_ORIGEM		:= "FINA565"
+		SE2->E2_FLUXO		:= "S"
+		SE2->E2_STATUS		:= "A"
+		SE2->E2_CODAPRO	:= cCodAprov
+
+		Replace E2_FILORIG	With cFilAnt
+		
+		If lUsaFlag .AND. lPadrao .AND. MV_PAR01 == 1 // Armazena em aFlagCTB para atualizar no modulo Contabil
+			aAdd( aFlagCTB, {"E2_LA", "S", "SE2", SE2->( Recno() ), 0, 0, 0} )
+		Else
+			SE2->E2_LA      	:= Iif(lPadrao .and. mv_par01==1,"S","")
+		EndIf
+		
+		If UsaSeqCor()
+			AADD(aDiario,{"SE2",SE2->(recno()),cCodDiario,"E2_NODIA","E2_DIACTB"}) 
+		endif  
+					
+		//Pcc Baixa 
+		If lPCCBaixa
+			Replace E2_PIS		With nPis
+			Replace E2_PRETPIS	With "1"
+			Replace E2_BASEPIS	With nBasePcc
+
+			Replace E2_COFINS	With nCofins
+			Replace E2_PRETCOF	With "1"
+			Replace E2_BASECOF	With nBasePcc
+
+			Replace E2_CSLL		With nCsll     
+			Replace E2_PRETCSL	With "1"
+			Replace E2_BASECSL	With nBasePcc
+		Endif
+        
+		//IR Baixa
+		If lIRBaixa
+			Replace E2_IRRF		With nIrrf     
+			Replace E2_PRETIRF	With "1"
+			Replace E2_BASEIRF	With nBaseIR
+		EndIf
+		
+		//ISS Baixa
+		If lCalcIssBx 
+			Replace E2_ISS 		With  nIss
+			Replace E2_FRETISS 	With  "1"
+			Replace E2_TRETISS 	With  "2"
+		Endif
+
+		//Documentos 
+		IF lFinVDoc
+			If Len(aDocsOri) > 0
+				SE2->E2_TEMDOCS := "1"
+			EndIf
+		EndIf
+
+		MsUnlock()
+
+		//Cria玢o do Ponto de Entrada para manipular o titulo gerado da liquida玢o
+		If lF565TPliq
+			ExecBlock("F565TPliq",.F.,.F.)
+		EndIf
+
+		If lAtuSldNat
+			AtuSldNat(SE2->E2_NATUREZ, SE2->E2_VENCREA, SE2->E2_MOEDA, "2", "P", SE2->E2_VALOR,SE2->E2_VLCRUZ, "+",,FunName(),"SE2",SE2->(Recno()),0)
+		Endif
+
+		nValorTotal+= SE2->E2_VLCRUZ
+
+		If lf565Val
+			ExecBlock("F565VAL",.f.,.f.,aComplem)
+		EndIf
+
+		//Rastreamento - Gerados
+		If lRastro
+			aadd(aRastroDes,{	SE2->E2_FILIAL,;
+									SE2->E2_PREFIXO,;
+									SE2->E2_NUM,;
+									SE2->E2_PARCELA,;
+									SE2->E2_TIPO,;
+									SE2->E2_FORNECE,;
+									SE2->E2_LOJA,;
+									SE2->E2_VALOR } )
+		Endif			
+
+		//Documentos 
+		IF lFinVDoc
+			If Len(aDocsOri) > 0
+				aAdd(aDocsDes,{SE2->E2_FILIAL,;
+									SE2->E2_PREFIXO,;
+									SE2->E2_NUM,;
+									SE2->E2_PARCELA,;
+									SE2->E2_TIPO,;
+									SE2->E2_FORNECE,;
+									SE2->E2_LOJA } )
+			EndIf
+		EndIf
+
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Atualiza Acumulado de Fornecedores		     ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+		DbSelectArea("SA2")
+		DbSetOrder(1)
+		If MsSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA)
+			RecLock( "SA2" )
+			If !(SE2->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG+"/"+MVABATIM)
+				SA2->A2_SALDUP -= Round(NoRound(xMoeda(SE2->E2_SALDO,SE2->E2_MOEDA,1,SE2->E2_EMISSAO,3),3),2)
+				SA2->A2_SALDUPM-= Round(NoRound(xMoeda(SE2->E2_SALDO,SE2->E2_MOEDA,nMoeda,SE2->E2_EMISSAO,3),3),2)
+			Else
+				SA2->A2_SALDUP += Round(NoRound(xMoeda(SE2->E2_SALDO,SE2->E2_MOEDA,1,SE2->E2_EMISSAO,3),3),2)
+				SA2->A2_SALDUPM+= Round(NoRound(xMoeda(SE2->E2_SALDO,SE2->E2_MOEDA,nMoeda,SE2->E2_EMISSAO,3),3),2)
+			EndIf
+			MsUnlock()
+		Endif
+
+		If mv_par01 == 1  // Contabiliza On Line
+			If !lHeadProva .and. lPadrao
+				nHdlPrv := HeadProva( cLote,;
+				                      "FINA565",;
+				                      Substr( cUsuario, 7, 6 ),;
+				                      @cArquivo )
+
+				lHeadProva	:= .T.
+			EndIf
+
+			If lPadrao
+				nTotal += DetProva( nHdlPrv,;
+				                    cPadrao,;
+				                    "FINA565",;
+				                    cLote,;
+				                    /*nLinha*/,;
+				                    /*lExecuta*/,;
+				                    /*cCriterio*/,;
+				                    /*lRateio*/,;
+				                    /*cChaveBusca*/,;
+				                    /*aCT5*/,;
+				                    /*lPosiciona*/,;
+				                    @aFlagCTB,;
+				                    /*aTabRecOri*/,;
+				                    /*aDadosProva*/ )
+			EndIf
+		
+		EndIf
+	EndIf
+Next nCntFor
+
+VALOR := nValorTotal
+
+If mv_par01 == 1 .And. lPadrao 
+
+	//Desposiciono SE2 para nao duplicar
+	nSe2Rec := SE2->(RECNO())
+	SE2->(dbGoBottom())
+	SE2->(dbSkip())
+
+	//Contabilizo totalizador - VALOR
+	nTotal += DetProva( nHdlPrv,;
+	                    cPadrao,;
+	                    "FINA565",;
+	                    cLote,;
+	                    /*nLinha*/,;
+	                    /*lExecuta*/,;
+	                    /*cCriterio*/,;
+	                    /*lRateio*/,;
+	                    /*cChaveBusca*/,;
+	                    /*aCT5*/,;
+	                    /*lPosiciona*/,;
+	                    @aFlagCTB,;
+	                    /*aTabRecOri*/,;
+	                    /*aDadosProva*/ )
+
+	//Reposiciono SE2
+	SE2->(DBGOTO(nSe2Rec))
+
+EndIF
+
+If nTotal > 0
+	RodaProva(  nHdlPrv,;
+				nTotal )
+	lDigita	:=IIF(mv_par02==1,.T.,.F.)
+	lAglutina:=IIF(mv_par03==1,.T.,.F.)
+
+	cA100Incl( cArquivo,;
+	           nHdlPrv,;
+	           3,;
+	           cLote,;
+	           lDigita,;
+	           lAglutina,;
+	           /*cOnLine*/,;
+	           /*dData*/,;
+	           /*dReproc*/,;
+	           @aFlagCTB,;
+	           /*aDadosProva*/,;
+	           aDiario )
+	aFlagCTB := {}  // Limpa o coteudo apos a efetivacao do lancamento
+EndIf
+
+VALOR := 0
+If Existblock("F565CTB")
+	Execblock("F565CTB",.F.,.F.)
+Endif
+
+//Gravacao do rastreamento
+If lRastro
+	FINRSTGRV(2,"SE2",aRastroOri,aRastroDes,nValProces) 
+Endif
+
+//Documentos
+If (Len(aDocsOri) > 0) .And. lFinVDoc
+ 	CN062GrvFat(aDocsOri,aDocsDes)
+EndIf
+
+Return .T.
+
+/*
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噮o	 矨565YesNo	?Autor ?Mauricio Pequim Jr.   ?Data ?25/01/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噮o ?Exibe mensagem de OK para dados digitados da fatura		  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?A565YesNo()							                      		  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+*/
+Static Function A565YesNo()
+Return (MsgYesNo(STR0050,STR0051))  //"Confirma Dados?"###"Aten噭o"
+
+/*
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噮o	 矨565Exibe	?Autor ?Pilar S. Albaladejo   ?Data ?07/11/95 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噮o ?Exibe Totais de titulos selecionados						  	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?A565Exibe()											  	  				  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+*/
+Function A565Exibe( cAlias, cMarca, oValor, oQtdTit )
+DbSelectArea(cAlias)
+If (cAlias)->MARCA == cMarca
+	nValor 	+= (cAlias)->VALLIQ 
+	nQtdTit++
+Else
+	nValor 	-= (cAlias)->VALLIQ 
+	nQtdTit--
+EndIf
+
+nValor := IIf (nValor < 0, 0, nValor)
+nQtdTit:= Iif (nQtdTit < 0, 0 ,nQtdTit)
+oValor:Refresh()
+oQtdTit:Refresh()
+Return
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 ?A565Invert ?Autor ?Wagner Xavier	       ?Data ?09/05/97 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Marca / Desmarca titulos				            				 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Fina565													    				 潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function A565Inverte( cMarca, oValor, oQtdTit, lTodos, oMark )
+Local nReg := TRB->(Recno())
+
+DEFAULT lTodos  := .T.
+
+DbSelectArea("TRB")
+If lTodos
+	DbGoTop()
+Endif
+While !lTodos .Or. !Eof()
+	SE2->(MSSeek(TRB->CHAVE))
+	If SE2->(MsRLock()) .and. SE2->E2_SALDO > 0
+		If TRB->MARCA == cMarca
+			RecLock("TRB")
+			Replace MARCA With Space(02)
+			TRB->(MsUnlock())
+			SE2->(MsUnlock()) //Destravo para que outro detrminal possa utilizar o documento
+			nValor -= TRB->VALLIQ
+			nQtdTit--
+		Else
+			RecLock("TRB")
+			Replace MARCA With cMarca
+			TRB->(MsUnlock())
+			nValor += TRB->VALLIQ
+			nQtdTit++
+		EndIf
+	Endif
+	If lTodos
+		TRB->(dbSkip())
+	Else
+		Exit
+	Endif
+End
+DbGoTo(nReg)
+nValor := IIf (nValor < 0, 0, nValor)
+nQtdTit := IIF (nQtdTit < 0, 0 , nQtdTit)
+oQtdTit:Refresh()
+oValor:Refresh()
+Return(NIL)
+
+/*
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噮o	 矨565Cond 	?Autor ?Mauricio Pequim Jr.   ?Data ?25/01/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噮o ?Faz calculos da Liquidacao de parcelas automaticas 		  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?A565Cond(cCondicao)													  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565																	  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+*/
+Function A565Cond( cCondicao, nUsado2, cTipo )
+
+Local nValParc		:= 0
+Local nDifer		:= 0
+Local aTamBco 		:= TamSx3("E2_BCOCHQ")
+Local aTamAge 		:= TamSx3("E2_AGECHQ")
+Local aTamCta 		:= TamSx3("E2_CTACHQ")
+Local aTamTit 		:= TamSx3("E2_NUM")
+Local nHeader
+Local nCond
+
+If SE4->(dbSeek(xFilial("SE4")+cCondicao))
+	If SE4->E4_TIPO == "9"
+	Return .F.	
+	ElseIf SE4->E4_TIPO == "A"
+		// As condicoes de pagamento do tipo A s鉶 exclusivas dos modulos SIGAVEI e SIGAOFI.
+		Alert(STR0170)
+		Return .F.	
+	Endif 
+Endif
+
+If Empty(cCondicao)
+	aParcelas := {{dDataBase,nValor}}
+Else	
+	aParcelas := Condicao (nValor,cCondicao,,dDataBase)
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Corrige possiveis diferencas entre o valor selecionado e o ?
+	//?apurado ap a divisao das parcelas						   	?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	For nCond := 1 to Len (aParcelas)
+		nValParc += aParcelas [ nCond, 2]
+	Next
+	If nValParc != nValor
+		nDifer := round(nValor - nValParc,2)
+		aParcelas [ Len(aParcelas), 2 ] += nDifer
+	EndIf
+Endif	
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Passa para aCols{} as datas e Valores de parcela apurados  ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+aCols:= Array(len(aParcelas),(nUsado2+1))
+
+For nCond := 1 to Len (aParcelas)
+	If ExistIni("E2_PREFIXO")
+     	aCols[nCond,1] := InitPad(SX3->X3_RELACAO)
+   Else
+		aCols[nCond,1] := space(3)
+   EndIf
+	aCols[nCond,3] := Space(aTamBco[1])								// Banco
+	aCols[nCond,4] := Space(aTamAge[1])								// Agencia
+	aCols[nCond,5] := Space(aTamCta[1])   							// Conta
+	aCols[nCond,2] := cTipo
+	aCols[nCond,6] := Space(aTamTit[1])	// nRO.cHEQUE
+	aCols[nCond,7] := aParcelas [nCond,1]							// data
+	aCols[nCond,8] := aParcelas [nCond,2]							// valor da parcela
+	aCols[nCond,9] := 0														// acrescimo        
+	aCols[nCond,10] := 0                  								// decrescimo      
+	aCols[nCond,11] := aParcelas [nCond,2]							// valor do cheque 
+	// Iniciar colunas adicionadas pelo usuario
+	If nUsado2 > 11 // Tamanho do aHeader
+		For nHeader := 12 to nUsado2
+			aCols[nCond,nHeader] := CriaVar(aHeader[nHeader,2],.T.)
+		Next
+	Endif
+	aCols[nCond,nUsado2+1] := .F.										// controle de delecao
+Next nCond
+nValorLiq	:= 0
+nNroParc	:= 0
+
+If SuperGetMv("MV_CMC7FIN") == "S"
+	// Abre porta para CMC7
+	If lOpenCmc7 == Nil
+		OpenCMC7()
+		lOpenCmc7 := .T.
+	Endif	
+	If ExistBlock("A565PARC")
+		ExecBlock("A565PARC", .F., .F. )
+	Else
+		F565CMC7()
+	Endif
+Endif
+oGet:ForceRefresh()
+A565Valor(.F.)
+
+Return .T.
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 ?FA565CAN   ?Autor ?Mauricio Pequim Jr.	 ?Data ?02/02/98  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Cancelamento de Liquida噭o                 				    潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?FA565CAN()													潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 													潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function FA565CAN( cAlias, cCampo, nOpcx )
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Define Variaveis 											 ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+Local lPanelFin := IsPanelFin()
+Local cSavCur1
+Local cSavRow1
+Local cSavCol1
+Local cSavCor1
+Local cSavScr1
+Local cSavScr2
+Local lRet		:= .F.
+Local cSav7
+Local cSav20
+Local cSavCur
+Local nPosAtu	:= 0
+Local nPosAnt	:= 0
+Local nPosCnt	:= 0
+Local cSavMenuh
+Local nC		:= 0
+Local aCA		:= {STR0004,STR0006 }   //"Confirma"###"Abandona"
+Local cArquivo
+Local nTotal	:= 0
+Local nHdlPrv	:= 0
+Local nOpcT		:= 0
+Local nW		:= 1
+Local dDatCont	:= dDatabase
+Local cCondicao	:= Space(3)
+Local nTitulos	:= 0
+Local nParcelas	:= 0
+Local cOP		:= "N"
+Local cIndex	:= ""
+Local nLastKey	:= 0
+Local cNewLiq
+Local cTitulo 	:= STR0062  //"Cancel. Liquida噭o"
+Local cDadosSE2
+Local cDadosSe5
+Local lHeadProva:= .F.
+Local lPadraoE5	:= VerPadrao("531")  // Estorno de baixas a PAGAR
+Local lPadraoE2	:= VerPadrao("515")  // Exclusao de conta a PAGAR
+Local cPadrao
+Local lContabilizou := .F.
+Local lDigita 	:= .T.
+Local lAglutina := .T.
+Local cTipoLiq 	:= CriaVar("E2_TIPO" , .F.)
+Local lCtBaixa 	:= .F.
+Local lFin565e2 := ExistBlock("FIN565E2")
+Local lAcreDecre:= .F.
+Local nAcresc 	:= 0
+Local nDecresc 	:= 0
+
+Local aFlagCTB	:= {}
+Local lUsaFlag	:= SuperGetMV( "MV_CTBFLAG" , .T. /*lHelp*/, .F. /*cPadrao*/)
+Local lAtuSldNat  := .T.
+
+//REESTRUTURACAO SE5
+Local aAreaAnt		:= {}
+Local oModelBxP	:= FWLoadModel("FINM020")
+Local cLog			:= ""
+Local lRet			:= .T.
+
+Local aTitPai := {}
+Local nI			:= 0
+Local lExistFJU := FJU->(ColumnPos("FJU_RECPAI")) >0 .and. FindFunction("FinGrvEx")
+Local aAreaMnt := {}
+
+Private cLiqCan := CriaVar("E2_NUM" , .F.) 
+Private aDiario := {}
+Private cCodDiario:= ""
+
+// Zerar variaveis para contabilizar os impostos da lei 10925.
+VALOR5 := 0
+VALOR6 := 0
+VALOR7 := 0                   
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se data do movimento n刼 ?menor que data limite de ?
+//?movimentacao no financeiro    										  ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+If !DtMovFin(,,"1")
+	Return
+EndIf
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica o numero do Lote 									 ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+DbSelectArea("SX5")
+MsSeek(cFilial+"09FIN")
+
+Private cLote := Substr(X5_DESCRI,1,4)
+
+If Empty(SE2->E2_NUMLIQ)
+	cLiqCan := SuperGetMV("MV_NUMLIQP")
+Else
+	cLiqCan := SE2->E2_NUMLIQ
+EndIf
+
+nValor		:= 0
+nValPag		:= 0
+nTitulos 	:= 0
+nParcelas	:= 0
+nOpcT 		:= 0
+
+//verifica se existem os capos de valores de acrescimo e decrescimo no SE5
+lAcreDecre := .T.
+
+aSize := MSADVSIZE()
+If lPanelFin  //Chamado pelo Painel Financeiro			
+	dbSelectArea(cAlias)
+	oPanelDados := FinWindow:GetVisPanel()
+	oPanelDados:FreeChildren()
+	aDim := DLGinPANEL(oPanelDados)
+	DEFINE MSDIALOG oDlg OF oPanelDados:oWnd FROM 0,0 To 0,0 PIXEL STYLE nOR( WS_VISIBLE, WS_POPUP )	
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Observacao Importante quanto as coordenadas calculadas abaixo: ?
+	//?-------------------------------------------------------------- ?		
+	//?a funcao DlgWidthPanel() retorna o dobro do valor da area do   ?
+	//?painel, sendo assim este deve ser dividido por 2 antes da sub- ?
+	//?tracao e redivisao por 2 para a centralizacao. 				   ?	
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁		
+	nEspLarg := (((DlgWidthPanel(oPanelDados)/2) - 114) /2) 
+	nEspLin  := 0						
+	oDlg:lMaximized := .F.
+	oPanel := TPanel():New(0,0,'',oDlg,, .T., .T.,, ,20,20)
+	oPanel:Align := CONTROL_ALIGN_ALLCLIENT    	
+	
+Else	
+	DEFINE MSDIALOG oDlg4 FROM	20,1 TO 160,340 TITLE cTitulo PIXEL
+	nEspLarg := 0 
+  	nEspLin  := 0	
+  	oDlg4:lMaximized := .F.
+	oPanel := TPanel():New(0,0,'',oDlg4,, .T., .T.,, ,20,20)
+	oPanel:Align := CONTROL_ALIGN_ALLCLIENT    	
+
+Endif	
+
+@ 006+nEspLin, nEspLarg TO 036, 114+nEspLarg OF oPanel PIXEL
+nEspLarg := nEspLarg -11
+@ 021+nEspLin, 014+nEspLarg MSGET cLiqCan Valid !Empty(cLiqCan) 	SIZE 49, 11 OF oPanel PIXEL
+@ 011+nEspLin, 014+nEspLarg SAY STR0058 SIZE 49, 07 OF oPanel PIXEL //"Nro. Liquida噭o"
+
+If lPanelFin  //Chamado pelo Painel Financeiro			
+		// define dimen玢o da dialog
+		oDlg:nWidth := aDim[4]-aDim[2]
+
+		ACTIVATE MSDIALOG oDlg ON INIT (FaMyBar(oDlg,{||,nOpct:=1, oDlg:End()},{||,oDlg:End()}),oDlg:Move(aDim[1],aDim[2],aDim[4]-aDim[2], aDim[3]-aDim[1]))		
+		FinVisual(cAlias,FinWindow,(cAlias)->(Recno()),.T.)
+		
+Else
+	DEFINE SBUTTON FROM 10, 133 TYPE 1 ACTION (nOpct:=1, If (Fa565OK2(),oDlg4:End(),nOpct:=0)) ENABLE OF oDlg4 
+	DEFINE SBUTTON FROM 23, 133 TYPE 2 ACTION oDlg4:End() ENABLE OF oDlg4
+	ACTIVATE MSDIALOG oDlg4 CENTERED
+Endif
+	
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Salva a Area atual do SE2                                 ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+DbSelectArea("SE2")
+nOrdemSe2 	:= IndexOrd()
+nRegSE2 	:= Recno()
+nRecSe5		:= SE5->(Recno())
+
+If Existblock("F565CANC")
+	nOpct := Execblock("F565CANC" ,.F.,.F.)
+Endif
+
+If nOpct == 1
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+	//?Seleciona os registros a serem processados no cancelamento?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+	If A565Filtra(cLiqCan)
+		dbSelectArea("TRB")
+		DbGoTop()		
+		DbSelectArea("SE2")
+		DbGoTop()
+		While TRB->(!Eof())
+     		SE2->(dbGoto(TRB->CHAVE))
+     		TRB->(dbSkip())
+			DbSelectArea("SE2")
+      	
+			cDadosSe2 := SE2->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA)
+			cDadosSe5 := SE2->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA)
+
+			//Movimento dos titulos geradores de liquidacao
+			If ( Empty(SE2->E2_NUMLIQ) .And.;
+				 (Empty(SE2->E2_BCOCHQ) .and. !(SE2->E2_TIPO $ MV_CPNEG))) .or. ;
+				  SE2->E2_STATUS == "R" 
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				//?Se for um titulo que gerou a liquidacao, desfaz o processo?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				nTotAbat := 0
+				nJuros	:= 0
+				nDescont := 0
+
+				dbSelectArea("SE2")
+				nTotAbat := SomaAbat(SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,"P",SE2->E2_MOEDA,dDataBase,SE2->E2_FORNECE,SE2->E2_LOJA)
+
+				dbSelectArea("SE5")
+				SE5->(dbSetOrder(7))
+              
+                //谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+                //Ponto de entrada para tratamento do titulo gerado pela   ?
+				//liquidacao antes do cancelamento.                        ? 
+   				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+				IF ExistBlock("F565E5")
+      				ExecBlock("F565E5", .F., .F.)
+				Endif    
+
+				If SE5->( MsSeek(xFilial("SE5")+cDadosSE5))
+					
+					aAreaAnt:= SE5->(GETAREA())
+
+					While !Eof() .and. xFilial("SE5") == SE5->E5_FILIAL .and. ;
+						SE5->(E5_PREFIXO+E5_NUMERO+E5_PARCELA+E5_TIPO+E5_CLIFOR+E5_LOJA) == cDadosSE5
+
+						If SE5->E5_SITUACA == "C" .or. cLiqCan != Alltrim(E5_DOCUMEN) .or. ;
+							SE5->E5_MOTBX != "LIQ" .or. !(SE5->E5_TIPODOC $ "DC#JR#BA") .Or.;
+							SE5->E5_RECPAG != "P"
+							dbSKip()
+							Loop
+						EndIf
+
+						// Verifica movimentacao de AVP
+						FAVPValTit( "SE2", SE5->( RecNo() ) )
+
+						If SE5->E5_TIPODOC == "DC"
+							nDescont	:= SE5->E5_VALOR
+							RecLock("SE5")
+								Replace E5_SITUACA with "C"
+							SE5->(MSUNLOCK())
+						ElseIf  SE5->E5_TIPODOC == "JR"
+							nJuros		:= SE5->E5_VALOR
+							RecLock("SE5")
+								Replace E5_SITUACA with "C"
+							SE5->(MSUNLOCK())
+						Elseif  SE5->E5_TIPODOC == "BA"
+							nValPag  := SE5->E5_VALOR
+							nValorM2 := SE5->E5_VLMOED2
+							nRecSE5  := SE5->( recno() )
+							lCtBaixa := If("S"$SE5->E5_LA,.T.,lCtBaixa)
+							If lAcreDecre
+								nAcresc	:= SE5->E5_VLACRES
+								nDecresc	:= SE5->E5_VLDECRE
+							Endif
+							oModelBxP := FWLoadModel("FINM020") //Recarrega o Model de baixa para pegar o campo do relacionamento (SE5->E5_IDORIG)
+							oModelBxP:SetOperation( 4 ) //Altera玢o
+							oModelBxP:Activate()
+							oModelBxP:SetValue( "MASTER", "E5_GRV", .T. ) //Habilita grava玢o SE5
+							//E5_OPERACAO 1 = Altera E5_SITUACA da SE5 para 'C' e gera estorno na FK2
+							//E5_OPERACAO 2 = Grava E5 com E5_TIPODOC = 'ES' e gera estorno na FK2
+							//E5_OPERACAO 3 = Deleta da SE5 e gera estorno na FK2
+							oModelBxP:SetValue( "MASTER", "E5_OPERACAO", 1 )
+							oModelBxP:SetValue( "MASTER", "HISTMOV"    , STR0062) 
+							
+							//Posiciona a FKA com base no IDORIG da SE5 posicionada
+		             		oFKA := oModelBxP:GetModel( "FKADETAIL" )
+							oFKA:SeekLine( { {"FKA_IDORIG", SE5->E5_IDORIG } } )	
+							If oModelBxP:VldData()
+								SE5->(dbGoTo(nRecSE5))
+								oModelBxP:CommitData()
+						       
+							Else
+								lRet := .F.
+							    cLog := cValToChar(oModelBxP:GetErrorMessage()[4]) + ' - '
+							    cLog += cValToChar(oModelBxP:GetErrorMessage()[5]) + ' - '
+							    cLog += cValToChar(oModelBxP:GetErrorMessage()[6])        	
+							    
+					    		
+					    		Help( ,,"M020VALID",,cLog, 1, 0 )
+							EndIf
+							oModelBxP:DeActivate()
+						EndIf
+
+						If UsaSeqCor()
+							AADD(aDiario,{"SE5",SE5->(recno()),cCodDiario,"E5_NODIA","E5_DIACTB"}) 
+			   			EndIf
+			   		
+						SE5->(dbSkip())
+					End
+					
+					RestArea(aAreaAnt)
+
+				Endif
+				
+						
+
+				SE5->( dbGoTo( nRecSE5 ) )
+
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+				//砎erifica se foi utilizada taxa contratada para moeda > 1          ?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+				If SE5->E5_TXMOEDA > 1
+					nTxMoeda := SE5->E5_TXMOEDA
+				Else
+					If SE2->E2_MOEDA > 1 .and. Round(NoRound(xMoeda(nValPag,1,SE2->E2_MOEDA,SE5->E5_DATA,3),3),2) != SE5->E5_VLMOED2
+						nTxMoeda := SE5->E5_VALOR / SE5->E5_VLMOED2
+					Else
+						nTxMoeda := RecMoeda(SE5->E5_DATA,SE2->E2_MOEDA)
+					Endif
+				EndIf
+
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				//矯aso moeda == 1 a funcao RecMoeda iguala nTxMoeda = 0. Iguala-se   ?
+				//硁TxMoeda = 1 p/ evitar problema c/ calculos de abatimento e outros.?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				nTxMoeda := IIF(nTxMoeda == 0 , 1 , nTxMoeda)
+				DbSelectArea("SE2")
+				DbSetOrder(1)
+				MsSeek(xFilial("SE2")+cDadosSE2)
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+				//矴era backup dos valores da baixa (para cancelamento baixa parcial)?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+				nSe2ValLiq  := SE2->E2_VALLIQ
+				nSe2Descont := SE2->E2_DESCONT
+				nSe2Juros   := SE2->E2_JUROS
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+				//矴rava novos valores do cancelamento da baixa parcial              ?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+				RecLock("SE2")
+				SE2->E2_VALLIQ  := nValPag
+				SE2->E2_DESCONT := nDescont
+				SE2->E2_JUROS   := nJuros
+				MsUnlock()
+				DbSetOrder(1)
+
+				If SE2->E2_MOEDA > 1				
+	            nTotAbat := nTotAbat * NoRound(nTxMoeda,5)
+	   			Endif
+	   		
+				ABATIMENTO 		 := nTotAbat
+
+				//adiciona no array os dados do titulos pai
+				If lExistFJU
+					aAdd(aTitPai,{SE2->E2_FILIAL,SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,SE2->E2_TIPO,SE2->E2_FORNECE,SE2->E2_LOJA,SE2->(Recno())})
+				EndIf
+
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+				//矴era lan嘺mento contabil de estorno                               ?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+				cPadrao:="531"    //cancelamento de baixa
+				lPadrao:=VerPadrao(cPadrao)
+				DbSelectArea("SA2")
+				DbSetOrder(1)
+				MsSeek(xFilial("SA2")+SE2->(E2_FORNECE+E2_LOJA))
+				DbSelectArea("SE2")
+				If !lHeadProva .and. lPadrao
+					nHdlPrv := HeadProva( cLote,;
+					                      "FINA565",;
+					                      Substr( cUsuario, 7, 6 ),;
+					                      @cArquivo )
+
+					lHeadProva := .T.
+				EndIf
+				If lPadrao .and. lCtBaixa
+					nTotal += DetProva( nHdlPrv,;
+					                    cPadrao,;
+					                    "FINA565",;
+					                    cLote,;
+					                    /*nLinha*/,;
+					                    /*lExecuta*/,;
+					                    /*cCriterio*/,;
+					                    /*lRateio*/,;
+					                    /*cChaveBusca*/,;
+					                    /*aCT5*/,;
+					                    /*lPosiciona*/,;
+					                    @aFlagCTB,;
+					                    /*aTabRecOri*/,;
+					                    /*aDadosProva*/ )
+				EndIf
+
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				//矴rava valores anteriores da contabilizacao do canc da baixa parcial?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				RecLock("SE2")
+				SE2->E2_VALLIQ  := nSE2ValLiq
+				SE2->E2_DESCONT := nSe2Descont
+				SE2->E2_JUROS   := nSe2Juros
+				MsUnlock()
+				DbSetOrder(1)
+
+				nSalvRec := Recno()
+				
+				If lAtuSldNat
+					AtuSldNat(SE2->E2_NATUREZ, SE2->E2_VENCREA, SE2->E2_MOEDA, "2", "P", SE2->E2_VALOR,SE2->E2_VLCRUZ, "+",,FunName(),"SE2",SE2->(Recno()),0)
+				Endif
+		
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+				//砎erifica se h?abatimentos para voltar a carteira                 ?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+				If nTotAbat > 0 .and. SE2->E2_SALDO == 0
+					SE2->(DbSetOrder(6))
+					If MsSeek(xFilial("SE2")+SE2->(E2_FORNECE+E2_LOJA+E2_PREFIXO+E2_NUM+SE2->E2_PARCELA))
+						cTitAnt := SE2->(E2_FILIAL+E2_FORNECE+E2_LOJA+E2_PREFIXO+E2_NUM+SE2->E2_PARCELA)
+						While !Eof() .and. cTitAnt == SE2->(E2_FILIAL+E2_FORNECE+E2_LOJA+E2_PREFIXO+E2_NUM+SE2->E2_PARCELA)
+							If !(SE2->E2_TIPO $ MVABATIM)
+								dbSkip()
+								Loop
+							Endif
+							//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+							//砎olta tulo para carteira                                       ?
+							//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+							Reclock("SE2", .F.)
+							SE2->E2_BAIXA   := Ctod(" /  /  ")
+							SE2->E2_SALDO	 := SE2->E2_VALOR
+							SE2->E2_DESCONT := 0
+							SE2->E2_JUROS   := 0
+							SE2->E2_MULTA   := 0
+							SE2->E2_CORREC  := 0
+							SE2->E2_VALLIQ  := 0
+							SE2->E2_LOTE    := Space(Len(E2_LOTE))
+							SE2->E2_STATUS  := "A"
+							msUnLock()
+							If lAtuSldNat
+								AtuSldNat(SE2->E2_NATUREZ, SE2->E2_VENCREA, SE2->E2_MOEDA, "2", "P", SE2->E2_VALOR,SE2->E2_VLCRUZ, "-",,FunName(),"SE2",SE2->(Recno()),0)
+							Endif
+							dbSkip()
+						End
+					Endif
+					SE2->(DbSetOrder(1))
+				Endif
+				dbGoTo( nSalvRec )
+
+				IF SE2->E2_MOEDA == 1
+					nValor := SE2->E2_SALDO+(nValPag-nJuros+nDescont+IIF(SE2->E2_SALDO==0,nTotAbat,0))
+				Else
+					nValor := SE2->E2_SALDO+((nValPag-nJuros+nDescont+IIF(SE2->E2_SALDO==0,nTotAbat,0)) / NoRound(nTxMoeda,5))
+					//Corrige possiveis erros de arredondamento
+					If ABS(Round(SE2->E2_VALOR - nValor,2)) == 0.01         
+						nValor := SE2->E2_VALOR
+					Endif
+				Endif
+
+				RecLock("SE2",.F.)
+				SE2->E2_SALDO	  := nValor
+				SE2->E2_MOVIMEN  := dDataBase
+				SE2->E2_TIPOLIQ  := Space(3)
+				If lAcreDecre
+					SE2->E2_SDACRES  := Round(NoRound(xMoeda(nAcresc,1,SE2->E2_MOEDA,SE5->E5_DATA,3,nTxMoeda),3),2)
+					SE2->E2_SDDECRE  := Round(NoRound(xMoeda(nDecresc,1,SE2->E2_MOEDA,SE5->E5_DATA,3,nTxMoeda),3),2)
+				Else
+					SE2->E2_SDACRES  := SE2->E2_ACRESC 
+					SE2->E2_SDDECRE  := SE2->E2_DECRESC		
+				Endif
+				SE2->E2_STATUS	  := "A"
+				IF STR(SE2->E2_SALDO,17,2) == STR(SE2->E2_VALOR,17,2)
+					SE2->E2_VALLIQ	:= 0				
+					SE2->E2_BAIXA	  := Ctod("//")
+				Endif
+				MsUnlock()
+
+				// Cancelamento do rastreamento(FI7/FI8)
+				FINRSTDEL("SE2",cDadosSe5)
+
+				//Se houver integra玢o entre os m骴ulos Manuten玢o de Ativos e Financeiro
+				If FindFunction("NGBAIXASE2") .And. GetNewPar( "MV_NGMNTFI","N" ) == 'S' 
+					If AllTrim(SE2->E2_ORIGEM) $ "MNTA765/MNTA766" 
+						aAreaMnt := GetArea()
+						NGBAIXASE2(2)
+						RestArea( aAreaMnt )
+					EndIf
+				EndIf
+
+			ElseIf (SE2->E2_NUMLIQ = cLiqCan 	.or. ;
+					SE2->E2_TIPO $ MV_CPNEG)	.and.;
+					SE2->E2_STATUS != "R"
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				//?Se for uma parcela da liquidacao contabiliza o    ?
+				//?cancelamento e deleta.                            ?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				cPadrao := "515"
+				//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				//?Posiciona o SE2 pois o arquivo de trabalgo pode ser resul-?
+				//?tado de uma Query.                                        ?
+				//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+				DbSelectArea("SE2")
+				DbSetOrder(1)
+				MsSeek(xFilial("SE2")+cDadosSE2)
+
+				lContabilizou := Iif(SubStr(SE2->E2_LA,1,1)=="S",.T.,.F.)
+				If !lHeadProva .and. lPadraoE2
+					nHdlPrv := HeadProva( cLote,;
+					                      "FINA565",;
+					                      Substr( cUsuario, 7, 6 ),;
+					                      @cArquivo )
+
+					lHeadProva := .T.
+				EndIf
+				If lPadraoE2 .and. lContabilizou
+					nTotal += DetProva( nHdlPrv,;
+					                    cPadrao,;
+					                    "FINA565",;
+					                    cLote,;
+					                    /*nLinha*/,;
+					                    /*lExecuta*/,;
+					                    /*cCriterio*/,;
+					                    /*lRateio*/,;
+					                    /*cChaveBusca*/,;
+					                    /*aCT5*/,;
+					                    /*lPosiciona*/,;
+					                    @aFlagCTB,;
+					                    /*aTabRecOri*/,;
+					                    /*aDadosProva*/ )
+				EndIf
+
+				If lFin565e2
+					Execblock("FIN565E2",.F.,.F.)
+				Endif
+            
+	            If lAtuSldNat
+					AtuSldNat(SE2->E2_NATUREZ, SE2->E2_VENCREA, SE2->E2_MOEDA, "2", "P", SE2->E2_VALOR,SE2->E2_VLCRUZ, "-",,FunName(),"SE2",SE2->(Recno()),0)
+				Endif
+				//apaga documentos
+				If SE2->E2_TEMDOCS == "1" 
+					CN062ApagDocs()
+				EndIf
+				
+				DbSetOrder(1)
+				FINDELFKs(xFilial("SE2")+SE2->E2_PREFIXO+SE2->E2_NUM+SE2->E2_PARCELA+SE2->E2_TIPO+SE2->E2_FORNECE+SE2->E2_LOJA, "SE2")
+				If lExistFJU
+					For ni := 1 to Len(aTitPai)
+						FinGrvEx("P",aTitPai[nI][1], aTitPai[nI][2],aTitPai[nI][3],aTitPai[nI][4],aTitPai[nI][5],aTitPai[nI][6],aTitPai[nI][7],aTitPai[nI][8])	
+					Next ni
+				Endif	
+				RecLock("SE2",.F.)
+				DbDelete()
+				MsUnlock()
+
+			EndIf
+		End
+		If nTotal > 0
+			RodaProva(  nHdlPrv,;
+						nTotal )
+						
+			lDigita	:=IIF(mv_par02==1,.T.,.F.)
+			lAglutina:=IIF(mv_par03==1,.T.,.F.)
+			cA100Incl( cArquivo,;
+			           nHdlPrv,;
+			           3,;
+			           cLote,;
+			           lDigita,;
+			           lAglutina,;
+			           /*cOnLine*/,;
+			           /*dData*/,;
+			           /*dReproc*/,;
+			           @aFlagCTB,;
+			           /*aDadosProva*/,;
+			           aDiario )
+			aFlagCTB := {}  // Limpa o coteudo apos a efetivacao do lancamento
+		EndIf
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		//?Volta Ultimo Numero do Parametro de Liquidacao          ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+		cNewLiq := GetMV("MV_NUMLIQP")
+		If cNewLiq == cLiqCan
+			RecLock("SX6",.F.)
+			Replace X6_CONTEUD with Tira1(SUBSTR(X6_CONTEUD,1,6))
+			MsUnlock()
+		EndIf
+	EndIf
+EndIf
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Restaura a area do SE2                                    ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+If Select("TRB") > 0
+	DbSelectArea("TRB")
+	DbCloseArea()
+Endif
+
+//Deleta tabela tempor醨ia caso j?exista
+If _oFINA5651 <> Nil
+	_oFINA5651:Delete()
+	_oFINA5651 := Nil
+Endif
+
+DbSelectArea("SE2")
+RetIndex("SE2")
+Set Filter to
+
+DbSelectArea("SE2")
+DbSetOrder(nOrdemSE2)
+DbGoToP()
+fErase (cIndex+OrdBagExt())
+cIndex := ""
+
+Return (.T.)
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 ?A565FCan   ?Autor ?Mauricio Pequim Jr    ?Data ?02/02/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Sele噭o para a cria噭o do indice condicional no CANCELAMENTO 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Fina565								    									 潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function A565FCan()
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Devera selecionar todos os registros que atendam a seguinte condi噭o : 	  ?
+//媚哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?2. Ou titulos que tenham originado a liquidacao selecionada 			  ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+Local cFiltro
+cFiltro := 'E2_FILIAL = "'+xFilial("SE2")+'"  .And. '
+cFiltro += 'E2_NUMLIQ = "'+cLiqCan+'" '
+
+Return cFiltro
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 ?A565Filtra ?Autor ?Jeremias Luna         ?Data ?12.05.00 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Calcula Parcelas, Nro.Titulos e valor da Liquida. a cancelar 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Fina565														潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function A565Filtra( cLiqCan )
+
+Local lRetOk := .T.
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Variaveis para a funcao da barra de status do processamento     ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//MsAguarde({||A460CalCan(cLiqCan, @lRetOK)},"Cancelamento da Liquidacao - Num: "+cLiqCan)
+A565CalCan(cLiqCan, @lRetOK)
+
+Return(lRetOk)
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 ?A565CalCan ?Autor ?Mauricio Pequim Jr    ?Data ?02/02/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Calcula Parcelas, Nro.Titulos e valor da Liquida. a cancelar 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Fina565																		 潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function A565CalCan( cLiqCan, lRetOk )
+
+Local cQuery	:= ""
+Local cChave	:= ""
+
+lRetOk := IIF(lRetOk == Nil,.T.,lRetOk)
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Cria indice condicional separando os titulos que deram origem a ?
+//?liquidacao e os titulos que foram gerados					        ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+dbSelectArea("SE2")
+DbSetOrder(1)
+cIndex := CriaTrab(nil,.f.)
+cChave := "E2_FILIAL+E2_NUMLIQ"
+
+cQuery := "SELECT SE2.R_E_C_N_O_ CHAVE "
+cQuery += "FROM "+RetSqlName("SE2")+" SE2,"
+cQuery +=         RetSqlName("SE5")+" SE5 WHERE "
+cQuery += " E2_FILIAL = '" + xFilial("SE2") + "' AND "
+cQuery += " E5_FILIAL = '" + xFilial("SE5") + "' AND "
+cQuery += " E5_PREFIXO = E2_PREFIXO AND "
+cQuery += " E5_NUMERO = E2_NUM AND "
+cQuery += " E5_PARCELA = E2_PARCELA AND "
+cQuery += " E5_TIPO = E2_TIPO AND "
+cQuery += " E5_CLIFOR = E2_FORNECE AND "
+cQuery += " E5_LOJA = E2_LOJA AND "
+cQuery += " E5_RECPAG='P' AND "
+cQuery += " E5_SITUACA<>'C' AND "
+cQuery += " E5_TIPODOC = 'BA' AND "	
+cQuery += " E5_DOCUMEN = '" + PADR(cLiqCan,TamSx3("E5_DOCUMEN")[1]) + "' AND "
+cQuery += " E5_MOTBX = 'LIQ' AND "
+cQuery += " SE2.D_E_L_E_T_ <> '*' AND "
+cQuery += " SE5.D_E_L_E_T_ <> '*' "
+cQuery += " UNION ALL "
+cQuery += " SELECT SE2.R_E_C_N_O_ CHAVE FROM " +RetSqlName("SE2")+" SE2 WHERE"
+cQuery += " E2_FILIAL = '" + xFilial("SE2") + "' AND "
+cQuery += " E2_NUMLIQ= '"+ cLiqCan + "' AND "
+cQuery += " SE2.D_E_L_E_T_ <> '*' "		
+cQuery := ChangeQuery(cQuery)
+dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), 'TRB', .F., .T.)
+DbSelectArea("TRB")
+
+DbGoTop()
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Certifica se foram encontrados registros na condi噭o selecionada		?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+If Bof() .and. Eof()
+	Help(" ",1,"RECNO")
+	//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+	//?Restaura os indices do SE2 e deleta o arquivo de trabalho			?
+	//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+	If Select("TRB") > 0
+		DbSelectArea("TRB")
+		DbCloseArea()
+	Endif
+
+	//Deleta tabela tempor醨ia caso j?exista
+	If _oFINA5651 <> Nil
+		_oFINA5651:Delete()
+		_oFINA5651 := Nil
+	Endif
+
+	If Select("SE2") > 0
+		DbSelectArea("SE2")
+		DbCloseArea()
+	Endif
+
+	DbSelectArea("SE2")
+	RetIndex("SE2")
+	DBClearFilter()
+	fErase(cIndex+OrdBagExt())
+	cIndex := ""
+	DbSetOrder(1)
+	DbGoTop()
+	lRetOk:= .F.
+EndIf
+
+If lRetOk
+
+	While TRB->(!Eof())
+		dbSelectArea("TRB")
+     	SE2->(dbGoto(TRB->CHAVE))
+     	TRB->(dbSkip())
+		DbSelectArea("SE2")
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//?Caso tenha ocorrido a baixa de alguma parcela da liquida噭o , nao  ?
+		//?sera possivel a opera噭o de cancelamento.						        ?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+		If SE2->E2_NUMLIQ == cLiqCan .And. 	STR(SE2->E2_SALDO,17,2) != STR(SE2->E2_VALOR,17,2)
+			Help(" ",1,"LIQJABX")   // Nao aceita se ja houve baixa em liquidacao
+			lRetOk := .F.
+			Exit
+		EndIf
+	End
+Endif
+Return lRetOk
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 ?A565natur  ?Autor ?Mauricio Pequim Jr    ?Data ?17/03/98 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Validacao da Natureza                                        潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Fina565																		 潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function A565Natur( cNatureza )
+
+Local lRetorna := .T.
+
+//294 - Natureza Sintetica e Analitica
+If !(FinVldNat( .F., cNatureza, 2 ))
+	lRetorna := .F.
+Endif
+
+Return lRetorna
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 ?A565VerNum ?Autor ?Julio Wittwer         ?Data ?03.11.99 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Consiste nero de Cheque na Liquida噭o                      潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Fina565	(A565NumChq)      											 潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function A565VerNum( cPrefixo, cTit, cTipo )
+
+Local cAlias 		:= Alias()
+Local nOrdem		:= IndexOrd()
+Local nRegistro		:= Recno()
+Local lRet 			:= .T.
+Local cKeyChq   
+
+Default cTipo := ""
+
+
+cParc565 := F565Parc()
+cPrefixo := Iif(cPrefixo==nil,space(03),cPrefixo)
+cKeyChq :=	xFilial("SE2")+cPrefixo+cTit+cTipo
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+//?Verifica se o titulo ja existe no SE2                            ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+DbSelectArea("SE2")
+DbSetOrder(1)
+If MsSeek(xFilial("SE2")+cPrefixo+cTit+cParc565+cTipo)
+	While !Eof() .and. xFilial("SE2")+SE2->(E2_PREFIXO+E2_NUM+E2_TIPO) == cKeyChq
+		If SE2->(E2_BCOCHQ+E2_AGECHQ+E2_CTACHQ) == aCols[n,3]+aCols[n,4]+aCols[n,5]
+			lRet := .F.
+			Exit
+		Endif
+		dbSkip()
+	End
+EndIf
+DbSelectArea(cAlias)
+DbSetOrder(nOrdem)
+DbGoTo(nRegistro)
+
+Return(lRet)
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 ?A565VerPc  ?Autor ?Mauricio Pequim Jr    ?Data ?17.04.00 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Consiste nero de parcela na Liquida噭o                     潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Fina565	                  									潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function A565VerPc( nContad, lNcc, cLiquid )
+
+Local aAmbSE2   := {SE2->(recno()),SE2->(Indexord())}
+Local cOldAlias := Alias()
+
+lNcc := IIF (lNcc == NIL, .F., lNcc)
+
+//Verifico se existe o titulo no arquivo nao filtrado
+//Este alias e aberto pela SomaAbat() sempre
+DbSelectArea("__SE2")
+DbSetOrder(1)
+
+cParc565 := Alltrim(F565Parc())
+If lNcc
+	While .T.
+		If MsSeek(xFilial("SE2")+"LIQ"+cLiquid+cParc565+MV_CPNEG)
+			cParc565 := Soma1(cParc565)
+		Else			
+			Exit				
+		EndIf
+	End
+Else
+	While .T.
+		If MsSeek(xFilial("SE2")+aCols[nContad,1]+aCols[nContad,6]+cParc565+aCols[nContad,2])		
+			cParc565 := Soma1(cParc565)
+		Else			
+			Exit				
+		EndIf
+	End
+Endif
+
+DbSetOrder(aAmbSE2[2])
+DbGoTo(aAmbSE2[1])
+DbSelectArea(cOldAlias)
+Return .T.
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噮o	 矲A565Tipo ?Autor ?Mauricio Pequim Jr    ?Data ?03/12/99 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噮o ?Checa o Tipo do titulo informado 						  		  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?FA565Tipo() 												  			  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function FA565Tipo( cTipo )
+Local lRetorna := .T.
+Local nI := 1
+Local lTipo := (cTipo == NIL)
+
+cTipo := IIF(cTipo == NIL, M->E2_TIPO, cTipo)
+
+DbSelectArea("SX5")
+If !MsSeek(cFilial+"05"+cTipo)
+	Help(" ",1,"E1_TIPO")
+	lRetorna := .F.
+Else
+	If cTipo $ MVPAGANT+"/"+MV_CPNEG
+		Help(" ",1,"E1_TIPO")
+		lRetorna := .F.
+	ElseIf cTipo $ MVPAGANT+"/"+MVTAXA+"/"+MV_CPNEG .or. cTipo $ MVABATIM
+		Help(" ",1,"TIPODOC")
+		lRetorna := .F.
+	EndIf
+EndIf
+If lRetorna .and. !lTipo
+	For nI := 1 to Len(aCols)
+		aCols[nI,2] := cTipo
+	Next
+	oGet:ForceRefresh()
+Endif
+
+Return lRetorna
+
+
+/*/
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲A565GerAr?Autor ?Mauricio Pequim Jr    ?Data ?18/12/00 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Gera arquivo de trabalho									  		  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?FA565GerAr()												  			  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565Gerarq( aCampos )
+
+Local TRB, cIndex
+
+If ( Select ( "TRB" ) <> 0 )
+	dbSelectArea ( "TRB" )
+	dbCloseArea ()
+End
+
+//------------------
+//Cria玢o da tabela temporaria 
+//------------------
+If _oFINA5651 <> Nil
+	_oFINA5651:Delete()
+	_oFINA5651 := Nil
+Endif
+
+_oFINA5651 := FWTemporaryTable():New( "TRB" )  
+_oFINA5651:SetFields(aCampos) 	
+_oFINA5651:AddIndex("1", {"CHAVE"}) 	
+_oFINA5651:Create()	
+
+Return 
+
+/*/
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲A565Repl ?Autor ?Mauricio Pequim Jr    ?Data ?20/02/97 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Grava registros no arquivo temporario					  		  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?FA565Repl() 												  			  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function Fa565Repl()
+
+Local nAbat		:= 0
+Local nJuros	:= 0
+Local nDescon	:= 0
+Local nValBxd  	:= 0
+Local lF565JUR 	:= ExistBlock("F565JUR") 
+Local aAreaSe2 	 
+Local lF565DESC	 	:= ExistBlock("F565DESC")
+
+dbSelectArea("SE2")
+dbGotop()
+
+While !Eof()
+	dbSelectArea("SE2")
+
+	If SE2->E2_OK == "xx"
+		RecLock("SE2")
+		SE2->E2_OK := ""		
+		MsUnlock()
+		dbsKip()
+		Loop
+	Endif
+
+	nAbat := SomaAbat(SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,"P",SE2->E2_MOEDA,dDataBase,SE2->E2_FORNECE,SE2->E2_LOJA)
+	If lF565JUR
+		nJuros := ExecBlock("F565JUR",.F.,.F.)
+	Else
+		nJuros := fa080Juros(1)
+	Endif
+	
+	If lF565DESC
+		nDescon := ExecBlock("F565DESC",.F.,.F.)
+	EndIf
+	
+	nValBxd := SE2->E2_VALOR - SE2->E2_SALDO
+	RecLock("TRB",.T.)
+	Replace	TITULO	With	SE2->E2_PREFIXO + "-" + ;
+									SE2->E2_NUM + "-" + ;
+									SE2->E2_PARCELA + "-" + ;
+									SE2->E2_TIPO
+	Replace	EMISSAO	With 	SE2->E2_EMISSAO
+	Replace	VENCTO	With 	SE2->E2_VENCREA
+	Replace	VALORI	With 	SE2->E2_VALOR
+	Replace VALCVT	With Round(NoRound(xMoeda(SE2->E2_VALOR,SE2->E2_MOEDA,nMoeda,,3),3),2)
+	Replace	VALLIQ	With Round(NoRound(xMoeda(SE2->E2_VALOR - nAbat - nValBxd - nDescon + nJuros+SE2->E2_SDACRES-SE2->E2_SDDECRE,SE2->E2_MOEDA,nMoeda,,3),3),2)
+	Replace	JUROS	With Round(NoRound(xMoeda(nJuros+SE2->E2_SDACRES,SE2->E2_MOEDA,nMoeda,,3),3),2)
+	Replace	DESCON	With Round(NoRound(xMoeda(nDescon+SE2->E2_SDDECRE,SE2->E2_MOEDA,nMoeda,,3),3),2)
+	Replace	ABATIM	With nAbat
+	Replace	BAIXADO	With nValBxd
+	Replace	MARCA 	With " "
+	Replace MOEDAO  With SE2->E2_MOEDA
+
+	Replace	ACRESC	With SE2->E2_SDACRES
+	Replace	DECRESC	With SE2->E2_SDDECRE
+
+	Replace	CHAVE 	With	SE2->E2_FILIAL+SE2->E2_PREFIXO+SE2->E2_NUM+;
+									SE2->E2_PARCELA+SE2->E2_TIPO+SE2->E2_FORNECE+SE2->E2_LOJA 
+									
+	Replace	CHAVE2 	With	SE2->E2_FILIAL+SE2->E2_FORNECE+SE2->E2_LOJA+SE2->E2_PREFIXO+;
+									SE2->E2_NUM+SE2->E2_PARCELA+SE2->E2_TIPO
+
+
+	Replace CTMOED	With RecMoeda(dDataBase, SE2->E2_MOEDA)
+
+	
+	dbselectArea("SE2")
+	
+	If ExistBlock("FA565GRVTRB")
+		aAreaSE2 := GetArea()
+		ExecBlock("FA565GRVTRB",.F.,.F.)
+		dbselectArea("SE2")
+		RestArea(aAreaSE2)		
+	Endif
+	
+	dbSkip()
+End
+Return
+
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565Bar	?Autor ?Mauricio Pequim Jr	  ?Data ?8.12.00  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Mostra a EnchoiceBar na tela - WINDOWS 					  	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function Fa565Bar( oDlg, bOk, bCancel, oMark, oValor, oQtdTit )
+
+Local oBar
+Local bSet15
+Local bSet24
+Local lOk
+Local lVolta 		:= .F.
+Local lRet 		:= .T.
+Local aButtons	:= {}
+
+If lRet
+	AADD( aButtons, {"NOTE"		    , {|| Fa565Edit( oValor, oQtdTit ) }, STR0165 } )
+EndIf
+
+AADD(aButtons, {"PESQUISA"		, {|| Fa565Pesq( oMark ) }, STR0166 } )
+EnchoiceBar( oDlg, {|| ( lLoop := lVolta, lOk := Eval( bOk ) ) }, {|| ( lLoop := .F., Eval( bCancel ), ButtonOff( bSet15, bSet24, .T. ) ) },, aButtons,,,,, .F. )
+
+Return Nil
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565Edit ?Autor ?Mauricio Pequim Jr	  ?Data ?8.12.00  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Mostra a EnchoiceBar na tela - WINDOWS 					  	  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565Edit( oValor, oQtdTit )
+
+Local cTitulo
+Local nOpca := 0
+Local nCol := 0
+
+
+SE2->(MSSeek(TRB->CHAVE))
+If SE2->(MsRLock())	
+	cTitulo := STR0096  //"Altera Valores"
+	nOldJur:= TRB->JUROS
+	nOldDes:= TRB->DESCON
+	nOldVlq:= TRB->VALLIQ
+	nValOri:= TRB->VALORI
+	nValBxd:= TRB->BAIXADO
+	nCol := 10
+	nValJur:= TRB->JUROS
+	nMora := 0
+	nValDes	  := TRB->DESCON
+	nValLiq	  := TRB->VALLIQ
+	nValAbt	  := TRB->ABATIM
+	nMoedaTit := TRB->MOEDAO
+	nValCvt	  := TRB->VALCVT
+	nCotMoed  := TRB->CTMOED
+	nOldCotMoe:= TRB->CTMOED
+	
+	SE2->(dbSetOrder(1))
+	SE2->(MsSeek(TRB->CHAVE))
+	
+	//Se o titulo nao estiver marcado, marco
+	If TRB->MARCA != cMarca
+		RecLock("TRB")
+		TRB->MARCA := cMarca
+		MsUnlock()
+		nValor += nValLiq
+		nQtdTit++
+	Endif
+	
+	DEFINE MSDIALOG oDlga FROM	69,70 TO 296-(nCol*1.6),331 TITLE cTitulo PIXEL
+	
+	@ 0.5, 2 TO 90-nCol, 128 OF oDlga  PIXEL
+	
+	@ 7, 68	MSGET nValOri Picture "@E 9999,999,999.99" When .F. SIZE 54, 10 OF oDlga PIXEL
+	@ 8, 9 SAY STR0097  SIZE 54, 7 OF oDlga PIXEL  //"Vlr.Original"
+	
+	@ 17, 68	MSGET nValAbt Picture "@E 9999,999,999.99" When .F. SIZE 54, 10 OF oDlga PIXEL
+	@ 18, 9 SAY STR0100  SIZE 54, 7 OF oDlga PIXEL  //"Abatimento"
+	
+	@ 27, 68	MSGET nValBxd Picture "@E 9999,999,999.99" When .F. SIZE 54, 10 OF oDlga PIXEL
+	@ 28, 9 SAY  STR0106  SIZE 54, 7 OF oDlga PIXEL  //"Vlr.Baixado"
+	
+	@ 37, 68	MSGET nCotMoed Picture "@E 9,999.9999" When TRB->MOEDAO != nMoeda Valid Fa565CTM(@nValJur,@nValDes,@nValLiq,@nValCvt,nCotMoed,@nOldCotMoe);
+			SIZE 54, 10 OF oDlga Hasbutton PIXEL
+	@ 38, 9 SAY STR0140 SIZE 54, 7 OF oDlga PIXEL //"Cotacao da Moeda (R$)"
+	
+	@ 47, 68	MSGET nValJur Picture "@E 9999,999,999.99" Valid Fa565Val(nValOri,nValBxd,nValJur+nMora,nValDes,nValAbt,@nValLiq,,nMoedaTit,nValCvt,nCotMoed);
+			SIZE 54, 10 OF oDlga Hasbutton PIXEL
+		
+	@ 48, 9 SAY STR0098  SIZE 54, 7 OF oDlga PIXEL  //"Juros"
+	@ 67-nCol, 68	MSGET nValDes Picture "@E 9999,999,999.99" Valid Fa565Val(nValOri,nValBxd,nValJur+nMora,nValDes,nValAbt,@nValLiq,,nMoedaTit,nValCvt,nCotMoed);
+			SIZE 54, 10 OF oDlga Hasbutton PIXEL
+	@ 68-nCol, 9 SAY STR0099  SIZE 54, 7 OF oDlga PIXEL  //"Desconto"
+	
+	@ 77-nCol, 68	MSGET nValLiq Picture "@E 9999,999,999.99" Valid Fa565Val(nValOri,nValBxd,nValJur+nMora,nValDes,nValAbt,@nValLiq,.T.,nMoedaTit,nValCvt,nCotMoed) SIZE 54, 10 OF oDlga Hasbutton PIXEL
+	@ 78-nCol, 9 SAY STR0101  SIZE 54, 7 OF oDlga PIXEL  //"Vlr.Liquidar"
+	
+	DEFINE SBUTTON FROM 98-nCol, 71 TYPE 1 ENABLE ACTION (nOpca:=1,If(Fa565ValOK(nValOri,nValBxd,nValJur+nMora,nValDes,nValAbt,@nValLiq,nOldVlq,nMoedaTit,nValCvt,nCotMoed),;
+											oDlga:End(),nOpca:=0)) OF oDlga
+	DEFINE SBUTTON FROM 98-nCol, 99 TYPE 2 ENABLE ACTION (oDlga:End()) OF oDlga
+
+	
+	ACTIVATE MSDIALOG oDlga CENTERED
+	
+	If nOpca == 1
+		nValor += nValliq - nOldVlq
+	Endif
+	oValor:Refresh()
+	oQtdTit:Refresh()
+	
+Else
+	IW_MsgBox(STR0156,STR0051,"STOP")	//"Este titulo est?sendo utilizado em outro terminal, n鉶 pode ser utilizado na Liquida玢o"###"Aten玢o"
+	lRet := .F.
+Endif	
+	
+Return
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565Val	?Autor ?Mauricio Pequim Jr.   ?Data ?8.12.00  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Valida o valor digitado 									  		  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565Val(	nValOri,	nValBxd,	nValJur,	nValDes,	nValAbt,;
+							nValLiq,	lValLiq,	nMoedaTit,	nValCvt,	nCotMoed	)
+
+Local nAbtCvt := Round(NoRound(xMoeda(nValAbt,nMoedaTit,nMoeda,,3,nCotMoed),3),2)
+Local nBxdCvt := Round(NoRound(xMoeda(nValBxd,nMoedaTit,nMoeda,,3,nCotMoed),3),2)
+Local nTotCvt := Round(NoRound(xMoeda(SE2->E2_VALOR-nValAbt-nValBxd,nMoedaTit,nMoeda,,3,nCotMoed),3),2)
+Local nTotal  := nValCvt - nAbtCvt - nBxdCvt + nValJur - nValDes
+Local nSldCvt := Round(NoRound(xMoeda(SE2->E2_SALDO,nMoedaTit,nMoeda,,3,nCotMoed),3),2)
+
+lValLiq := IIF(lValliq == NIL, .F.,lValLiq)
+
+If nValLiq <= 0 .or. nTotal <= 0
+	Return .F.
+Else
+	dbSelectArea("SE2")
+	dbSetOrder(1)
+	If	MsSeek(TRB->CHAVE)
+		If STR(nTotCvt,17,2) < STR(nTotal-nValJur+nValDes,17,2)
+			Help(" ",1,"FA460VAL")
+			dbSelectArea("TRB")
+			Return .F.
+		Endif
+		If lValLiq
+			If STR(nSldCvt,17,2) < STR(nValliq + nAbtCvt + nValDes - nValJur,17,2)
+				Help(" ",1,"FA460VAL")
+				dbSelectArea("TRB")
+				Return .F.
+			Endif                      
+		Endif
+	Else		
+		Help(" ",1,"TITNOXADO")
+		dbSelectArea("TRB")
+		Return .F.
+	EndIf
+	dbSelectArea("TRB")
+	If !lValLiq
+		nValLiq := nValCvt - nAbtCvt - nBxdCvt + nValJur - nValDes
+	Endif
+EndIF
+Return .T.
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565ValOK?Autor ?Mauricio Pequim Jr	  ?Data ?8.12.00  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Verifica na confirmacao da tela, a validacao do valor - WIN潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565ValOK( nValOri,	nValBxd,	nValJur,	nValDes,	nValAbt, ;
+							nValLiq,	nOldVlq,	nMoedaTit,	nValCvt,	nCotMoed )
+
+Local nAbtCvt := Round(NoRound(xMoeda(nValAbt,nMoedaTit,nMoeda,,3,nCotMoed),3),2)
+Local nBxdCvt := Round(NoRound(xMoeda(nValBxd,nMoedaTit,nMoeda,,3,nCotMoed),3),2)
+Local nTotCvt := Round(NoRound(xMoeda(SE2->E2_VALOR-nValAbt-nValBxd,nMoedaTit,nMoeda,,3,nCotMoed),3),2)
+Local nTotal  := nValCvt - nAbtCvt - nBxdCvt + nValJur - nValDes
+
+If nValLiq <= 0 .or. nTotal <= 0
+	Return .F.
+Else
+	dbSelectArea("SE2")
+	dbSetOrder(1)
+	If	MsSeek(TRB->CHAVE)
+		If STR(nTotCvt,17,2) < STR(nTotal-nValJur+nValDes,17,2)
+			Help(" ",1,"FA460VAL")
+			dbSelectArea("TRB")
+			Return .F.
+		Endif
+	Else		
+		Help(" ",1,"TITNOXADO")
+		dbSelectArea("TRB")
+		Return .F.
+	EndIf
+	dbSelectArea("TRB")
+EndIF
+dbSelectArea("TRB")
+
+RecLock("TRB",.F.)
+TRB->JUROS	:= nValJur
+TRB->DESCON	:= nValDes
+TRB->VALLIQ := nValLiq
+TRB->CTMOED := nCotMoed
+TRB->VALCVT := nValCvt
+
+MsUnlock()
+Return .T.
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565Pesq ?Autor ?Mauricio Pequim Jr	  ?Data ?8.12.00  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?tela de pesquisa - WINDOWS 				    			  		  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565Pesq( oMark )
+
+Local cCampo := Space(25)
+
+DEFINE MSDIALOG oDlgb FROM	69,70 TO 160,331 TITLE STR0002 PIXEL  //"Pesquisar"
+@ 1, 2 TO 22, 128 OF oDlgb  PIXEL
+@ 7, 68	MSGET cCampo Picture "@!" SIZE 54, 10 OF oDlgb PIXEL
+@ 8, 9 SAY STR0102  SIZE 54, 7 OF oDlgb PIXEL  //"Pesquisa"
+DEFINE SBUTTON FROM 29, 71 TYPE 1 ENABLE ACTION (nOpca:=1,Fa565Acha(cCampo,oMark),;
+								oDlgb:End(),nOpca:=0) OF oDlgb
+DEFINE SBUTTON FROM 29, 99 TYPE 2 ENABLE ACTION (oDlgb:End()) OF oDlgb
+ACTIVATE MSDIALOG oDlgb
+Return
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565Acha ?Autor ?Mauricio Pequim Jr	  ?Data ?8.12.00  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Funcao que realiza a pesquisa - WINDOWS					     潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  				  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565Acha( cCampo, oMark )
+
+dbSelectArea("TRB")
+MsSeek(xFilial("SE2")+cCampo,.T.)
+oMark:oBrowse:Refresh(.T.)
+
+Return
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565OK1	?Autor ?Mauricio Pequim Jr	  ?Data ?7.07.01潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Funcao que realiza a validacao do usuario na primeira tela 潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565OK1()
+Local lRet := .T.
+If ExistBlock("F565OK1")
+	lRet := ExecBlock("F565OK1",.f.,.f.)
+Endif
+
+// Se Portugal, pega cod. Diario
+If UsaSeqCor() .AND. lRet
+	lRet := Fa565OK2()
+Endif
+
+If lRet
+	If cFornAte < cFornDe
+		IW_MsgBox( STR0168, STR0051, "STOP" )	// "O c骴igo <Fornecedor Ate> deve ser maior ou igual ao c骴igo <Fornecedor De>."###"Aten玢o"
+		oFornAte:SetFocus()
+		lRet := .F.
+	ElseIf cFornAte == cFornDe .And. cLojaAte < cLojaDe
+		IW_MsgBox( STR0169, STR0051, "STOP" )	// "O c骴igo <Loja Ate> deve ser maior ou igual ao c骴igo <Loja De>."###"Aten玢o"
+		oLojaAte:SetFocus()
+		lRet := .F.
+	EndIf
+EndIf
+
+Return lRet
+
+
+
+/*/
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北砅rograma  ?F565CMC7 ?Autor ?Mauricio Pequim Jr    ?Data ?28/08/02 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Programa destinado a efetuar a leitura de cheques a partir 潮?
+北?         ?do equipamento CMC7 e alimentar a rotina de liquidacao.    潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function F565CMC7()
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Declaracao de Variaveis                                             ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+Local lContinua		:= .T.			// Flag da leitura quando for por dispositivo serial
+Local nNumCH		:= 1			// Numeral do cheque (qual cheque esta sendo lido. Se primeiro, segundo etc)
+Local aCMC7			:= {}			// Array que guardara os dados do cheque vindos da leitora
+Local dVenc565		:= dDataBase    // Data inicial do cheque
+Local nValChq565	:= 0			// Valor inicial do cheque
+Local nCont			:= 0            // Variavel de looping do aHeader
+Local cEmiten565	:= Space(40)	// Nome do emitente do cheque 
+Local aCmc7Tc 		:= {}			// Armazena o retorno da funcao F565Cmc7Tc
+Local nX			:= 2            // Variavel para comparar com o tamanho do aCols
+Local lContLeit		:= .T.			// Verifica se a leitura (teclado) acabou ou nao 
+Local nPosFili		:= aScan(aHeader,{|z| Alltrim(Upper(z[2]))=="E2_PREFIXO" })	// Captura no aHeader o campo da filial
+Local nPosTipo		:= aScan(aHeader,{|z| Alltrim(Upper(z[2]))=="E2_TIPO" })		// Captura no aHeader o campo do tipo de operacao
+Local nPosBanco		:= aScan(aHeader,{|z| Alltrim(Upper(z[2]))=="E2_BCOCHQ" })		// Captura no aHeader o campo do banco
+Local nPosAgen		:= aScan(aHeader,{|z| Alltrim(Upper(z[2]))=="E2_AGECHQ" })		// Captura no aHeader o campo da agencia
+Local nPosConta		:= aScan(aHeader,{|z| Alltrim(Upper(z[2]))=="E2_CTACHQ" }) 	// Captura no aHeader o campo da conta
+Local nPosCheque	:= aScan(aHeader,{|z| Alltrim(Upper(z[2]))=="E2_NUM" })		// Captura no aHeader o campo do nro. do cheque	
+Local nPosValor		:= aScan(aHeader,{|z| Alltrim(Upper(z[2]))=="E2_VLCRUZ" }) 	// Captura no aHeader o campo do valor do cheque
+Local lCond 		:= .T.	
+Private lUsaCmC7	:= .T.			// Necessario para funcionamento das funcoes de leitura
+
+If IW_MsgBox(STR0122,STR0001,"YESNO")  //"Deseja utilizar a leitora de cheques?"###"Liquida玢o"
+	If nHdlCMC7 < 0
+		lContinua := .f.
+		//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪目
+		//矻eitura do cheque utilizando leitor via teclado.?
+		//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪馁
+		If Len( aCols ) >= 1 .AND. Empty( aCols[1,nPosBanco] ) 
+			aCmc7Tc		:= F460Cmc7Tc() //F565Cmc7Tc()   
+	    	If !Empty( aCols[1,nPosValor] ) 
+	    		nValChq565 := aCols[1,nPosValor]
+	    	Endif	
+	    	If 	Len(aCmc7Tc) != 0
+	    		F565GetChq(aCmC7Tc,@dVenc565,@nValChq565)
+		    	aCols[1,nPosFili]	:= Pad(cFilAnt,Len(SE2->E2_PREFIXO))			// Prefixo
+				aCols[1,nPosTipo]	:= cTipo		   	// Tipo
+				aCols[1,nPosBanco]	:= aCmc7Tc[1]		// Banco
+				aCols[1,nPosAgen]	:= aCmc7Tc[3]		// Agencia
+				aCols[1,nPosConta]	:= aCmc7Tc[4]		// Conta
+				aCols[1,nPosCheque]	:= Pad(aCmc7Tc[2],Len(SE2->E2_NUM))		// Cheque
+				aCols[1,nPosValor]	:= nValChq565		// Valor     
+			EndIf 
+		Endif
+		While lContLeit
+			If IW_MsgBox(STR0125,STR0001,"YESNO")	//"Deseja incluir mais cheques?"###"Liquida玢o"
+				aCmc7Tc	:= F460Cmc7Tc()
+				If Len(aCmc7Tc) != 0
+					If aScan(aCols,{|x| AllTrim(x[3])+AllTrim(x[4])+AllTrim(x[5])+AllTrim(x[6])== ;
+						AllTrim(aCmc7Tc[1])+AllTrim(aCmc7Tc[3])+AllTrim(aCmc7Tc[4])+AllTrim(aCmc7Tc[2]) }) = 0 
+						If nX <= Len( aCols )
+							If !Empty( aCols[nX,nPosValor] )
+	    						nValChq565 := aCols[nX,nPosValor]
+	    					Endif
+	    				Endif	
+						F565GetChq(aCmC7Tc,@dVenc565,@nValChq565)
+						If Empty( cCondicao ) .OR. Len( aCols ) = 1 .OR. nX > Len( aCols ) .OR. !lCond
+							Aadd( aCols, { 	Pad(cFilAnt,Len(SE2->E2_PREFIXO)),	cTipo, 		aCmc7Tc[1], aCmc7Tc[3],	aCmc7Tc[4], aCmc7Tc[2],;
+									 	dVenc565,	nValChq565, 0,			0, 			nValChq565, .F. } )   
+							lCond := .F.
+						Elseif lCond  				
+							aCols[nX,nPosFili]		:= Pad(cFilAnt,Len(SE2->E2_PREFIXO))		// Prefixo
+							aCols[nX,nPosTipo]		:= cTipo		   	// Tipo
+							aCols[nX,nPosBanco]		:= aCmc7Tc[1]		// Banco
+							aCols[nX,nPosAgen]		:= aCmc7Tc[3]		// Agencia
+							aCols[nX,nPosConta]		:= aCmc7Tc[4]		// Conta
+							aCols[nX,nPosCheque]	:= Pad(aCmc7Tc[2],Len(SE2->E2_NUM))		// Cheque   
+							aCols[nX,nPosValor]		:= nValChq565		// Valor
+							nX++  	
+						Endif			
+					Else
+						IW_MsgBox(STR0124,STR0051,"STOP")	//""Cheque j?Inclu韉o ! Ser?Desprezado.""###"Aten玢o"	
+					Endif
+				EndIf		
+			Else
+				lContLeit := .F.					
+			Endif	
+			Loop
+		End	
+	Endif                              
+	
+	While lContinua
+		aCmc7 := {}
+		aCmc7 := LjLeCmc7(nNumCH)
+		If Len(aCmc7) > 0
+			dVenc565		:= dDataBase
+			nValChq565	:= 0
+			IF F565GetChq(aCmC7,@dVenc565,@nValChq565)
+				If nNumCH == 1  // Se for o primeiro
+					aCols[1,1] := Pad(cFilAnt,Len(SE2->E2_PREFIXO))		//Prefixo
+					aCols[1,2] := cTipo			//Tipo
+					aCols[1,3] := aCmc7[1]		//Banco
+					aCols[1,4] := aCmc7[3]		//Agencia
+					aCols[1,5] := aCmc7[4]		//Conta
+					aCols[1,6] := Pad(aCmc7[2],Len(SE2->E2_NUM))		//Cheque
+					aCols[1,7] := dVenc565		//Vencimento
+					aCols[1,8] := nValChq565	//Valor
+					aCols[1,9] := 0				//Acrescimo
+					aCols[1,10] := 0			//Decrescimo
+					aCols[1,11] := nValChq565	//Valor
+					If nUsado2 > 11 // Tamanho do aHeader
+						For nCont := 12 to nUsado2
+							aCols[1,nCont] := CriaVar(aHeader[nCont,2],.T.)
+						Next
+					Endif
+					aCols[1,nUsado2+1] := .F.	// controle de delecao
+					nNumCH++
+				Else
+					//Pesquisa se cheque ja foi lido anteriormente (Banco/Agencia/Conta/Nro.Cheque)
+					If aScan(aCols,{|x| AllTrim(x[3])+AllTrim(x[4])+AllTrim(x[5])+AllTrim(x[6])== ;
+							AllTrim(aCmc7[1])+AllTrim(aCmc7[3])+AllTrim(aCmc7[4])+AllTrim(aCmc7[2]) }) = 0
+
+						Aadd(aCols,{	Pad(cFilAnt,Len(SE2->E2_PREFIXO)),	aCmc7[1],	aCmc7[3],	aCmc7[4],	Pad(aCmc7[2],Len(SE2->E2_NUM)),;
+										dVenc565,	nValChq565,	0,			0,			nValChq565})
+						If nUsado2 > 12 // Tamanho do aHeader
+							For nCont := 13 to nUsado2
+								AADD(aCols[Len(aCols)],CriaVar(aHeader[nCont,2],.T.))
+							Next
+						Endif
+						AADD(aCols[Len(aCols)],.F.)	// controle de delecao
+						nNumCH++
+					Else
+						IW_MsgBox(STR0124,STR0051,"STOP") //"Cheque j?Inclu韉o ! Ser?Desprezado."###"Aten玢o"
+					Endif
+				EndIf
+			Endif
+			If !IW_MsgBox(STR0125,STR0001,"YESNO") //"Deseja incluir mais cheques?"###"Liquida玢o"
+				Exit
+			EndIf
+		Else
+			IF IW_Msgbox(STR0126,STR0051,"YESNO")  //"Encerra leitura de Cheques ?"###"Aten玢o"
+				Exit
+			Endif
+		Endif
+	End
+Endif
+n:= Len(aCols)
+Return 
+
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲565GetChq?Autor ?Mauricio Pequim Jr    ?Data ?28/08/02 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o 矱ntrada de dados do cheque   								  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?F565GetChq(ExpA1,ExpD1,ExpN1)							  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砅arametros?ExpA1=Array contendo dados do cheque (vindos da leitora)	  潮?
+北?         ?ExpD1=Data de vencto do cheque                             潮?
+北?         ?ExpC3=Valor do Cheque                                      潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function F565GetChq( aCmC7, dVenc565, nValChq565 )
+
+Local lCorrige := .F.
+Local lRet := .F.
+Local nOpca := 0
+Local oBanco
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Criacao da Interface                                                ?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+While .T.
+	nOpca := 0
+	DEFINE MSDIALOG oMkwdlg FROM	070,116 TO 334,330 TITLE STR0127 PIXEL  //"Dados do cheque"
+	@ 010,010 SAY STR0128     	Size 25,08 OF oMkwdlg PIXEL	//"Banco"
+	@ 025,010 SAY STR0129   	Size 25,08 OF oMkwdlg PIXEL	//"Ag阯cia"
+	@ 040,010 SAY STR0130     	Size 25,08 OF oMkwdlg PIXEL	//"Conta"
+	@ 055,010 SAY STR0131    	Size 25,08 OF oMkwdlg PIXEL	//"Cheque"
+	@ 070,010 SAY STR0132		Size 35,08 OF oMkwdlg PIXEL	//"Vencimento"
+	@ 085,010 SAY STR0133		Size 25,08 OF oMkwdlg PIXEL	//"Valor"
+	@ 010,050 MSGET oBanco VAR aCmc7[1] WHEN lCorrige	Size 15,10 OF oMkwdlg PIXEL
+	@ 025,050 MSGET aCmc7[3] WHEN lCorrige	Size 30,10 OF oMkwdlg PIXEL
+	@ 040,050 MSGET aCmc7[4] WHEN lCorrige	Size 30,10 OF oMkwdlg PIXEL
+	@ 055,050 MSGET aCmc7[2] WHEN lCorrige	Size 30,10 OF oMkwdlg PIXEL
+	@ 070,050 MSGET dVenc565					Size 40,10 OF oMkwdlg PIXEL
+	@ 085,050 MSGET nValChq565 Valid nValChq565 > 0 Picture "@E 99,999,999.99" Size 40,10  OF oMkwdlg PIXEL
+	
+	DEFINE SBUTTON FROM 107, 015 TYPE 1 ACTION (nOpca:=1,oMkwdlg:End())ENABLE OF oMkwdlg PIXEL
+	DEFINE SBUTTON FROM 107, 045 TYPE 2 ACTION (nOpca:=2,oMkwdlg:End())ENABLE OF oMkwdlg PIXEL
+	DEFINE SBUTTON FROM 107, 075 TYPE 5 ACTION (nOpca:=3,	;
+																aCmc7[1] := PADR(aCmc7[1],3," "),;
+																aCmc7[3] := PADR(aCmc7[3],4," "),;
+																aCmc7[4] := PADR(aCmc7[4],8," "),;
+																aCmc7[2] := PADR(aCmc7[2],6," "),;
+																lCorrige := .T.,;
+																oBanco:SetFocus()) ENABLE OF oMkwdlg PIXEL
+	
+	ACTIVATE MSDIALOG oMkwdlg CENTERED
+	
+	If nOpca == 1  // Confirma Dados do Cheque
+	   lRet := .T.
+		lCorrige := .F.
+	ElseIf nOpca == 2 	// Finaliza inclusao de cheques
+		lRet := .F.
+		lCorrige := .F.
+	Endif	
+	Exit	
+End	
+Return(lRet)
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565CTM	?Autor ?Mauricio Pequim Jr.   ?Data ?2.12.02  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Converte os valores para nova cotacao da moeda			  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565CTM( nValJur, nValDes, nValLiq, nValCvt, nCotMoed, nOldCotMoe )
+
+nValJur := Round(NoRound((nValJur * nCotMoed)/nOldCotMoe,3),2)
+nValDes := Round(NoRound((nValDes * nCotMoed)/nOldCotMoe,3),2)
+nValLiq := Round(NoRound((nValLiq * nCotMoed)/nOldCotMoe,3),2)
+nValCvt := Round(NoRound((nValCvt * nCotMoed)/nOldCotMoe,3),2)                  
+nOldCotMoe := nCotMoed
+
+Return .T.
+
+
+/*
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北赏屯屯屯屯脱屯屯屯屯屯送屯屯屯淹屯屯屯屯屯屯屯屯屯退屯屯屯淹屯屯屯屯屯屯槐?
+北篜rograma  矲565PARC  篈utor  矱dney S. Souza      ?Data ? 06/03/02   罕?
+北掏屯屯屯屯拓屯屯屯屯屯释屯屯屯贤屯屯屯屯屯屯屯屯屯褪屯屯屯贤屯屯屯屯屯屯贡?
+北篋esc.     ?Retorna a Parcela do T韙ulo                                罕?
+北掏屯屯屯屯拓屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯贡?
+北篣so       ?AP6                                                        罕?
+北韧屯屯屯屯拖屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯急?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+*/
+
+Function F565PARC()
+cParc565 := StrZero(1,TamSx3("E2_PARCELA")[1])
+Return cParc565
+
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪穆哪哪哪穆哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噮o	 矲a565bAval ?Autor ?Mauricio Pequim Jr.  ?Data ?02/04/03 潮?
+北媚哪哪哪哪呐哪哪哪哪哪牧哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噮o 矪loco de marcacoo       			     					  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 ?Fa565bAval()		  										  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?FINA565													  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565bAval( cMarca, oValor, oQtdTit, oMark )
+Local lRet 		:= .T.
+
+// Verifica se o registro nao esta sendo utilizado em outro terminal
+SE2->(MsSeek(TRB->CHAVE))
+If SE2->(MsRLock()) .and. SE2->E2_SALDO > 0
+	A565Inverte(cMarca,oValor,oQtdTit,.F.,oMark) // Marca o registro e trava
+	lRet := .T.
+Else
+	IW_MsgBox(STR0156,STR0051,"STOP")	//"Este titulo est?sendo utilizado em outro terminal, n鉶 pode ser utilizado na Liquida玢o"###"Aten玢o"
+	lRet := .F.
+Endif	
+
+Return lRet                    
+
+/*
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北赏屯屯屯屯脱屯屯屯屯屯送屯屯屯淹屯屯屯屯屯屯屯屯屯退屯屯屯淹屯屯屯屯屯屯槐?
+北篎uncao    矲565Confir篈utor  矼auro Sano          ?Data ? 27/03/06   罕?
+北掏屯屯屯屯拓屯屯屯屯屯释屯屯屯贤屯屯屯屯屯屯屯屯屯褪屯屯屯贤屯屯屯屯屯屯贡?
+北篋esc.     ?Funcao para a validar o c骴igo capturado pelo leitor de    罕?
+北?         ?CMC7.                                                      罕?
+北掏屯屯屯屯拓屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯贡?
+北篜arametr  ?ExpC1 = Contem a string lida do cheque, antes do tratamento罕?
+北掏屯屯屯屯拓屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯贡?
+北篟etorno   ?ExpL1 = Confirma se os dados lidos sao validos             罕?
+北掏屯屯屯屯拓屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯贡?
+北篣so       ?FINA565                                                    罕?
+北韧屯屯屯屯拖屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯急?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+*/
+
+Function F565Confirma( cCmc7 )
+Local lRet := .F.		// Retorno da validacao da string
+
+If Empty( cCmc7 ) // Caso nao leia nada
+	MsgAlert( STR0161 )		// "Passe o cheque novamente no leitor." 
+Elseif ( "?" $ cCmc7 ) .OR. Len( AllTrim( cCmc7 ) ) <> 34 // Se encontrar o caracter de erro (?) ou tamnaho menor que o correto (34)
+	MsgAlert( STR0162 + " " + STR0161 )		// "Erro na leitura." ### "Passe o cheque novamente no leitor."  
+Else
+	lRet := .T.
+Endif	
+
+Return ( lRet )	    
+
+/*
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北赏屯屯屯屯脱屯屯屯屯屯送屯屯屯淹屯屯屯屯屯屯屯屯屯退屯屯屯淹屯屯屯屯屯屯槐?
+北篎uncao    矲565Cmc7Tc篈utor  矼auro Sano          ?Data ? 27/03/06   罕?
+北掏屯屯屯屯拓屯屯屯屯屯释屯屯屯贤屯屯屯屯屯屯屯屯屯褪屯屯屯贤屯屯屯屯屯屯贡?
+北篋esc.     ?Funcao para a captura do c骴igo CMC7 pelo leitor via       罕?
+北?         ?teclado.                                                   罕?
+北掏屯屯屯屯拓屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯贡?
+北篟etorno   ?ExpA1 = Array contendo os dados lidos do cheque:           罕?
+北?         ?[1] - Banco | [2] - Agencia | [3] - Conta | [4] - Cheque   罕?
+北掏屯屯屯屯拓屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯贡?
+北篣so       ?FINA565                                                    罕?
+北韧屯屯屯屯拖屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯急?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+*/
+
+Function F565Cmc7Tc()          
+Local cCmc7 	:= Space(35)	// Recebera o conteudo lido do cheque 
+Local oCmc7						// Objeto do get do CMC7
+Local oDlg						// Monta a tela de captura do codigo  
+Local aCmc7Tc	:= {}			// Armazena os dados do cheque; retorno da funcao
+
+DEFINE MSDIALOG oDlg TITLE STR0163 FROM 200 , 001 TO 300 , 300 OF oMainWnd PIXEL	// "Leitura do c骴igo do cheque"
+@ 010 , 018 Say STR0167 SIZE 050 , 050 OF oDlg PIXEL								// "Passe o cheque:"
+@ 018 , 018 MSGET oCmc7 VAR cCmc7 PICTURE "@!" SIZE 120,009 OF oDlg PIXEL
+DEFINE SBUTTON FROM 30 , 110 TYPE 2 ACTION (Iif (F565Confirma(cCmc7), oDlg:End(), oCmc7:SetFocus()) )  ENABLE OF oDlg
+ACTIVATE MSDIALOG oDlg CENTERED	
+Aadd( aCmc7Tc, SubStr(cCmc7, 2, 3) )	//Banco
+Aadd( aCmc7Tc, SubStr(cCmc7, 14, 6) )	//Cheque
+Aadd( aCmc7Tc, SubStr(cCmc7, 5, 4) )	//Agencia  
+Aadd( aCmc7Tc, SubStr(cCmc7, 25, 8) )	//Conta
+
+
+Return( aCmc7Tc )
+
+Static Function MenuDef()
+ 
+Local aRotina := {	{ STR0002 ,"AxPesqui"  , 0 , 1,,.F. },;	//"Pesquisar"
+							{ STR0003 ,"A565Liquid", 0 , 3 },;   // "Liquidar"
+							{ STR0076 ,"A565Liquid", 0 , 3 },;   // "Reliquidar"
+							{ STR0052 ,"FA565Can"  , 0 , 6 },;  	//"Cancelar"
+							{ STR0175 ,"FA040Legenda", 0 , 7, , .F.}}  	//"Legenda"
+If Existblock("FA565ROT")
+ 	aRotina := Execblock("FA565ROT",.F.,.F.,aRotina)		//adiciona alguma rotina em aRotina
+Endif
+
+Return(aRotina)
+
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪穆哪哪哪穆哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噮o    矲inA290T   ?Autor ?Marcelo Celi Marques ?Data ?26.03.08 潮?
+北媚哪哪哪哪呐哪哪哪哪哪牧哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噮o ?Chamada semi-automatica utilizado pelo gestor financeiro   潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso      ?FINA290                                                    潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Function FinA565T(aParam)
+	cRotinaExec := "FINA565"
+	ReCreateBrow("SE2",FinWindow)      		
+	FinA565(aParam[1])
+	ReCreateBrow("SE2",FinWindow)      	
+	dbSelectArea("SE2")
+	
+	INCLUI := .F.
+	ALTERA := .F.
+
+Return .T.	
+
+/*/
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 矲a565OK2	?Autor ?Erica Casale      	?Data ?6.06.08  潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o ?Funcao que solicita cod. diario para Portugal              潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 ?Generico 												  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+/*/
+Static Function Fa565OK2()
+
+Local lRetOK2 := .T.
+
+// Se Portugal, pega cod. Diario
+If UsaSeqCor()
+	cCodDiario := CTBAVerDia() 
+Endif
+
+Return lRetOK2
+
+
+/*
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北赏屯屯屯屯脱屯屯屯屯屯送屯屯屯淹屯屯屯屯屯屯屯屯屯退屯屯屯淹屯屯屯屯屯屯槐?
+北篎uncao    矲A565MotBX篈utor  矼arcelo Celi Marques?Data ? 23/01/09   罕?
+北掏屯屯屯屯拓屯屯屯屯屯释屯屯屯贤屯屯屯屯屯屯屯屯屯褪屯屯屯贤屯屯屯屯屯屯贡?
+北篋esc.     ?Funcao criar automaticamente o motivo de baixa LIQ na      罕?
+北?         ?tabela Mot baixas                                          罕?
+北掏屯屯屯屯拓屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯贡?
+北篣so       ?FINA565                                                    罕?
+北韧屯屯屯屯拖屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯屯急?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+*/                    
+Static Function Fa565MotBx(cMot,cNomMot, cConfMot)
+	Local aMotbx := ReadMotBx()
+	Local nHdlMot, I, cFile := "SIGAADV.MOT"
+	
+	If ExistBlock("FILEMOT")
+		cFile := ExecBlock("FILEMOT",.F.,.F.,{cFile})
+	Endif
+	
+	If Ascan(aMotbx, {|x| Substr(x,1,3) == Upper(cMot)}) < 1
+		nHdlMot := FOPEN(cFile,FO_READWRITE)
+		If nHdlMot <0
+			HELP(" ",1,"SIGAADV.MOT")
+			Final("SIGAADV.MOT")
+		Endif
+		
+		nTamArq:=FSEEK(nHdlMot,0,2)	// VerIfica tamanho do arquivo
+		FSEEK(nHdlMot,0,0)			// Volta para inicio do arquivo
+
+		For I:= 0 to  nTamArq step 19 // Processo para ir para o final do arquivo	
+			xBuffer:=Space(19)
+			FREAD(nHdlMot,@xBuffer,19)
+	    Next		
+		
+		fWrite(nHdlMot,cMot+cNomMot+cConfMot+chr(13)+chr(10))	
+		fClose(nHdlMot)		
+	EndIf	
+Return
+
+
+
+/*/
+苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘苘?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+北谀哪哪哪哪穆哪哪哪哪哪履哪哪哪履哪哪哪哪哪哪哪哪哪哪哪履哪哪穆哪哪哪哪哪勘?
+北矲un噭o	 砯a565Corr ?Autor ?Mauricio Pequim Jr    ?Data ?11/01/12 潮?
+北媚哪哪哪哪呐哪哪哪哪哪聊哪哪哪聊哪哪哪哪哪哪哪哪哪哪哪聊哪哪牧哪哪哪哪哪幢?
+北矰escri噭o 矯alcula a corre噭o monet爎ia.								  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北砈intaxe	 砯a565Corr()												  潮?
+北媚哪哪哪哪呐哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪幢?
+北?Uso		 矴en俽ico													  潮?
+北滥哪哪哪哪牧哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪俦?
+北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北?
+哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌哌?
+*/
+Function fa565Corr(nValorBx)
+
+Local nCorrecao := 0
+Local nValAtual := 0
+Local nValEmiss := 0
+Local nTxMoeda	:= TRB->CTMOED
+
+IF Int(SE2->E2_VLCRUZ) = Int(xMoeda(SE2->E2_SALDO,SE2->E2_MOEDA,1,SE2->E2_EMISSAO,,If(cPaisLoc=="BRA",SE2->E2_TXMOEDA,0)))
+	IF Int(SE2->E2_VLCRUZ) = Int(xMoeda(nValorBx,SE2->E2_MOEDA,1,SE2->E2_EMISSAO,,If(cPaisLoc=="BRA",SE2->E2_TXMOEDA,0)))
+		nValEmiss := SE2->E2_VLCRUZ
+	Else
+		nValEmiss := xMoeda(nValorBx,SE2->E2_MOEDA,1,SE2->E2_EMISSAO,,If(cPaisLoc=="BRA",SE2->E2_TXMOEDA,0))
+	EndIf
+Else
+	If !Empty(SE2->E2_TXMDCOR)
+		nValEmiss := xMoeda(nValorBx,SE2->E2_MOEDA,1,Iif(Empty(SE2->E2_DTVARIA),SE2->E2_EMISSAO,SE2->E2_DTVARIA),8,SE2->E2_TXMDCOR)
+	Else
+		nValEmiss := xMoeda(nValorBx,SE2->E2_MOEDA,1,Iif(Empty(SE2->E2_DTVARIA),SE2->E2_EMISSAO,SE2->E2_DTVARIA),8,Iif(Empty(SE2->E2_DTVARIA),SE2->E2_TXMOEDA,0))
+	EndIf
+EndIF
+
+nValAtual := xMoeda(nValorBx,SE2->E2_MOEDA,1,dDataBase,8,nTxMoeda)
+
+//谀哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+//?Verifica atraves do parametro MV_CALCCM se sera calculada a cor-?
+//?recao monetaria.                                                ?
+//?Caso o parametro nao exista, sera assumido "S"					?
+//滥哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪哪?
+If GetMv("MV_CALCCM") == "S"
+	nCorrecao := nValAtual - nValEmiss
+Else
+	nCorrecao := 0
+Endif
+
+//Converto para a moeda do titulo (necessario para a gravacao correta do SE5)
+nCorrecao := Round(NoRound(xMoeda(nCorrecao,1,nMoeda,,3),3),2)
+
+Return (nCorrecao)
+
+
+

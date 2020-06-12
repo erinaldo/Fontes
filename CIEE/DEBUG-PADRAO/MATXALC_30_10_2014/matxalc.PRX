@@ -1,0 +1,4100 @@
+#INCLUDE "MATXALC.CH"
+#INCLUDE "PROTHEUS.CH"
+
+#define GRPALLUSERS '************'
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Descri‡…o ³ PLANO DE MELHORIA CONTINUA        ³Programa     MATXALC.PRX³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ITEM PMC  ³ Responsavel              ³ Data                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³      01  ³Nereu Humberto Junior     ³ 05/04/2006                      ³±±
+±±³      02  ³Nereu Humberto Junior     ³ 24/03/2006                      ³±±
+±±³      03  ³Alexandre Inacio Lemes    ³ 09/05/2006                      ³±±
+±±³      04  ³Alexandre Inacio Lemes    ³ 03/02/2005                      ³±±
+±±³      05  ³Alexandre Inacio Lemes    ³ 03/02/2005                      ³±±
+±±³      06  ³Nereu Humberto Junior     ³ 05/04/2006                      ³±±
+±±³      07  ³Alexandre Inacio Lemes    ³ 09/05/2006                      ³±±
+±±³      08  ³Alexandre Inacio Lemes    ³ 05/12/2005                      ³±±
+±±³      09  ³Nereu Humberto Junior     ³ 24/03/2006                      ³±±
+±±³      10  ³Alexandre Inacio Lemes    ³ 05/12/2005                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³RetCodUsr ³ Autor ³ Edson Maricate        ³ Data ³27.01.1999³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna o codigo do Usuario Corrente.                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Void RetCodUsr()                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetC1  - Codigo do usuario corrente.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function RetCodUsr()
+
+Local cAlias 	:= ""
+Local cSavOrd := ""
+Local cCodUser:= ""
+
+If GetRemoteType() == -1 // Verifica se o acesso é por Job/WebService
+
+	cAlias	 := Alias()
+	cSavOrd := IndexOrd()
+	cCodUser:= CriaVar("AN_USER")
+
+	PswOrder(2)
+	If !Empty(cUserName) .And. PswSeek(CUSERNAME)
+		cCodUser := PswRet(1)[1][1]
+	EndIf
+
+	dbSelectArea(cAlias)
+	dbSetOrder(cSavOrd)
+
+Else
+	cCodUser := __cUserId
+Endif
+
+Return cCodUser
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³UsrRetGrp ³ Autor ³ Edson Maricate        ³ Data ³27.01.1999³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna os grupos do usuario.                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do usuario                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetA1 = Array contendo os grupos.                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function UsrRetGrp(cUser,cCodUser)
+
+Local cAlias		:= Alias()
+Local cSavOrd 	:= IndexOrd()
+Local aGrupos		:= {}
+
+Default cCodUser	:= ""
+Default cUser		:= ""
+
+// Prioriza o ID de usuario para ganho de performance
+If !Empty(cCodUser)
+	aGrupos  := FWSFUsrGrps(cCodUser)
+Else
+	If !Empty(cUser)
+		PswOrder(2)
+		If PswSeek(cUser)
+			aGrupos  := PswRet(1)[1][10]
+		Else
+			PswOrder(1)
+			If PswSeek(cUser)
+				aGrupos  := PswRet(1)[1][10]
+			EndIf
+		EndIf			
+	EndIf
+EndIf
+
+dbSelectArea(cAlias)
+dbSetOrder(cSavOrd)
+
+Return aGrupos
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³UsrFullName³ Autor ³ Edson Maricate       ³ Data ³27.01.1999³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna o nome do completo do usuario.                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do usuario a ser verificado.                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetC1 = Nome completo do usuario.                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Mata085                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function UsrFullName(cUser)
+Local cAlias := Alias()
+Local cSavOrd := IndexOrd()
+Local cName
+
+If cUser == Nil
+	cUser := CUSERNAME
+EndIf
+
+PswOrder(1)
+If	PswSeek(cUser)
+	cName := PswRet(1)[1][4]
+Else
+	cName := SPACE(15)
+EndIf
+
+If !Empty(cAlias)
+	dbSelectArea(cAlias)
+	dbSetOrder(cSavOrd)
+EndIf
+
+Return cName
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³UsrGrComp ³ Autor ³ Edson Maricate        ³ Data ³ 02.09.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna os Grupos de Compras do Usuario.                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do usuario a ser verificado.                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetA1 = Array contendo os codigos dos grupos.              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function UsrGrComp(cUser)
+Local cSaveArea  := Alias()
+Local cSavOrdem  := IndexOrd()
+Local cSavOrdSAJ := SAJ->(IndexOrd())
+Local nSavRecSAJ := SAJ->(RecNo())
+Local aRet:={}
+
+If !Empty(cUser)
+	dbSelectArea("SAJ")
+	dbSetOrder(2)
+	If MsSeek(xFilial("SAJ")+cUser)
+		While !Eof() .And. SAJ->AJ_USER == cUser
+			AADD(aRet,SAJ->AJ_GRCOM)
+			dbSkip()
+		End
+	EndIf
+Endif
+
+dbSelectArea("SAJ")
+dbSetOrder(cSavOrdSAJ)
+MsGoto(nSavRecSAJ)
+
+dbSelectArea(cSaveArea)
+dbSetOrder(cSavOrdem)
+
+Return aRet
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³VldGrComp ³ Autor ³ Edson Maricate        ³ Data ³ 28.10.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica se o usuario pertence a um grupo de compras.      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do usuario a ser verificado.                ³±±
+±±³          ³ ExpC2 = Codigo do grupo a ser verificado.                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetL1 = .T. / .F.                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA150.                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function VldGrComp(cUser,cGrupo)
+Local cSaveArea := Alias()
+Local cSavOrdem := IndexOrd()
+Local lRet := .F.
+
+If !Empty(cUser)
+	dbSelectArea("SAJ")
+	dbSetOrder(2)
+	If MsSeek(xFilial("SAJ")+cUser)
+		While !Eof() .And. SAJ->AJ_USER == cUser
+			If SAJ->AJ_GRCOM == "*" .Or. cGrupo == SAJ->AJ_GRCOM
+				lRet := .T.
+				Exit
+			EndIf
+			dbSkip()
+		End
+	EndIf
+Endif
+
+If Empty(cGrupo)
+	lRet := .T.
+EndIf
+
+dbSelectArea(cSaveArea)
+dbSetOrder(cSavOrdem)
+
+Return lRet
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ VldAnCot ³ Autor ³ Edson Maricate        ³ Data ³ 28.10.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica se o usuario pode analizar a cotacao.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do usuario a ser verificado.                ³±±
+±±³          ³ ExpC2 = Codigo do grupo a ser verificado.                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetL1 = .T. / .F.                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA160.                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function VldAnCot(cUser,cGrupo)
+
+Local aArea		:= GetArea()
+Local aAreaSAJ	:= SAJ->(GetArea())
+Local lRet		:= .F.
+
+If !Empty(cUser) .And. !Empty(cGrupo)
+	dbSelectArea("SAJ")
+	dbSetOrder(2)
+	If MsSeek(xFilial("SAJ")+cUser)
+		While !Eof() .And. SAJ->AJ_USER == cUser
+			If cGrupo == SAJ->AJ_GRCOM .And. SAJ->AJ_COTACAO == 'S'
+				lRet := .T.
+				Exit
+			EndIf
+			dbSkip()
+		End
+	EndIf
+Endif
+
+If Empty(cGrupo) .Or. (Type("lIsACC")=="L" .And. lIsACC)
+	lRet := .T.
+EndIf
+
+RestArea(aAreaSAJ)
+RestArea(aArea)
+
+Return lRet
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³MaRetComSC³ Autor ³   Edson Maricate      ³ Data ³ 01.10.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna o grupo de compradores responsavel pelo processo   ³±±
+±±³          ³ de compras  ( Pedido / Cotacao ) da solicitacao.           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do produto.                                 ³±±
+±±³          ³ ExpA1 = Array contendo os grupos do usuario.               ³±±
+±±³          ³ ExpC1 = Codigo do usuario a ser verificado.                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetC1 = Grupo de compradores destino.                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MaRetComSC(cProduto,aGrpUsr,cUser)
+
+Local aArea		:= GetArea()
+Local aAreaSB1	:= SB1->(GetArea())
+Local aAreaSAI	:= SAI->(GetArea())
+Local cGrpComSC
+Local nx
+
+DEFAULT aGrpUsr	:= UsrRetGrp()
+DEFAULT cUser	:= RetCodUsr()
+
+dbSelectArea("SB1")
+dbSetOrder(1)
+MsSeek(xFilial("SB1")+cProduto)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se existe o o Solicitante TODOS USUARIOS   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea('SAI')
+dbSetOrder(3)
+dbSeek(xFilial("SAI")+GRPALLUSERS)
+While !Eof() .And. SAI->AI_FILIAL+SAI->AI_GRUSER+SAI->AI_USER == xFilial('SAI')+GRPALLUSERS
+	If 	SAI->AI_GRUPO == SB1->B1_GRUPO .Or. ;
+			SAI->AI_PRODUTO == SB1->B1_COD .Or. ;
+			(AllTrim(SAI->AI_PRODUTO) == '*'.And.;
+			Alltrim(SAI->AI_GRUPO)=='*')
+
+		If SAI->AI_PRODUTO == SB1->B1_COD
+			cGrpComSC := SAI->AI_GRUPCOM
+			If !Empty(cGrpComSC)
+				Exit
+			EndIf
+		Else
+			If (AllTrim(SAI->AI_PRODUTO) == '*'.And.Alltrim(SAI->AI_GRUPO)=='*' .And. Empty(cGrpComSC))
+				cGrpComSC := SAI->AI_GRUPCOM
+			Else
+				cGrpComSC := SAI->AI_GRUPCOM
+			EndIf
+		EndIf
+
+	EndIf
+	dbSkip()
+End
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica os Grupo de Usuarios.                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nx := 1 to Len(aGrpUsr)
+	dbSelectArea('SAI')
+	dbSetOrder(1)
+	dbSeek(xFilial("SAI")+aGrpUsr[nx])
+	While !Eof() .And. SAI->AI_FILIAL+SAI->AI_GRUSER==xFilial('SAI')+aGrpUsr[nx]
+		If 	SAI->AI_GRUPO == SB1->B1_GRUPO .Or. ;
+				SAI->AI_PRODUTO == SB1->B1_COD .Or. ;
+				(AllTrim(SAI->AI_PRODUTO) == '*'.And.;
+				Alltrim(SAI->AI_GRUPO)=='*')
+
+			If SAI->AI_PRODUTO == SB1->B1_COD
+				cGrpComSC := SAI->AI_GRUPCOM
+				If !Empty(cGrpComSC)
+					Exit
+				EndIf
+			Else
+				If (AllTrim(SAI->AI_PRODUTO) == '*'.And.Alltrim(SAI->AI_GRUPO)=='*' .And. Empty(cGrpComSC))
+					cGrpComSC := SAI->AI_GRUPCOM
+				Else
+					cGrpComSC := SAI->AI_GRUPCOM
+				EndIf
+			EndIf
+
+		EndIf
+		dbSkip()
+	End
+Next nx
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica o Usuario                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea('SAI')
+dbSetOrder(2)
+MsSeek(xFilial("SAI")+cUser)
+While !Eof() .And. SAI->AI_FILIAL+SAI->AI_USER==xFilial('SAI')+cUser
+	If 	SAI->AI_GRUPO == SB1->B1_GRUPO .Or. ;
+			SAI->AI_PRODUTO == SB1->B1_COD .Or. ;
+			(AllTrim(SAI->AI_PRODUTO) == '*'.And.;
+			Alltrim(SAI->AI_GRUPO)=='*')
+
+		If SAI->AI_PRODUTO == SB1->B1_COD
+			cGrpComSC := SAI->AI_GRUPCOM
+			If !Empty(cGrpComSC)
+				Exit
+			EndIf
+		Else
+			If (AllTrim(SAI->AI_PRODUTO) == '*'.And.Alltrim(SAI->AI_GRUPO)=='*' .And. Empty(cGrpComSC))
+				cGrpComSC := SAI->AI_GRUPCOM
+			Else
+				cGrpComSC := SAI->AI_GRUPCOM
+			EndIf
+		EndIf
+
+	EndIf
+	dbSkip()
+End
+
+If Empty(cGrpComSC)
+	dbSelectArea("SB1")
+	dbSetOrder(1)
+	MsSeek(xFilial("SB1")+cProduto)
+	cGrpComSC := SB1->B1_GRUPCOM
+EndIf
+
+RestArea(aAreaSB1)
+RestArea(aAreaSAI)
+RestArea(aArea)
+
+Return cGrpComSC
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³UsrRetName³ Autor ³ Edson Maricate        ³ Data ³27.01.1999³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna o nome do usuario.                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do usuario a ser verificado.                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetC1 = Nome do usuario.                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function UsrRetName(cCodUser)
+Local cAlias := Alias()
+Local cSavOrd := IndexOrd()
+Local cName
+
+PswOrder(1)
+If	!Empty(cCodUser) .And. PswSeek(cCodUser)
+	cName := PswRet(1)[1][2]
+Else
+	cName := SPACE(15)
+EndIf
+If cCodUser == "******"
+	cName := "Todos"
+EndIf
+
+dbSelectArea(cAlias)
+dbSetOrder(cSavOrd)
+
+Return cName
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³GrpRetName³ Autor ³ Edson Maricate        ³ Data ³27.01.1999³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna o nome do grupo de Usuarios.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do grupo de usuarios a ser verificado.      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetC1 = Nome do grupo de usuarios.                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function GrpRetName(cCodGrup)
+Local cAlias := Alias()
+Local cSavOrd := IndexOrd()
+Local cName
+
+cName := FWSFGroup( cCodGrup, "DATAGROUP", "GR__NOME")
+If Empty(cName)
+	cName := SPACE(15)
+EndIf 
+
+If cCodGrup == "******"
+	cName := "Todos"
+EndIf
+
+dbSelectArea(cAlias)
+dbSetOrder(cSavOrd)
+
+Return cName
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ UsrExist ³ Autor ³ Edson Maricate        ³ Data ³ 30.09.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica se o usuario existe.                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void UsrExist(ExpC1)                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do Usuario                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function UsrExist(cUser,lPesqUsr)
+Local cAlias		:= Alias()
+Local cSavOrd		:= IndexOrd()
+Local lRet 		:= .F.
+
+Default lPesqUsr	:= .T.
+
+PswOrder(1)
+If PswSeek(cUser,lPesqUsr)
+	lRet := .T.
+Else
+	HELP("   ",1,"USR_EXIST")
+EndIf
+
+dbSelectArea(cAlias)
+dbSetOrder(cSavOrd)
+Return lRet
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³MaAlcDtRef³ Autor ³ Edson Maricate        ³ Data ³29.10.1998³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna a data de referencia para o gravacao do arquivo    ³±±
+±±³          ³ de Saldos.                                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void MaAlcDtRef(ExpC1,ExpD1,ExpC2)                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Alias do arquivo                                   ³±±
+±±³          ³ ExpD1 = Data de referencia                                 ³±±
+±±³          ³ ExpC2 = Tipo de saldo                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function MaAlcDtRef(cAprov,dDataRef,cTipo)
+Local dRet       := Ctod("")
+Local cSavAlias  := Alias()
+Local nSavOrd 	 := Indexord()
+
+dbSelectArea("SAK")
+dbSetOrder(1)
+MsSeek(xFilial("SAK")+cAprov)
+If cTipo == Nil
+	cTipo := AK_TIPO
+EndIf
+
+Do Case
+Case cTipo == "D"
+	dRet := dDataRef
+Case cTipo == "M"
+	dRet := CTOD("01/"+STRZERO(MONTH(dDataRef),2)+"/"+STRZERO(YEAR(dDataRef),4),"ddmmyy")
+Case cTipo == "S"
+	dRet := dDataRef
+	While DOW(dRet) != 1
+		dRet--
+	End
+Case cTipo == "A"
+	dRet := CTOD("01/01/"+STRZERO(YEAR(dDataRef),4),"ddmmyy")
+OtherWise
+	dRet := dDataRef
+End
+dbSelectArea(cSavAlias)
+dbSetOrder(nSavOrd)
+
+Return (dRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³UsrRetMail³ Autor ³Rodrigo de A. Sartorio ³ Data ³03.07.2000³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna o e-mail do usuario                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do usuario a ser verificado.                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetC1 = E-mail do usuario.                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function UsrRetMail(cCodUser)
+Local aArea:=GetArea()
+Local cMail:=""
+PswOrder(1)
+If !Empty(cCodUser) .And. PswSeek(cCodUser)
+	cMail:=PswRet(1)[1][14]
+EndIf
+RestArea(aArea)
+Return cMail
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A120Posic ³Revisao³Alexandre Inacio Lemes ³Data  ³05/05/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Consulta do status das Aprovacoes Documentos PC/AE/CP/NF   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void A120Posic(ExpC1,ExpN1,ExpN2,ExpC2)                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Alias do arquivo                                   ³±±
+±±³          ³ ExpN1 = Numero do registro                                 ³±±
+±±³          ³ ExpN2 = Opcao selecionada                                  ³±±
+±±³          ³ ExpC2 = Tipo do Documento                                  ³±±
+±±³          ³ ExpC3 = Informa se salva status                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA120 / MATA125 / MATA103 / CNTA130                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A120Posic(cAlias,nReg,nOpcx,cTipoDoc,lStatus,lResid)
+
+Local aArea		:= GetArea()
+Local aSavCols   := {}
+Local aSavHead   := {}
+Local cHelpApv   := OemToAnsi(STR0052) // "Este documento nao possui controle de aprovacao."
+Local cAliasSCR  := "TMP"
+Local cComprador := ""
+Local cSituaca   := ""
+Local cNumDoc    := ""
+Local cStatus    := ""
+Local cTitle     := ""
+Local cTitDoc    := ""
+Local cAddHeader := ""
+Local cAprovador := ""
+
+Local lBloq     := .F.
+Local lQuery    := .F.
+
+Local nSavN		:= 0
+Local nX   		:= 0
+Local nY        := 0
+
+Local oDlg
+Local oGet
+Local oBold        
+Local lExAprov	:= SuperGetMV( "MV_EXAPROV" , .F. , .F. )
+Local lMVAPRSCEC 	:= SuperGetMv("MV_APRSCEC",.F.,.F.)
+Local lExistDBM	:= AliasInDic("DBM")
+
+#IFDEF TOP
+	Local cQuery   := ""
+	Local aStruSCR := {}
+#ENDIF
+
+DEFAULT cTipoDoc := "PC"
+DEFAULT lStatus  := .T.
+DEFAULT lResid   := .F.
+
+If lStatus
+	aSavCols  := aClone( aCols )
+	aSavHead  := aClone( aHeader )
+	nSavN     := N
+Else
+	Private aCols   := {}
+	Private aHeader := {}
+	Private N       := 1
+EndIf
+
+dbSelectArea( cAlias )
+MsGoto( nReg )
+
+IF cTipoDoc == "PC" .Or. cTipoDoc == "AE"
+	If !Empty(SC7->C7_APROV)
+	    cTitle    := OemToAnsi(STR0029) // "Aprovacao do Pedido de Compra"
+	    cTitDoc   := OemToAnsi(STR0012) // "Pedido" 
+	    cHelpApv  := OemToAnsi(STR0033) // "Este pedido nao possui controle de aprovacao." 
+		cNumDoc   := SC7->C7_NUM
+		cComprador:= UsrRetName(SC7->C7_USER)
+		cStatus   := IIF(SC7->C7_CONAPRO=="L",OemToAnsi(STR0001),OemToAnsi(STR0002)) //"PEDIDO LIBERADO"#"AGUARDANDO LIB."
+	EndIf	
+ElseIf cTipoDoc == "CP"
+	If !Empty(SC3->C3_APROV)
+	    cTitle    := OemToAnsi(STR0040) // "Aprovacao do Contrato de Parceria"
+	    cTitDoc   := OemToAnsi(STR0039) // "Contrato" 
+	    cHelpApv  := OemToAnsi(STR0038) // "Este Contrato nao possui controle de aprovacao." 
+		cNumDoc   := SC3->C3_NUM
+		cComprador:= UsrRetName(SC3->C3_USER)
+		cStatus   := IIF(SC3->C3_CONAPRO=="L",OemToAnsi(STR0036),OemToAnsi(STR0037)) //"CONTRATO LIBERADO"#"AGUARDANDO LIB."
+	EndIf
+ElseIf cTipoDoc == "NF"
+	If !Empty(SF1->F1_APROV)
+	    cTitle    := OemToAnsi(STR0047) // "Aprovacao da Nota Fiscal de Entrada"
+	    cTitDoc   := OemToAnsi(STR0048) // "Nota Fiscal" 
+	    cHelpApv  := OemToAnsi(STR0049) // "Esta Nota Fiscal nao possui controle de aprovacao." 
+		cNumDoc   := SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA
+		cStatus   := IIF(SF1->F1_STATUS=="B",OemToAnsi(STR0051),OemToAnsi(STR0050)) //"NF AGUARDANDO LIB."#"NF LIBERADA" 
+	EndIf
+ElseIf cTipoDoc == "MD"
+	If !Empty(CND->(FieldPos("CND_APROV"))) .And. !Empty(CND->CND_APROV)
+	    cTitle    := OemToAnsi(STR0053)//"Aprovação da  Medição de Contrato"
+	    cTitDoc   := OemToAnsi(STR0054)//"Medição"
+	    cHelpApv  := OemToAnsi(STR0055)//"Esta medição não possui controle de aprovação"
+		cAprovador:= OemToAnsi(STR0062)//"Aprovadores"
+		cNumDoc   := CND->CND_NUMMED 
+		cComprador:= CND->CND_APROV + " - " + Posicione("SAL",1,xFilial("SAL")+CND->CND_APROV, "AL_DESC")  
+		cStatus   := IIF(CND->CND_ALCAPR=="B",OemToAnsi(STR0056),OemToAnsi(STR0057)) //"Medição Aguardando Liberação"#"Medição Liberada"
+	EndIf
+ElseIf cTipoDoc == "SC"
+	    cTitle    := OemToAnsi(STR0064) // "Aprovacao da Solicitação de Compra"
+	    cTitDoc   := OemToAnsi(STR0065) // "Solicitação" 
+	    cHelpApv  := OemToAnsi(STR0066) // "Esta solicitação nao possui controle de aprovacao." 
+		cNumDoc   := SC1->C1_NUM
+		cComprador:= UsrRetName(SC1->C1_USER)
+		cStatus   := IIF(SC1->C1_APROV=="L",OemToAnsi(STR0067),OemToAnsi(STR0068)) //"SOLICITAÇÃO LIBERADA"#"AGUARDANDO LIB."
+ElseIf cTipoDoc == "SA"
+	    cTitle    := OemToAnsi(STR0069) // "Aprovação da Solicitação de Armazém"
+	    cTitDoc   := OemToAnsi(STR0065) // "Solicitação" 
+	    cHelpApv  := OemToAnsi(STR0066) // "Esta solicitação nao possui controle de aprovação." 
+		cNumDoc   := SCP->CP_NUM
+		cComprador:= UsrRetName(SCP->CP_SOLICIT)
+		cStatus   := IIF(SCP->CP_STATSA=="L",OemToAnsi(STR0067),OemToAnsi(STR0068)) //"SOLICITAÇÃO LIBERADA"#"AGUARDANDO LIB."
+ElseIf cTipoDoc == "IP"
+	If !Empty(SC7->C7_APROV)
+	    cTitle    := OemToAnsi(STR0029) // "Aprovacao do Pedido de Compra"
+	    cTitDoc   := OemToAnsi(STR0012) // "Pedido" 
+	    cHelpApv  := OemToAnsi(STR0033) // "Este pedido nao possui controle de aprovacao." 
+		cNumDoc   := SC7->C7_NUM
+		cComprador:= UsrRetName(SC7->C7_USER)
+		cStatus   := IIF(SC7->C7_CONAPRO=="L",OemToAnsi(STR0001),OemToAnsi(STR0002)) //"PEDIDO LIBERADO"#"AGUARDANDO LIB."
+	EndIf
+EndIf
+
+
+If !Empty(cNumDoc) 
+
+	aHeader:= {}
+	aCols  := {}
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Ponto de Entrada para adicionar Campos SCR na MsGetDados     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ExistBlock("A120PSCR") 
+		cAddHeader := ExecBlock("A120PSCR", .F., .F. )
+		If ValType(cAddHeader) <> "C"
+			cAddHeader := ""			
+		Endif
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Faz a montagem do aHeader com os campos fixos.               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SX3")
+	dbSetOrder(1)
+	MsSeek("SCR")
+	If lMVAPRSCEC
+		AADD(aHeader,{ "Item ","bCR_ITEM","",15,0,"","","C","",""} )
+	Endif
+	While !Eof() .And. (SX3->X3_ARQUIVO == "SCR")
+		IF AllTrim(X3_CAMPO)$"CR_NIVEL/CR_OBS/CR_DATALIB/" + cAddHeader
+			AADD(aHeader,{	TRIM(X3Titulo()),;
+			SX3->X3_CAMPO,;
+			SX3->X3_PICTURE,;
+			SX3->X3_TAMANHO,;
+			SX3->X3_DECIMAL,;
+			SX3->X3_VALID,;
+			SX3->X3_USADO,;
+			SX3->X3_TIPO,;
+			SX3->X3_ARQUIVO,;
+			SX3->X3_CONTEXT } )
+
+			If AllTrim(x3_campo) == "CR_NIVEL"
+				AADD(aHeader,{ OemToAnsi(STR0003),"bCR_NOME",   "",15,0,"","","C","",""} ) // Usuario
+				AADD(aHeader,{ OemToAnsi(STR0004),"bCR_SITUACA","",20,0,"","","C","",""} ) //"Situacao"
+				AADD(aHeader,{ OemToAnsi(STR0005),"bCR_NOMELIB","",15,0,"","","C","",""} ) //"Usuario Lib."
+			EndIf
+
+		Endif
+
+		dbSelectArea("SX3")		
+		dbSkip()
+	EndDo
+
+	ADHeadRec("SCR",aHeader)
+
+	#IFDEF TOP
+		lQuery     := .T.
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Altera o tipo de documento ( cTipoDoc ) quando o  valor do      ³
+		//³ campo C7_TIPO é igual a 2, pois trata-se de uma autorização de  ³
+		//³ entrega e essa variável é utilizada como parâmetro em uma query ³
+		//³ que faz a busca dos dados de controle de aprovação na SCR.      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SC7->(FieldPos("C7_TIPO")) > 0
+			If SC7->C7_TIPO == 2 .And. cTipoDoc == "PC" 
+				cTipoDoc := "AE"
+			EndIf
+		EndIf
+
+		IF cTipoDoc == "PC" 		
+
+			aStruSCR := SCR->(dbStruct())
+			cAliasSCR := GetNextAlias()
+			cQuery    := "SELECT SCR.*,SCR.R_E_C_N_O_ SCRRECNO FROM "+RetSqlName("SCR")+" SCR "
+			cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+			cQuery    += "SCR.CR_NUM = '"+Padr(SC7->C7_NUM,Len(SCR->CR_NUM))+"' AND "
+			cQuery    += "SCR.CR_TIPO = 'PC' "
+			If lExAprov .And. lResid	// Exibe registros deletados quando MV_EXAPROV estiver ativo e houver itens eliminados como residuo
+				cQuery    += " "
+			Else
+				cQuery    += "AND SCR.D_E_L_E_T_=' ' "
+			EndIf
+
+		ElseIf cTipoDoc == "AE"	
+				aStruSCR := SCR->(dbStruct())
+				cAliasSCR := GetNextAlias()
+				cQuery    := "SELECT SCR.*,SCR.R_E_C_N_O_ SCRRECNO FROM "+RetSqlName("SCR")+" SCR "
+				cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+				cQuery    += "SCR.CR_NUM = '"+Padr(SC7->C7_NUM,Len(SCR->CR_NUM))+"' AND "
+				cQuery    += "SCR.CR_TIPO = 'AE' "
+				If lExAprov .And. lResid
+					cQuery    += " "
+				Else
+					cQuery    += "AND SCR.D_E_L_E_T_=' ' "
+				EndIf
+
+		ElseIf cTipoDoc == "CP"
+
+			aStruSCR  := SCR->(dbStruct())
+			cAliasSCR := GetNextAlias()
+			cQuery    := "SELECT SCR.*,SCR.R_E_C_N_O_ SCRRECNO FROM "+RetSqlName("SCR")+" SCR "
+			cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+			cQuery    += "SCR.CR_NUM = '"+Padr(SC3->C3_NUM,Len(SCR->CR_NUM))+"' AND "
+			cQuery    += "SCR.CR_TIPO = 'CP' "
+			If !lExAprov .Or. SC3->C3_RESIDUO != "S"
+				cQuery    += "AND SCR.D_E_L_E_T_=' ' "
+			EndIf
+
+
+		ElseIf cTipoDoc == "NF"
+
+			aStruSCR  := SCR->(dbStruct())
+			cAliasSCR := GetNextAlias()
+			cQuery    := "SELECT SCR.*,SCR.R_E_C_N_O_ SCRRECNO FROM "+RetSqlName("SCR")+" SCR "
+			cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+			cQuery    += "SCR.CR_NUM = '"+Padr(SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA,Len(SCR->CR_NUM))+"' AND "
+			cQuery    += "SCR.CR_TIPO = 'NF' "
+			cQuery    += "AND SCR.D_E_L_E_T_=' ' "
+
+
+		ElseIf cTipoDoc == "MD"
+
+			aStruSCR  := SCR->(dbStruct())
+			cAliasSCR := GetNextAlias()
+			cQuery    := "SELECT SCR.*,SCR.R_E_C_N_O_ SCRRECNO FROM "+RetSqlName("SCR")+" SCR "
+			cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+			cQuery    += "SCR.CR_NUM = '"+Padr(CND->CND_NUMMED,Len(SCR->CR_NUM))+"' AND "
+			cQuery    += "SCR.CR_TIPO = 'MD' "
+			If !lExAprov .Or. CND->CND_RESID != "S"
+				cQuery    += "AND SCR.D_E_L_E_T_=' ' "
+			EndIf
+
+		
+		ElseIf cTipoDoc == "SC"
+			aStruSCR := SCR->(dbStruct())
+			cAliasSCR := GetNextAlias()
+			cQuery    := "SELECT SCR.*,DBM.DBM_ITEM,DBM.DBM_ITEMRA,SCR.R_E_C_N_O_ SCRRECNO "
+			cQuery	   += "FROM "+RetSqlName("SCR")+" SCR INNER JOIN "
+			cQuery	   += RetSqlName("DBM")+" DBM ON "
+			cQuery	   += "CR_TIPO=DBM_TIPO AND "
+			cQuery	   += "CR_NUM=DBM_NUM AND "
+			cQuery	   += "CR_GRUPO=DBM_GRUPO AND "
+			cQuery	   += "CR_ITGRP=DBM_ITGRP AND "
+			cQuery	   += "CR_USER=DBM_USER AND "
+			cQuery	   += "CR_USERORI=DBM_USEROR "
+			cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+			cQuery    += "SCR.CR_NUM = '"+Padr(SC1->C1_NUM,Len(SCR->CR_NUM))+"' AND "
+			cQuery    += "SCR.CR_TIPO = 'SC' "
+			If !lExAprov .Or. SC1->C1_RESIDUO
+				cQuery    += "AND DBM.D_E_L_E_T_=' ' "
+				cQuery    += "AND SCR.D_E_L_E_T_=' ' "
+			EndIf	
+
+		
+		ElseIf cTipoDoc == "SA"
+
+			aStruSCR := SCR->(dbStruct())
+			cAliasSCR := GetNextAlias()
+			cQuery    := "SELECT SCR.*, " + IIF(lExistDBM,"DBM.DBM_ITEM,DBM.DBM_ITEMRA, "," ")+ "SCR.R_E_C_N_O_ SCRRECNO "
+			cQuery	   += "FROM "+RetSqlName("SCR")+" SCR " 
+			If lExistDBM
+				cQuery    += "INNER JOIN "
+				cQuery	   += RetSqlName("DBM")+" DBM ON "
+				cQuery	   += "CR_TIPO=DBM_TIPO AND "
+				cQuery	   += "CR_NUM=DBM_NUM AND "
+				cQuery	   += "CR_GRUPO=DBM_GRUPO AND "
+				cQuery	   += "CR_ITGRP=DBM_ITGRP AND "
+				cQuery	   += "CR_USER=DBM_USER AND "
+				cQuery	   += "CR_USERORI=DBM_USEROR "
+			EndIf	
+			cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+			cQuery    += "SCR.CR_NUM = '"+Padr(SCP->CP_NUM,Len(SCR->CR_NUM))+"' AND "
+			cQuery    += "SCR.CR_TIPO = 'SA' "
+			If !lExAprov
+				If lExistDBM
+					cQuery    += "AND DBM.D_E_L_E_T_=' ' "
+				EndIf
+				cQuery    += "AND SCR.D_E_L_E_T_=' ' "
+			EndIf
+			
+		ElseIf cTipoDoc == "IP"
+
+			aStruSCR := SCR->(dbStruct())
+			cAliasSCR := GetNextAlias()
+			cQuery    := "SELECT SCR.*,DBM.DBM_ITEM,DBM.DBM_ITEMRA,SCR.R_E_C_N_O_ SCRRECNO "
+			cQuery	   += "FROM "+RetSqlName("SCR")+" SCR LEFT JOIN "
+			cQuery	   += RetSqlName("DBM")+" DBM ON "
+			cQuery	   += "CR_TIPO=DBM_TIPO AND "
+			cQuery	   += "CR_NUM=DBM_NUM AND "
+			cQuery	   += "CR_GRUPO=DBM_GRUPO AND "
+			cQuery	   += "CR_ITGRP=DBM_ITGRP AND "
+			cQuery	   += "CR_USER=DBM_USER AND "
+			cQuery	   += "CR_USERORI=DBM_USEROR AND "
+			cQuery    += "DBM.D_E_L_E_T_=' ' "
+			cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+			cQuery    += "SCR.CR_NUM = '"+Padr(SC7->C7_NUM,Len(SCR->CR_NUM))+"' AND "
+			cQuery    += "(SCR.CR_TIPO = 'IP' OR SCR.CR_TIPO = 'PC' )"
+			If !lExAprov
+				cQuery    += "AND SCR.D_E_L_E_T_=' ' "
+			EndIf
+		EndIf
+		
+		cQuery    += "ORDER BY "+SqlOrder(SCR->(IndexKey()))
+		cQuery := ChangeQuery(cQuery)
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSCR)
+
+		For nX := 1 To Len(aStruSCR)
+			If aStruSCR[nX][2]<>"C"
+				TcSetField(cAliasSCR,aStruSCR[nX][1],aStruSCR[nX][2],aStruSCR[nX][3],aStruSCR[nX][4])
+			EndIf
+		Next nX
+	#ELSE
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Abre o arquivo SCR sem filtros    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		ChkFile("SCR",.F.,"TMP")	
+
+		dbSelectArea(cAliasSCR)
+		dbSetOrder(1)
+
+		IF cTipoDoc == "PC" .Or. cTipoDoc == "AE"
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ A rotina a seguir garante o funcionamento correto na base historica dos clientes, ³
+			//³ pois com a implementacao do parametro MV_AEAPROV que estende o controle de alcadas³
+			//³ para a AE, em 22/07/04 foi alterada a gravacao do tipo do doc para PC e AE afim   ³
+			//³ de diferenciar o tipo de doc nos arquivos SC7 e SCR sem afetar o funcionamento ant³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			cTipoDoc := "PC"
+			MsSeek(xFilial("SCR")+cTipoDoc+Padr(SC7->C7_NUM,Len(SCR->CR_NUM)))
+			If (cAliasSCR)->( Eof() )
+				cTipoDoc := "AE"
+				MsSeek(xFilial("SCR")+cTipoDoc+Padr(SC7->C7_NUM,Len(SCR->CR_NUM)))
+			EndIf
+		ElseIf cTipoDoc == "CP"
+			MsSeek(xFilial("SCR")+cTipoDoc+Padr(SC3->C3_NUM,Len(SCR->CR_NUM)))
+		ElseIf cTipoDoc == "NF"
+			MsSeek(xFilial("SCR")+cTipoDoc+Padr(SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA,Len(SCR->CR_NUM)))
+		ElseIf cTipoDoc == "MD"
+			MsSeek(xFilial("SCR")+cTipoDoc+Padr(CND->CND_NUMMED,Len(SCR->CR_NUM)))
+		ElseIf cTipoDoc == "SC"
+			MsSeek(xFilial("SCR")+cTipoDoc+Padr(SC1->C1_NUM,Len(SCR->CR_NUM)))
+		ElseIf cTipoDoc == "SA"
+			MsSeek(xFilial("SCR")+cTipoDoc+Padr(SCP->CP_NUM,Len(SCR->CR_NUM)))
+		ElseIf cTipoDoc == "IP"
+			MsSeek(xFilial("SCR")+cTipoDoc+Padr(SC7->CP_NUM,Len(SCR->CR_NUM)))
+		EndIf        	
+	#ENDIF
+
+	dbSelectArea(cAliasSCR)
+
+	If cTipoDoc $ "PC|AE|IP"
+		nTamDoc := Len(SC7->C7_NUM)
+	ElseIf cTipoDoc == "CP"
+		nTamDoc := Len(SC3->C3_NUM)
+	ElseIf cTipoDoc == "NF"
+		nTamDoc := Len(SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)
+	ElseIf cTipoDoc == "SA"
+		nTamDoc := Len(SCP->CP_NUM)
+	ElseIf cTipoDoc == "SC"
+		nTamDoc := Len(SC1->C1_NUM)
+	ElseIf cTipoDoc == "MD"
+		nTamDoc := Len(CND->CND_NUMMED)
+	EndIf
+			
+	While !Eof() 
+		aAdd(aCols,Array(Len(aHeader)+1))
+		nY++
+		For nX := 1 to Len(aHeader)
+            If IsHeadRec(aHeader[nX][2])
+			    aCols[nY][nX] := IIf(lQuery , (cAliasSCR)->SCRRECNO , SCR->(Recno())  )
+            ElseIf IsHeadAlias(aHeader[nX][2])
+			    aCols[nY][nX] := "SCR"
+			ElseIf aHeader[nX][02] == "bCR_NOME"
+				aCols[nY][nX] := UsrRetName((cAliasSCR)->CR_USER)
+			ElseIf aHeader[nX][02] == "bCR_ITEM"
+				If lMVAPRSCEC
+					If (cAliasSCR)->CR_TIPO $ "SC|SA|IP" 
+						aCols[nY][nX] :=(cAliasSCR)->DBM_ITEM + IIF(!Empty((cAliasSCR)->DBM_ITEMRA),"-"+(cAliasSCR)->DBM_ITEMRA,"")
+					Else
+						aCols[nY][nX] := Replicate("-",8)
+					Endif
+				Endif	
+			ElseIf aHeader[nX][02] == "bCR_SITUACA"
+				Do Case
+				Case (cAliasSCR)->CR_STATUS == "01"
+						cSituaca := OemToAnsi(STR0006) //"Nivel Bloqueado"
+				Case (cAliasSCR)->CR_STATUS == "02"
+						cSituaca := OemToAnsi(STR0007) //"Aguardando Liberacao"
+				Case (cAliasSCR)->CR_STATUS == "03"
+						If (cAliasSCR)->CR_TIPO $ "PC|AE"
+							cSituaca := OemToAnsi(STR0008) //"Pedido Aprovado"
+						ElseIf (cAliasSCR)->CR_TIPO == "CP"
+							cSituaca := OemToAnsi(STR0041) //"Contrato Aprovado" 
+						ElseIf (cAliasSCR)->CR_TIPO == "NF"
+							cSituaca := OemToAnsi(STR0044) //"NF Aprovada"
+						ElseIf (cAliasSCR)->CR_TIPO $ "SC|SA"
+							cSituaca := OemToAnsi(STR0067) //"Solicitação Aprovada"
+						ElseIf (cAliasSCR)->CR_TIPO $ "IP"
+							cSituaca := OemToAnsi(STR0071) //"Item do Pedido Aprovado"
+						ElseIf (cAliasSCR)->CR_TIPO == "MD"
+							cSituaca := OemToAnsi(STR0058) //"Medição Aprovada"
+						EndIf
+				Case (cAliasSCR)->CR_STATUS == "04"
+						If (cAliasSCR)->CR_TIPO $ "PC|AE"
+							cSituaca := OemToAnsi(STR0009) //"Pedido Bloqueado"
+						ElseIf (cAliasSCR)->CR_TIPO == "CP"
+							cSituaca := OemToAnsi(STR0042) //"Contrato Bloqueado" 
+						ElseIf (cAliasSCR)->CR_TIPO == "NF"
+							cSituaca := OemToAnsi(STR0045) //"NF Bloqueada"
+						ElseIf (cAliasSCR)->CR_TIPO == "SC"
+							cSituaca :=OemToAnsi(STR0070) //"Solicitação Bloqueada"
+						ElseIf (cAliasSCR)->CR_TIPO == "IP"
+							cSituaca :=OemToAnsi(STR0072) //"Item do Pedido Bloqueado"
+						ElseIf (cAliasSCR)->CR_TIPO == "MD"
+							cSituaca := OemToAnsi(STR0059) //"Medição Bloqueada"
+						EndIf
+					lBloq := .T.
+				Case (cAliasSCR)->CR_STATUS == "05"
+					cSituaca := OemToAnsi(STR0016) // "Nivel Liberado "
+				EndCase
+				aCols[nY][nX] := cSituaca
+			ElseIf aHeader[nX][02] == "bCR_NOMELIB"
+				aCols[nY][nX] := UsrRetName((cAliasSCR)->CR_USERLIB)
+			ElseIf ( aHeader[nX][10] != "V")
+				aCols[nY][nX] := FieldGet(FieldPos(aHeader[nX][2]))
+			EndIf
+		Next nX
+		aCols[nY][Len(aHeader)+1] := .F.
+		dbSkip()
+	EndDo
+
+	If !Empty(aCols)
+		If lBloq
+			cStatus := IIF(cTipoDoc == "PC" .Or. cTipoDoc == "AE",OemToAnsi(STR0010),IIF(cTipoDoc == "CP",OemToAnsi(STR0043),IIF(cTipoDoc == "NF",OemToAnsi(STR0046),IIF(cTipoDoc == "SC",OemToAnsi(STR0069),OemToAnsi(STR0060)))))  //"BLOQUEADO"
+		EndIf	
+		n:=	 IIF(n > Len(aCols), Len(aCols), n)  // Feito isto p/evitar erro fatal(Array out of Bounds). Gilson-Localizações
+		DEFINE FONT oBold NAME "Arial" SIZE 0, -12 BOLD
+		DEFINE MSDIALOG oDlg TITLE cTitle From 109,095 To 400,600 OF oMainWnd PIXEL	 //"Aprovacao do Pedido de Compra // Contrato"
+		@ 005,003 TO 032,250 LABEL "" OF oDlg PIXEL
+		If cTipoDoc <> "MD"
+			@ 015,007 SAY cTitDoc OF oDlg FONT oBold PIXEL SIZE 046,009 // "Pedido" / "Contrato" / "Nota Fiscal" 
+			@ 014,041 MSGET cNumDoc PICTURE "" WHEN .F. PIXEL SIZE 150,009 OF oDlg FONT oBold
+	        If cTipoDoc <> "NF"
+				@ 015,095 SAY OemToAnsi(STR0013) OF oDlg PIXEL SIZE 045,009 FONT oBold //"Comprador"
+				@ 014,138 MSGET cComprador PICTURE "" WHEN .F. of oDlg PIXEL SIZE 103,009 FONT oBold
+	        EndIF   
+	   	Else
+			@ 015,007 SAY cTitDoc OF oDlg FONT oBold PIXEL SIZE 046,009 // "Medicao" 
+			@ 014,035 MSGET cNumDoc PICTURE "" WHEN .F. PIXEL SIZE 50,009 OF oDlg FONT oBold
+
+			@ 015,095 SAY cAprovador OF oDlg PIXEL SIZE 045,009 FONT oBold //"Aprovador"
+			@ 014,138 MSGET cComprador PICTURE "" WHEN .F. of oDlg PIXEL SIZE 103,009 FONT oBold  	
+	   	EndIf          
+	   	
+		@ 132,008 SAY STR0030 OF oDlg PIXEL SIZE 052,009 //'Situacao :'
+		@ 132,038 SAY cStatus OF oDlg PIXEL SIZE 120,009 FONT oBold
+		@ 132,205 BUTTON STR0031 SIZE 035 ,010  FONT oDlg:oFont ACTION (oDlg:End()) OF oDlg PIXEL  //'Fechar'
+		oGet:= MSGetDados():New(038,003,120,250,nOpcx,,,"")
+		oGet:Refresh()
+		@ 126,002 TO 127,250 LABEL "" OF oDlg PIXEL	
+		ACTIVATE MSDIALOG oDlg CENTERED
+	Else
+		Aviso(STR0032,cHelpApv,{STR0034}) //"Atencao"###"Este pedido nao possui controle de aprovacao."###"Voltar"
+	EndIf
+
+	dbSelectArea(cAliasSCR)
+	dbCloseArea()
+
+	If lStatus
+		aHeader := aClone(aSavHead)
+		aCols   := aClone(aSavCols)
+		N		:= nSavN
+	EndIf
+Else
+	Aviso(STR0032,cHelpApv,{STR0034}) //"Atencao"###"Este Documento nao possui controle de aprovacao."###"Voltar"
+EndIf
+
+dbSelectArea(cAlias)
+RestArea(aArea)
+
+Return NIL
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³UserPesqui³ Autor ³ Edson Maricate        ³ Data ³13.11.2000³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Cria uma tela de pesquisa para utilizacao nos ListBox de   ³±±
+±±³          ³ usuarios e grupos de usuarios.                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void UserPesqui(ExpA1,ExpN1,ExpA2,Expo1,ExpC1,Expo2)       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 = Array com as posicoes                              ³±±
+±±³          ³ ExpN1 = Numero do posicao                                  ³±±
+±±³          ³ ExpA2 = Array com os Nomes                                 ³±±
+±±³          ³ Expo1 = Objeto                                             ³±±
+±±³          ³ ExpC1 = Titulo                                             ³±±
+±±³          ³ Expo2 = Objeto da Dialogo                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA085,MATA095,MATA086                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function UserPesqui(aPos,nPos,aNames,oObj,cTitle,oJanela)
+
+Local oDlgSeek
+Local lCase		:= .F.
+Local lWord		:= .F.
+Local lChg		:= .F.
+Local lReturn	:= .F.
+Local nBefore	:= nPos
+Local cSeek		:= Space(20)
+Local aCoors	:= Array(4)
+
+If aPos == Nil
+	oJanela:CoorsUpdate()
+	aCoors[1] := oJanela:nTop+90
+	aCoors[2] := oJanela:nLeft+80
+	aCoors[3] := aCoors[1]+130
+	aCoors[4] := aCoors[2]+370
+Else
+	aCoors[1] := aPos[1]
+	aCoors[2] := aPos[2]
+	aCoors[3] := aCoors[1]+130
+	aCoors[4] := aCoors[2]+370
+EndIf
+
+DEFINE MSDIALOG oDlgSeek FROM aCoors[1],aCoors[2] TO aCoors[3],aCoors[4] TITLE  STR0020+ cTitle PIXEL  //"Localizar - "
+
+@07,02 SAY STR0021 OF oDlgSeek PIXEL  //"Localizar:"
+@05,30 GET cSeek OF oDlgSeek PIXEL SIZE 100,9
+
+@05,135 BUTTON STR0026 PIXEL OF oDlgSeek SIZE 44,11;  //"&Próximo"
+	ACTION (nPos := ListBoxSeek(cSeek,nPos,aNames,lCase,lWord),oObj:Refresh())
+
+@20,02 TO 62,130 LABEL STR0022 PIXEL OF oDlgSeek  //"Opções"
+@27,05 CHECKBOX lCase PROMPT STR0023 FONT oDlgSeek:oFont PIXEL SIZE 80,09  //"&Coincidir maiúsc./minúsc."
+@38,05 CHECKBOX lWord PROMPT STR0024 FONT oDlgSeek:oFont PIXEL SIZE 80,09  //"Localizar palavra &inteira"
+@49,05 CHECKBOX lChg PROMPT STR0025 FONT oDlgSeek:oFont PIXEL SIZE 80,09  //"Localizar e &alterar"
+
+
+@18,135 BUTTON STR0027 PIXEL ACTION (lReturn := .T.,oDlgSeek:End()) OF oDlgSeek SIZE 44,11 //"OK"
+@31,135 BUTTON STR0028 PIXEL ACTION oDlgSeek:End() OF oDlgSeek SIZE 44,11  //"&Cancelar"
+
+ACTIVATE MSDIALOG oDlgSeek
+
+If lReturn
+	lReturn := lChg
+Else
+	nPos := nBefore
+	oObj:Refresh()
+EndIf
+Return lReturn
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ListBoxSeek³ Autor ³ Edson Maricate       ³ Data ³13.11.2000³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Procura a palavra de acordo com os parametros.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ UserPesqui()                                               ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function ListBoxSeek(cGet,nLastSeek,aArray,lCase,lWord)
+Local nSearch := 0
+Local bSearch
+
+cGet := Trim(cGet)
+
+If ( lCase .And. lWord )
+	bSearch := {|x| Trim(x) == cGet}
+ElseIf ( !lCase .And. !lWord )
+	bSearch := {|x| Trim(Upper(SubStr(x,1,Len(cGet)))) == Upper(cGet)}
+ElseIf ( lCase .And. !lWord )
+	bSearch := {|x| Trim(SubStr(x,1,Len(cGet))) == cGet}
+ElseIf ( !lCase .And. lWord )
+	bSearch := {|x| Trim(Upper(x)) == Upper(cGet)}
+EndIf
+
+nSearch := Ascan(aArray,bSearch,nLastSeek+1)
+If ( nSearch == 0 )
+	nSearch := Ascan(aArray,bSearch)
+	If ( nSearch == 0 )
+		nSearch := nLastSeek
+	EndIf
+EndIf
+Return nSearch
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MaSalAlc ³ Autor ³ Edson Maricate        ³ Data ³29.10.1998³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna o saldo do aprovador.                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void MaSalAlc(ExpC1,ExpD1,ExpL1)                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do Aprovador                                ³±±
+±±³          ³ ExpD1 = Data de referencia para o saldo                    ³±±
+±±³          ³ ExpL1 = Criar saldo inicial do aprovador?                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function MaSalAlc(cAprov,dDataRef,lCriaSld)
+Local cSavAlias:= Alias()
+Local cSavOrd	:= Indexord()
+Local nSavRec	:= 1
+Local nSaldo	:= 0
+Local dDtSaldo	:= MaAlcDtRef(cAprov,dDataRef)
+Local nMoeda	:= 1
+Local aRet097SLD := {}
+DEFAULT lCriaSld	:= .T.
+
+dbSelectArea("SCS")
+nSavRec := RecNo()
+dbSetOrder(2)
+
+If MsSeek(xFilial("SCS")+SAK->AK_COD+DTOS(dDtSaldo))
+	nSaldo := SCS->CS_SALDO
+	nMoeda := SCS->CS_MOEDA
+Else
+	If lCriaSld
+		Reclock("SCS",.T.)
+		SCS->CS_FILIAL := xFilial("SCS")
+		SCS->CS_COD		:= SAK->AK_USER
+		SCS->CS_APROV	:= SAK->AK_COD
+		SCS->CS_DATA	:= dDtSaldo
+		SCS->CS_SALDO	:= SAK->AK_LIMITE
+		SCS->CS_MOEDA	:= SAK->AK_MOEDA
+		MsUnlock()
+	EndIf
+	nSaldo	:=  SAK->AK_LIMITE
+	nMoeda	:=  SAK->AK_MOEDA
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ P.E. para manipular o Saldo, a Moeda e a Data pelo Usuario.  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistBlock("MT097SLD")
+	aRet097SLD := ExecBlock("MT097SLD",.F.,.F.,{nSaldo,nMoeda,dDtSaldo})
+	If ValType( aRet097SLD ) == "A"
+		nSaldo   := aRet097SLD[1]
+		nMoeda   := aRet097SLD[2]
+        dDtSaldo := aRet097SLD[3]
+	EndIf
+EndIf
+
+MsGoto(nSavRec)
+
+dbSelectArea(cSavAlias)
+dbSetOrder(cSavOrd)
+
+Return {nSaldo,nMoeda,dDtSaldo}
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MaAlcDoc ³ Autor ³ Aline Correa do Vale  ³ Data ³07.08.2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Controla a alcada dos documentos (SCS-Saldos/SCR-Bloqueios)³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ MaAlcDoc(ExpA1,ExpD1,ExpN1,ExpC1,ExpL1)               	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 = Array com informacoes do documento                 ³±±
+±±³          ³       [1] Numero do documento                              ³±±
+±±³          ³       [2] Tipo de Documento                                ³±±
+±±³          ³       [3] Valor do Documento                               ³±±
+±±³          ³       [4] Codigo do Aprovador                              ³±±
+±±³          ³       [5] Codigo do Usuario                                ³±±
+±±³          ³       [6] Grupo do Aprovador                               ³±±
+±±³          ³       [7] Aprovador Superior                               ³±±
+±±³          ³       [8] Moeda do Documento                               ³±±
+±±³          ³       [9] Taxa da Moeda                                    ³±±
+±±³          ³      [10] Data de Emissao do Documento                     ³±±
+±±³          ³      [11] Grupo de Compras                                 ³±±
+±±³          ³      [12] Aprovador Original                               ³±±
+±±³          ³ ExpD1 = Data de referencia para o saldo                    ³±±
+±±³          ³ ExpN1 = Operacao a ser executada                           ³±±
+±±³          ³       1 = Inclusao do documento                            ³±±
+±±³          ³       2 = Transferencia para Superior                      ³±±
+±±³          ³       3 = Exclusao do documento                            ³±±
+±±³          ³       4 = Aprovacao do documento                           ³±±
+±±³          ³       5 = Estorno da Aprovacao                             ³±±
+±±³          ³       6 = Bloqueio Manual da Aprovacao                     ³±±
+±±³          ³ ExpC1 = Chave(Alternativa) do SF1 para exclusao SCR        ³±±
+±±³          ³ ExpL1 = Eliminacao de Residuos                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function MaAlcDoc(aDocto,dDataRef,nOper,cDocSF1,lResiduo,cItGrp,aItens)
+Local cDocto	:= aDocto[1]
+Local cTipoDoc	:= aDocto[2]
+Local nValDcto	:= aDocto[3]
+Local cAprov	:= If(aDocto[4]==Nil,"",aDocto[4])
+Local cUsuario	:= If(aDocto[5]==Nil,"",aDocto[5])
+Local nMoeDcto	:= If(Len(aDocto)>7,If(aDocto[8]==Nil, 1,aDocto[8]),1)
+Local nTxMoeda	:= If(Len(aDocto)>8,If(aDocto[9]==Nil, 0,aDocto[9]),0)
+Local cObs      := If(Len(aDocto)>10,If(aDocto[11]==Nil, "",aDocto[11]),"")
+Local aArea		:= GetArea()
+Local aAreaSCS	:= SCS->(GetArea())
+Local aAreaSCR	:= SCR->(GetArea())
+Local aRetPe	:= {}
+Local nSaldo	:= 0
+Local cGrupo	:= If(aDocto[6]==Nil,"",aDocto[6])
+Local lFirstNiv:= .T.
+Local cAuxNivel:= ""
+Local cNextNiv := ""
+Local cNivIgual:= ""
+Local cStatusAnt:= ""
+Local cAprovOri := ""    
+Local cUserOri  := ""    
+Local cObsBloq  := STR0061
+Local lAchou	:= .F.
+Local nRec		:= 0
+Local lRetorno	:= .T.
+Local aSaldo	:= {} 
+Local aMTALCGRU := {}
+Local lDeletou  := .F.
+Local lBloqueio := .F.
+Local dDataLib := IIF(dDataRef==Nil,dDataBase,dDataRef)             
+Local lIntegDef  :=  FindFunction("GETROTINTEG") .And. FindFunction("FWHASEAI") .And. FWHasEAI("MATA120",.T.,,.T.)
+Local lPrjCni := FindFunction("ValidaCNI") .And. ValidaCNI()
+Local cGrupoSAL	:= ""
+Local lCRgrp		:= ( SCR->(FieldPos("CR_GRUPO")) > 0 .And. SCR->(FieldPos("CR_ITGRP")) > 0 ) 
+Local lCRUserOri 	:= !Empty(SCR->(FieldPos("CR_USERORI"))) 
+Local lCRAprori 	:= !Empty(SCR->(FieldPos("CR_APRORI")))
+Local aAreaSC1	:= {}
+Local lSC1Blq		:= .F.
+
+PRIVATE cA120Num := ""
+
+DEFAULT dDataRef := dDataBase
+DEFAULT cDocSF1 := cDocto
+DEFAULT lResiduo := .F.
+DEFAULT cItGrp	:= ""
+DEFAULT aItens	:= {}
+cDocto := cDocto+Space(Len(SCR->CR_NUM)-Len(cDocto))
+cDocSF1:= cDocSF1+Space(Len(SCR->CR_NUM)-Len(cDocSF1))
+
+If ExistBlock("MT097GRV")
+	lRetorno := (Execblock("MT097GRV",.F.,.F.,{aDocto,dDataRef,nOper,cDocSF1,lResiduo}))
+	If Valtype( lRetorno ) <> "L"
+		lRetorno := .T.
+	EndIf
+Endif
+
+If lRetorno
+
+	If Empty(cUsuario) .And. (nOper != 1 .And. nOper != 6) //nao e inclusao ou estorno de liberacao
+		dbSelectArea("SAK")
+		dbSetOrder(1)
+		MsSeek(xFilial("SAK")+cAprov)
+		cUsuario :=	AK_USER
+		nMoeDcto :=	AK_MOEDA
+		nTxMoeda	:=	0
+	EndIf
+	If nOper == 1  //Inclusao do Documento
+		cGrupo := If(!Empty(aDocto[6]),aDocto[6],cGrupo)
+		dbSelectArea("SAL")
+		dbSetOrder(2)
+		If !Empty(cGrupo) .And. dbSeek(xFilial("SAL")+cGrupo)
+			While !Eof() .And. xFilial("SAL")+cGrupo == AL_FILIAL+AL_COD
+
+                If cTipoDoc <> "NF"  
+					If SAL->AL_AUTOLIM == "S" .And. !MaAlcLim(SAL->AL_APROV,nValDcto,nMoeDcto,nTxMoeda)
+						dbSelectArea("SAL")
+						dbSkip()
+						Loop
+					EndIf	
+                EndIf
+                 
+				If lFirstNiv
+					cAuxNivel := SAL->AL_NIVEL
+					lFirstNiv := .F.
+				EndIf
+
+				Do Case
+				Case cTipoDoc == "NF"
+					SF1->(FkCommit())
+				Case cTipoDoc == "PC" .Or.cTipoDoc == "AE"
+					SC7->(FkCommit())
+				Case cTipoDoc == "CP"
+					SC3->(FkCommit())
+				Case cTipoDoc == "SC"
+					SC1->(FkCommit())
+				Case cTipoDoc == "CO"
+					SC8->(FkCommit())
+				Case cTipoDoc == "MD"
+					CND->(FkCommit())
+				EndCase
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ajusta o nivel da solicitação, quando a quantidade da solicitação for MENOR  do valor da solicitação:³
+				//³deve-se manter o estatus da solicitação aprovada e não retornar em EM APROVAÇÃO.                     ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				_cStatus	:= ""   
+				
+				If lPrjCni
+					If INCLUI
+						_cStatus	:= 	IIF(SAL->AL_NIVEL == cAuxNivel ,"02","01")
+					ElseIf ALTERA
+						If IsInCallStack("MATA110") .And. !IsInCallStack("A110COPIA") 
+							lSC1Blq := .F.
+							aAreaSC1 := SC1->(GetArea())
+							DbSelectArea("SC1")
+							SC1->(DbSetOrder(1))
+							If (SC1->(DbSeek(xFilial("SC1") + SubStr(cDocto, 1, TamSX3("C1_NUM")[1]))))
+								If (AllTrim(SC1->C1_APROV) == "B")
+									lSC1Blq := .T.
+								Endif
+							Endif
+							
+							If SAL->AL_NIVEL == cAuxNivel 
+								If ntotsc1 > _nTotSc .and. SAL->AL_NIVEL <> "01" .And. !(lSC1Blq)
+					   	   			_cStatus	:= 	"03"
+								Else
+									_cStatus	:= 	IIF(SAL->AL_NIVEL == cAuxNivel ,"02","01")
+					   			Endif
+					   		ElseIf SAL->AL_NIVEL <> cAuxNivel .And. ntotsc1 > _nTotSc .And. !(lSC1Blq)
+								_cStatus	:= 	"03"
+							Else
+								_cStatus	:= 	"01"
+							EndIf
+							RestArea(aAreaSC1)
+	                 	Else
+	                 		_cStatus	:= 	IIF(SAL->AL_NIVEL == cAuxNivel ,"02","01")
+						Endif
+					Else
+						_cStatus	:= 	IIF(SAL->AL_NIVEL == cAuxNivel ,"02","01")								
+					Endif
+				Else
+					_cStatus := IIF(SAL->AL_NIVEL == cAuxNivel  ,"02","01")
+				EndIf
+				
+				Reclock("SCR",.T.)
+				SCR->CR_FILIAL	:= xFilial("SCR")
+				SCR->CR_NUM		:= cDocto
+				SCR->CR_TIPO	:= cTipoDoc
+				SCR->CR_NIVEL	:= SAL->AL_NIVEL
+				SCR->CR_USER	:= SAL->AL_USER
+				SCR->CR_APROV	:= SAL->AL_APROV
+				SCR->CR_STATUS	:= _cStatus			//IIF(SAL->AL_NIVEL == cAuxNivel  ,"02","01")
+				SCR->CR_TOTAL	:= nValDcto
+				SCR->CR_EMISSAO:= aDocto[10]
+				SCR->CR_MOEDA	:=	nMoeDcto
+				SCR->CR_TXMOEDA:= nTxMoeda
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ tratando os dois campos, pois quando existe um aprovador ele apaga os dois campos. Caso a quantidade for ³
+				//³ MENOR que a qtde lançada não deve limpar os dois campos                                                                                                    ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If lPrjCni
+					If ALTERA .And. IsInCallStack("MATA110") .And. !IsInCallStack("A110COPIA") 
+						If ntotsc1 > _nTotSc
+							SCR->CR_DATALIB	:= dDataLib
+							SCR->CR_USERLIB	:= SAK->AK_USER
+						Endif
+					Endif
+				EndIf
+
+				If lCRgrp .AND. !Empty(cGrupo)
+			   		SCR->CR_GRUPO := cGrupo
+				EndIf
+				
+				If lCRgrp .AND. !Empty(cItGrp)
+			   		SCR->CR_ITGRP := cItGrp
+				EndIf				
+
+				MsUnlock()
+					
+				//Ponto de entrada para alteraçao da SCR	
+				If ExistBlock("MTALCALT")
+					Execblock("MTALCALT",.F.,.F.)
+				EndIf
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Gravacao dos itens da alcada ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If !Empty(aItens) .AND. AliasInDic("DBM")
+					MaAlcItEC(cDocto,cTipoDoc,cGrupo,cItGrp,SAL->AL_USER,aItens,,nOper)
+				EndIf
+				
+				dbSelectArea("SAL")
+				dbSkip()
+			EndDo
+			
+		EndIf
+		lRetorno := lFirstNiv
+	EndIf
+	
+	If nOper == 2  //Transferencia da Alcada para o Superior
+		// O SCR deve estar posicionado, para que seja transferido o atual para o Superior
+		If !Eof() .And. SCR->CR_FILIAL+SCR->CR_TIPO+SCR->CR_NUM == xFilial("SCR")+cTipoDoc+cDocto
+			// Carrega dados do Registro a ser tranferido e exclui
+			cTipoDoc := SCR->CR_TIPO
+			cAuxNivel:= SCR->CR_STATUS
+			nValDcto := SCR->CR_TOTAL
+			nMoeDcto :=	SCR->CR_MOEDA
+			cNextNiv := SCR->CR_NIVEL
+			nTxMoeda := SCR->CR_TXMOEDA
+			dDataRef := SCR->CR_EMISSAO
+			cAprovOri:= SCR->CR_APROV
+			cUserOri := SCR->CR_USER
+			If lCRgrp 
+				cGrupo:=SCR->CR_GRUPO
+			EndIf				
+
+			If lCRgrp
+				cItGrp:= SCR->CR_ITGRP 
+			EndIf
+			
+			Reclock("SCR",.F.,.T.)
+			dbDelete()
+			MsUnlock()
+			// Inclui Registro para Aprovador Superior
+			Reclock("SCR",.T.)
+			SCR->CR_FILIAL	:= xFilial("SCR")
+			SCR->CR_NUM		:= cDocto
+			SCR->CR_TIPO	:= cTipoDoc
+			SCR->CR_NIVEL	:= cNextNiv
+			SCR->CR_USER	:= cUsuario
+			SCR->CR_APROV	:= cAprov
+			SCR->CR_STATUS	:= cAuxNivel
+			SCR->CR_TOTAL	:= nValDcto
+			SCR->CR_EMISSAO:= dDataRef
+			SCR->CR_MOEDA	:=	nMoeDcto
+			SCR->CR_TXMOEDA:= nTxMoeda                     
+			SCR->CR_OBS 	:= cObs  
+			
+			If lCRgrp
+		   		SCR->CR_GRUPO := cGrupo
+			EndIf				
+
+			If lCRgrp 
+		   		SCR->CR_ITGRP := cItGrp
+			EndIf	
+			
+			//Aplicar UPDCOM10 se não existir campos na base //
+			If lCRAprori .And. lCRUserOri
+				SCR->CR_APRORI  := cAprovOri	
+				SCR->CR_USERORI := cUserOri
+			EndIf
+
+			MsUnlock()
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Gravacao dos itens da alcada ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If AliasInDic("DBM")
+				MaAlcItEC(cDocto,cTipoDoc,cGrupo,cItGrp,cUsuario , ,cUserOri   ,nOper)
+		EndIf
+	
+		EndIf
+		lRetorno := .T.
+	EndIf
+	
+	If nOper == 3  //exclusao do documento
+		dbSelectArea("SAK")
+		dbSetOrder(1)
+		dbSelectArea("SCR")
+		dbSetOrder(1)
+		dbSeek(xFilial("SCR")+cTipoDoc+cDocto)		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Efetua uma nova busca caso o cDocto nao for encontrado no SCR³
+		//³ pois seu conteudo em caso de NF foi alterado para chave unica³
+		//³ do SF1, o cDocSF1 sera a busca alternativa com o conteudo ori³
+		//³ ginal do lancamento da versao que poderia causar duplicidades³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SCR->( Eof() ) .And. cTipoDoc == "NF"
+			dbSeek(xFilial("SCR")+cTipoDoc+cDocSF1)
+			cDocto := cDocSF1
+		EndIf
+
+		While !Eof() .And. SCR->CR_FILIAL+SCR->CR_TIPO+SCR->CR_NUM == xFilial("SCR")+cTipoDoc+cDocto
+			If SCR->CR_STATUS == "03"
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Reposiciona o usuario aprovador.               ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				dbSelectArea("SAK")
+				dbSeek(xFilial("SAK")+SCR->CR_LIBAPRO)
+				dbSelectArea("SAL")
+				dbSetOrder(3)
+				dbSeek(xFilial("SAL")+cGrupo+SAK->AK_COD)
+				If SAL->AL_LIBAPR == "A"
+					dbSelectArea("SCS")
+					dbSetOrder(2)
+					If dbSeek(xFilial("SCS")+SAK->AK_COD+DTOS(MaAlcDtRef(SCR->CR_LIBAPRO,SCR->CR_DATALIB,SCR->CR_TIPOLIM)))
+						RecLock("SCS",.F.)
+						SCS->CS_SALDO := SCS->CS_SALDO + SCR->CR_VALLIB
+						MsUnlock()
+					EndIf
+				EndIf
+			EndIf
+			Reclock("SCR",.F.,.T.)
+			dbDelete()
+			MsUnlock()
+			dbSkip()
+		EndDo
+		
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Exclui registros dos itens da alcada ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If AliasInDic("DBM")
+				MaAlcItEC(cDocto,cTipoDoc,,,,,,nOper)
+	EndIf
+	EndIf
+	
+	If nOper == 4 //Aprovacao do documento
+		dbSelectArea("SCS")
+		dbSetOrder(2)
+		aSaldo := MaSalAlc(cAprov,dDataRef,.T.)
+		nSaldo 	:= aSaldo[1]
+		dDataRef	:= aSaldo[3]
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Atualiza o saldo do aprovador.                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea("SAK")
+		dbSetOrder(1)
+		MsSeek(xFilial("SAK")+cAprov)
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Posiciona a Tabela SAL pelo Aprovador de Origem caso o Documento tenha sido ³
+		//| transferido por Ausência Temporária ou Transferência superior e o aprovador |
+		//| de destino não fizer parte do Grupo de Aprovação.                           |
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea("SAL")
+		dbSetOrder(3)
+		MsSeek(xFilial("SAL")+cGrupo+cAprov) 
+	    If lCRUserOri .And. lCRAprori .And. !Empty(SCR->CR_APRORI)
+    		MsSeek(xFilial("SAL")+cGrupo+SCR->CR_APRORI) 
+    	EndIf   
+    	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Posiciona a Tabela SAL pelo Aprovador de Origem caso o Documento que esta   ³
+		//| sendo aprovado, pela opcao: SUPERIOR e o aprovador Superior nao fizer parte |
+		//| do mesmo Grupo de Aprovação.  									                            |
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+    	If Len(aDocto)>11 .And. lCRUserOri .And. lCRAprori .And. Empty(SCR->CR_APRORI)
+	    	If !Empty(aDocto[12])
+				MsSeek(xFilial("SAL")+cGrupo+aDocto[12])     	
+    		EndIf
+    	EndIf                               
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Ponto de entrada para alterar o Aprovador 	 												³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	   	If ExistBlock("MTALCGRU")
+			aMTALCGRU := If(ValType(aRetPe:=ExecBlock("MTALCGRU",.F.,.F.,{cAprov,cGrupo}))=="A",aRetPe,aMTALCGRU)
+			If Len(aMTALCGRU) >= 1 .And. ValType(aMTALCGRU[1]) == "C"
+				cAprov := aMTALCGRU[1]
+			EndIf
+			If Len(aMTALCGRU) >= 2 .And. ValType(aMTALCGRU[2]) == "C"
+				cGrupoSAL := aMTALCGRU[2]
+			EndIf	
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Libera o pedido pelo aprovador.                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea("SCR")
+		cAuxNivel := CR_NIVEL
+		Reclock("SCR",.F.)
+		dbSetOrder(1)
+		CR_STATUS	:= "03"
+		CR_OBS		:= If(Len(aDocto)>10,aDocto[11],"")
+		CR_DATALIB	:= dDataLib
+		CR_USERLIB	:= SAK->AK_USER
+		CR_LIBAPRO	:= SAK->AK_COD
+		CR_VALLIB	:= nValDcto
+		CR_TIPOLIM	:= SAK->AK_TIPO
+		MsUnlock()
+	   
+		If lCRgrp .And. Empty(cGrupo)
+			cGrupo := SCR->CR_GRUPO
+		EndIf
+		
+		If lCRgrp .And. Empty(cItGrp)
+	   		cItGrp:= SCR->CR_ITGRP
+		EndIf
+		
+		cUser:= SCR->CR_USER
+		
+		dbSeek(xFilial("SCR")+cTipoDoc+cDocto+cAuxNivel)
+		nRec := RecNo()
+		While !Eof() .And. xFilial("SCR")+cDocto+cTipoDoc == CR_FILIAL+CR_NUM+CR_TIPO
+
+			If !lCRUserOri .And. !lCRAprori .And. Empty(SAL->AL_APROV)  // Não conseguiu posicionar SAL pois os campos não existem, efetua posicionamento
+	    		SAL->(dbSeek(xFilial("SAL")+cGrupoSAL+SCR->CR_APROV))
+	    	EndIf
+			If cAuxNivel == CR_NIVEL .And. CR_STATUS != "03" .And. SAL->AL_TPLIBER $ "U " .And.;
+						!(Alltrim(CR_OBS) $ cObsBloq+SAK->AK_COD) .And.;
+						If(lCRgrp,cGrupo+cItGrp # SCR->CR_GRUPO+SCR->CR_ITGRP,.T.) 
+				dbSkip()
+				Loop
+			EndIf   
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Verifica se nivel anterior ja passou por algum bloqueio      ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If cAuxNivel <> CR_NIVEL  .And. lBloqueio
+				Exit
+			EndIf     
+			
+			If lCRgrp .And. cGrupo+cItGrp # SCR->CR_GRUPO + SCR->CR_ITGRP 
+				If cAuxNivel >= CR_NIVEL   
+					dbSkip()
+					Loop
+				EndIf
+			EndIf
+						
+			If cAuxNivel == CR_NIVEL .And. CR_STATUS != "03" .And. SAL->AL_TPLIBER$"NP"
+				Reclock("SCR",.F.)
+				CR_STATUS	:= "05"
+				CR_DATALIB	:= dDataLib
+				CR_USERLIB	:= SAK->AK_USER
+				CR_APROV	:= cAprov
+				CR_OBS		:= ""
+				MsUnlock()
+				If AliasInDic("DBM") .And. !Empty(cItGrp)
+	   				MaAlcItEC(cDocto,cTipoDoc,cGrupo,cItGrp,SCR->CR_USER,,,nOper)
+			EndIf
+			EndIf
+			If CR_NIVEL > cAuxNivel .And. CR_STATUS != "03" .And. !lAchou .And. If(lCRgrp,cGrupo+cItGrp == SCR->CR_GRUPO+SCR->CR_ITGRP,.T.) 
+				lAchou := .T.
+				cNextNiv := CR_NIVEL
+			EndIf
+			If lAchou .And. CR_NIVEL == cNextNiv .And. CR_STATUS != "03"
+				Reclock("SCR",.F.)
+				
+				If SAL->AL_TPLIBER == "P"
+					CR_STATUS := "05"
+				ElseIf (Empty(cNivIgual) .Or. cNivIgual == CR_NIVEL) .And. cStatusAnt <> "01"
+					CR_STATUS := "02"
+					cNivIgual := CR_NIVEL
+				EndIf
+
+				If CR_STATUS == "05"
+					CR_DATALIB	:= dDataLib
+					If AliasInDic("DBM") .And. !Empty(cItGrp)
+	   					MaAlcItEC(cDocto,cTipoDoc,cGrupo,cItGrp,SCR->CR_USER,,,nOper)
+				EndIf
+				EndIf
+				MsUnlock()
+				lAchou    := .F.
+			Endif  
+		
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Verifica se nivel ja passou por algum bloqueio       ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If cAuxNivel$"02" .And. CR_STATUS$"05" .And. Alltrim(CR_OBS)$cObsBloq+SAK->AK_COD     
+				lBloqueio := .T.
+				Reclock("SCR",.F.)
+				CR_STATUS	:= "02"
+				CR_DATALIB	:= Ctod("//")
+				CR_USERLIB	:= ""
+				CR_LIBAPRO	:= ""
+				CR_OBS		:= STR0063+SAK->AK_COD 
+				CR_VALLIB	:= 0
+				CR_TIPOLIM	:= ""
+				MsUnlock()
+			EndIf  
+			
+			If lCRgrp .And. cGrupo+cItGrp == SCR->CR_GRUPO + SCR->CR_ITGRP
+				cStatusAnt := SCR->CR_STATUS
+			EndIf
+			dbSkip()
+		EndDo
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Reposiciona e verifica se ja esta totalmente liberado.       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		MsGoto(nRec)
+		While !Eof() .And. xFilial("SCR")+cTipoDoc+cDocto == CR_FILIAL+CR_TIPO+CR_NUM
+			If !lCRgrp .Or. (cGrupo == SCR->CR_GRUPO .And. cItGrp == SCR->CR_ITGRP)
+				If CR_STATUS != "03" .And. CR_STATUS != "05"
+					lRetorno := .F.
+					Exit
+				EndIf
+			EndIf
+			dbSkip()
+		EndDo
+		If SAL->AL_LIBAPR == "A"
+			dbSelectArea("SCS")
+			If MsSeek(xFilial("SCS")+cAprov+dToS(dDataRef))
+				Reclock("SCS",.F.)
+			Else
+				Reclock("SCS",.T.)                                    
+			EndIf
+			CS_FILIAL:= xFilial("SCS")
+			CS_SALDO := CS_SALDO - nValDcto
+			CS_APROV := cAprov
+			CS_USER	 := cUsuario
+			CS_MOEDA := nMoeDcto
+			CS_DATA	 := dDataRef
+			MsUnlock()
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Libera os itens da alcada ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If AliasInDic("DBM") .And. !Empty(cItGrp)
+	   		MaAlcItEC(cDocto,cTipoDoc,cGrupo,cItGrp,cUser,,,nOper)
+		EndIf
+		
+			EndIf
+	
+	If nOper == 5  //Estorno da Aprovacao
+		cGrupo := If(!Empty(aDocto[6]),aDocto[6],cGrupo)
+		
+		If lCRgrp .And. Empty(cGrupo)
+			cGrupo := SCR->CR_GRUPO
+		EndIf
+		
+		If lCRgrp .And. Empty(cItGrp)
+			cItGrp := SCR->CR_ITGRP
+		EndIf	
+		
+		dbSelectArea("SAK")
+		dbSetOrder(1)
+		dbSelectArea("SCR")
+		dbSetOrder(1)
+		dbSeek(xFilial("SCR")+cTipoDoc+cDocto)
+		nMoeDcto := SCR->CR_MOEDA
+		nTxMoeda := SCR->CR_TXMOEDA
+			
+		While !Eof() .And. SCR->CR_FILIAL+SCR->CR_TIPO+SCR->CR_NUM == xFilial("SCR")+cTipoDoc+cDocto
+			//-- Quando aprovação por item, processa estorno somente das SCR referente ao mesmo item
+			If SCR->CR_TIPO $ "SA|SC|IP" .And. SCR->(CR_GRUPO+CR_ITGRP) # cGrupo+cItGrp 
+				SCR->(dbSkip())
+				Loop
+			EndIf
+			
+			If SCR->CR_STATUS == "03"
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Reposiciona o usuario aprovador.               ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				dbSelectArea("SAK")
+				MsSeek(xFilial("SAK")+SCR->CR_LIBAPRO)
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Posiciona a Tabela SAL pelo Aprovador de Origem caso o Documento tenha sido ³
+				//| transferido por Ausência Temporária ou Transferência superior e o aprovador |
+				//| de destino não fizer parte do Grupo de Aprovação.                           |
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				dbSelectArea("SAL")
+				dbSetOrder(3)
+				MsSeek(xFilial("SAL")+cGrupo+SAK->AK_COD)
+				If Eof()
+				    If lCRUserOri
+			    		MsSeek(xFilial("SAL")+cGrupo+SCR->CR_APRORI) 
+	    			EndIf
+	   			EndIf
+	   			
+				If SAL->AL_LIBAPR == "A"
+					dbSelectArea("SCS")
+					dbSetOrder(2)
+					If dbSeek(xFilial("SCS")+SAK->AK_COD+DTOS(MaAlcDtRef(SAK->AK_COD,SCR->CR_DATALIB)))
+						RecLock("SCS",.F.)
+						SCS->CS_SALDO := SCS->CS_SALDO + If(nValDcto>0 .And. nValDcto < SCR->CR_VALLIB,nValDcto,SCR->CR_VALLIB)
+						If SCS->CS_SALDO > SAK->AK_LIMITE
+							SCS->CS_SALDO := SAK->AK_LIMITE
+						EndIf
+						MsUnlock()
+					EndIf
+				EndIf
+			EndIf
+			Reclock("SCR",.F.,.T.)
+			If !(SCR->CR_TIPO $ "SA|SC|IP") .And. nValDcto > 0 .And. nValDcto < SCR->CR_TOTAL
+				SCR->CR_TOTAL	:= SCR->CR_TOTAL - nValDcto
+				SCR->CR_VALLIB	:= SCR->CR_VALLIB - nValDcto
+			Else
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³A variavel lResiduo informa se devera ou nao reconstituir um  ³
+				//³novo bloqueio SCR  se ainda houver saldo apos a eliminacao de ³
+				//³residuos, em caso da opcao de estorno a recosntituicao do SCR ³
+				//³e obrigatoria, apos a delecao.                                ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
+				If lResiduo
+					lDeletou := IF(SCR->CR_TOTAL - nValDcto > 0,.T.,.F.)
+				ElseIf !(SCR->CR_TIPO $ "SA|SC|IP")
+					lDeletou := .T.
+				EndIf
+				//-- Reconstrói somente quando por documento
+				If !(SCR->CR_TIPO $ "SA|SC|IP")
+					dbDelete()
+				//-- Por item desfaz liberação, pois não tem os dados para regerar
+				//-- E o custo deste processamento é muito alto
+				Else
+					SCR->CR_STATUS	:= If(IsFirstLev(cGrupo,SCR->CR_NIVEL),'02','01')//Verifica se é primeiro nivel, se não for gera como bloqueado
+					SCR->CR_DATALIB	:= CriaVar("CR_DATALIB",.F.)
+					SCR->CR_OBS		:= CriaVar("CR_OBS",.F.)
+					SCR->CR_USERLIB	:= CriaVar("CR_USERLIB",.F.)
+					SCR->CR_LIBAPRO	:= CriaVar("CR_LIBAPRO",.F.)
+					SCR->CR_VALLIB	:= CriaVar("CR_VALLIB",.F.)
+					SCR->CR_TIPOLIM	:= CriaVar("CR_TIPOLIM",.F.)
+					
+					DBM->(dbSetOrder(1))
+					DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_USER+CR_USERORI)))
+					While !DBM->(EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USER+DBM_USERORI) == xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_USER+CR_USERORI)
+						RecLock("DBM",.F.)
+						DBM->DBM_APROV := '2'
+						DBM->(MsUnLock())
+						
+						DBM->(dbSkip())
+					End 
+				EndIf
+			EndIf
+			MsUnlock()
+			SCR->(dbSkip())
+		EndDo
+
+		dbSelectArea("SAL")
+		dbSetOrder(2)
+		If	!(cTipoDoc $ "SA|SC|IP") .And.;
+			((!Empty(cGrupo) .And. dbSeek(xFilial("SAL")+cGrupo) .And. nValDcto > 0 .And. lDeletou) .Or. ;
+			(!Empty(cGrupo) .And. dbSeek(xFilial("SAL")+cGrupo) .And. cTipoDoc == "NF" .And. lDeletou))
+			
+			While !Eof() .And. xFilial("SAL")+cGrupo == AL_FILIAL+AL_COD
+
+                If cTipoDoc <> "NF"  
+					If SAL->AL_AUTOLIM == "S" .And. !MaAlcLim(SAL->AL_APROV,nValDcto,nMoeDcto,nTxMoeda)
+						dbSelectArea("SAL")
+						dbSkip()
+						Loop
+					EndIf             	
+                EndIf
+                 				
+				If lFirstNiv
+					cAuxNivel := SAL->AL_NIVEL
+					lFirstNiv := .F.
+				EndIf
+				
+				Reclock("SCR",.T.)
+				SCR->CR_FILIAL	:= xFilial("SCR")
+				SCR->CR_NUM		:= cDocto
+				SCR->CR_TIPO	:= cTipoDoc
+				SCR->CR_NIVEL	:= SAL->AL_NIVEL
+				SCR->CR_USER	:= SAL->AL_USER
+				SCR->CR_APROV	:= SAL->AL_APROV
+				SCR->CR_STATUS	:= IIF(SAL->AL_NIVEL == cAuxNivel,"02","01")
+				SCR->CR_TOTAL	:= nValDcto
+				SCR->CR_EMISSAO:= dDataRef
+				SCR->CR_MOEDA	:=	nMoeDcto
+				SCR->CR_TXMOEDA:= nTxMoeda
+				If lCRgrp 
+					SCR->CR_GRUPO	:= cGrupo  
+				EndIf
+				If lCRgrp 
+	   				SCR->CR_ITGRP := cItGrp
+				EndIf	
+				MsUnlock()
+				dbSelectArea("SAL")
+				dbSkip()
+			EndDo
+		EndIf
+		lRetorno := lFirstNiv
+	EndIf
+	
+	If nOper == 6  //Bloqueio manual
+		dbSelectArea("SAK")
+		dbSetOrder(1)
+		MsSeek(xFilial("SAK")+cAprov)
+	
+		Reclock("SCR",.F.)
+		CR_STATUS   := "04"
+		CR_OBS	    := If(Len(aDocto)>10,aDocto[11],"")
+		CR_DATALIB  := dDataRef
+		CR_USERLIB	:= SAK->AK_USER
+		CR_LIBAPRO	:= SAK->AK_COD
+		cAuxNivel   := CR_NIVEL
+		MsUnlock()
+		lRetorno 	:= .F.
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Bloqueia todos os Aprovadores do Nível  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSeek(xFilial("SCR")+cTipoDoc+cDocto+cAuxNivel)
+		nRec := RecNo()
+		While !Eof() .And. xFilial("SCR")+cDocto+cTipoDoc+cAuxNivel == CR_FILIAL+CR_NUM+CR_TIPO+CR_NIVEL
+			If CR_STATUS != "04" 
+				Reclock("SCR",.F.)
+				CR_STATUS	:= "05"
+				CR_OBS	    := STR0061+SAK->AK_COD
+				CR_DATALIB	:= dDataRef
+				CR_USERLIB	:= SAK->AK_USER
+				CR_LIBAPRO	:= SAK->AK_COD
+				MsUnlock()
+			EndIf             
+			                                           
+			dbSkip()
+		EndDo
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Envia o pedido de compra ao TOTVS Colaboracao ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno .And. cTipoDoc $ "PC#AE" .And. (nOper == 1 .Or. nOper == 4) .And. SC7->(FieldPos("C7_TPCOLAB")) > 0 .And.;
+		SC7->C7_TPOP $ " F" .And. FindFunction("FWLSEnable") .And. FWLSEnable(TOTVS_COLAB_ONDEMAND) .And. FindFunction("ExpXML_PC")
+		ExpXML_PC(SC7->C7_NUM)
+	EndIf		
+	If ExistBlock("MTALCDOC")
+		Execblock("MTALCDOC",.F.,.F.,{aDocto,dDataRef,nOper})
+	EndIf	 
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Envia o pedido de compra direto para portal MarketPLace ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno .And. cTipoDoc $ "PC" .And. (nOper == 1 .Or. nOper == 4) .And. SC7->(FieldPos("C7_ACCNUM")) > 0 .And.;
+		SC7->C7_TPOP $ " F" .And. lIntegDef .And. SuperGetMV("MV_MKPLACE",.F.,.F.)
+	 	cA120Num := SC7->C7_NUM     
+	 	If SC7->(MsSeek(xFilial("SC7")+SC7->C7_NUM))  
+			Inclui:=.T.	               
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Dispara thread										 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ 
+			StartJob("MaEnvPed",GetEnvServer(),.F.,cEmpAnt,cFilAnt,cA120Num)
+EndIf
+	 EndIf
+EndIf
+
+If ExistBlock("MTALCFIM")
+	lCalculo := Execblock("MTALCFIM",.F.,.F.,{aDocto,dDataRef,nOper,cDocSF1,lResiduo})
+	If Valtype( lCalculo ) == "L"
+		lRetorno := lCalculo
+	EndIf
+Endif
+
+dbSelectArea("SCR")
+RestArea(aAreaSCR)
+dbSelectArea("SCS")
+RestArea(aAreaSCS)
+RestArea(aArea)
+
+Return(lRetorno)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MaAlcLim  ³ Autor ³ Aline Correa do Vale ³ Data ³ 24.03.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica os limites minimos e maximos do aprovador.        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do Aprovador.                               ³±±
+±±³          ³ ExpN1 = Valor a ser verificado na moeda do Documento       ³±±
+±±³          ³ ExpN2 = Moeda do documento                                 ³±±
+±±³          ³ ExpN3 = Taxa da moeda do documento original                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA120                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MaAlcLim(cAprov,nValor,nMoeda,nTaxa)
+Local cSavArea	:= Alias()
+Local lRet 		:= .F.
+Local nLimMin		:= 0
+Local nLimMax		:= 0
+Local nSavOrd,nSavRec
+
+DEFAULT nMoeda 	:= 1
+DEFAULT nTaxa		:= 0
+
+dbSelectArea("SAK")
+nSavOrd := IndexOrd()
+nSavRec := Recno()
+dbSetOrder(1)
+If MsSeek(xFilial("SAK")+cAprov)
+	If nTaxa > 0
+		nLimMin := xMoeda(SAK->AK_LIMMIN,SAK->AK_MOEDA,If(nMoeda > 1,nMoeda,1),dDataBase,,,nTaxa)
+		nLimMax := xMoeda(SAK->AK_LIMMAX,SAK->AK_MOEDA,If(nMoeda > 1,nMoeda,1),dDataBase,,,nTaxa)
+		If  nValor >= IIF(nLimMin <> 0, nLimMin,SAK->AK_LIMMIN) .And. nValor <= IIF(nLimMax <> 0, nLimMax,SAK->AK_LIMMAX)
+			lRet := .T.
+		EndIf
+	ElseIf nMoeda > 1
+		nLimMin := xMoeda(SAK->AK_LIMMIN,SAK->AK_MOEDA,If(nMoeda > 1,nMoeda,1),dDataBase)
+		nLimMax := xMoeda(SAK->AK_LIMMAX,SAK->AK_MOEDA,If(nMoeda > 1,nMoeda,1),dDataBase)
+		If  nValor >= IIF(nLimMin <> 0, nLimMin,SAK->AK_LIMMIN) .And. nValor <= IIF(nLimMax <> 0, nLimMax,SAK->AK_LIMMAX)
+			lRet := .T.
+		EndIf
+	Else
+		nLimMin := xMoeda(SAK->AK_LIMMIN,SAK->AK_MOEDA,1,dDataBase)
+		nLimMax := xMoeda(SAK->AK_LIMMAX,SAK->AK_MOEDA,1,dDataBase)
+		If nValor >= Iif(nLimMin <> 0, nLimMin,SAK->AK_LIMMIN) .And. nValor <= Iif(nLimMax <> 0, nLimMax,SAK->AK_LIMMAX)
+			lRet := .T.
+		EndIf
+	EndIf 
+EndIf
+
+dbSetOrder(nSavOrd)
+MsGoto(nSavRec)
+dbSelectArea(cSavArea)
+
+Return lRet
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³MaVldSolic³ Autor ³Eduardo Riera          ³ Data ³22.10.2003³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Validacao para controle de solicitantes.                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do produto.                                 ³±±
+±±³          ³ ExpA1 = Array contendo os grupos do usuario.               ³±±
+±±³          ³ ExpC1 = Codigo do usuario a ser verificado.                ³±±
+±±³          ³ ExpL1 = Variavel que controla a exibicao dos helps.        ³±±
+±±³          ³ ExpN1 = Quantidade para verificacao de saldo.              ³±±
+±±³          ³ ExpD1 = Data de referencia para verificacao do saldo.      ³±±
+±±³          ³ ExpA2 = Array preenchido com informacoes sobre SAI solicit.³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetL1 = .T. - usuario/grupo com permissao ao produto.      ³±±
+±±³          ³ RetL1 = .F. - usuario/grupo sem permissao ao produto.      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MaVldSolic(cProduto,aGrupo,cUser,lHelp, nQuant, dDataRef, aInfoSAI)
+
+Local aArea      := GetArea()
+Local aAreaSAI   := SAI->(GetArea())
+Local aAreaSCW   := IIf( AliasInDic("SCW"),SCW->(GetArea()), GetArea())
+Local aUser      := {}
+Local lRetorno   := .F.
+Local lRestricao := .F.
+Local nX         := 1
+Local lExistSCW  := AliasInDic("SCW")
+Local lExistSoli := GetNewPar( "MV_CHKSOLI", .F. ) // Verifica se existe controle de solicitante 
+Local lContinua  := .T.
+#IFDEF TOP
+	Local cQuery     := ""
+	Local lQuery     := .F.
+	Local cAliasSAI  := "SAI"
+#ENDIF
+DEFAULT lHelp  := .T.
+DEFAULT aGrupo := UsrRetGrp()
+DEFAULT cUser  := RetCodUsr()
+DEFAULT nQuant   := 0
+DEFAULT aInfoSAI := {}
+DEFAULT dDataRef := Date()
+
+// aInfoSAI
+// [1] Grupo de Produto a ser verificado o saldo
+// [2] Produto a ser verificado o saldo
+// [3] Grupo de Usuario a ser verificado o saldo
+// [4] Usuario a ser verificado o saldo
+// [5] Quantidade Limite para o Periodo
+// [6] Saldo Disponivel no SCW
+
+dDataRef := FirstDay(dDataRef)
+aUser    := {"******",cUser}
+
+If !Empty(cProduto) .And. !StaticCall(MATA110,PutByAPS)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica se há controle de solicitante                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	If lExistSoli 
+		dbSelectArea("SAI")
+		dbSetOrder(1)
+		If !MsSeek(xFilial("SAI"))
+			lContinua := .F.
+		Endif
+	Endif
+	
+	If lContinua 		
+
+		dbSelectArea("SB1")
+		dbSetOrder(1)
+		MsSeek(xFilial("SB1")+cProduto)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica os direitos dos Grupos de usuarios.             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+		#IFDEF TOP
+			cAliasSAI := "MAVLDSOLIC"
+			lQuery    := .T.
+
+			cQuery    := "SELECT COUNT(AI_FILIAL) NREG "
+			cQuery    += "FROM "+RetSqlName("SAI")+" SAI "
+			cQuery    += "WHERE SAI.AI_FILIAL='"+xFilial("SAI")+"' AND "
+			cQuery    += "(SAI.AI_GRUSER = '******'"
+
+			If !Empty( aGrupo )
+				cQuery += " OR "
+				cQuery += " SAI.AI_GRUSER IN("
+				For nX := 1 To Len(aGrupo)
+					cQuery += "'"+aGrupo[nX]+Iif(nX==Len(aGrupo),"'","',")
+				Next nX		
+				cQuery += ")"
+			EndIf 				
+
+			cQuery    += ") AND "
+			cQuery    += "(((SAI.AI_GRUPO='"+SB1->B1_GRUPO+"' OR SAI.AI_GRUPO='* ') AND "
+			cQuery    += " SAI.AI_PRODUTO='* ') OR SAI.AI_PRODUTO='"+SB1->B1_COD+"') AND "
+			cQuery    += "SAI.AI_USER = '******' AND "
+			cQuery    += "SAI.D_E_L_E_T_=' ' "
+
+			cQuery := ChangeQuery(cQuery)
+
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSAI)
+
+			If (cAliasSAI)->NREG > 0
+				lRetorno := .T.		
+			EndIf
+			(cAliasSAI)->(dbCloseArea())
+
+			cAliasSAI := "MAVLDSOLIC"
+			lQuery    := .T.
+
+			cQuery    := "SELECT AI_FILIAL,AI_USER,AI_GRUSER,AI_GRUPO,AI_PRODUTO,AI_DOMINIO "+IIf(lExistSCW,",AI_QUANT ","")
+			cQuery    += "FROM "+RetSqlName("SAI")+" SAI "
+			cQuery    += "WHERE SAI.AI_FILIAL='"+xFilial("SAI")+"' AND "
+			cQuery    += "SAI.AI_USER IN ('******','"+cUser+"') AND "
+			If !Empty( aGrupo )
+				cQuery    += "SAI.AI_GRUSER IN ('******'"
+				For nX := 1 To Len(aGrupo)
+					cQuery += ",'"+aGrupo[nX]+"'"
+				Next nX		
+				cQuery += ") AND "
+			Else
+				cQuery    += "SAI.AI_GRUSER = '******' AND "
+			Endif
+			cQuery    += "SAI.D_E_L_E_T_=' ' "
+
+			cQuery := ChangeQuery(cQuery)
+
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSAI)
+
+			While !Eof() .And. (cAliasSAI)->AI_FILIAL == xFilial("SAI")
+				If AllTrim(AI_GRUSER) == "******" .Or. AllTrim(AI_USER) $ "******|"+cUser
+					If ((cAliasSAI)->AI_GRUPO == SB1->B1_GRUPO .Or. Alltrim((cAliasSAI)->AI_GRUPO)=="*") .And.;
+							Alltrim((cAliasSAI)->AI_PRODUTO)=="*" .And. !lRestricao .And. (cAliasSAI)->AI_DOMINIO $ "I "
+						lRetorno := .T.
+						aInfoSAI := {(cAliasSAI)->AI_GRUPO, (cAliasSAI)->AI_PRODUTO, (cAliasSAI)->AI_GRUSER, (cAliasSAI)->AI_USER, IIf(lExistSCW,(cAliasSAI)->AI_QUANT,0), 0}
+					EndIf
+					If (cAliasSAI)->AI_PRODUTO == SB1->B1_COD .And. !lRestricao .And. (cAliasSAI)->AI_DOMINIO$"I "
+						lRetorno := .T.
+						aInfoSAI := {(cAliasSAI)->AI_GRUPO, (cAliasSAI)->AI_PRODUTO, (cAliasSAI)->AI_GRUSER, (cAliasSAI)->AI_USER, IIf(lExistSCW,(cAliasSAI)->AI_QUANT,0), 0}
+					EndIf
+					If (cAliasSAI)->AI_PRODUTO == SB1->B1_COD .And. (cAliasSAI)->AI_DOMINIO=="E"
+						lRetorno := .F.
+						lRestricao := .T.
+					EndIf
+					If (cAliasSAI)->AI_GRUPO == SB1->B1_GRUPO .And. (cAliasSAI)->AI_DOMINIO=="E"
+						lRetorno := .F.
+						lRestricao := .T.
+					EndIf
+					If (cAliasSAI)->AI_DOMINIO == "R" .And. !lRestricao
+						lRetorno := .F.
+						lRestricao := .T.
+					EndIf
+					If (cAliasSAI)->AI_PRODUTO == SB1->B1_COD .And. (cAliasSAI)->AI_DOMINIO == "R"
+						lRetorno := .T.
+						lRestricao := .T.
+						aInfoSAI := {(cAliasSAI)->AI_GRUPO, (cAliasSAI)->AI_PRODUTO, (cAliasSAI)->AI_GRUSER, (cAliasSAI)->AI_USER, IIf(lExistSCW,(cAliasSAI)->AI_QUANT,0), 0}
+					EndIf
+					If (cAliasSAI)->AI_USER<>'******' .And. ((cAliasSAI)->AI_GRUPO == SB1->B1_GRUPO .Or. AllTrim((cAliasSAI)->AI_GRUPO)=="*") .And. AllTrim((cAliasSAI)->AI_PRODUTO)=="*".And. (cAliasSAI)->AI_DOMINIO == "R"
+						lRetorno := .T.
+						lRestricao := .T.
+						aInfoSAI := {(cAliasSAI)->AI_GRUPO, (cAliasSAI)->AI_PRODUTO, (cAliasSAI)->AI_GRUSER, (cAliasSAI)->AI_USER, IIf(lExistSCW,(cAliasSAI)->AI_QUANT,0), 0}
+					EndIf
+				EndIf
+				dbSelectArea(cAliasSAI)
+				dbSkip()
+			EndDo
+
+			(cAliasSAI)->(dbCloseArea())
+
+			dbSelectArea("SAI")
+		#ELSE
+			dbSelectArea("SAI")
+			dbSetOrder(1)
+			aadd(aGrupo,"******")		
+			For nX := 1 To Len(aGrupo)
+				MsSeek(xFilial("SAI")+aGrupo[nX])
+				While !Eof() .And. xFilial("SAI") == SAI->AI_FILIAL .And.;
+						AllTrim(aGrupo[nX]) == AllTrim(SAI->AI_GRUSER)
+					If SAI->AI_USER == "******"
+						If (SAI->AI_GRUPO == SB1->B1_GRUPO .Or. AllTrim(SAI->AI_GRUPO)=="*") .And.;
+								Alltrim(SAI->AI_PRODUTO)=="*"
+							lRetorno := .T.
+							aInfoSAI := {SAI->AI_GRUPO, SAI->AI_PRODUTO, SAI->AI_GRUSER, SAI->AI_USER, IIf(lExistSCW,SAI->AI_QUANT,0), 0}
+						EndIf
+						If SAI->AI_PRODUTO == SB1->B1_COD
+							lRetorno := .T.
+							aInfoSAI := {SAI->AI_GRUPO, SAI->AI_PRODUTO, SAI->AI_GRUSER, SAI->AI_USER, IIf(lExistSCW,SAI->AI_QUANT,0), 0}
+						EndIf
+					EndIf
+					dbSelectArea("SAI")
+					dbSkip()
+				EndDo
+			Next nX
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Verifica os direitos do Usuario.                         ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SAI")
+			dbSetOrder(2)
+			For nX := 1 To Len(aUser)
+				MsSeek(xFilial("SAI")+aUser[nX])
+				While !Eof() .And. SAI->AI_FILIAL == xFilial("SAI") .And.;
+						AllTrim(SAI->AI_USER) == AllTrim(aUser[nX])
+					If AllTrim(AI_GRUSER) == "******"
+						If (SAI->AI_GRUPO == SB1->B1_GRUPO .Or. Alltrim(SAI->AI_GRUPO)=="*") .And.;
+								Alltrim(SAI->AI_PRODUTO)=="*" .And. !lRestricao .And. SAI->AI_DOMINIO $ "I "
+							lRetorno := .T.
+							aInfoSAI := {SAI->AI_GRUPO, SAI->AI_PRODUTO, SAI->AI_GRUSER, SAI->AI_USER, IIf(lExistSCW,SAI->AI_QUANT,0), 0}
+						EndIf
+						If SAI->AI_PRODUTO == SB1->B1_COD .And. !lRestricao .And. SAI->AI_DOMINIO$"I "
+							lRetorno := .T.
+							aInfoSAI := {SAI->AI_GRUPO, SAI->AI_PRODUTO, SAI->AI_GRUSER, SAI->AI_USER, IIf(lExistSCW,SAI->AI_QUANT,0), 0}
+						EndIf
+						If SAI->AI_PRODUTO == SB1->B1_COD .And. SAI->AI_DOMINIO=="E"
+							lRetorno := .F.
+							lRestricao := .T.
+						EndIf
+						If SAI->AI_GRUPO == SB1->B1_GRUPO .And. SAI->AI_DOMINIO=="E"
+							lRetorno := .F.
+							lRestricao := .T.
+						EndIf
+						If SAI->AI_DOMINIO == "R" .And. !lRestricao
+							lRetorno := .F.
+							lRestricao := .T.
+						EndIf
+						If SAI->AI_PRODUTO == SB1->B1_COD .And. SAI->AI_DOMINIO == "R"
+							lRetorno := .T.
+							lRestricao := .T.
+							aInfoSAI := {SAI->AI_GRUPO, SAI->AI_PRODUTO, SAI->AI_GRUSER, SAI->AI_USER, IIf(lExistSCW,SAI->AI_QUANT,0), 0}
+						EndIf
+						If SAI->AI_USER<>'******' .And. (SAI->AI_GRUPO == SB1->B1_GRUPO .Or. AllTrim(SAI->AI_GRUPO)=="*") .And. AllTrim(SAI->AI_PRODUTO)=="*".And. SAI->AI_DOMINIO == "R"
+							lRetorno := .T.
+							lRestricao := .T.
+							aInfoSAI := {SAI->AI_GRUPO, SAI->AI_PRODUTO, SAI->AI_GRUSER, SAI->AI_USER, IIf(lExistSCW,SAI->AI_QUANT,0), 0}
+						EndIf
+					EndIf
+					dbSelectArea("SAI")
+					dbSkip()
+				EndDo
+			Next nX
+		#ENDIF
+	Else
+		lRetorno := .T.
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica saldo a requisitar do produto ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno .And. lExistSCW .And. !Empty(aInfoSAI) 
+		dbSelectArea("SCW")
+		dbSetOrder(1)
+		If MsSeek(xFilial("SCW")+aInfoSAI[1]+aInfoSAI[2]+aInfoSAI[3]+aInfoSAI[4]+DToS(dDataRef))
+			If SCW->CW_SALDO >= nQuant
+				aInfoSAI[6] := SCW->CW_SALDO
+				lRetorno := .T.
+			Else
+				lRetorno := .F.
+			EndIf
+		Else
+			lRetorno := .T.
+		EndIf
+		If lHelp .And. !lRetorno
+			ApMsgStop(STR0035)
+		EndIf
+	EndIf	
+Else
+	lRetorno := .T.
+EndIf
+
+If lHelp .And. !lRetorno
+	Help("  ",1,"A110RESTR")
+EndIf
+
+RestArea(aAreaSCW)
+RestArea(aAreaSAI)
+RestArea(aArea)
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³AtuSalSCW ³ Autor ³Ernani Forastieri      ³ Data ³18.03.2005³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Atualizacao dos saldo de pre requisicao                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do grupo de produtos.                       ³±±
+±±³          ³ ExpC2 = Codigo de produtos                                 ³±±
+±±³          ³ ExpC3 = Codigo do grupo de Usuarios                        ³±±
+±±³          ³ ExpC4 = Codigo do usuario                                  ³±±
+±±³          ³ ExpN1 = Quantidade para aumentar/diminuir no saldo         ³±±
+±±³          ³ ExpN2 = Quantidade para periodo para cricao do saldo       ³±±
+±±³          ³ ExpL1 = Variavel que controla a soma/subtracao do saldo    ³±±
+±±³          ³ ExpD1 = Data de referencia do saldo.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetL1 = .T. - usuario/grupo com permissao ao produto.      ³±±
+±±³          ³ RetL1 = .F. - usuario/grupo sem permissao ao produto.      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function AtuSalSCW(cGrpProd, cProduto, cGrpUser, cUser, nQuant, nQtdPer, lSoma, dDataRef)
+Local aArea       := GetArea()
+Local aAreaSCW    := SCW->(GetArea())
+Local nSaldo      := 0
+
+DEFAULT lSoma     := .F.
+DEFAULT nQuant    := 0
+DEFAULT dDataRef  := Date()
+DEFAULT nQtdPer   := nQuant
+
+If AliasInDic("SCW")
+
+	dDataRef  := FirstDay(dDataRef)
+
+	dbSelectArea("SCW")
+	If !MsSeek(xFilial("SCW")+cGrpProd+cProduto+cGrpUser+cUser+DtoS(dDataRef))
+		RecLock("SCW",.T.)
+		SCW->CW_FILIAL  := xFilial("SCW")
+		SCW->CW_GRUPO   := cGrpProd
+		SCW->CW_PRODUTO := cProduto
+		SCW->CW_GRPUSER := cGrpUser                 
+		
+		SCW->CW_USER    := cUser
+		SCW->CW_DATA    := dDataRef
+		SCW->CW_LIMITE  := nQtdPer
+		SCW->CW_SALDO   := Min(Max(0, nQtdPer - nQuant)	, nQtdPer)
+		MsUnlock()
+	Else
+		RecLock("SCW",.F.)
+		SCW->CW_SALDO   := Min(Max(0, SCW->CW_SALDO + IIf(lSoma, nQuant, nQuant * -1)), SCW->CW_LIMITE)
+		MsUnlock()
+	EndIf
+	nSaldo := SCW->CW_SALDO
+
+EndIf
+
+RestArea(aAreaSCW)
+RestArea(aArea)
+Return nSaldo
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡ao    ³MaAvalPerm³ Autor ³Allyson Freitas        ³ Data ³23.01.2012³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡ao ³ Controle de permissoes por produto ou usuario/grupo        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpN1 = Tipo de Permissao                                  ³±±
+±±³          ³           1 - Permissao por Rotina                         ³±± 
+±±³          ³           2 - Permissao por TM                             ³±±
+±±³          ³           3 - Permissao por Armazem                        ³±±
+±±³          ³                                                            ³±±
+±±³          ³ ExpA1 = Dados da busca                                     ³±±
+±±³          ³               TIPO 1       |    TIPO 2     |    TIPO 3     ³±± 
+±±³          ³  [1]C1 = Codigo do Produto |TM do documento|Cod. do Armazem³±±
+±±³          ³  [2]C2 = Cod. do documento |               |Cod. do Produto³±±
+±±³          ³  [3]C3 = Operacao          |               |               ³±±
+±±³          ³           3- Inclusao                                      ³±±
+±±³          ³           4- Alteracao                                     ³±±
+±±³          ³           5- Exclusao                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ RetL1 = .T. - usuario/grupo/produto com permissao.         ³±±
+±±³          ³ RetL1 = .F. - usuario/grupo/produto sem permissao.         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico.                                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/ 
+Function MaAvalPerm(nTipo,aDados)
+Static lAjuste := .T.
+Local cUsu		:= RetCodUsr()
+Local cGProd	:= ""
+Local cPermArm	:= SuperGetMV("MV_RESTARM",.F.,"0")
+Local aArea		:= GetArea()
+Local aGrp		:= UsrRetGrp(cUsu)
+Local nTamPrd	:= TamSX3("B1_COD")[1]
+Local nTamGrp	:= TamSX3("B1_GRUPO")[1]
+Local lRet 		:= .F.
+Local lAchou 	:= .F.
+Local nCont     := 0
+Local nGQUser	:= TamSX3("GQ_USER")[1]
+
+// Executa AjustaSX1 apenas 1 vez
+If lAjuste
+	AjustaSX1()
+	lAjuste := .F.
+EndIf	
+
+If !Empty(cUsu) .And. AliasInDic("SDW") .And. AliasInDic("SGQ") .And. AliasInDic("SGP")  
+	Do Case
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Permissoes por Rotina ³
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ aDados[1] = Produto   ³
+	//³ aDados[2] = Documento ³
+	//³ aDados[3] = Operacao  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Case nTipo == 1
+		cGProd := Posicione("SB1",1,xFilial("SB1")+aDados[1],"B1_GRUPO")
+		
+		//-- 1. Busca por produto e usuario
+		SDW->(dbSetOrder(1))
+		lAchou := SDW->(dbSeek(xFilial("SDW")+aDados[1]+cUsu+aDados[2]))
+		
+		//-- 2. Busca por produto e grupos do usuario
+		If !lAchou .And. Len(aGrp) > 0
+			SDW->(dbSetOrder(2))
+			For nCont := 1 To Len(aGrp)
+				If SDW->(dbSeek(xFilial("SDW")+aDados[1]+aGrp[nCont]+aDados[2]))
+					lAchou := .T.
+					Exit
+				EndIf
+			Next nCont
+		EndIf
+		
+		//-- 3. Busca por grupo de produto e usuario
+		If !lAchou .And. !Empty(cGProd)  
+			SDW->(dbSetOrder(3))
+			lAchou := SDW->(dbSeek(xFilial("SDW")+cGProd+cUsu+aDados[2]))
+		EndIf
+		
+		//-- 3. Busca por grupo de produto e grupos do usuario
+		If !lAchou .And. !Empty(cGProd) .And. Len(aGrp) > 0 
+			SDW->(dbSetOrder(4))
+			For nCont := 1 To Len(aGrp)
+				If SDW->(dbSeek(xFilial("SDW")+cGProd+aGrp[nCont]+aDados[2]))
+					lAchou := .T.
+					Exit
+				EndIf
+			Next nCont
+		EndIf
+		
+		//-- 5. Busca por produto == "*" e usuario
+		If !lAchou  
+			SDW->(dbSetOrder(1))
+			lAchou := SDW->(dbSeek(xFilial("SDW")+PadR("*",nTamPrd)+cUsu+aDados[2]))
+		EndIf
+		
+		//-- 6. Busca por produto == "*" e grupos do usuario
+		If !lAchou .And. Len(aGrp) > 0  
+			SDW->(dbSetOrder(2))
+			For nCont := 1 To Len(aGrp)
+				If SDW->(dbSeek(xFilial("SDW")+PadR("*",nTamPrd)+aGrp[nCont]+aDados[2]))
+					lAchou := .T.
+					Exit
+				EndIf
+			Next nCont
+		EndIf
+		
+		//-- 7. Busca por grupo de produto == "*" e usuario
+		If !lAchou  
+			SDW->(dbSetOrder(3))
+			lAchou := SDW->(dbSeek(xFilial("SDW")+PadR("*",nTamGrp)+cUsu+aDados[2]))
+		EndIf
+		
+		//-- 8. Busca por grupo de produto == "*" e grupos do usuario
+		If !lAchou .And. Len(aGrp) > 0
+			SDW->(dbSetOrder(4))
+			For nCont := 1 To Len(aGrp)
+				If SDW->(dbSeek(xFilial("SDW")+PadR("*",nTamGrp)+aGrp[nCont]+aDados[2]))
+					lAchou := .T.
+					Exit
+				EndIf
+			Next nCont
+		EndIf
+		
+		//-- Se achou registro, verifica as permissoes segundo a operacao desejada
+		If lAchou 
+			Do Case
+				Case aDados[3] == 3
+					lRet := SDW->DW_INCLUI
+				Case aDados[3] == 4
+					lRet := SDW->DW_ALTERA
+				Case aDados[3] == 5
+					lRet := SDW->DW_EXCLUI
+			EndCase
+		//-- Senao, busca pelo parametro MV_PERMDEF
+		Else
+			lRet := SuperGetMV("MV_PERMDEF",.F.,.T.)
+		EndIf
+		
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Permissoes por TM ³
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ aDados[1] = TM   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Case nTipo == 2
+		If SuperGetMV("MV_RESTTM",.F.,.F.)
+			SGP->(DbSetOrder(1))
+
+			//-- 1. Busca permissao para todos os usuarios
+			lRet := SGP->(dbSeek(xFilial("SGP")+aDados[1]+PadR("*",TamSX3("GP_USER")[1])))
+
+			//-- 2. Busca por TM e Usuario
+			If !lRet
+				lRet := SGP->(dbSeek(xFilial("SGP")+aDados[1]+cUsu))
+			EndIf
+			
+			//-- 3. Busca por TM e grupos do usuario
+			If !lRet .And. Len(aGrp) > 0
+				SGP->(dbSetOrder(2))
+				For nCont := 1 To Len(aGrp)
+					If (lRet := SGP->(dbSeek(xFilial("SGP")+aDados[1]+aGrp[nCont])))
+						Exit
+					EndIf
+				Next nCont
+			EndIf	
+			
+			//Se nao encontrou, exibe help
+			If !lRet
+				Help(,,1,"SEMPERM")
+			EndIf
+		Else
+			lRet := .T.
+		EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Permissao por Armazem ³
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ aDados[1] = Armazem   ³
+	//³ aDados[2] = Produto   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	Case nTipo == 3 
+		cGProd := Posicione("SB1",1,xFilial("SB1")+aDados[2],"B1_GRUPO")
+
+		//-- MV_RESTARM == 0: Nao utiliza permissoes por armazem
+		If cPermArm == "0"
+			lRet := .T.
+		EndIf
+			
+		//-- MV_RESTARM == 1 ou 3: Permissoes por usuario
+		If !lRet .And. cPermArm $ "13"
+			SGQ->(dbSetOrder(1))
+			
+			//-- 1. Busca por armazem e todos os usuarios
+			lRet := SGQ->(dbSeek(xFilial("SGQ")+"1"+aDados[1]+PadR("*",nGQUser)))
+			
+			//-- 2. Busca por armazem e o usuario
+			If !lRet
+				lRet := SGQ->(dbSeek(xFilial("SGQ")+"1"+aDados[1]+PadR(cUsu,nGQUser)))
+			EndIf
+
+			//-- 3. Busca por armazem e grupos do usuario
+			If !lRet .And. Len(aGrp) > 0
+				SGQ->(DbSetOrder(2))
+				For nCont := 1 To Len(aGrp)
+					If (lRet := SGQ->(dbSeek(xFilial("SGQ")+"1"+aDados[1]+aGrp[nCont])))
+						Exit
+					EndIf
+				Next nCont
+			EndIf
+		EndIf
+		
+		//-- MV_RESTARM == 2 ou 3: Permissoes por produto
+		If (!lRet .And. cPermArm == "2") .Or. (lRet .And. cPermArm == "3")
+			//-- 1. Busca por armazem e todos os produtos
+			SGQ->(dbSetOrder(3))
+			lRet := SGQ->(dbSeek(xFilial("SGQ")+"2"+aDados[1]+PadR("*",nTamPrd)))
+			
+			//-- 2. Busca por armazem e produto
+			If !lRet
+				lRet := SGQ->(dbSeek(xFilial("SGQ")+"2"+aDados[1]+aDados[2]))
+			EndIf
+						
+			//-- 3. Busca por armazem e grupo do produto
+			If !lRet .And. !Empty(cGProd)
+				SGQ->(dbSetOrder(4))
+				lRet := SGQ->(dbSeek(xFilial("SGQ")+"2"+aDados[1]+cGProd))
+			EndIf
+		EndIf
+			
+		//Se nao encontrou, exibe help
+		If !lRet 
+			Do Case
+				Case cPermArm == "1"		// Por usuario
+					Help(,,1,"SEMPERM")
+				Case cPermArm $ "23" 	// Por produto e/ou usuario
+					Help(,,1,"RESTRICAO")
+			EndCase
+		EndIf
+	EndCase
+Else
+	lRet := .T.
+EndIf
+
+RestArea(aArea)
+Return lRet
+
+
+// --------------------------------------------------------------------------------------
+/*/{Protheus.doc} MaEnvPed
+Prepara ambiente do JOB que enviará o pedido de compra para o Market Place
+@author  Leonarndo Quintania
+@version P11.8
+@since   13/05/2013
+/*/
+// --------------------------------------------------------------------------------------
+
+Function MaEnvPed(cEmp,cFil, cPedido)
+
+// Seta job para nao consumir licencas
+RpcSetType(3)
+
+// Seta job para empresa filial desejada
+RpcSetEnv( cEmp, cFil,,,'COM')
+Inclui:=.T.	
+cA120Num := cPedido
+FwIntegDef('MATA120')
+
+Return .T.
+
+// --------------------------------------------------------------------------------------
+/*/{Protheus.doc} MaRetAglEC
+Retorna os itens aglutinados por entidade contabil
+@author  Leandro Kenji
+@version P11.8
+@since   26/08/2013
+
+aItensAgl
+
+@aItensAgl Array com os itens para aglutinar
+
+@return aRet
+/*/
+// --------------------------------------------------------------------------------------
+Function MaRetAglEC(aItensAgl)
+                             	
+Local aArea			:= GetArea()
+Local aRet			:= {}
+Local aEntCtb		:= {}
+Local aECKey		:= {}
+Local aItemEC		:= {}
+Local cKeyEtCtb		:= ""
+Local cDoc			:= ""
+Local cItem       	:= ""
+Local cRateio		:= ""
+Local lParOk		:= .T.
+Local nForIt		:= 0
+Local nForKey		:= 0
+Local nEntCtb		:= 0
+Local nVlrItem		:= 0
+
+For nForIt := 1 to Len(aItensAgl)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Valida o array de parametros³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !( Len(aItensAgl[nForIt]) >= 5 ) .OR. ( ValType(aItensAgl[nForIt][Len(aItensAgl[nForIt])]) != "A" )
+		aItensAgl := {}
+		Exit	
+	EndIf
+	
+	cDoc 	:= aItensAgl[nForIt][1]
+	cItem 	:= aItensAgl[nForIt][2]
+	cRateio 	:= aItensAgl[nForIt][3] 
+	nVlrItem := aItensAgl[nForIt][4]
+	
+	aEntCtb := aClone(aItensAgl[nForIt][5])
+	
+	cKeyEtCtb := ""
+	aItemEC		:= {}
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Monta chave para busca da entidade ctb. ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nForKey := 1 to Len(aEntCtb)
+
+		cKeyEtCtb += aEntCtb[nForKey]
+
+	Next nForKey	
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se aglutina ou adiciona a entidade ctb. ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nEntCtb := aScan( aECKey,{|x|,x[1] == cKeyEtCtb } )
+
+	If nEntCtb > 0
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Aglutina o item e valor da entidade ctb.  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aAdd( aRet[nEntCtb][2], {cItem,cRateio} ) 
+		aRet[nEntCtb][3] += nVlrItem	
+	
+	Else
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Adiciona nova entidade ctb. no array de retorno³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		Aadd(aItemEC,{cItem,cRateio})
+		Aadd( aRet , { cDoc, aClone(aItemEC) , nVlrItem, aClone(aEntCtb) } )
+		
+		Aadd( aECKey, { cKeyEtCtb , Len(aRet) } )	 
+			
+	EndIf
+	
+Next nForIt 
+
+RestArea(aArea)
+
+Return aRet
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} MaEntCtb()
+Funcao utilizada para gerar a alcada de aprovacao por itens aglutinados por Entidade Ctb. e valor.
+
+@author Leandro.Moura
+@since 28/08/2013
+@version 1.0
+
+cAlias,cAlsRat,cDocto,cTpDoc,aHeader,aCols,aHeadRat,aColsRat,nOpcao,dDtDoc
+
+@param cAlias Alias da tabela.
+@param cAlsRat Alias da tabela de rateio
+@param cDoc Documento
+@param cTpDoc Tipo de documento na SCR
+@param aHeader aHeader da rotina
+@param aCols aCols da rotina
+@param aHeadRat aHeader da rotina de rateio
+@param aColsRat aCols da rotina de rateio
+@param nOpcao Inclusao, Alteracao, Exclusao
+@param dDtDoc Data do documento
+
+@return lGerouApv 
+/*/
+//-------------------------------------------------------------------
+
+Function MaEntCtb(cAlias,cAlsRat,cDocto,cTpDoc,aHeader,aCols,aHeadRat,aColsRat,nOpcao,dDtDoc)
+
+Local aItens  	:= {}
+Local aAglut		:= {}
+Local aEntCtb		:= {}
+Local aAlcDoc		:= {}
+Local aGrpAprov	:= {}
+Local cAlsCpo		:= ""
+Local cGrpAprov 	:= ""
+Local cItAprov	:= ""
+Local cCpo	 		:= ""
+Local lContinua	:= .T.
+Local lDelItem	:= .F. 
+Local lDeleta		:= Iif( nOpcao == 3, .T. , .F. )
+Local lEstorna	:= Iif( ( (nOpcao == 2) .OR. (nOpcao == 3) ) , .T. , .F. )
+Local lGerouApv	:= .F.
+Local lFirstNiv	:= .F.
+Local lEntCtb		:= .T.
+Local nPosIt		:= 0
+Local nPosQtd 	:= 0
+Local nPosVlr		:= 0
+Local nPosPrd		:= 0
+Local nForIt		:= 0
+Local nVlrIt		:= 0
+Local nRateio		:= 0
+
+Default aHeadRat	:= {}
+Default aColsRat	:= {}
+
+If !AliasIndic(cAlias)
+	lContinua := .F.	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Caso seja alias iniciado com S³
+//³Desconsidera a primeira letra ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If SubStr(cAlias,1,1) == "S"
+	cAlsCpo := SubStr(cAlias,2,Len(cAlias) )
+Else
+	cAlsCpo := cAlias 
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica posicao do item³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCpo := cAlsCpo + "_ITEM" 
+
+If lContinua .AND. !Empty( (cAlias)->( FieldPos(cCpo) ) )
+	nPosIt := aScan(aHeader, {|x| Alltrim(x[2]) == cCpo })	
+ElseIf lContinua
+	lContinua := .F.	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica posicao da Qtde.	  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCpo := cAlsCpo + "_QUANT" 
+
+If lContinua .AND. !Empty( (cAlias)->( FieldPos(cCpo) ) )
+	nPosQtd := aScan(aHeader, {|x| Alltrim(x[2]) == cCpo })	
+ElseIf lContinua 
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica posicao do Produto	  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCpo := cAlsCpo + "_PRODUTO" 
+
+If lContinua .AND. !Empty( (cAlias)->( FieldPos(cCpo) ) )
+	nPosPrd := aScan(aHeader, {|x| Alltrim(x[2]) == cCpo })	
+ElseIf lContinua 
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica posicao do Valor 	  ³
+//³Caso seja IP				 	  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCpo := cAlsCpo + "_PRECO" 
+
+If lContinua .AND. (cTpDoc == "IP" ) .AND. !Empty( (cAlias)->( FieldPos(cCpo) ) )
+	nPosVlr := aScan(aHeader, {|x| Alltrim(x[2]) == cCpo })	
+ElseIf (cTpDoc == "IP" ) .AND. lContinua 
+	lContinua := .F.
+EndIf
+
+If lContinua
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Para cada item, preenche o array para aglutinacao³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nForIt := 1 to Len(aCols)
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Valida item deletado ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ValType( aCols[nForIt][Len( aCols[nForIt] )] ) == "L"
+			lDelItem := aCols[nForIt][Len( aCols[nForIt] ) ]
+		EndIf
+	
+		If !lDelItem
+		
+			cItemDoc	:= aCols[nForIt][nPosIt]
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica se o item possui rateio ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			nRateio := aScan(aColsRat,{|x| x[1] == cItemDoc} )
+            
+			If cTpDoc == "IP"
+				nVlrIt := aCols[nForIt][nPosVlr]
+			Else 
+				nVlrIt := MTGetVProd(aCols[nForIt][nPosPrd])	
+			EndIf
+		   
+			nVlrIt := nVlrIt * aCols[nForIt][nPosQtd]
+	        
+	        If nRateio == 0  
+	        
+	   			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Carrega array com as entidades contabeis³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				aEntCtb := MtGetValEC(cAlias, cAlsCpo, aHeader, aCols, nForIt, {} )
+
+				Aadd( aItens, { cDocto				,;		// Documento
+								cItemDoc			,;		// Item Dcto.
+								""	   				,;		// Item Rateio
+								nVlrIt		   		,; 		// Valor item
+								aClone(aEntCtb[1])	})		// Array com Entidades Ctb.
+	
+			Else 
+			
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Rotina para montagem do array de rateio³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				lContinua := MaMtRateio(cAlsRat,cDocto,cItemDoc,nVlrIt,@aItens,aHeadRat,aColsRat[nRateio][2]) 
+	
+			EndIf
+				
+		EndIf
+		
+		If !lContinua
+			Exit
+		EndIf
+		
+		lDelItem := .F.
+	
+	Next nForIt		 
+
+EndIf
+
+If lContinua
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Estorna todas as aprovacoes do documento caso necessario ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lEstorna
+		MaEstAlcEC(cDocto,cTpDoc,dDtDoc)
+	EndIf
+ 	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Funcao para aglutinar os itens por entidade ctb. ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aAglut := MaRetAglEC( aItens )
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Gera SCR para cada entidade contabil³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nForIt := 1 to Len(aAglut)
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Busca grupo de aprovadores³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aGrpAprov		:= MaGrpApEC( aClone(aAglut[nForIt][4]),@lEntCtb )
+		
+		cGrpAprov 		:= Iif( Len(aGrpAprov) >= 1 , aGrpAprov[1] , "")
+		cItAprov		:= Iif( Len(aGrpAprov) >= 2 , aGrpAprov[2] , "")
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Caso nao encontre um grupo de aprovacao³
+		//³Bloqueia ou libera o doc.			  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If Empty(cGrpAprov)
+		
+			Loop
+		EndIf
+			
+		aAlcDoc := { aAglut[nForIt][1]		,; 		// Num. Documento
+		  			  cTpDoc				,; 		// Tipo Doc.
+					  aAglut[nForIt][3]		,; 		// Valor aprovac.
+					  						,;		// Aprovador
+					  						,;		// Cod. Usuario
+					  cGrpAprov				,;		// Grupo Aprovac.
+					  						,;		// Aprov. Superior
+		              						,;		// Moeda Docto
+		              						,;		// Taxa da moeda
+		              dDtDoc				}		// Data Emissao
+		              						
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Chama rotina para controle de alcada da SC ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !lDeleta
+			lFirstNiv := MaAlcDoc(aAlcDoc,,1,,,cItAprov,aClone(aAglut[nForIt][2]))
+		EndIf
+		
+		If !lFirstNiv .AND. !lGerouApv
+			lGerouApv := .T.	
+		EndIf
+	
+	Next nForIt
+	
+EndIf
+
+Return lGerouApv
+
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MaMtRateio()
+Funcao utilizada para montar o array de rateio do item.
+
+@author Leandro.Moura
+@since 28/08/2013
+@version 1.0
+
+cAlias,cDoc,cItem,nQtde,aItens,aHead,aCols
+
+@param cAlias Alias da tabela.
+@param cDoc Documento
+@param cItem Item do Documento
+@param aHead aHeader da rotina
+@param aCols aCols da rotina
+
+@return lRet 
+/*/
+//-------------------------------------------------------------------
+Static Function MaMtRateio(cAlias,cDoc,cItem,nVlrItem,aItens,aHead,aCols) 
+
+Local aEntCtb		:= {}
+Local aRateio		:= aClone(aItens)
+Local cAlsCpo		:= ""
+Local cCpo			:= ""
+Local cItemRat		:= ""
+Local lRet			:= .T.
+Local lDeleted		:= .F. 
+Local nPosItRat		:= 0
+Local nPosPerc		:= 0
+Local nFor			:= 0
+Local nVlrRat		:= 0
+Local nPerRat		:= 0
+
+If !AliasIndic(cAlias)
+	lRet := .F.	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Caso seja alias iniciado com S³
+//³Desconsidera a primeira letra ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If SubStr(cAlias,1,1) == "S"
+	cAlsCpo := SubStr(cAlias,2,Len(cAlias) )
+Else
+	cAlsCpo := cAlias 
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica posicao do item³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCpo := cAlsCpo + "_ITEM" 
+If lRet .AND. !Empty( (cAlias)->( FieldPos(cCpo) ) )
+	nPosItRat := aScan(aHead, {|x| Alltrim(x[2]) == cCpo })	
+ElseIf lRet
+	lRet := .F.	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica posicao do Percentual ³
+//³Caso seja campos de rateio     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cCpo := cAlsCpo + "_PERC" 
+If lRet .AND. !Empty( (cAlias)->( FieldPos(cCpo) ) )
+	nPosPerc := aScan(aHead, {|x| Alltrim(x[2]) == cCpo })	
+ElseIf lRet 
+	lRet := .F.
+EndIf
+
+If lRet
+ 
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Monta array conforme rateio do item³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nFor := 1 to Len(aCols)
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Valida item deletado ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ValType( aCols[nFor][Len( aCols[nFor] )] ) == "L"
+			lDeleted := aCols[nFor][Len( aCols[nFor] )]
+		EndIf
+		
+		If !lDeleted
+	        
+	        cItemRat := aCols[nFor][nPosItRat] 
+	        
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Aplica o percentual do rateio sobre a quantidade³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			nPerRat := (aCols[nFor][nPosPerc]) / 100
+	
+			nVlrRat := nVlrItem * nPerRat
+							
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Carrega array com as entidades contabeis³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			aEntCtb := MtGetValEC(cAlias, cAlsCpo, aHead, aCols, nFor, {} )
+
+			Aadd( aRateio, { cDoc			,;		// Documento
+							cItem			,;		// Item Dcto.
+							cItemRat		,;		// Item Rateio
+							nVlrRat			,; 		// Valor item
+							aClone(aEntCtb[1]) } )		// Array com Entidades Ctb.
+
+		EndIf
+	
+	Next nFor
+
+Else
+
+	lRet := .F.
+
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Insere no array oficial os itens de rateio³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aItens := aClone(aRateio)
+
+Return lRet
+
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MaEstAlcEC()
+Funcao utilizada para estornar a liberacao do documento
+
+@author Leandro.Moura
+@since 28/08/2013
+@version 1.0
+
+cDocto,cTpDoc,dDtDoc
+
+@param cDoc Documento
+@param cTpDoc Tipo do Documento
+@param dDtDoc Data do Documento
+
+@return
+/*/
+//-------------------------------------------------------------------
+Static Function MaEstAlcEC(cDocto,cTpDoc,dDtDoc)
+
+Local aEstDoc	:= {}
+Local aArea		:= GetArea()
+Local cQuery	:= ""
+Local cAls		:= GetNextAlias()
+Local cGrpApv	:= ""
+Local lCRgrp		:= ( SCR->(FieldPos("CR_GRUPO")) > 0 .And. SCR->(FieldPos("CR_ITGRP")) > 0 )
+
+cQuery := " SELECT "
+cQuery += " 	SCR.CR_NUM AS DOC "
+cQuery += " 	,SCR.CR_TOTAL AS VLRDOC "
+
+If lCRgrp
+	cQuery += " 	,SCR.CR_GRUPO AS GRPAPV "
+EndIf
+
+cQuery += " FROM " + RetSQLName("SCR") + " SCR "
+
+cQuery += " WHERE "
+cQuery += "			SCR.CR_FILIAL = '" + FWXFilial("SCR") + "' "
+cQuery += " 	AND SCR.CR_NUM LIKE '" + cDocto + "%' "
+cQuery += " 	AND SCR.CR_TIPO = '" + cTpDoc + "'  "
+cQuery += " 	AND SCR.CR_EMISSAO = '" + DtoS(dDtDoc) + "'  "
+cQuery += " 	AND SCR.D_E_L_E_T_ = '' "
+
+cQuery += " GROUP BY SCR.CR_NUM,SCR.CR_TOTAL "
+
+If lCRgrp
+	cQuery += ",SCR.CR_GRUPO "
+EndIf
+
+dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAls)
+
+While (cAls)->( !EOF() )
+
+	If lCRgrp
+		cGrpApv := (cAls)->GRPAPV
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Monta array para estorno do documento³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aEstDoc := { (cAls)->DOC			,; 		// Num. Documento
+	  			  cTpDoc				,; 		// Tipo Doc.
+				  (cAls)->VLRDOC   	,; 		// Valor aprovac.
+				  						,;		// Aprovador
+				  						,;		// Cod. Usuario
+				  cGrpApv				,;		// Grupo Aprovac.
+				  						,;		// Aprov. Superior
+	              					,;		// Moeda Docto
+	              					,;		// Taxa da moeda
+	              dDtDoc				}		// Data Emissao
+	              						
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Chama rotina para estorno ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	MaAlcDoc(aEstDoc,,3)
+	
+	(cAls)->( dbSkip() )   
+
+End
+
+(cAls)->( dbCloseArea() )
+
+RestArea(aArea)
+
+Return
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MtGetValEC()
+Retorna array com os valores das entidades contabeis
+
+@author Aecio Gomes
+@since 28/08/2013
+@version 1.0
+
+cTab, cPrefix, aHeader, aCols, nLinAcols, aCampos
+
+@param cTab Alias da tabela.
+@param cPrefix Prefixo da tabela.
+@param aHeader aHeader da rotina
+@param aCols aCols da rotina
+@param nLinAcols Linha atual do aCols
+@param aCampos entidades contábeis já existentes no array. 
+
+@return aCampos 
+/*/
+//-------------------------------------------------------------------
+Function MtGetValEC(cTab, cPrefix, aHeader, aCols, nLinAcols, aCampos)
+Local aArea 	:= GetArea()
+Local aRetEc	:= {}
+Local aFieldsEC	:= {}
+Local nX, nY 	:= 0
+
+Default aHeader := {}
+Default aCampos	:= {}
+Default aCols	:= {}
+Default cTab 	:= ""
+Default cPrefix := ""
+Default nLinAcols := 0
+
+If AliasIndic(cTab)
+	If Empty(aCampos)
+		aCampos	:= {cPrefix+"_CC",cPrefix+"_CONTA", cPrefix+"_ITEMCTA", cPrefix+"_CLVL"}
+	EndIf
+	
+	For nX := 1 To Len(aCampos)
+		If (cTab)->(FieldPos(aCampos[nX])) > 0
+			AADD(aFieldsEC, aCampos[nX])
+		EndIf
+	Next nX
+	
+	aFieldsEC := MTGETFEC(cTab, cPrefix, aFieldsEC)
+	
+	If nLinAcols > 0 
+		AADD(aRetEc, {})
+		For nX := 1 To Len(aFieldsEC)
+			xConteudo := GDFieldGet(aFieldsEC[nX], nLinAcols, .F., aHeader, aCols)
+			AADD(aTail(aRetEc), xConteudo)
+		Next		
+	Else
+		For nX := 1 To Len(aCols)
+			AADD(aaRetEc, {})
+			For nY := 1 To Len(aFieldsEC)
+				xConteudo := GDFieldGet(aFieldsEC[nY], nX, .F., aHeader, aCols)
+				AADD(aTail(aRetEc), xConteudo)
+			Next nY
+		Next nX
+	EndIf		
+EndIf
+
+RestArea(aArea)
+Return(aRetEc)
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MaGrpApEC()
+Funcao utilizada para retornar o grupo de aprovacao conforme entidades ctb.
+
+@author Leandro.Moura
+@since 29/08/2013
+@version 1.0
+
+aEntCtb,lEntCtb
+
+@param aEntCtb Array com as entidades contabeis
+@param lEntCtb Informa se existe entidade ctb preenchida
+
+@return aApv
+/*/
+//-------------------------------------------------------------------
+Function MaGrpApEC(aEntCtb,lEntCtb)
+
+Local aArea	  		:= GetArea()
+Local aApv			:= {}
+Local aAuxEnt		:= {}
+Local aCondEC		:= {}
+Local aAuxGrp		:= {}
+Local cGrupo		:= ""
+Local cItGrp		:= ""
+Local cQuery		:= ""
+Local cAls			:= GetNextAlias()
+Local cCpoDBL	 	:= ""
+Local cContDBL		:= ""
+Local cGrpDfl		:= SuperGetMv("MV_APGRDFL",.F.,"")
+Local lOK			:= .T.
+Local lAchou 		:= .F.
+Local nForEnt		:= 0
+
+Default lEntCtb		:= .T.
+
+If !(AliasIndic("DBL")) .OR. !( Len(aEntCtb) >= 1 )
+	lEntCtb := .F. 
+	lOK := .F.
+EndIf
+
+If lOK
+ 
+	cQuery := " SELECT "
+	cQuery += " 	DBL.DBL_GRUPO AS GRPAPV "
+	cQuery += " 	,DBL.DBL_ITEM  AS ITEMGRP "
+
+	cQuery += " FROM " + RetSQLName("DBL") + " DBL "
+	
+	cQuery += " WHERE "
+	cQuery += " DBL.DBL_FILIAL = '" + FWXFilial("SCR") + "' "
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica as entidades da tabela DBL ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	aCondEC	:= { "DBL_CC","DBL_CONTA","DBL_ITEMCT","DBL_CLVL" }
+	aCondEC	:= MtGetFEC("DBL", "DBL", aCondEC)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Adiciona condicao das entidades ctb. dinamicamente ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nForEnt := 1 to Len(aCondEC)
+	
+		cCpoDBL := aCondEC[nForEnt]
+		
+		If ( Len(aEntCtb) >= nForEnt ) .AND. !(Empty(aEntCtb[nForEnt]) )
+			cContDBL := aEntCtb[nForEnt] 
+		Else
+			cContDBL := Space(TamSx3(cCpoDBL)[1])
+		EndIf
+		
+		cQuery += " AND DBL." + cCpoDBL + " = '" + cContDBL + "' "
+	
+	Next nForEnt 
+
+	cQuery += " 	AND DBL.D_E_L_E_T_ = '' "
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Somente executa a query se tiver where de entidade contabil³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAls)
+
+	If (cAls)->( !EOF() ) 
+		lAchou	:= .T.
+		cGrupo := (cAls)->GRPAPV
+		cItGrp	:= (cAls)->ITEMGRP
+	EndIf
+
+	(cAls)->( dbCloseArea() )
+	
+EndIf
+
+If !lAchou .AND. Len(aEntCtb) > 1
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Faz a chamada recursiva retirando uma entidade³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nForEnt := 1 to ( Len(aEntCtb)- 1)
+    	
+    	If !Empty(aEntCtb[nForEnt] )
+			Aadd(aAuxEnt,aEntCtb[nForEnt])		
+		EndIf
+		
+	Next nForEnt 
+
+	aApv := MaGrpApEC(aAuxEnt,@lEntCtb) 
+	
+Else
+	If Empty(cGrupo) .AND. !Empty(cGrpDfl)
+		aAuxGrp := Separa(cGrpDfl,';',.F.)
+		Aadd(aApv,aAuxGrp[1])
+		Aadd(aApv,IIF(len(aAuxGrp)>=2,aAuxGrp[2],""))
+	Else 
+		Aadd(aApv,cGrupo)
+		Aadd(aApv,cItGrp)
+	Endif
+EndIf
+
+RestArea(aArea)
+
+Return aApv
+
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MaAlcItEC()
+Funcao utilizada para atualizacao dos itens da alcada por Ent. Ctb.
+
+@author Leandro.Moura
+@since 29/08/2013
+@version 1.0
+
+cDocto,cTpDoc,cGrp,cItGrp,cAprov,aItens,nOpcao
+
+@param cDocto Documento
+@param cTpDoc Tipo do Documento (SC,SA,IP,etc.)
+@param cGrp	 Grupo de aprovacao
+@param cItGrp	 Item do Grupo de aprovacao
+@param cAprov Usuario da aprovacao
+@param aItens Array com os itens da aprovacao
+@param nOpcao Opcao (1-Inclusao,2-Alteracao,3-Exclusao)
+
+@return
+/*/
+//-------------------------------------------------------------------
+Function MaAlcItEC(cDocto,cTpDoc,cGrp,cItGrp,cUsrApv,aItens,cUsrOld,nOper)
+
+Local aArea		:= GetArea()
+Local cItem		:= ""
+Local cRateio		:= ""
+Local cKeyDBM		:= ""
+Local cItOld	 	:= ""
+Local cRatOld 		:= ""
+Local cGrpOld		:= ""
+Local cItGrpOld	:= ""
+Local lOk			:= .T.
+Local nFor	 		:= 0
+
+Default cGrp 		:= ""
+Default cItGrp		:= ""
+Default cUsrApv		:= ""
+Default aItens		:= {}
+Default cUsrOld		:= ""
+
+If !AliasIndic("DBM")
+	lOk := .F.
+EndIf
+
+If lOK
+	If nOper == 1 //Inclusao
+		DBM->( dbSetOrder(1) )
+		//--------------------------------------------
+		//Grava cada item da alcada por entidade ctb
+		//--------------------------------------------
+		For nFor := 1 to Len(aItens)
+	
+			cItem 		:= aItens[nFor][1]
+			cRateio	:= aItens[nFor][2]
+
+			RecLock("DBM",.T.)
+			DBM->DBM_FILIAL 	:= FWXfilial("DBM")
+			DBM->DBM_TIPO		:= cTpDoc
+			DBM->DBM_NUM		:= cDocto
+			DBM->DBM_ITEM		:= cItem
+			DBM->DBM_ITEMRA 	:= cRateio 
+			DBM->DBM_GRUPO	:= cGrp
+			DBM->DBM_ITGRP	:= cItGrp			
+			DBM->DBM_USER		:= cUsrApv
+			DBM->DBM_APROV	:= "2"
+		
+			DBM->( MsUnLock() )
+			
+
+	    Next nFor
+
+	//--------------------------------------------
+	//2 - Transferencia de alcada para superior 
+	//3 - Exclusao de registros de alcada		 
+	//5 - Estorno de liberacao					 
+	//--------------------------------------------
+	ElseIf (nOper == 2) .OR. (nOper == 3) .OR. (nOper == 5)
+		DBM->( dbSetOrder(1) )
+		//--------------------------------------------
+		//Monta chave para exclusao dos registros
+		//--------------------------------------------
+		If (nOper == 3) //Exclui todos os registros
+			cKeyDBM := FWXFilial("DBM") + cTpDoc + cDocto
+		Else // Apenas os registros pertencente ao Grupo
+			cKeyDBM := FWXFilial("DBM") + cTpDoc + cDocto  +  cGrp + cItGrp
+		EndIf
+		
+		If DBM->(dbSeek( cKeyDBM ) )
+			If (nOper == 3) //Exclui todos os registros
+				cSeek := "DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM)"
+			Else // Apenas os registros pertencente ao Grupo
+				cSeek := "DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP)"
+			EndIf
+
+			While ( !(DBM->( EOF() )) .And. cKeyDBM == &cSeek  )
+            
+				//---------------------------------------------------
+				//Transfere as aprovacoes somente do usuario antigo
+				//---------------------------------------------------
+            	If (nOper == 2) .AND. !( DBM->DBM_USER == cUsrOld ) 
+   					DBM->( dbSkip() )
+					Loop	
+            	EndIf
+            
+				//---------------------------------------------------------------------------
+				//Se for transferencia ou estorno, salva informacoes para gerar nova alcada
+				//---------------------------------------------------------------------------
+				If (nOper == 2) .OR. (nOper == 5)
+					cItOld 	:= DBM->DBM_ITEM
+					cRatOld 	:= DBM->DBM_ITEMRA
+					cGrpOld	:= DBM->DBM_GRUPO
+					cItGrpOld	:= DBM->DBM_ITGRP
+					
+					If (nOper == 5) 
+						cUsrApv := DBM->DBM_USER
+						cUsrOld := "" 					
+					EndIf
+				
+				EndIf
+		
+				RecLock("DBM",.F.)
+				DBM->( dbDelete() )					
+				DBM->( MsUnLock() )
+
+				//---------------------------------------------------
+				//Se for transferencia ou estorno, inclui nova alcada 
+				//---------------------------------------------------
+				If (nOper == 2) .OR. (nOper == 5)
+
+					RecLock("DBM",.T.)
+				
+					DBM->DBM_FILIAL 	:= FWXfilial("DBM")
+					DBM->DBM_TIPO		:= cTpDoc
+					DBM->DBM_NUM		:= cDocto
+					DBM->DBM_ITEM		:= cItOld
+					DBM->DBM_ITEMRA 	:= cRatOld 
+					DBM->DBM_GRUPO	:= cGrpOld
+					DBM->DBM_ITGRP	:= cItGrpOld
+					DBM->DBM_USER		:= cUsrApv
+					DBM->DBM_USEROR	:= cUsrOld
+					DBM->DBM_APROV	:= "2"
+				
+					DBM->( MsUnLock() )
+	
+				EndIf
+				DBM->( dbSkip() )
+			End
+			
+		EndIf
+	
+	//-------------------------------
+	//Aprovacao dos itens da alcada		 
+	//-------------------------------
+	ElseIf (nOper == 4)
+		DBM->( dbSetOrder(1) ) 
+		cKeyDBM := FwXFilial("DBM")  + cTpDoc + cDocto +  cGrp + cItGrp + cUsrApv 
+		
+		If DBM->( dbSeek( cKeyDBM ) )
+			//---------------------------------------
+			//Informa todos os itens como liberados
+			//---------------------------------------
+			While ! DBM->( EOF() ) .And. ( DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USER) == cKeyDBM )
+			
+				RecLock("DBM",.F.)
+				DBM->DBM_APROV		:= "1"
+				DBM->( MsUnLock() )
+				DBM->( dbSkip() )	
+			End 
+		EndIf
+	EndIf    
+EndIf
+
+RestArea(aArea)
+
+Return
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} MtGLastDBM()
+Valida se o(s) item(s) do documento foram liberados quando tipo do documento "IP".  
+@author Aecio Gomes
+@Param cNum: Numero do documento
+@Param cItem: Item do documento
+@Param cItemRA: Item do Rateio
+@since 30/08/2013
+@version 1.0
+@return Ret :=  .T. = Está liberado, .F. = não está liberdado.
+/*/
+//--------------------------------------------------------------------
+Function MtGLastDBM(cTipo,cNum, cItem, cItemRA)
+Local lRet 		:= .T.
+Local cWhere		:= ""
+
+Default cItem 	:= ""
+Default cItemRA 	:= ""
+
+cWhere += " AND DBM_TIPO = '"+cTipo+"' "
+cWhere += " AND DBM_NUM = '"+cNum+"' "	
+cWhere += " AND DBM.DBM_APROV = '2'"	
+
+If !Empty(cItem)
+	cWhere += " AND DBM_ITEM = '"+cItem+"' "
+	If !Empty(cItemRA)
+		cWhere += "AND DBM_ITEMRA = '"+cItemRA+"' "
+	EndIf	
+EndIf	
+
+cWhere := '%'+cWhere+'%'
+
+BeginSql Alias "TMPDBM"
+
+	SELECT COUNT(*) AS NREG
+	FROM 
+		%table:DBM% DBM
+	WHERE
+		DBM.%notDel% AND  
+		DBM.DBM_FILIAL = %xFilial:DBM%
+		%Exp:cWhere%
+EndSql
+
+lRet := TMPDBM->NREG == 0
+TMPDBM->(dbCloseArea())
+	
+Return(lRet)
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} MtExistDBM()
+Valida se existe DBM para o tipo de documento selecionado
+@author Leonardo Quintania
+@Param cTipo: Tipo do documento
+@Param cNum: Numero do documento
+@Param cItem: Item do documento
+@Param cItemRA: Item do Rateio
+@since 23/10/2013
+@version 1.0
+@return Ret :=  .T. = Existe, .F. = Não Existe
+/*/
+//--------------------------------------------------------------------
+Function MtExistDBM(cTipo,cNum, cItem, cItemRA)
+Local lRet 		:= .T.
+Local cWhere		:= ""
+
+Default cItem 	:= ""
+Default cItemRA 	:= ""
+
+cWhere += " AND DBM_TIPO = '"+cTipo+"' "
+cWhere += " AND DBM_NUM = '"+cNum+"' "	
+
+If !Empty(cItem) 
+	cWhere += "AND DBM_ITEM = '"+cItem+"' "
+	If !Empty(cItemRA)
+		cWhere += "AND DBM_ITEMRA = '"+cItemRA+"' "
+	EndIf	
+EndIf	
+
+cWhere := '%'+cWhere+'%'
+
+BeginSql Alias "TMPDBM"
+
+	SELECT COUNT(*) AS NREG
+	FROM 
+		%table:DBM% DBM
+	WHERE
+		DBM.%notDel% AND  
+		DBM.DBM_FILIAL = %xFilial:DBM%
+		%Exp:cWhere%	
+EndSql
+
+lRet := TMPDBM->NREG # 0 //Se for diferente de Zero encontrou registro.
+TMPDBM->(dbCloseArea())
+	
+Return(lRet)
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MTPVLSOLPD()
+Função para preparar valiçao do produto X solicitante X entidade contábil
+
+@author Alexandre.Gimenez
+@since 03/09/2013
+@version 1.0
+@return lRet 
+/*/
+//-------------------------------------------------------------------
+
+Function MTPVLSOLPD()
+Local lRet			:= .T.
+Local lErro		:= .F.
+Local lRateio		:= .F.
+Local lAPROVSC		:= SuperGetMv("MV_APROVSC",.F.,.F.) .And. SuperGetMv("MV_APRSCEC",.F.,.F.)
+local lAPROVSA		:= SuperGetMv("MV_APROVSA",.F.,.F.) .And. SuperGetMv("MV_APRSAEC",.F.,.F.)
+local aColsRat		:= {}
+Local aHeaderRat 	:= {}
+Local aEC  		:= {}
+Local aCampos 		:= {}
+Local ctab			:= Substr( ReadVar() , At(">",ReadVar())+1 , At("_",ReadVar()) - At(">",ReadVar()) -1 )
+Local cProd		:= &(ReadVar())
+Local cItemRat		:= ""
+local nPosRat		:= 0
+Local nX			:= 0
+Local nY			:= 0
+
+Do Case
+	Case cTab == "C1" .And. lAPROVSC // Solicitação de compra
+		aCampos := MTGETFEC("SC1","C1")
+		aEC := MTGETVALEC("SC1","C1",aHeader,aCols,n)
+	Case cTab == "CP" .And. lAPROVSA// Solicitação Armazem
+		aCampos := MTGETFEC("SCP","CP")
+		aEC := MTGETVALEC("SCP","CP",aHeader,aCols,n)
+EndCase
+
+If !(Empty(cProd))
+	For nX := 1 to len(aCampos)
+ 		IF !(empty(aEC[1][nX])) 
+ 			If !(MTVLDSOLEC(cProd,aEC[1][nX],aCampos[nX]))
+ 				lErro := .T.
+ 				aCols[n,GDFieldPos(aCampos[nX])] := Criavar(aCampos[nX],.F.)
+ 			EndIf 				
+ 		EndIf
+	Next Nx
+ 	If lErro	
+ 		Help(' ', 1,'SOLPRODEC')
+ 	EndIf
+EndIf
+
+//Zerar variaveis para testar rateio
+lErro 	:= .F.
+aCampos:= {}
+
+Do Case
+	Case cTab == "C1" .And. lAPROVSC // Solicitação de compra
+		IF( GDFieldGet("C1_RATEIO") == "1" )
+			lRateio := .T.
+			cItemRat:= GDFieldGet("C1_ITEM")
+			aColsRat   := A110GETSCX()
+			nPosRat := aScan(aColsRat, { |x|  x[1] == cItemRat })
+			aCampos := MTGETFEC("SCX","CX")
+			aHeaderRat := aClone(aCPHSCX)			
+		EndIf
+	Case cTab == "CP" .And. lAPROVSA	// Solicitação Armazem
+		IF GDFieldGet("CP_RATEIO") == "1"
+			lRateio := .T.
+			cItemRat:= GDFieldGet("CP_ITEM")
+			aColsRat   := A105GETSGS()
+			nPosRat := aScan(aColsRat, { |x|  x[1] == cItemRat })
+			aCampos := MTGETFEC("SGS","GS")
+			aHeaderRat := aClone(aCPHSGS)
+		EndIf
+EndCase
+
+If lRateio
+	For nY := 1 to len(aColsRat[nPosRat][2])
+		For nX := 1 to len(aCampos)
+			If !(MTVLDSOLEC(cProd, aColsRat[nPosRat][2][nY][aScan(aHeaderRat,{ |x|  x[2] = aCampos[nX] })], aCampos[nX]))
+		 		lErro := .T.
+		 		exit
+		 	EndIF	
+	 	Next nX	
+	 	If lErro 
+			exit
+		EndIf			
+	Next nY	
+	If lErro
+		ADel(aColsRat,nPosRat)
+		aSize(aColsRat,len(aColsRat)-1)
+		If cTab == "C1"
+			A110SETSCX(aColsRat)
+			aCols[n,GDFieldPos("C1_RATEIO")] := "2"
+		ElseIf cTab == "CP"
+			A105SETSGS(aColsRat)
+			aCols[n,GDFieldPos("CP_RATEIO")] := "2"
+		EndIf
+		Help(' ', 1,'SOLRATEC')
+	EndIf
+EndIf
+	
+
+
+Return lRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MTPVLSOLEC()
+Função para preparar valiçao solicitante X entidade contábil
+
+@author antenor.silva
+@since 30/08/2013
+@version 1.0
+@return lRet 
+/*/
+//-------------------------------------------------------------------
+
+Function MTPVLSOLEC()
+Local lRet			:= .T.
+Local cEC  		:= &(ReadVar())
+Local cCampo 		:= ReadVar()
+Local cTab			:= Substr( ReadVar() , At(">",ReadVar())+1 , At("_",ReadVar()) - At(">",ReadVar()) -1 )
+Local cProd		:= ""
+Local lContinua	:= .T.
+Local lAPROVSC	:= SuperGetMv("MV_APROVSC",.F.,.F.) .And. SuperGetMv("MV_APRSCEC",.F.,.F.)
+Local lAPROVSA	:= SuperGetMv("MV_APROVSA",.F.,.F.) .And. SuperGetMv("MV_APRSAEC",.F.,.F.)
+Local lRestSCC	:= SuperGetMv("MV_RESTSCC",.F.,.F.)
+Local lRestSAC	:= SuperGetMv("MV_RESTSAC",.F.,.F.)
+
+Do Case
+	Case cTab == "C1" .And. lAPROVSC// Solicitação de compra
+		cProd	:= GDFieldGet("C1_PRODUTO")
+		lContinua	:= lRestSCC
+	Case cTab == "CP" .And. lAPROVSA	// Solicitação Armazem
+		cProd 	:= GDFieldGet("CP_PRODUTO")
+		lContinua	:= lRestSAC
+	Case cTab == "CX" .And. lAPROVSC // Rateio - Solicitação de compra
+		cProd	:= GDFieldGet("C1_PRODUTO",nOrigN,,aOrigHeader,aOrigAcols)
+		lContinua	:= lRestSCC
+	Case cTab == "GS" .And. lAPROVSA	 // Rateio - Solicitação Armazem
+		cProd 	:= GDFieldGet("CP_PRODUTO", nOrigN,,aOrigHeader,aOrigAcols)	
+		lContinua	:= lRestSAC
+EndCase
+
+If !(Empty(cProd)) .And. !(Empty(cEC)) .And. lContinua
+	lRet := MTVLDSOLEC(cProd,cEC,cCampo)
+EndIf
+
+If !lRet
+	Help(' ', 1,'SOLEC')
+EndIf
+
+Return lRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MTVLDSOLEC()
+Função para validar solicitante X entidade contábil
+
+@author antenor.silva
+@since 30/08/2013
+@version 1.0
+@return lRet 
+/*/
+//-------------------------------------------------------------------
+
+Function MTVLDSOLEC(cProd,cEC,cCampo)
+Local aArea		:= GetArea()
+Local lRet			:= .F.
+Local cFiltOpc 	:= ''
+Local cFiltGrp	:= ''
+Local nX			:= 0
+Local cAllUser	:= Replicate('*',TamSX3("AI_USER")[1])
+Local cUser		:= RetCodUsr()
+Local cGrpProd	:= ""
+Local cAliasSql   := GetNextAlias()
+
+//Ajusta Campo, retira prefixo e adiciona Novamente com DBK
+cCampo 		:= Substr(cCampo,At("_",cCampo))
+cCampo 		:= "DBK" + Substr(cCampo,1,7)
+
+//Busca Grupos de usuario e cria clausula where
+aGrpUsr := UsrRetGrp([RetCodUsr()])
+cFiltOpc := "DBK.DBK_USER = '"+cUser+"' OR " 
+cFiltOpc += "DBK.DBK_USER = '"+cAlluser+"' "  
+If Len(aGrpUsr)>0
+	For nX := 1 to Len(aGrpUsr)
+		If nX == 1
+			cFiltOpc += " OR DBK.DBK_GRUSER = '"+aGrpUsr[nX]+"' "
+		EndIf
+	Next nX
+EndIf  
+cFiltOpc := "%" +cFiltOpc+ "%"
+
+// Buscar grupo de Produto
+cFiltGrp := "DBK.DBK_PRODUT = '"+cProd+"' OR "  
+cFiltGrp += "DBK.DBK_PRODUT = '*' "  
+dbSelectArea("SB1")
+dbSetOrder(1)
+If dbSeek(xFilial("SB1")+cProd)
+	cGrpProd	:= SB1->B1_GRUPO
+	If !(Alltrim(cGrpProd) == "") 
+		cFiltGrp 	+= " OR DBK.DBK_GRUPO = '"+cGrpProd+"' "
+	EndIf
+EndIF
+cFiltGrp   := "%"+cFiltGrp+"%"
+
+BeginSQL Alias cAliasSql
+			
+	SELECT 
+		DBK.R_E_C_N_O_  AS RecDBK
+	FROM 
+		%table:DBK% DBK
+	WHERE 
+		DBK.DBK_FILIAL = %xfilial:DBK%
+		
+		AND
+			(
+			 %Exp:cFiltOpc%
+			)
+		AND 
+			(
+		     %Exp:cFiltGrp%
+		     )
+			AND DBK.%NotDel%	
+					
+EndSql
+
+//Colocar while eof e percorrer o resultado do select
+While !(cAliasSql)->(eof())
+	DBK->(MsGoto((cAliasSql)->RecDBK))
+	If DBK->&(cCampo) == cEC .Or. Alltrim(DBK->&(cCampo)) == '*' 
+		lRet := .T.
+		Exit
+	EndIf	
+	(cAliasSql)->(DBSkip())	
+End
+
+(cAliasSql)->(DbCloseArea())
+
+RestArea(aArea)
+
+Return lRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} IsFirstLev()
+Função que verifica se é o primeiro nivel do grupo de aprovação
+
+@author Leonardo Quintania
+@since 04/11/2013
+@version 1.0
+@return lRet 
+/*/
+//-------------------------------------------------------------------
+
+Function IsFirstLev(cGrupo,cNivel)
+Local lRet := .T.
+
+SAL->(dbSetOrder(2)) //AL_FILIAL+AL_COD+AL_NIVEL
+SAL->(dbSeek(xFilial('SAL')+cGrupo))
+If SAL->AL_NIVEL # cNivel
+	lRet := .F.
+EndIf
+
+Return lRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} ExistSCR()
+Função que verifica se existe SCR para o documento
+
+@author Leonardo Quintania
+@since 04/11/2013
+@version 1.0
+@return lRet 
+/*/
+//-------------------------------------------------------------------
+
+Function ExistSCR(cTipo,cNum)
+Local lRet := .F.
+
+SCR->(dbSetOrder(1)) //CR_FILIAL+CR_TIPO+CR_NUM+CR_NIVEL
+If SCR->(dbSeek(xFilial('SCR')+cTipo+cNum))
+	lRet := .T.
+EndIf
+
+Return lRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} AjustaSX1()
+Função para ajuste do dicionário SX1
+
+@author Isaias Florencio
+@since 04/09/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+Static Function AjustaSX1()
+
+Local aHlpP     := {}
+Local aHlpE     := {}
+Local aHlpS     := {}
+          
+aHlpP := {"Operação não permitida. Possivelmente há  ",;
+		   " restrição de acesso a usuário, armazém, ",;
+		   " produto ou grupo de produtos. "}
+aHlpE := {"Operation denied. Possibly there is restriction ",;
+		   "for access to warehouse, product, 	 ",;
+		   "group of products, user or user groups. "}
+aHlpS := {"Operación no permitida. Es posible que haya ",;
+	   	   "restricciones para el acceso del usuario ",;
+	   	   " ,al almacén o producto     "}
+PutHelp ("PRESTRICAO", aHlpP, aHlpE, aHlpS, .F.)
+
+aHlpP := {"Verifique o conteúdo do parâmetro  ",;
+		   "MV_RESTARM, o cadastro de armazéns ou ",;
+		   "contate o administrador do sistema  	"}
+aHlpE := {"Check the contents of the parameter     	",;
+		   "MV_RESTARM, definitions of the warehouse ",;
+		   " or contact the system administrator "}
+aHlpS := {"Compruebe el contenido de los parámetros 	",;
+			"MV_RESTARM, el registro de los almacenes ",;
+			" o informe al administrador del sistema "}
+PutHelp ("SRESTRICAO", aHlpP, aHlpE, aHlpS, .F.)
+
+Return

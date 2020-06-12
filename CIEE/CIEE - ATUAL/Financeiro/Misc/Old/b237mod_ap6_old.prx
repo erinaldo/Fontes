@@ -1,0 +1,48 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+User Function b237mod()        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_AMODEL,")    
+
+_aArea := GetArea() 
+_aAreaE2 := SE2->(GetArea())
+_aAreaEA := SEA->(GetArea())
+
+/////  PROGRAMA PARA INDICAR A MODALIDADE DO PAGAMENTO POS.264-265
+
+///// 01 - Depositos em Conta Corrente
+///// 03 - DOCs para outros Bancos
+///// 08 - TED CIP
+///// 30 - Titulos do Banco Bradesco - Rastreamento
+/////      O Bradesco ira procurar todos os titulos do proprio banco contra o
+/////      seu CGC e enviara para sua confirmacao de pagamento
+///// 31 - Titulos de Outros Bancos
+/*
+DbSelectArea("SA2")
+DbSetOrder(1)
+DbSeek(xfilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA)
+*/
+
+IF SEA->EA_MODELO $ "01,03"
+   If SE2->E2_BANCO == "237" 
+      _aModel := "01"
+   Else
+      _aModel := "03"
+   Endif
+Else
+   _aModel := SEA->EA_MODELO
+EndIf
+
+SEA->(RestArea(_aAreaEA))
+SE2->(RestArea(_aAreaE2))
+RestArea(_aArea)
+
+// Substituido pelo assistente de conversao do AP6 IDE em 15/07/02 ==> __Return(_aModel)
+Return(_aModel)        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02

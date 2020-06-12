@@ -1,0 +1,49 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+User Function b237cta()        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_CTACED,")      
+
+_aArea := GetArea()
+_aAreaE2 := SE2->(GetArea())
+//_aAreaEA := SEA->(GetArea())
+
+///// PROGRAMA PARA SEPARAR A C/C DO CODIGO DE BARRA PARA O PROGRAMA DO
+///// PAGFOR - POSICOES ( 105 - 117 )
+
+/*
+DbSelectArea("SA2")
+DbSetOrder(1)
+DbSeek(xfilial("SA2")+SE2->E2_FORNECE + SE2->E2_LOJA)
+*/
+_CTACED := "0000000000000"
+
+_cConta := AllTrim(SE2->E2_CTAFOR)
+_cCnt := SubStr(_cConta, 1, len(_cConta) - 1)
+_cDg  := SubStr(_cConta, len(_cConta), 1)
+_RETDIG  := "0"
+
+IF SE2->E2_MODELO == "31"
+	IF SUBSTR(SE2->E2_CODBAR,1,3) == "237"
+	    _Ctaced  :=  STRZERO(VAL(SUBSTR(SE2->E2_CODBAR,37,7)),13,0)
+	ElseIf SUBSTR(SE2->E2_LD,1,3) == "237"
+	    _Ctaced  :=  STRZERO(VAL(SUBSTR(SE2->E2_LD,24,7)),13,0)
+	ElseIf !Empty(_cCnt) .and. SUBSTR(SE2->E2_CODBAR,1,3) == "237"
+		_Ctaced  :=  STRZERO(VAL(_cCnt),13,0)
+	EndIf
+ELSE
+  _Ctaced  :=  STRZERO(VAL(_cCnt),13,0)
+ENDIF  
+
+//SEA->(RestArea(_aAreaEA))
+SE2->(RestArea(_aAreaE2))
+RestArea(_aArea)
+
+Return(_Ctaced)

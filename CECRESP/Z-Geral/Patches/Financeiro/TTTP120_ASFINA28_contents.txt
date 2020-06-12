@@ -1,0 +1,8 @@
+Geração de pacote de atualização
+Parâmetros da solicitação
+Servidor    : Aguassanta TESTE
+Ambiente    : R8XNQC_COMP_TESTE
+Validando a existência do(s) recurso(s) no RPO
+Processo    : Por fontes selecionados em projetos
+Selecionados: 1 fontes(s)
+            : asfina28.prw

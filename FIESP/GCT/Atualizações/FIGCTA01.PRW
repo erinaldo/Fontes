@@ -1,0 +1,488 @@
+#Include "Protheus.ch"
+#Include "Topconn.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ FIGCTA01 ºAutor  ³TOTVS               º Data ³  28/11/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Rotina de liberação da Solicitacao de Contratos            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ P11 - FIESP                                                º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function FIGCTA01(_nOpcao)
+// _nOpcao = 1 / Consulta
+// _nOpcao = 2 / Liberacao
+// _nOpcao = 3 / Estornar
+// _nOpcao = 4 / Consulta Aprovacao
+Local _aArea	:= {}
+Local _aAreaCR	:= SC7->(GetArea())
+Local _cDoc		:= ""
+Local _nTamDoc 	:= TamSx3("Z7_NUM")[1]
+
+If _nOpcao == 1 // Consulta
+	
+	_aArea := GetArea()
+	_aAreaCR := SCR->(GetArea())
+	_cDoc := Left(SCR->CR_NUM,_nTamDoc)
+	SZ7->(DbSetOrder(1))
+	IF SZ7->(DbSeek(xFilial("SZ7")+_cDoc))
+		DbSelectArea("SZ7")
+		AxVisual('SZ7',SZ7->(Recno()),2)
+	EndIf
+	RestArea(_aAreaCR)
+	RestArea(_aArea)
+	
+ElseIf _nOpcao == 2 // Liberacao
+	
+	fLibCT("SCR",RecNo(),_nOpcao)
+	
+ElseIf _nOpcao == 3 // Estornar
+	
+	_cDoc := Left(SCR->CR_NUM,_nTamDoc)
+		
+	SZ7->(DbSetOrder(1))
+	IF SZ7->(DbSeek(xFilial("SZ7")+_cDoc))
+		IF !SZ7->Z7_STATUS$("5/6")
+			Aviso("Atencao","A Solicitação de Contrato correspondente não está mais pendente ou foi cancelada.",{"Sair"})
+		ELSE
+			fEstCT()
+		ENDIF
+	ELSE
+		Aviso("Atencao","Solicitação de Contrato correspondente não foi localizada.",{"Sair"})
+	ENDIF
+	
+ElseIf _nOpcao == 4 // Consulta Aprovacao
+	
+	_aArea := GetArea()
+	_aAreaCR := SCR->(GetArea())
+	fPosic("SZ7",Recno(),2,"GC")
+	RestArea(_aAreaCR)
+	RestArea(_aArea)
+	
+EndIf
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fLibCT    ºAutor  ³TOTVS               º Data ³  20/07/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Funcao para Liberacao                                       º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ FIESP                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function fLibCT(cAlias,nReg,nOpcx)
+Local _cCodUser	:= ""  //Codigo do usuario de retorno
+Local _lEnvMail := .T.
+Local _aArea	:= GetArea()
+Local _aAreaZ7	:= SZ7->(GetArea())
+Local cCodLiber := SCR->CR_APROV
+Local cDocto    := SCR->CR_NUM
+Local cTipo     := SCR->CR_TIPO
+Local aSize		:= {290,410}
+Local cObs 		:= IIF(!Empty(SCR->CR_OBS),SCR->CR_OBS,CriaVar("CR_OBS"))
+Local ca097User := RetCodUsr()
+Local dRefer 	:= dDataBase
+Local aRetSaldo	:= {}
+Local nSaldo	:= 0
+Local CRoeda	:= ""
+Local nTotal	:= 0
+Local nSalDif	:= 0
+Local _cDoc		:= ""
+local _nTamDoc 	:= TamSx3("Z7_NUM")[1]
+Local cName		:= ""
+Local nOpc		:= 0
+Local lLiberou	:= .F.
+Local cGrupo	:= ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa as variaveis utilizadas no Display.               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aRetSaldo 	:= MaSalAlc(cCodLiber,dRefer)
+nSaldo 	  	:= aRetSaldo[1]
+CRoeda 	  	:= A097Moeda(aRetSaldo[2])
+cName  	  	:= UsrRetName(ca097User)
+nTotal    	:= xMoeda(SCR->CR_TOTAL,SCR->CR_MOEDA,aRetSaldo[2],SCR->CR_EMISSAO,,SCR->CR_TXMOEDA)
+nSalDif		:= nSaldo - nTotal
+
+Do Case
+	Case SAK->AK_TIPO == "D"
+		cTipoLim :=OemToAnsi("Diario")
+	Case  SAK->AK_TIPO == "S"
+		cTipoLim := OemToAnsi("Semanal")
+	Case  SAK->AK_TIPO == "M"
+		cTipoLim := OemToAnsi("Mensal")
+	Case  SAK->AK_TIPO == "A"
+		cTipoLim := OemToAnsi("Anual")
+EndCase
+
+_cDoc := Left(SCR->CR_NUM,_nTamDoc)
+
+SZ7->(dbSetOrder(1))
+SZ7->(dbSeek(xFilial("SZ7")+_cDoc))
+
+CTT->(dbSetOrder(1))
+CTT->(dbSeek(xFilial("CTT")+_cDoc))
+
+cGrupo	:= CTT->CTT_XAPROV
+
+DEFINE MSDIALOG oDlg FROM 0,0 TO aSize[1],aSize[2] TITLE OemToAnsi("Liberacao de SA") PIXEL
+@ 0.5,01 TO 44,204 LABEL "" OF oDlg PIXEL
+@ 45,01  TO 128,204 LABEL "" OF oDlg PIXEL
+@ 07,06  Say OemToAnsi("Numero do Docto.") OF oDlg PIXEL
+@ 07,120 Say OemToAnsi("Emissao") OF oDlg SIZE 50,9 PIXEL
+@ 19,06  Say OemToAnsi("Centro de Custo") OF oDlg PIXEL
+@ 31,06  Say OemToAnsi("Aprovador") OF oDlg PIXEL SIZE 30,9
+@ 31,120 Say OemToAnsi("Data de ref. ") SIZE 60,9 OF oDlg PIXEL
+@ 53,06  Say OemToAnsi("Limite min.  ") +CRoeda OF oDlg PIXEL
+@ 53,110 Say OemToAnsi("Limite max. ")+CRoeda SIZE 60,9 OF oDlg PIXEL
+@ 65,06  Say OemToAnsi("Limite  ")+CRoeda  OF oDlg PIXEL
+@ 65,110 Say OemToAnsi("Tipo lim.") OF oDlg PIXEL
+@ 77,06  Say OemToAnsi("Saldo na data  ")+CRoeda OF oDlg PIXEL
+If SCR->CR_MOEDA == aRetSaldo[2]
+	@ 89,06 Say OemToAnsi("Total do documento ")+CRoeda OF oDlg PIXEL
+Else
+	@ 89,06 Say OemToAnsi("Total do documento, convertido em ")+CRoeda OF oDlg PIXEL
+EndIf
+@ 101,06 Say OemToAnsi("Saldo disponivel apos liberacao  ") +CRoeda SIZE 130,10 OF oDlg PIXEL
+@ 113,06 Say OemToAnsi("Observa‡äes ") SIZE 100,10 OF oDlg PIXEL
+@ 07,58  MSGET SCR->CR_NUM     When .F. SIZE 28 ,9 OF oDlg PIXEL
+@ 07,155 MSGET SCR->CR_EMISSAO When .F. SIZE 45 ,9 OF oDlg PIXEL
+@ 19,45  MSGET SZ7->Z7_CUSTO   When .F. SIZE 155,9 OF oDlg PIXEL
+@ 31,45  MSGET cName           When .F. SIZE 50 ,9 OF oDlg PIXEL
+@ 31,155 MSGET oDataRef VAR dRefer When .F. SIZE 45 ,9 OF oDlg PIXEL
+@ 53,50  MSGET SAK->AK_LIMMIN Picture "@E 999,999,999.99" When .F. SIZE 55,9 OF oDlg PIXEL RIGHT
+@ 53,155 MSGET SAK->AK_LIMMAX Picture "@E 999,999,999.99" When .F. SIZE 45,9 OF oDlg PIXEL RIGHT
+@ 65,50  MSGET SAK->AK_LIMITE Picture "@E 999,999,999.99" When .F. SIZE 55,9 OF oDlg PIXEL RIGHT
+@ 65,155 MSGET cTipoLim When .F. SIZE 45,9 OF oDlg PIXEL CENTERED
+@ 77,115 MSGET oSaldo VAR nSaldo Picture "@E 999,999,999.99" When .F. SIZE 85,9 OF oDlg PIXEL RIGHT
+@ 89,115 MSGET nTotal Picture "@E 999,999,999.99" When .F. SIZE 85,9 OF oDlg PIXEL RIGHT
+@ 101,115 MSGET oSaldif VAR nSalDif Picture "@E 999,999,999.99" When .F. SIZE 85,9 OF oDlg PIXEL RIGHT
+@ 113,115 MSGET cObs Picture "@!" SIZE 85,9 OF oDlg PIXEL
+
+@ 132, 80 BUTTON OemToAnsi("Libera Docto")   SIZE 40 ,11  FONT oDlg:oFont ACTION (nOpc:=2,oDlg:End())  OF oDlg PIXEL
+@ 132,121 BUTTON OemToAnsi("Cancela")        SIZE 40 ,11  FONT oDlg:oFont ACTION (nOpc:=1,oDlg:End())  OF oDlg PIXEL
+@ 132,162 BUTTON OemToAnsi("Bloqueia Docto") SIZE 40 ,11  FONT oDlg:oFont ACTION (nOpc:=3,oDlg:End())  OF oDlg PIXEL
+
+ACTIVATE MSDIALOG oDlg CENTERED
+
+If nOpc == 2 .Or. nOpc == 3
+	
+	SCR->(dbClearFilter())
+	SCR->(dbGoTo(nReg))
+	
+	_cDoc := Left(SCR->CR_NUM,_nTamDoc)
+	
+	Begin Transaction
+	
+	lLiberou := MaAlcDoc({cDocto,cTipo,nTotal,cCodLiber,,cGrupo,,,,,cObs},dRefer,If(nOpc==2,4,6))
+	
+	// Envio de e-mail de aprovação/reprovação
+	IF !Empty( _cEMail := Alltrim(UsrRetMail( SZ7->Z7_USUSOL )) )
+		_lEnvMail := .t.
+	ENDIF
+	
+	If lLiberou
+		
+		// Envio de e-mail para solicitante
+		IF _lEnvMail
+			_cBody  := "Prezado(a) "+Alltrim(UsrRetName(SZ7->Z7_USUSOL))+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += "Informamos que sua Solicitação de Contrato Nr. "+SZ7->Z7_NUM+" foi aprovada."
+			_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += "Obs: "+cObs
+			ACSendMail( ,,,,_cEMail,"SOLICIT. "+_cDoc+" APROVADA",_cBody)
+		ENDIF
+		
+		// Se liberou total
+		RecLock("SZ7",.F.)
+		SZ7->Z7_STATUS := "6"
+		SZ7->(MsUnLock())
+		
+	ENDIF
+	
+	If nOpc == 3
+		
+		// Envio de e-mail para solicitante
+		IF _lEnvMail
+			_cBody  := "Prezado(a) "+Alltrim(UsrRetName(SZ7->Z7_USUSOL))+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += "Informamos que sua Solicitação de Contrato Nr. "+SC7->C7_NUM+" foi reprovada."
+			_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += "Obs: "+cObs
+			ACSendMail( ,,,,_cEMail,"SOLICIT. "+_cDoc+" REPROVADA",_cBody)
+		ENDIF
+		
+		// Se Bloqueou
+		RecLock("SZ7",.F.)
+		SZ7->Z7_STATUS := "5"
+		SZ7->(MsUnLock())
+		
+	EndIf
+	
+	End Transaction
+	
+ENDIF
+
+RestArea(_aAreaZ7)
+RestArea(_aArea)
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³fEstSC    ºAutor  ³TOTVS               º Data ³  21/07/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Funcao de estorno de liberacao.                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ FIESO                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function fEstCT()
+Local lEstorna	:= .f.
+Local _cDoc		:= ""
+local _nTamDoc 	:= TamSx3("Z7_NUM")[1]
+Local cGrupo 	:= ""
+Local nTot		:= 0
+Local dEmissao
+Local nReg		:= SCR->(Recno())
+
+If ApMsgYesNo("Confirma estorno da liberação?","Confirmar")
+	_cDoc := Left(SCR->CR_NUM,_nTamDoc)
+	
+	CTT->(dbSetOrder(1))
+	CTT->(dbSeek(xFilial("CTT")+SZ7->Z7_CUSTO))
+	
+	cGrupo	 := CTT->CTT_XAPROV
+	dEmissao := SCR->CR_EMISSAO
+	
+	SCR->(dbClearFilter())
+	SCR->(dbGoTo(nReg))
+	
+	// Exclui Alçada
+	MaAlcDoc({_cDoc,"GC",SZ7->Z7_VLINI,,,,,1,0,},dEmissao,3)
+	
+	// Refaz Alçada
+	MaAlcDoc({_cDoc,"GC",SZ7->Z7_VLINI,,,cGrupo,,1,1,dEmissao},,1)
+	
+	SCR->(dbSetOrder(1))
+	
+	// Se gerou SCR, bloqueia solicitacao novamente.
+	RecLock("SZ7",.F.)
+	IF SCR->(dbSeek(xFilial("SCR")+"GC"+_cDoc))
+		SZ7->Z7_STATUS := '4' // Em Aprovação
+	Else
+		SZ7->Z7_STATUS := '6' // Pendente
+	EndIf
+	SZ7->(MsUnlock())
+	
+EndIf
+
+Return()
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A120Posic ³Revisao³TOTVS                  ³Data  ³05/05/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Consulta do status das Aprovacoes Documentos               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void A120Posic(ExpC1,ExpN1,ExpN2,ExpC2)                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Alias do arquivo                                   ³±±
+±±³          ³ ExpN1 = Numero do registro                                 ³±±
+±±³          ³ ExpN2 = Opcao selecionada                                  ³±±
+±±³          ³ ExpC2 = Tipo do Documento                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA120 / MATA125 / MATA103                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function fPosic(cAlias,nReg,nOpcx,cTipoDoc)
+Local aArea		:= GetArea()
+Local cHelpApv  := OemToAnsi("Este documento nao possui controle de aprovacao.")
+Local cAliasSCR := "TMP"
+Local cComprador:= ""
+Local cSituaca  := ""
+Local cNumDoc   := ""
+Local cStatus   := ""
+Local cTitle    := ""
+Local cTitDoc   := ""
+Local lBloq     := .F.
+Local lQuery    := .F.
+Local nX   		:= 0
+Local nY        := 0
+Local oDlg
+Local oGet
+Local oBold
+
+#IFDEF TOP
+	Local cQuery   := ""
+	Local aStruSCR := {}
+#ENDIF
+
+DEFAULT cTipoDoc := "GC"
+
+dbSelectArea(cAlias)
+dbGoto(nReg)
+
+cTitle    := OemToAnsi("Aprovacao de Solicitação Contratos")
+cTitDoc   := OemToAnsi("GC")
+cHelpApv  := OemToAnsi("Esta Solicitação nao possui controle de aprovacao.")
+cNumDoc   := SZ7->Z7_NUM
+cStatus   := IIF(SZ7->Z7_STATUS=="4",OemToAnsi("AGUARDANDO LIB."),IIF(SZ7->Z7_STATUS=="5",OemToAnsi("SOLICITAÇÃO REPROVADA"),OemToAnsi("SOLICITAÇÃO LIBERADA")))
+
+If !Empty(cNumDoc)
+	
+	aHeader:= {}
+	aCols  := {}
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Faz a montagem do aHeader com os campos fixos.               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SX3")
+	dbSetOrder(1)
+	MsSeek("SCR")
+	While !Eof() .And. (SX3->X3_ARQUIVO == "SCR")
+		IF AllTrim(X3_CAMPO)$"CR_NIVEL/CR_OBS/CR_DATALIB"
+			AADD(aHeader,{	TRIM(X3Titulo()),;
+			SX3->X3_CAMPO,;
+			SX3->X3_PICTURE,;
+			SX3->X3_TAMANHO,;
+			SX3->X3_DECIMAL,;
+			SX3->X3_VALID,;
+			SX3->X3_USADO,;
+			SX3->X3_TIPO,;
+			SX3->X3_ARQUIVO,;
+			SX3->X3_CONTEXT } )
+			
+			If AllTrim(x3_campo) == "CR_NIVEL"
+				AADD(aHeader,{ OemToAnsi("Usuário"),"bCR_NOME",   "",15,0,"","","C","",""} )
+				AADD(aHeader,{ OemToAnsi("Situação"),"bCR_SITUACA","",20,0,"","","C","",""} )
+				AADD(aHeader,{ OemToAnsi("Usuário Lib."),"bCR_NOMELIB","",15,0,"","","C","",""} )
+			EndIf
+			
+		Endif
+		
+		dbSelectArea("SX3")
+		dbSkip()
+	EndDo
+	
+	ADHeadRec("SCR",aHeader)
+	
+	#IFDEF TOP
+		lQuery     := .T.
+		
+		
+		aStruSCR := SCR->(dbStruct())
+		cTipoDoc := "GC"
+		cAliasSCR := GetNextAlias()
+		cQuery    := "SELECT SCR.*,SCR.R_E_C_N_O_ SCRRECNO FROM "+RetSqlName("SCR")+" SCR "
+		cQuery    += "WHERE SCR.CR_FILIAL='"+xFilial("SCR")+"' AND "
+		cQuery    += "SCR.CR_NUM = '"+Padr(SZ7->Z7_NUM,Len(SCR->CR_NUM))+"' AND "
+		cQuery    += "SCR.CR_TIPO = 'GC' AND "
+		cQuery    += "SCR.D_E_L_E_T_=' ' "
+		cQuery := ChangeQuery(cQuery)
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSCR)
+		
+		For nX := 1 To Len(aStruSCR)
+			If aStruSCR[nX][2]<>"C"
+				TcSetField(cAliasSCR,aStruSCR[nX][1],aStruSCR[nX][2],aStruSCR[nX][3],aStruSCR[nX][4])
+			EndIf
+		Next nX
+	#ELSE
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Abre o arquivo SCR sem filtros    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		ChkFile("SCR",.F.,"TMP")
+		
+		dbSelectArea(cAliasSCR)
+		dbSetOrder(1)
+		MsSeek(xFilial("SCR")+cTipoDoc+Padr(SZ7->Z7_NUM,Len(SCR->CR_NUM)))
+		
+	#ENDIF
+	
+	dbSelectArea(cAliasSCR)
+	
+	While !Eof() .And.(cAliasSCR)->CR_FILIAL+(cAliasSCR)->CR_TIPO+Substr((cAliasSCR)->CR_NUM,1,len(SZ7->Z7_NUM))== xFilial("SCR") + cTipoDoc + cNumDoc
+		
+		aadd(aCols,Array(Len(aHeader)+1))
+		nY++
+		For nX := 1 to Len(aHeader)
+			If IsHeadRec(aHeader[nX][2])
+				aCols[nY][nX] := IIf(lQuery , (cAliasSCR)->SCRRECNO , SCR->(Recno())  )
+			ElseIf IsHeadAlias(aHeader[nX][2])
+				aCols[nY][nX] := "SCR"
+			ElseIf aHeader[nX][02] == "bCR_NOME"
+				aCols[nY][nX] := UsrRetName((cAliasSCR)->CR_USER)
+			ElseIf aHeader[nX][02] == "bCR_SITUACA"
+				Do Case
+					Case (cAliasSCR)->CR_STATUS == "01"
+						cSituaca := OemToAnsi("Nivel Bloqueado")
+					Case (cAliasSCR)->CR_STATUS == "02"
+						cSituaca := OemToAnsi("Aguarando Liberação")
+					Case (cAliasSCR)->CR_STATUS == "03"
+						cSituaca := OemToAnsi("Solicitação Aprovada")
+					Case (cAliasSCR)->CR_STATUS == "04"
+						cSituaca := OemToAnsi("Solicitação Bloqueada")
+						lBloq := .T.
+					Case (cAliasSCR)->CR_STATUS == "05"
+						cSituaca := OemToAnsi("Nivel Liberado ")
+				EndCase
+				aCols[nY][nX] := cSituaca
+			ElseIf aHeader[nX][02] == "bCR_NOMELIB"
+				aCols[nY][nX] := UsrRetName((cAliasSCR)->CR_USERLIB)
+			ElseIf ( aHeader[nX][10] != "V")
+				aCols[nY][nX] := FieldGet(FieldPos(aHeader[nX][2]))
+			EndIf
+		Next nX
+		aCols[nY][Len(aHeader)+1] := .F.
+		dbSkip()
+	EndDo
+	
+	If !Empty(aCols)
+		If lBloq
+			cStatus := OemToAnsi("BLOQUEADO")
+		EndIf
+		DEFINE FONT oBold NAME "Arial" SIZE 0, -12 BOLD
+		DEFINE MSDIALOG oDlg TITLE cTitle From 109,095 To 400,600 OF oMainWnd PIXEL
+		@ 005,003 TO 032,250 LABEL "" OF oDlg PIXEL
+		@ 015,007 SAY cTitDoc OF oDlg FONT oBold PIXEL SIZE 046,009
+		@ 014,041 MSGET cNumDoc PICTURE "" WHEN .F. PIXEL SIZE 050,009 OF oDlg FONT oBold
+		@ 132,008 SAY "Situacao :" OF oDlg PIXEL SIZE 052,009 //'Situacao :'
+		@ 132,038 SAY cStatus OF oDlg PIXEL SIZE 120,009 FONT oBold
+		@ 132,205 BUTTON "Fechar" SIZE 035 ,010  FONT oDlg:oFont ACTION (oDlg:End()) OF oDlg PIXEL  //'Fechar'
+		oGet:= MSGetDados():New(038,003,120,250,nOpcx,,,"")
+		oGet:Refresh()
+		@ 126,002 TO 127,250 LABEL "" OF oDlg PIXEL
+		ACTIVATE MSDIALOG oDlg CENTERED
+	Else
+		Aviso("Atencao",cHelpApv,{"Voltar"})
+	EndIf
+	
+	dbSelectArea(cAliasSCR)
+	dbCloseArea()
+Else
+	Aviso("Atencao",cHelpApv,{"Voltar"})
+EndIf
+
+dbSelectArea(cAlias)
+RestArea(aArea)
+Return

@@ -1,0 +1,32 @@
+
+user function XDIALOG()
+
+	NewDlg1()
+
+return
+
+Static Function xFechar()
+
+alert("vai sair")                
+
+close(oDlg)
+
+Return
+
+Static Function NewDlg1()
+/*
+A tag abaixo define a criação e ativação do novo diálogo. Você pode colocar esta tag
+onde quer que deseje em seu código fonte. A linha exata onde esta tag se encontra, definirá
+quando o diálogo será exibido ao usuário.
+Nota: Todos os objetos definidos no diálogo serão declarados como Local no escopo da
+função onde a tag se encontra no código fonte.
+*/
+
+//$BEGINDIALOGDEF_oDlg
+/*/======================================================
+// These information were generated automatically by AP  
+// IDE. DO NOT change anything in these information under
+// any circumstance. Otherwise, it can mean loss of data 
+// or the dialog invalidation by the Totvs Development Studio
+//-------------------------------------------------------
+//$DIALOGINFO=312E30,32373839,33383633353036343233,36303536,353534363137393234

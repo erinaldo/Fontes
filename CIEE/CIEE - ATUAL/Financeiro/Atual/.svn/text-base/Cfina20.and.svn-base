@@ -1,0 +1,287 @@
+#INCLUDE "rwmake.ch"
+#include "_FixSX.ch"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCFINA20   บ Autor ณ Andy               บ Data ณ  28/10/03   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Conciliacao do Movimento Bancario                          บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP6 IDE                                                    บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+
+User Function CFINA20()
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Declaracao de Variaveis                                             ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+Local cArq,cInd,cPerg
+Local cString := "SE5"
+Local aStru
+
+Local cVldAlt := ".T." // Validacao para permitir a alteracao. Pode-se utilizar ExecBlock.
+Local cVldExc := ".T." // Validacao para permitir a exclusao. Pode-se utilizar ExecBlock.
+Private aPags := {}
+Private _dPar01, _dPar02
+Private _cSZ8Ban, _cSZ8Age, _cSZ8Con, _dSZ8Emi, _dSZ8Tip
+Private _lRet
+
+_cSZ8Ban:=Space(03)
+_cSZ8Age:=Space(05)
+_cSZ8Con:=Space(10)
+_cSZ8Tip:=Space(02)
+_dSZ8Emi:=dDataBase
+_cSZ8Cta:=Space(10)
+dbSelectArea("SE5")
+dbSetOrder(1)
+
+// AxInclui(cAlias,nReg,nOpc,aAcho,cFunc,aCpos,cTudoOk,lF3)
+// AxAltera(cAlias,nReg,nOpc,aAcho,aCpos,nColMens,cMensagem,cTudoOk)
+// AxDeleta(cAlias,nReg,nOpc,aAcho,cFunc)
+
+
+cCadastro := "Conciliacao Contas a Pagar - Movimentacao Bancaria"
+aCores    := {}
+aRotina   := { 	{"Pesquisar" ,"AxPesqui"    , 0 , 1},;
+{"Visualizar"   ,"AxVisual"   , 0 , 2},;
+{"Conciliar"    ,"U_CONCILIA" , 0 , 3},;
+{"Extrato"      ,"U_CFINR009"   , 0 , 4},;
+{"Legenda"      ,'BrwLegenda(cCadastro,"Legenda",{{"BR_VERDE","Nao Conciliado"},{"BR_VERMELHO","Conciliado"}})',0 , 5 }}
+
+Aadd( aCores, { " Empty(E5_RECONC)  "  , "BR_VERDE" 	} )
+Aadd( aCores, { "!Empty(E5_RECONC)  "  , "BR_VERMELHO"	} )
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณRealiza a Filtragem                                                     ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+
+dbSelectArea("SE5")
+dbSetOrder(1)
+
+mBrowse( 6,1,22,75,"SE5",,,,,2, aCores)
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ Concilia บ Autor ณ Andy               บ Data ณ  28/04/03   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Preenche Z8_RDR ou Z8_RDRIR, no Programa CFINA11           บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+
+User Function CONCILIA()
+Private cPerg  := "FIC470"
+
+If !Pergunte(cPerg, .T.)
+	Return
+EndIf
+
+While .T.
+	U_TelaSE5()
+	If !_lRet
+		Exit
+	EndIf
+EndDo
+Return
+
+User Function TelaSE5()
+
+Local aArea    := GetArea() //, aPags := {}
+Local oOk      := LoadBitmap( GetResources(), "LBOK" )
+Local oNo      := LoadBitmap( GetResources(), "LBNO" )
+aPags          := {}
+
+dbSelectArea("SA6")
+dbSetOrder(1)
+IF !(dbSeek(cFilial+mv_par01+mv_par02+mv_par03))
+	Help(" ",1,"BCONAOEXIST")
+	Return
+EndIF
+
+_cBanco		:= A6_COD
+_cAgencia	:= A6_AGENCIA
+_cConta		:= A6_NUMCON
+
+DbSelectArea("SE5")
+DbSetOrder(1)
+cChave  := "E5_FILIAL+DTOS(E5_DTDISPO)+E5_BANCO+E5_AGENCIA+E5_CONTA+E5_DOCUMEN+E5_NUMCHEQ"
+
+cOrder := SqlOrder(cChave)
+cQuery := "SELECT *, "+ RetSqlName("SE5") +".R_E_C_N_O_ REGSE5 "
+cQuery += " FROM " + RetSqlName("SE5") + " WHERE "
+cQuery += "	E5_FILIAL = '" + xFilial("SE5") + "'" + " AND "
+cQuery += " D_E_L_E_T_ <> '*' "
+cQuery += " AND E5_DTDISPO >=  '"     + DTOS(mv_par04) + "'"
+cQuery += " AND E5_DTDISPO <=  '"     + DTOS(mv_par05) + "'"
+//cQuery += " AND E5_TIPODOC NOT IN ('DC','JR','MT','CM','D2','J2','M2','C2','V2','CP','TL','BA') "
+cQuery += " AND E5_BANCO = '"   + _cBanco   + "'"
+cQuery += " AND E5_AGENCIA = '" + _cAgencia + "'"
+cQuery += " AND E5_CONTA = '"   + _cConta   + "'"
+cQuery += " AND E5_SITUACA <> 'C' "
+cQuery += " AND E5_VALOR <> 0 "
+cQuery += " AND E5_NUMCHEQ NOT LIKE '%*' "
+cQuery += " AND E5_VENCTO <= '" + DTOS(mv_par05)  + "'"      
+cQuery += " AND E5_VENCTO <= E5_DATA "
+cQuery += " AND E5_RECONC = ' ' "
+//cQuery += " AND E5_RECPAG = 'P' "
+cQuery += " AND ( (E5_TIPODOC IN ('VL','CH') AND E5_MOEDA IN ('  ')) OR "
+cQuery += "       (E5_TIPODOC IN ('  ')      AND E5_MOEDA IN ('BA','FL')) )  "
+cQuery += " ORDER BY " + cOrder
+
+cQuery := ChangeQuery(cQuery)
+
+dbSelectAre("SE5")
+//dbCloseArea()
+
+dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), 'SE5TMP', .T., .T.)
+
+dbSelectArea("SE5TMP")
+dbGoTop()
+
+_nConta      := 1
+
+While !Eof()
+	
+	_dE5_DTDISPO := SE5TMP->E5_DTDISPO
+	_cE5_DOCUMEN := SE5TMP->E5_DOCUMEN
+	_cE5_NUMCHEQ := SE5TMP->E5_NUMCHEQ
+	_nTotal      := 0
+	
+	While !Eof() .And. _cE5_DOCUMEN == SE5TMP->E5_DOCUMEN .And. _cE5_NUMCHEQ == SE5TMP->E5_NUMCHEQ
+		
+		_cOpera:=" "
+
+		If SE5TMP->E5_MOEDA $ "BA" .Or. SE5TMP->E5_MOEDA $ "FL"
+		   If SE5TMP->E5_MOEDA $ "BA"
+			  _cOpera := "Pagamento Bolsa Auxilio"
+		   Else                                     
+		      _cOpera := AllTrim(SE5TMP->E5_BENEF)
+		   EndIf	  
+		Else
+			If !EMPTY(SE5TMP->E5_DOCUMEN)
+				_cOpera := "Bordero para pgto."
+		    ElseIf !EMPTY(SE5TMP->E5_NUMCHEQ)
+			    _cOpera := AllTrim(SE5TMP->E5_BENEF)
+		    EndIf
+		EndIf
+
+		_cOpera := SubStr(_cOpera,1,23)
+		
+		_cDocumento := " "
+
+		If SE5TMP->E5_MOEDA $ "BA" .Or. SE5TMP->E5_MOEDA $ "FL"
+			_cDocumento := AllTrim(SE5TMP->E5_DOCUMEN)
+		Else
+			If !EMPTY(SE5TMP->E5_DOCUMEN)
+				_cDocumento := "BD "+AllTrim(SE5TMP->E5_DOCUMEN)
+			ElseIf !EMPTY(SE5TMP->E5_NUMCHEQ)
+				_cDocumento := "CH "+AllTrim(SE5TMP->E5_NUMCHEQ)
+			EndIf
+		EndIf
+		
+		_nTotal := _nTotal + SE5TMP->E5_VALOR
+		
+		aAdd(aPags,{ .F., STOD(SE5TMP->E5_DTDISPO), _cOpera, _cDocumento, SE5TMP->E5_VALOR,0,SE5TMP->REGSE5})
+		
+		dbSelectArea("SE5TMP")
+		DbSkip()
+	EndDo
+	If _nTotal <> 0
+		For _nI:=_nConta to Len(aPags)
+			aPags[_nI,6] := _nTotal
+		Next _nI
+		
+		_nConta := Len(aPags) + 1
+	EndIf
+	
+Enddo
+
+//                             "Data"            ,"Operacao/Beneficiario"        ,"Documento"       ,"Valor"                                           ,"Valor Bordero"
+// 1                           2                  3                               4                  5                                                  6
+// .F.                        ,SE5TMP->E5_DTDISPO,_cOpera                        ,_cDocumento       ,SE5TMP->E5_VALOR                                  , _nTotal
+// aPags[oLbx1:nAt,1],oOk,oNo),aPags[oLbx1:nAt,2],aPags[oLbx1:nAt,3]             ,aPags[oLbx1:nAt,4],Transform(aPags[oLbx1:nAt,5],"@EZ 999,999,999.99"),Transform(aPags[oLbx1:nAt,5],"@EZ 999,999,999.99")
+
+dbSelectArea("SE5TMP")
+DbCloseArea()
+
+If Len(aPags) > 0
+	
+	DEFINE MSDIALOG oDlg FROM  31,58 TO 360,695 TITLE "Escolha Movimentacao Contas a Pagar a conciliar " PIXEL
+	@ 05,05 LISTBOX oLbx1 FIELDS HEADER "","Data","Operacao/Beneficiario","Documento","Valor","Valor Bordero" SIZE 310, 130 OF oDlg PIXEL ;
+	ON DBLCLICK (U_MARKSE5())
+	
+	oLbx1:SetArray(aPags)
+	oLbx1:bLine := { || {If(aPags[oLbx1:nAt,1],oOk,oNo),aPags[oLbx1:nAt,2],aPags[oLbx1:nAt,3],aPags[oLbx1:nAt,4],Transform(aPags[oLbx1:nAt,5],"@EZ 999,999,999.99"),Transform(aPags[oLbx1:nAt,6],"@EZ 999,999,999.99") } }
+	oLbx1:nFreeze  := 1
+	
+	DEFINE SBUTTON FROM 140, 228 TYPE 11 ENABLE OF oDlg ACTION U_MarcaSE5()
+	DEFINE SBUTTON FROM 140, 258 TYPE 1  ENABLE OF oDlg ACTION (U_ConciSE5(),_lRet :=.T.,oDlg:End())
+	DEFINE SBUTTON FROM 140, 288 TYPE 2  ENABLE OF oDlg ACTION (_lRet :=.F.,oDlg:End())
+	
+	ACTIVATE MSDIALOG oDlg CENTERED
+Else
+	_lRet := .F.
+	MsgInfo("Jแ Conciliados!","Aten็ใo")
+Endif
+
+RestArea(aArea)
+
+
+
+Return(_lRet)
+
+
+User Function MARKSE5()
+_lFlag := aPags[oLbx1:nAt,1]
+For _nI:=1 to Len(aPags)
+	If aPags[oLbx1:nAt,4] == aPags[_nI,4]
+		If _lFlag
+			aPags[_nI,1] := .F.
+		Else
+			aPags[_nI,1] := .T.
+		EndIf
+	EndIf
+Next _nI
+oLbx1:Refresh(.T.)
+Return
+
+User Function MarcaSE5
+For _nI:=1 to Len(aPags)
+	If aPags[_nI,1]
+		aPags[_nI,1] := .F.
+	Else
+		aPags[_nI,1] := .T.
+	EndIf
+Next _nI
+oLbx1:Refresh(.T.)
+Return
+
+User Function CONCISE5
+Local  _aArea := GetArea()
+DbSelectarea("SE5")
+For _nI:=1 to Len(aPags)
+	If aPags[_nI,1]
+		dbGoto(aPags[_nI,7])
+		RecLock("SE5", .F.)                          
+	    SE5->E5_DTDISPO:=dDataBase
+		SE5->E5_RECONC := "x"
+		msUnLock()
+	EndIf
+Next _nI
+RestArea(_aArea)
+oLbx1:Refresh(.T.)
+Return
+

@@ -1,0 +1,1031 @@
+#line 1 "C:\TOTVS\TDS\Workspace\Local\CIEE\Estoque\Misc\MATA290.CH"
+#line 20 "C:\TOTVS\TDS\Workspace\Local\CIEE\Estoque\Misc\Mata290a.prx"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function MATA290
+PRIVATE aOpcoes,nTotRegs:=0,lEnd:= .F. 
+
+
+	TCInternal(5,"*OFF")
+
+aOpcoes := A290Menu()
+IF aOpcoes == NIL
+	Return
+Endif
+
+
+
+
+dbSelectArea("SB1")
+nTotRegs := nTotRegs + RecCount()
+nTotRegs := nTotRegs + RecCount()
+
+dbSelectArea("SB3")
+nTotRegs := nTotRegs + RecCount()
+nTotRegs := nTotRegs + RecCount()
+nTotRegs := nTotRegs + RecCount()
+nTotRegs := nTotRegs + RecCount()
+nTotRegs := nTotRegs + RecCount()
+
+dbSelectArea("SD1")
+nTotRegs := nTotRegs + RecCount()
+
+dbSelectArea("SD2")
+nTotRegs := nTotRegs + RecCount()
+
+dbSelectArea("SD3")
+nTotRegs := nTotRegs + RecCount()
+
+Processa({|lEnd| MA290Process(aOpcoes,@lEnd)},OemToAnsi("C lculo do Lote Econ“mico"),OemToAnsi("Efetuando C lculo do Lote Econ“mico..."), .F. )
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STATIC Function A290CalCon
+Static l290Cons
+
+LOCAL cCod,nTotCod:=0
+LOCAL cMes:="B3_Q"+StrZero(Month(dDataBase),2) , cDataIni, cDataFim
+LOCAL nCons:=0
+
+l290Cons := If(l290Cons==NIL,ExistBlock("A290CONS"),l290Cons)
+
+
+
+
+dbSelectArea("SB3")
+dbSeek(xFilial(Alias()))
+While !EOF() .And.  B3_FILIAL == xFilial(Alias())
+	RecLock("SB3", .F. )
+	_FIELD->&(cMes) := 0
+	MsUnlock()
+	dbSkip()
+	IncProc()
+   MsUnlock()
+EndDo
+
+
+
+
+dbSelectArea("SD2")
+
+
+	cDataINI := StrZero(Year(dDataBase),4,0)+StrZero(Month(dDataBase),2,0)+"01"
+	cDataFim := Dtos(LastDay(dDataBAse))
+	cFilSD2 := 'DTOS(D2_EMISSAO) >= "'+cDataINI+'" .and. DTOS(D2_EMISSAO) <= "'+cDataFIM+'"'
+	MsFilter(cFILSD2)
+
+dbSetOrder(1)
+dbSeek(xFilial(Alias()))
+While !EOF() .And.  D2_FILIAL == xFilial(Alias())
+	nTotCod := 0
+	cCod    := D2_COD
+	While !EOF() .And.  D2_FILIAL+D2_COD == xFilial(Alias())+cCod
+
+
+
+
+		If D2_ORIGLAN == "LF" .or.  D2_TIPO $ "DB"
+			dbSkip()
+			Loop
+		EndIf
+
+
+
+
+
+
+
+
+
+
+
+		If Month(D2_EMISSAO) == Month(dDataBase) .And.  Year(D2_EMISSAO) == Year(dDataBase)
+			dbSelectArea("SF4")
+			dbSeek(xFilial(Alias())+SD2->D2_TES)
+			dbSelectArea("SD2")
+			If SF4->F4_ESTOQUE == "S"
+				If D2_TES <= "500"
+					nTotCod := nTotCod - D2_QUANT
+				Else
+					nTotCod := nTotCod + D2_QUANT
+				EndIf
+			EndIf
+		EndIf
+		dbSkip()
+
+
+
+		IncProc()
+   EndDo
+	dbSelectArea("SB3")
+	dbSeek(xFilial(Alias())+cCod)
+	If EOF()
+		RecLock("SB3", .T. )
+		_FIELD->B3_FILIAL := xFilial(Alias()); _FIELD->B3_COD := cCod
+	Else
+		RecLock("SB3", .F. )
+	EndIf
+	_FIELD->&(cMes) :=&(cMes)+nTotCod
+
+	MsUnlock()
+
+	dbSelectArea("SD2")
+EndDo
+
+
+
+
+dbSelectArea("SD1")
+
+	cDataINI := StrZero(Year(dDataBase),4,0)+StrZero(Month(dDataBase),2,0)+"01"
+	cDataFim := Dtos(LastDay(dDataBAse))
+	cFilSD1 := 'DTOS(D1_DTDIGIT) >= "'+cDataINI+'" .and. DTOS(D1_DTDIGIT) <= "'+cDataFIM+'" .and. '
+	cFILSD1 += 'D1_TIPO == "D"'
+	MsFilter(cFILSD1)
+
+dbSetOrder(2)
+dbSeek(xFilial(Alias()))
+While !EOF() .And.  D1_FILIAL == xFilial(Alias())
+	nTotCod := 0
+    cCod    := D1_COD
+    While !EOF() .And.  D1_FILIAL+D1_COD == xFilial(Alias())+cCod
+
+
+
+
+		If D1_ORIGLAN $ "LF"
+			dbSkip()
+			Loop
+		EndIf
+
+
+
+
+
+
+
+
+
+
+
+		If Month(D1_DTDIGIT) == Month(dDataBase) .and.  D1_TIPO="D" .And.  Year(D1_DTDIGIT) == Year(dDataBase)
+			dbSelectArea("SF4")
+			dbSeek(xFilial(Alias())+SD1->D1_TES)
+			dbSelectArea("SD1")
+			If SF4->F4_ESTOQUE == "S"
+				If D1_TES <= "500"
+					nTotCod := nTotCod - D1_QUANT
+				Else
+					nTotCod := nTotCod + D1_QUANT
+				EndIf
+			EndIf
+		EndIf
+		dbSkip()
+
+
+
+		IncProc()
+	EndDo
+	dbSelectArea("SB3")
+	dbSeek(xFilial(Alias())+cCod)
+	If EOF()
+		RecLock("SB3", .T. )
+		_FIELD->B3_FILIAL := xFilial(Alias()); _FIELD->B3_COD := cCod
+	Else
+		RecLock("SB3", .F. )
+	EndIf
+	_FIELD->&(cMes) :=&(cMes)+nTotCod
+
+	MsUnlock()
+
+	dbSelectArea("SD1")
+EndDo
+
+
+
+
+dbSelectArea("SD3")
+
+
+	cDataINI := StrZero(Year(dDataBase),4,0)+StrZero(Month(dDataBase),2,0)+"01"
+	cDataFim := Dtos(LastDay(dDataBAse))
+	cFilSD3 := 'DTOS(D3_EMISSAO) >= "'+cDataINI+'" .and. DTOS(D3_EMISSAO) <= "'+cDataFIM+'"'
+	cFilSD3 += '.And.!(D3_CF=="DE8".Or.D3_CF=="RE8")'
+	if ( Empty(cFILSD3) );    dbClearFilter(); else;    dbSetFilter({|| &cFILSD3},cFILSD3 ); end
+
+
+dbSetOrder(3)
+dbSeek(xFilial(Alias()))
+While !EOF() .And.  D3_FILIAL == xFilial(Alias())
+	nTotCod := 0
+	cCod    := D3_COD
+	While !EOF() .And.  D3_FILIAL+D3_COD == xFilial(Alias())+cCod
+
+		If Month(D3_EMISSAO) == Month(dDataBase) .And.  Subs(D3_CF,2,1) == "E" .and.  Year(D3_EMISSAO) == Year(dDataBase)
+			If !(Substr(D3_CF,3,1) $ "3478")
+				If D3_TM <= "500"
+					nTotCod := nTotCod - D3_QUANT
+				Else
+					nTotCod := nTotCod + D3_QUANT
+				EndIf
+			EndIf
+		EndIf
+		dbSkip()
+
+
+
+		IncProc()
+   EndDo
+	If l290Cons
+		nCons:=ExecBlock("A290CONS", .F. , .F. ,{cCod,nTotCod})
+		If ValType(nCons) == "N"
+			nTotCod:=nCons
+		EndIf
+	EndIf
+	dbSelectArea("SB3")
+	dbSeek(xFilial(Alias())+cCod)
+	If EOF()
+		RecLock("SB3", .T. )
+		_FIELD->B3_FILIAL := xFilial(Alias()); _FIELD->B3_COD := cCod
+	Else
+		RecLock("SB3", .F. )
+	EndIf
+	_FIELD->&(cMes) :=&(cMes)+nTotCod
+
+	MsUnlock()
+
+	dbSelectArea("SD3")
+EndDo
+
+
+
+RETINDEX("SD1")
+dbClearFilter()
+RETINDEX("SD2")
+dbClearFilter()
+RETINDEX("SD3")
+dbClearFilter()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STATIC Function A290CalNor(nPorInc)
+LOCAL nX,aPesos[12],cPesos,nTPesos:=0,nMeses,aPesoAux,nI,nConsid
+LOCAL aTamSX3:={}
+
+AFILL(aPesos,0)
+
+
+
+
+cPesos := GetMv("MV_PESOS")
+cPesos := SubStr(cPesos,1,12)
+cPesos := cPesos+Space(12-Len(cPesos))
+
+For nX := 1 To 12
+	aPesos[nX] := Val(SubStr(cPesos,nX,1))
+next
+
+aPesoAux := aClone(aPesos)
+
+
+
+dbSelectArea("SB3")
+dbSeek(xFilial(Alias()))
+While !EOF() .And.  B3_FILIAL == xFilial(Alias())
+	dbSelectArea("SB1")
+	dbSeek(xFilial(Alias())+SB3->B3_COD)
+	nMeses := CalcMeses(SB1->B1_CONINI)
+	aPesos := aClone(aPesoAux)
+	nI := nMeses
+
+	If nMeses < 12
+		nX := (Month(dDataBase)+1) - nMeses
+		If nX <= 0
+			nX += 13
+		Endif
+		If nX = 13
+			nX := 1
+		Endif
+		aPesos := {0,0,0,0,0,0,0,0,0,0,0,0}
+		If nMeses > 0
+			nConsid := Month(dDataBase)+1
+			nConsid := IIF(nConsid >12,1,nConsid)
+			While nX <> nConsid
+				aPesos[nX] := aPesoAux[nX]
+				nX++
+				nX := IIF(nX>12,1,nX)
+			End
+		Endif
+	Endif
+	nTpesos := 0
+	For nX := 1 To 12
+		nTpesos += aPesos[nX]
+	next
+
+	dbSelectArea("SB3")
+	If MA290Filtro()
+		RecLock("SB3", .F. )
+
+
+
+
+		_FIELD->B3_MEDIA := ((B3_Q01*aPesos[01]+B3_Q02*aPesos[02]+B3_Q03*aPesos[03]+B3_Q04*aPesos[04]+B3_Q05*aPesos[05]+B3_Q06*aPesos[06]+B3_Q07*aPesos[07]+B3_Q08*aPesos[08]+B3_Q09*aPesos[09]+B3_Q10*aPesos[10]+B3_Q11*aPesos[11]+B3_Q12*aPesos[12])/nTpesos)*(1+nPorInc/100)
+		_FIELD->B3_TOTAL := B3_MEDIA*SB1->B1_CUSTD
+		aTamSX3:=TamSX3("B3_CTOTAL")
+		_FIELD->B3_CTOTAL := Transform(B3_TOTAL,PesqPict("SB3","B3_CTOTAL",aTamSX3[1]))
+		MsUnlock()
+	EndIf
+	dbSkip()
+   IncProc()
+EndDo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STATIC Function A290CalMin(nQtdMes)
+LOCAL nX,cMesAux2,cMeses:="010203040506070809101112"
+LOCAL nTotx:=0,nMpx:=0,nToty:=0,nMpy:=0,nTotXaYa:=0,nTotXaXa:=0,nTotYaYa:=0
+LOCAL aX[nQtdMes],aY[nQtdMes],aXa[nQtdMes],aYa[nQtdMes]
+LOCAL aXaYa[nQtdMes],aXaXa[nQtdMes],aYaYa[nQtdMes]
+LOCAL nMesProj,nSX,nSY,nRXY,nK1,nK2,nYP,nMeses,nMesAux
+LOCAL aTamSX3:={}
+nMesAux := nQtdMes
+
+For nX := 1 To nQtdMes
+	 aX[nX] := nX
+	 aY[nX] := 0
+	aXa[nX] := 0
+	aYa[nX] := 0
+ aXaYa[nX] := 0
+ aXaXa[nX] := 0
+ aYaYa[nX] := 0
+next
+
+
+
+
+dbSelectArea("SB3")
+dbSeek(xFilial(Alias()))
+nMesProj := nQtdMes+1
+
+
+
+FOR nX := 1 TO nQtdMes
+	nTotx := nTotx + aX[nX]
+NEXT
+nMpx := nTotx/nQtdMes
+
+While !EOF() .And.  B3_FILIAL == xFilial(Alias())
+	nToty    := 0
+	nTotXaYa := 0
+	nTotXaXa := 0
+	nTotYaYa := 0
+	dbSelectArea("SB1")
+	dbSeek(xFilial(Alias())+SB3->B3_COD)
+	nQtdMes := CalcMeses(SB1->B1_CONINI,nMesAux)
+	dbSelectArea("SB3")
+	If MA290Filtro()
+
+
+		For nX := 1 To nQtdMes
+			cMesAux2 := "B3_Q"+SUBS(cMeses+cMeses,(24+Month(dDataBase)*2)-1-(nQtdMes-nX)*2,2)
+			aY[nX] := &(cMesAux2)
+			nToty  := nToty + aY[nX]
+		next
+		nMpy := nToty/nQtdMes
+
+		For nX := 1 To nQtdMes
+
+
+			aXa[nX] := aX[nX] - nMpx
+
+
+			aYa[nX] := aY[nX] - nMpy
+
+
+			aXaYa[nX] := aXa[nX]  * aYa[nX]
+			nTotXaYa  := nTotXaYa + aXaYa[nX]
+
+
+			aXaXa[nX] := aXa[nX]  * aXa[nX]
+			nTotXaXa  := nTotXaXa + aXaXa[nX]
+
+
+			aYaYa[nX] := aYa[nX]  * aYa[nX]
+			nTotYaYa  := nTotYaYa + aYaYa[nX]
+		next
+
+		nSX  := Abs( Sqrt( nTotXaXa / nQtdMes ) )
+		nSY  := Abs( Sqrt( nTotYaYa / nQtdMes ) )
+		nRXY := nTotXaYa / ( nQtdMes * nSX * nSY )
+		nK1  := nRXY * ( nSX / nSY )
+		nK2  := nRXY * ( nSY / nSX )
+		nYP  := ( nK2 * nMesProj ) + ( nMpy - ( nK2 * nMpx ) )
+
+		RecLock("SB3", .F. )
+		_FIELD->B3_MEDIA := nYP; _FIELD->B3_TOTAL := B3_MEDIA*SB1->B1_CUSTD
+		aTamSX3:=TamSX3("B3_CTOTAL")
+		_FIELD->B3_CTOTAL := Transform(B3_TOTAL,PesqPict("SB3","B3_CTOTAL",aTamSX3[1]))
+		MsUnlock()
+	EndIf
+	dbSkip()
+	IncProc()
+EndDo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STATIC Function A290CalLot(cCalPon,nPerA,nPerB,nPerC,nPorA,nPorB,nPorC)
+LOCAL nTotCon:=0,nTotA:=0,nTotB:=0,nTotC:=0,nLote,cClasse,nPrazo
+LOCAL cIndSB3	:= CriaTrab(NIL, .F. ), nIndSB3
+dbSelectArea("SB3")
+nIndSB3 := RetIndex("SB3")
+IndRegua("SB3",cIndSB3,"B3_FILIAL+B3_CTOTAL",,".T.", OemToAnsi("Selecionando Registros..."))
+
+dbSeek(xFilial(Alias())+"z", .t. )
+dbSkip(-1)
+
+
+
+
+While !Bof() .And.  B3_FILIAL == xFilial(Alias())
+	dbSelectArea("SB1")
+	dbSeek(xFilial(Alias())+SB3->B3_COD)
+	dbSelectArea("SB3")
+	If MA290Filtro()
+		nTotCon := nTotCon + B3_TOTAL
+	EndIf
+	dbSkip(-1)
+	IncProc()
+EndDo
+nTotA   :=  nPorA * nTotCon / 100
+nTotB   := (nPorB * nTotCon / 100) + nTotA
+nTotC   := (nPorC * nTotCon / 100) + nTotB
+nTotCon := 0
+
+dbSeek(xFilial(Alias())+"z", .t. )
+dbSkip(-1)
+
+While !Bof() .And.  B3_FILIAL == xFilial(Alias())
+	dbSelectArea("SB1")
+	If	dbSeek(xFilial(Alias())+SB3->B3_COD)
+		dbSelectArea("SB3")
+		If MA290Filtro()
+			Do Case
+				Case nTotCon < nTotA
+					nLote   := B3_MEDIA * nPerA
+					cClasse := "A"
+				Case nTotCon < nTotB
+					nLote   := B3_MEDIA * nPerB
+					cClasse := "B"
+				OtherWise
+					nLote   := B3_MEDIA * nPerC
+					cClasse := "C"
+			EndCase
+			nLote := IIF(nLote < SB1->B1_QE,SB1->B1_QE,Round(nLote / IIF(SB1->B1_QE==0,1,SB1->B1_QE), 0) * IIF(SB1->B1_QE==0,1,SB1->B1_QE))
+			dbSelectArea("SB1")
+			nPrazo := CalcPrazo(B1_COD,B1_LE)
+			RecLock("SB1", .F. )
+			_FIELD->B1_LE := nLote
+			If cCalPon == "x"
+				_FIELD->B1_EMIN := (SB3->B3_MEDIA*(nPrazo/30))+CalcEstSeg(SB1->B1_ESTFOR)
+			EndIf
+			MsUnlock()
+			dbSelectArea("SB3")
+			RecLock("SB3", .F. )
+			_FIELD->B3_CLASSE := cClasse
+			MsUnlock()
+			nTotCon := nTotCon + B3_TOTAL
+		EndIf
+	EndIf
+	dbSelectArea("SB3")
+	dbSkip(-1)
+	IncProc()
+EndDo
+
+RetIndex("SB3")
+Ferase(cIndSB3+OrdBagExt())
+dbSetOrder(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STATIC Function A290AjuLot(nValDisp)
+LOCAL nQatu:=0,nPedido:=0,nTotVal:=0,nFalta:=0,nDif:=0
+
+
+
+
+dbSelectArea("SC1")
+dbSetOrder(2)
+
+dbSelectArea("SC7")
+dbSetOrder(4)
+
+
+
+
+dbSelectArea("SB1")
+dbSeek(xFilial(Alias()))
+While !EOF() .And.  B1_FILIAL == xFilial(Alias())
+	If MA290Filtro()
+		dbSelectArea("SB2")
+		dbSeek(xFilial(Alias())+SB1->B1_COD)
+		nQatu   := 0
+		nPedido := 0
+		While !EOF() .And.  B2_FILIAL+B2_COD == xFilial(Alias())+SB1->B1_COD
+			nQatu := nQatu + B2_QATU
+			dbSkip()
+		EndDo
+		dbSelectArea("SC1")
+		dbSeek(xFilial(Alias())+SB1->B1_COD)
+		While !EOF() .And.  C1_FILIAL+C1_PRODUTO == xFilial(Alias())+SB1->B1_COD
+
+			If C1_QUANT > C1_QUJE .And.  Month(C1_DATPRF) == Month(dDataBase) .And.  Year(C1_DATPRF) == Year(dDataBase)
+				nPedido := nPedido + (C1_QUANT - C1_QUJE)
+			EndIf
+			dbSkip()
+		EndDo
+		dbSelectArea("SC7")
+		dbSeek(xFilial(Alias())+SB1->B1_COD)
+		While !EOF() .And.  C7_FILIAL+C7_PRODUTO == xFilial(Alias())+SB1->B1_COD
+
+			If C7_QUANT > C7_QUJE .And.  Month(C7_DATPRF) == Month(dDataBase) .And.  Empty(C7_RESIDUO) .And.  Year(C7_DATPRF) == Year(dDataBase)
+				nPedido := nPedido + (C7_QUANT-C7_QUJE)
+			EndIf
+			dbSkip()
+		EndDo
+		dbSelectArea("SB3")
+		dbSeek(xFilial(Alias())+SB1->B1_COD)
+		dbSelectArea("SB1")
+		nFalta := (B1_EMIN+SB3->B3_MEDIA) - (nQatu+nPedido)
+		If nFalta > 0
+			If nFalta < B1_LE
+				nFalta := B1_LE
+			EndIf
+			nTotVal := nTotVal + (nFalta * IIF(B1_UPRC > 0,B1_UPRC,B1_CUSTD))
+		EndIf
+	EndIf
+	dbSkip()
+	IncProc()
+EndDo
+If nTotVal <= 0
+	nTotVal := 1
+EndIf
+nDif := (nValDisp/nTotVal)
+
+
+
+
+If nDif < 0.85
+	dbSelectArea("SB1")
+	dbSeek(xFilial(Alias()))
+	While !EOF() .And.  B1_FILIAL == xFilial(Alias())
+		If MA290Filtro()
+			RecLock("SB1", .F. )
+			_FIELD->B1_LE := B1_LE*nDif
+			MsUnlock()
+		EndIf
+		dbSkip()
+		IncProc()
+   EndDo
+EndIf
+
+
+
+dbSelectArea("SC1")
+dbSetOrder(1)
+
+dbSelectArea("SC7")
+dbSetOrder(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STATIC FUNCTION A290MENU()
+
+
+
+LOCAL oDlg,oQual,oQual2,oUsado,nCalculo:=1,oChk1,oChk2,oChk3,oChk4,lCalc,lLote, lPedido,lDispoF,aTipo:={},aGrupo:={},nIncre:=nMeses:=nDispoF:=0, nA1:=nB1:=nC1:=1,nA2:=nB2:=30,nC2:=40,oGet1,oGet2,nOpca:=2,aOpt[9][3], oChkQual,oChkQual2,lQual:= .T. ,lQual2:= .T. 
+LOCAL oOk := LoadBitmap( GetResources(), "LBOK")
+LOCAL oNo := LoadBitmap( GetResources(), "LBNO")
+LOCAL cVarQ := cVarQ2:="  "
+LOCAL cCapital
+Private cCadastro := OemToAnsi("Lote Econ“mico")
+
+
+
+
+dbSelectArea("SX5")
+dbSeek(xFilial(Alias())+"02")
+While (X5_filial == xFilial(Alias())) .AND.  (X5_tabela == "02")
+	cCapital := OemToAnsi(Capital(X5Descri()))
+	AADD(aTipo,{ .T. ,SubStr(X5_chave,1,3)+cCapital})
+	dbSkip()
+EndDo
+
+
+
+
+dbSelectArea("SBM")
+dbSeek(xFilial())
+While !EOF() .And.  BM_FILIAL == xFilial(Alias())
+	cCapital := OemToAnsi(Capital(BM_DESC))
+	AADD(aGrupo,{ .T. ,SubStr(BM_GRUPO,1,5)+" "+cCapital})
+	dbSkip()
+EndDo
+
+oDlg = MsDialog():New( 145, 0, 455, 628, cCadastro,,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+	@ 02,15 TO 25,120 LABEL "" OF oDlg  PIXEL
+	@ 10,20 CHECKBOX oChk1 VAR lCalc PROMPT OemToAnsi("Atualiza‡„o do Consumo do Mˆs") SIZE 90, 10 OF oDlg PIXEL ;oChk1:oFont := oDlg:oFont
+	@ 28,15 TO 92,120 LABEL OemToAnsi("C lculos") OF oDlg  PIXEL
+	@ 38,20 RADIO oUsado VAR nCalculo 3D SIZE 70,10 PROMPT OemToAnsi("Por Peso"),OemToAnsi("Pela Tendˆncia") OF oDlg PIXEL
+    oUsado:bChange := { || IIF(nCalculo=1,(oGet1:Enable(),oGet2:Disable()),(oGet1:Disable(),oGet2:Enable())) }
+	@ 62,20 Say OemToAnsi("Incremento:") SIZE 40,10 OF oDlg PIXEL
+	 oGet1 := TGet():New( 62, 67, bSETGET(nIncre),oDlg, 15, 10, "999",,,,,.F.,,.T.,,.F.,{||  IIF(nCalculo=1, .T. , .F. )},.F.,.F.,,.F.,.F. ,,"nIncre",,,, )
+	@ 78,20 Say OemToAnsi("N£mero de Meses:") SIZE 60,10 OF oDlg PIXEL
+	 oGet2 := TGet():New( 78, 67, bSETGET(nMeses),oDlg, 15, 10, "999",{||  (nMeses<13 .And. nMeses>0)},,,,.F.,,.T.,,.F.,{||  IIF(nCalculo=2, .T. , .F. )},.F.,.F.,,.F.,.F. ,,"nMeses",,,, )
+	@ 95,15 TO 148,120 LABEL "" OF oDlg  PIXEL
+	@ 103,20 CHECKBOX oChk2 VAR lLote PROMPT OemToAnsi("C lculo do Lote Econ“mico") SIZE 80, 10 OF oDlg PIXEL ;oChk2:oFont := oDlg:oFont
+	@ 113,20 CHECKBOX oChk3 VAR lPedido When lLote PROMPT OemToAnsi("C lculo do Ponto de Pedido") SIZE 80, 10 OF oDlg PIXEL ;oChk3:oFont := oDlg:oFont
+	@ 123,20 CHECKBOX oChk4 VAR lDispoF PROMPT OemToAnsi("Ajusta Lote Econ“mico pela dispo-") SIZE 90, 10 OF oDlg PIXEL ;oChk4:oFont := oDlg:oFont
+    @ 133,20 Say OemToAnsi("nibilidade financeira") SIZE 80,10 OF oDlg PIXEL
+	 TGet():New( 135, 70, bSETGET(nDispoF),oDlg, 45, 10, "@E 99,999,999,999",{||  nDispoF>0},,,,.F.,,.T.,,.F.,{||  lDispoF},.F.,.F.,,.F.,.F. ,,"nDispoF",,,, )
+	@ 02,130 TO 68,300 LABEL OemToAnsi("Classifica‡„o ABC") OF oDlg PIXEL
+	@ 15,182 TO 60,219 LABEL "A" OF oDlg  PIXEL
+	@ 15,220 TO 60,257 LABEL "B" OF oDlg  PIXEL
+	@ 15,258 TO 60,295 LABEL "C" OF oDlg  PIXEL
+	@ 23,135 Say OemToAnsi("Per¡odo de") SIZE 45,10 OF oDlg PIXEL
+	@ 30,135 Say OemToAnsi("Aquisi‡„o(meses)") SIZE 45,10 OF oDlg PIXEL
+	@ 43,135 Say OemToAnsi("Distribui‡„o") SIZE 45,10 OF oDlg PIXEL
+	@ 50,135 Say OemToAnsi("Percentual (%)") SIZE 45,10 OF oDlg PIXEL
+	 TGet():New( 25, 185, bSETGET(nA1),oDlg, 17, 10, "99.9",{||  nA1>0},,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"nA1",,,, )
+	 TGet():New( 25, 223, bSETGET(nB1),oDlg, 17, 10, "99.9",{||  nB1>0},,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"nB1",,,, )
+	 TGet():New( 25, 261, bSETGET(nC1),oDlg, 17, 10, "99.9",{||  nC1>0},,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"nC1",,,, )
+  	 TGet():New( 45, 185, bSETGET(nA2),oDlg, 17, 10, "99.9",{||  nA2>0},,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"nA2",,,, )
+	 TGet():New( 45, 223, bSETGET(nB2),oDlg, 17, 10, "99.9",{||  nB2>0},,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"nB2",,,, )
+	 TGet():New( 45, 261, bSETGET(nC2),oDlg, 17, 10, "99.9",{||  nC2>0},,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"nC2",,,, )
+	 oQual := VAR := cVarQ := TWBrowse():New( 76, 130, 75, 50,,{ "",OemToAnsi("Tipos de Material")},, oDlg, ,,,,{|nRow,nCol,nFlags|(aTipo:=ca290troca(oQual:nAt,aTipo),oQual:Refresh())},{|nRow,nCol,nFlags|ListBoxAll(nRow,nCol,@oQual,oOk,oNo,@aTipo)},,,,,,.F.,,.T.,,.F.,, !.T.,!.T. )
+	oQual:SetArray(aTipo)
+	oQual:bLine := { || {if(aTipo[oQual:nAt,1],oOk,oNo),aTipo[oQual:nAt,2]}}
+	 oQual2 := VAR := cVarQ2 := TWBrowse():New( 76, 225, 75, 50,,{ "",OemToAnsi("Grupos de Material")},, oDlg, ,,,,{|nRow,nCol,nFlags|(aGrupo:=ca290troca(oQual2:nAt,aGrupo),oQual2:Refresh())},{|nRow,nCol,nFlags|ListBoxAll(nRow,nCol,@oQual2,oOk,oNo,@aGrupo)},,,,,,.F.,,.T.,,.F.,, !.T.,!.T. )
+	oQual2:SetArray(aGrupo)
+	oQual2:bLine := { || {if(aGrupo[oQual2:nAt,1],oOk,oNo),aGrupo[oQual2:nAt,2]}}
+
+	@ 127,130 CHECKBOX oChkQual  VAR lQual  PROMPT OemToAnsi("Inverter Selecao") SIZE 66, 10 OF oDlg PIXEL ON CLICK (AEval(aTipo , {|z| z[1] := If(z[1]== .T. , .F. , .T. )}), oQual:Refresh( .F. ))
+	@ 127,225 CHECKBOX oChkQual2 VAR lQual2 PROMPT OemToAnsi("Inverter Selecao") SIZE 66, 10 OF oDlg PIXEL ON CLICK (AEval(aGrupo, {|z| z[1] := If(z[1]== .T. , .F. , .T. )}),oQual2:Refresh( .F. ))
+
+     SButton():New( 140, 240,1,{||  IIF(A290VldPer(nA2,nB2,nC2),(nOpca:=1,oDlg:End()),Help(" ",1,"A290PERC"))}, oDlg,.T.,,)
+	 SButton():New( 140, 270,2,{||  oDlg:End()}, oDlg,.T.,,)
+	oChk2:BlClicked :=	{|| oChk2:Refresh()}
+oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,, oDlg:bRClicked, )
+
+If nOpca = 1
+
+
+
+	If lCalc
+	   aOpt[1,1]:= "x"
+	Else
+	   aOpt[1,1]:=" "
+	EndIf
+
+
+
+
+	If nCalculo=1
+	   aOpt[2,1]:="x"
+	   aOpt[2,2]:=nIncre
+	   aOpt[3,1]:=" "
+	   aOpt[3,2]:=0
+	Else
+	   aOpt[2,1]:=" "
+   	aOpt[2,2]:=0
+   	aOpt[3,1]:="x"
+   	aOpt[3,2]:=nMeses
+	EndIf
+
+
+
+
+	If lLote
+	   aOpt[4,1]:="x"
+   	If lPedido
+	      aOpt[4,2]:="x"
+	   EndIf
+	Else
+   	aOpt[4,1]:=" "
+	   aOpt[4,2]:=" "
+	EndIf
+
+
+
+
+	If lDispoF
+	   aOpt[5,1]:="x"
+	   aOpt[5,2]:=nDispoF
+	Else
+	   aOpt[5,1]:=" "
+	   aOpt[5,2]:=0
+	EndIf
+
+
+
+
+	aOpt[6,1]:=nA1
+	aOpt[6,2]:=nB1
+	aOpt[6,3]:=nC1
+
+
+
+
+	aOpt[7,1]:=nA2
+	aOpt[7,2]:=nB2
+	aOpt[7,3]:=nC2
+
+
+
+
+	aOpt[8][1]:=""
+	nArr:=0
+	FOR i:=1 TO LEN(aTipo)
+		IF aTipo[i][1]
+			nArr++
+			aOpt[8][1] := aOpt[8][1]+SubStr(aTipo[i,2],1,2)+"|"
+		ENDIF
+	next
+	IF nArr == Len(aTipo)
+		aOpt[8][1]:="**"
+	End
+
+
+
+
+	aOpt[9][1]:=""
+	nArr:=0
+	FOR i:=1 TO LEN(aGrupo)
+		IF aGrupo[i][1]
+			nArr++
+			aOpt[9][1] := aOpt[9][1]+SubStr(aGrupo[i,2],1,4)+"|"
+		ENDIF
+	next
+	IF nArr == Len(aGrupo)
+		aOpt[9][1]:="**"
+	EndIf
+Else
+	aOpt:=NIL
+Endif
+DeleteObject(oOk)
+DeleteObject(oNo)
+Return aOpt
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CalcMeses(dInicio,nMaximo)
+Local nAnoIni := Year(dInicio),nMesIni:=Month(dInicio)
+Local nAnoFim := Year(dDataBase),nMesFim:=Month(dDataBase)
+Local nMeses
+nMaximo := IIF(nMaximo == Nil,12,nMaximo)
+nMeses := ((nAnoFim-nAnoIni)*12) + (nMesFim-nMesIni) + 1
+nMeses := IIF(nMeses>nMaximo,nMaximo,nMeses)
+nMeses := IIF(nMeses<0,0,nMeses)
+Return(nMeses)
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static FUnction MA290Filtro()
+Local lRet := .t. 
+
+If aOpcoes[8][1] <> "**" .and.  !(SB1->B1_TIPO$Trim(aOpcoes[8][1]))
+	lRet := .f. 
+EndIf
+If aOpcoes[9][1] <> "**" .and.  !(SB1->B1_GRUPO$Trim(aOpcoes[9][1]))
+	lRet := .f. 
+EndIf
+
+Return (lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function MA290Process(aOpcoes,lEnd)
+
+ProcRegua(nTotRegs)
+
+If aOpcoes[1][1] == "x"
+	A290CalCon()
+EndIf
+
+If aOpcoes[2][1] == "x"
+	A290CalNor(aOpcoes[2][2])
+Else
+	A290CalMin(aOpcoes[3][2])
+EndIf
+
+If aOpcoes[4][1] == "x"
+
+
+
+
+
+
+
+
+
+
+
+
+	A290CalLot(aOpcoes[4][2],aOpcoes[6][1],aOpcoes[6][2],aOpcoes[6][3], aOpcoes[7][1],aOpcoes[7][2],aOpcoes[7][3])
+EndIf
+If aOpcoes[5][1] == "x"
+	A290AjuLot(aOpcoes[5][2])
+EndIf
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function A290VldPer(nA2,nB2,nC2)
+lRet:= .T. 
+If nA2+nB2+nC2 <> 100
+   lRet:= .F. 
+EndIf
+Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function CA290TROCA(nIt,aArray)
+aArray[nIt,1] := !aArray[nIt,1]
+Return aArray

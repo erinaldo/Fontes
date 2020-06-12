@@ -1,0 +1,641 @@
+M:\Protheus11\my projects\rdmake\AjusAP.prw
+M:\Protheus11\my projects\rdmake\AJUS_CTT.prw
+M:\Protheus11\my projects\rdmake\AJUS_CV4.prw
+M:\Protheus11\my projects\rdmake\AJUS_PA4.prw
+M:\Protheus11\my projects\rdmake\CIEE - Produ‡Æo.PRJ
+M:\Protheus11\my projects\rdmake\cieeMail.prw
+M:\Protheus11\my projects\rdmake\COMPSX3.PRW
+M:\Protheus11\my projects\rdmake\DP06.prw
+M:\Protheus11\my projects\rdmake\ImportNatu.prw
+M:\Protheus11\my projects\rdmake\IncBmpR.prw
+M:\Protheus11\my projects\rdmake\MASK_CNPJ.prw
+M:\Protheus11\my projects\rdmake\MATXATU.PRX
+M:\Protheus11\my projects\rdmake\SX3P1011.PRW
+M:\Protheus11\my projects\rdmake\TSTEME.prw
+M:\Protheus11\my projects\rdmake\TSTWF2.prw
+M:\Protheus11\my projects\rdmake\xAtuSZK.prw
+M:\Protheus11\my projects\rdmake\XTSTPATH.prw
+M:\Protheus11\my projects\rdmake\_xAtuSC8.prw
+M:\Protheus11\my projects\rdmake\BDI\ACERTCEP.prw
+M:\Protheus11\my projects\rdmake\BDI\ACERTEND.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA01.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA02.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA03.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA04.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA05.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA06.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA07.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA08.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIA09.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIBDI.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDICARG.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDICATE.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDICEP.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDICONT.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\CBDIENT.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\email.prw
+M:\Protheus11\my projects\rdmake\BDI\Atual\teste.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\BDI_x_Contato.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Cargo.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Contato.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Contatos x Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Contatos X Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Duplicidade Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Duplicidade Entidade_old.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Endereco.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\GERAL.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Relaciona PJ com PF.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Relacionamento.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\Tratamento.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\new\BDI_x_Contato.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\new\Contato.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\new\Contatos x Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\new\Contatos X Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\new\Duplicidade Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\new\Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\new\GERAL.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\BDI_x_Contato.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Cargo.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Contato.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Contatos x Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Duplicidade Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Duplicidade Entidade_old.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Endereco.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Relaciona PJ com PF.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Relacionamento.prw
+M:\Protheus11\my projects\rdmake\BDI\Migracao\old\Tratamento.prw
+M:\Protheus11\my projects\rdmake\BDI\Misc\CBDIM01.prw
+M:\Protheus11\my projects\rdmake\BDI\Misc\CBDIM02.prw
+M:\Protheus11\my projects\rdmake\BDI\Misc\CBDIM03.prw
+M:\Protheus11\my projects\rdmake\BDI\Misc\CBDIM04.prw
+M:\Protheus11\my projects\rdmake\BDI\Ponto de Entrada\TMKDELU5.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR01.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR02.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR03.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR04.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR05.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR06.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR08.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR09.prw
+M:\Protheus11\my projects\rdmake\BDI\Relato\CBDIR0A.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA01.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA02.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA03.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA04.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA05.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA06.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA07.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA07_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA08.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA08_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIA09.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIBDI.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDICARG.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDICATE.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDICATE_OLD.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDICEP.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDICONT.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\CBDIENT.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\email.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Atual\teste.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\ACERTCEP.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\ACERTEND.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\BDI_x_Contato.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Cargo.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Contato.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Contatos x Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Contatos X Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Duplicidade Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Duplicidade Entidade_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Endereco.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\GERAL.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Relaciona PJ com PF.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Relacionamento.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\Tratamento.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\new\BDI_x_Contato.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\new\Contato.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\new\Contatos x Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\new\Contatos X Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\new\Duplicidade Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\new\Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\new\GERAL.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\BDI_x_Contato.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Cargo.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Contato.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Contatos x Categoria.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Duplicidade Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Duplicidade Entidade_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Endereco.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Entidade.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Relaciona PJ com PF.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Relacionamento.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Migracao\old\Tratamento.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Misc\CBDIM01.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Misc\CBDIM02.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Misc\CBDIM03.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR01.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR02.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR03.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR03_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR04.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR04_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR05.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR06.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR06_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR06_old1.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR08.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR08_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR09.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR09_old.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\CBDIR0A.prw
+M:\Protheus11\my projects\rdmake\BDI_OLD\Relato\MATA981.PRW
+M:\Protheus11\my projects\rdmake\Compras\AtuaSC7.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\A100DEL.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\A120PC.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\A120PC_old.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\avalcot.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\ccoma01.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\ccoma02.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\ccoma02_dialog.PRV
+M:\Protheus11\my projects\rdmake\Compras\Atual\CCOMA03.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\CCOMA04.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\CCOMA05.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\CFINA028.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\cmata01.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\C¢pia de SF1100E.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\FORCOD.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\FornXGrp.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\M110STTS.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\M130FIL.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MA120BUT.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MATA110.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\MATA110.PRX
+M:\Protheus11\my projects\rdmake\Compras\Atual\MATA111.PRW
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT100GE2.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT100LOK.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT100TOK.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT103IPC.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT120EXC.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT120FIL.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT120ISC.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT120LOK.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT130FOR.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT130FOR_old.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT130FOR_old07out.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MT130FOR_old27nov.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MTA110OK.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\MTA130C8.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\SF1100E.prw
+M:\Protheus11\my projects\rdmake\Compras\Atual\SF1100i.PRW
+M:\Protheus11\my projects\rdmake\Compras\Misc\AtuSA2a.prw
+M:\Protheus11\my projects\rdmake\Compras\Misc\AtuSA2b.prw
+M:\Protheus11\my projects\rdmake\Compras\Misc\ccomm01.prw
+M:\Protheus11\my projects\rdmake\Compras\Misc\ccomm02.prw
+M:\Protheus11\my projects\rdmake\Compras\Misc\LP650H.PRW
+M:\Protheus11\my projects\rdmake\Compras\Relato\ccomr01.prw
+M:\Protheus11\my projects\rdmake\Compras\Relato\ccomr02.prw
+M:\Protheus11\my projects\rdmake\Compras\Relato\ccomr03.prw
+M:\Protheus11\my projects\rdmake\Compras\Relato\ccomr04.prw
+M:\Protheus11\my projects\rdmake\Compras\Relato\CCOMR05.prw
+M:\Protheus11\my projects\rdmake\contabil\CCONA001.PRW
+M:\Protheus11\my projects\rdmake\contabil\Cconm002.PRW
+M:\Protheus11\my projects\rdmake\contabil\Cconm002_old.PRW
+M:\Protheus11\my projects\rdmake\contabil\CCONM003.PRW
+M:\Protheus11\my projects\rdmake\contabil\CIEE001.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE001_OLD.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE001_OLD1.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE002.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE003.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE003_old.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE004.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE004_old.PRW
+M:\Protheus11\my projects\rdmake\contabil\CIEE005.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE005_BKP.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE005_old.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE006.PRW
+M:\Protheus11\my projects\rdmake\contabil\CIEE007.prw
+M:\Protheus11\my projects\rdmake\contabil\CIEE008.prw
+M:\Protheus11\my projects\rdmake\contabil\CTGER002.PRW
+M:\Protheus11\my projects\rdmake\contabil\CTGER003.prw
+M:\Protheus11\my projects\rdmake\contabil\ctger003_old.PRW
+M:\Protheus11\my projects\rdmake\contabil\CTGER02.prw
+M:\Protheus11\my projects\rdmake\contabil\CWKF001.prw
+M:\Protheus11\my projects\rdmake\contabil\CWKF001_old.prw
+M:\Protheus11\my projects\rdmake\contabil\CWKF002.prw
+M:\Protheus11\my projects\rdmake\contabil\CWKF002_old.prw
+M:\Protheus11\my projects\rdmake\contabil\CWKF003.prw
+M:\Protheus11\my projects\rdmake\contabil\CWKF003_old.prw
+M:\Protheus11\my projects\rdmake\contabil\CWKF004.prw
+M:\Protheus11\my projects\rdmake\contabil\CWKF005.prw
+M:\Protheus11\my projects\rdmake\contabil\FTMSREL.prw
+M:\Protheus11\my projects\rdmake\contabil\GERAPRO.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\AJCT2LIN.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\AJCT2SEQ.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\ANCTB102GR.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CCTB010.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CCTBA001.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CCTBA002.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CCTBA002_old.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CCTBR001.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CCTBR001A.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CCTBR001_old.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CCTBR002.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\Cctbr003.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\Cctbr003_OLD.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CT105CHK.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CT105CHK_old.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CT105LINOK.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CT105TOK.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTA040TOK.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTB102EXC.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTB102EXC_old.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTB350EF.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTB350EF_old.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTB350EF_old1.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTBA20CT.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTBR110.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTBTSTPO.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTGER001.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTGER001A.PRW
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\CTGER005.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\DPCTB102GR.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\DPCTB102GR_OLD.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\F3esp.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\VLCPLOTE.prw
+M:\Protheus11\my projects\rdmake\Contabil Gerencial\VLCPLOTE_old.prw
+M:\Protheus11\my projects\rdmake\Estoque\mata907.prx
+M:\Protheus11\my projects\rdmake\Estoque\XEXEC241.prw
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta01.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta02.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta03.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta04.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta05.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta06.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta07.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta08.prw
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta09.prw
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cesta09_old.prw
+M:\Protheus11\my projects\rdmake\Estoque\Atual\Cmata170.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Misc\cestm01.prw
+M:\Protheus11\my projects\rdmake\Estoque\Misc\cestm02.prw
+M:\Protheus11\my projects\rdmake\Estoque\Misc\cestm03.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Misc\Mata290a.prx
+M:\Protheus11\my projects\rdmake\Estoque\Pontos de Entrada\MT241GRV.prw
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr01.prw
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr01_old.prw
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr02.prw
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr03.prw
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr04.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr04_old.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr05.prw
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr06.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr06_old.PRW
+M:\Protheus11\my projects\rdmake\Estoque\Relato\Cestr07.PRW
+M:\Protheus11\my projects\rdmake\Faturamento\Atualizacoes\CFATA01.prw
+M:\Protheus11\my projects\rdmake\Faturamento\Atualizacoes\CFATA02.prw
+M:\Protheus11\my projects\rdmake\Faturamento\Gatilhos\CFATG01.prw
+M:\Protheus11\my projects\rdmake\Faturamento\NotaFiscal\danfeii.prw
+M:\Protheus11\my projects\rdmake\Faturamento\NotaFiscal\danfeiii.prw
+M:\Protheus11\my projects\rdmake\Faturamento\NotaFiscal\danfeii_old.prw
+M:\Protheus11\my projects\rdmake\Faturamento\NotaFiscal\nfesefaz.prw
+M:\Protheus11\my projects\rdmake\Faturamento\Ponto de Entrada\CATFA01.prw
+M:\Protheus11\my projects\rdmake\Faturamento\Ponto de Entrada\MA410MNU.prw
+M:\Protheus11\my projects\rdmake\Faturamento\Ponto de Entrada\MT410INC.prw
+M:\Protheus11\my projects\rdmake\Faturamento\Ponto de Entrada\MTA410T.prw
+M:\Protheus11\my projects\rdmake\Faturamento\Relatorio\CFATR01.PRW
+M:\Protheus11\my projects\rdmake\Faturamento\Relatorio\CFATR01_old.PRW
+M:\Protheus11\my projects\rdmake\Faturamento\Relatorio\r730.prx
+M:\Protheus11\my projects\rdmake\Financeiro\ConSB1.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\ContaE2A2.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fina420.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA40.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA40a.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA40b.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA41.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA41_OLD0.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA41_OLD1.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA42.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA43.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA44.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\CFINA44_old.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Aplicacoes\_GatRF1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\AFDELAG.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina01.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina02.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina02_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina03.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina04.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina05.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina05_old.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA06.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA06_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA07.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA08.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA09.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA10.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA10_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA11.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA11_old.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina12.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina13.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina14.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA15.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA15_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina16.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina16_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA17.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina18.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA19.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina20.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA21.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina22.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\cfina22_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina23.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina24.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina24_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA25.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA25_1.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA25_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cfina26.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA27.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA28.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA29.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA30.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA31.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA32.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA32_OLD.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA33.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA34.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA34_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA34_old1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA35.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA36.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA37.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA38.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA39.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA70.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA71.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CFINA72.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\COMPET1.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\COMPET2.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\COMPET3.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Cripta.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\CT102CARR.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F080ACONT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F100BROW.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F240CAN.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F240FIL.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F240OK.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F240PCB.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F240Tit.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F240tit.prw_OLD
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F240Tit_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F390TIT.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F420CIT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F420CRP.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F420FIL.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\F90SE5GRV.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA050BCO.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA050DEL.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA050DEL_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA050GRV.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA050GRV1.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA050Inc.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA050TUDOK.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA080CHK.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA080CMC.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA080OWN.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA100CA2.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA100TRF.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FA430CIT.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\Fina420_ap.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\fina580.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FINALEG.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FINALEG_bkp.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\FIXVALMNAT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\HISTCT2.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\markbrowse.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\NUMNCR.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\NUMNCRZ6.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\SZKDATA.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\VALSZ5.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Atual\ZERONCR.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Consulta\Cfinc01.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Consulta\Cfinc01_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Consulta\Cfinc02.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA55.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA56.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA561.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA57.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA58.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA58_old.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA59.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA60.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\CFINA61.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\COMPET55.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\rdmod3.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\WFCIEE1.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\old\CFINA55.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\old\CFINA56.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\old\CFINA57.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Conta Cartao ITAU\old\CFINA58.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\FL Contas a Pagar\AFIN050TP.prw
+M:\Protheus11\my projects\rdmake\Financeiro\FL Contas a Pagar\AFINRATEIO.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\FL Contas a Pagar\CADPAC.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\FL Contas a Pagar\xTELAFL.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINA51.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINA51_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINA51_old1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINA52.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINA52a.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINR53.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINR53_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINR54.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Fluxo de Caixa\CFINR55.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\A020DELE.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\A100BL01.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\A100TR01.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\A100TR02.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\A100TR03.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\A390AVU.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\A390CHEQ.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\A390SEF.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237agen_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237ano_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237ban_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237car_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237cep_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\B237CPF.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\B237CPF_OLD.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237cpo_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237cta_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237des_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237dgag_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237dgct_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237dgct_ap6_old.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237digv_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237doc_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237mod_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237mod_ap6_old.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237moeda_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237nos_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237seun_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237sld.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237SOMA.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237tpcta.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\B237TPDOC.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\b237val_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\CFINA28G.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\cfinm01.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\cfinm02.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\cfinm03.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\cfinm04.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\Codbar_ap6.prx
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\Criptar.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\CSA2MIG.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\CTACOMPL.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\CVipData.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\DesCriptar.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\E2MULNAT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\ExpoSB0.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\ExpoSB1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\ExpoSB2.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050BUT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050BUT_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050RAT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050RAUT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050ROT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050TMP1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050TMP2.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050TMP2_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F050TMP3.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F090BOR.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F090TOK.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\F390Grv.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA050ALT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA050FIN.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA050FIN_OLD.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA050INC.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA080CAN.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA090TIT.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA090TIT_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA090TIT_old1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FA100TRF.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FAO90TIT.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\FINA090.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\GATCODBAR.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\IMP_FFQ.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\IMP_FFQ_OLD.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\IMP_FFQ_old1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\LP532ORI.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\MA020TOK.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\PEFUNC.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\TEPEFIN.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\ValidRat.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\xCntAmor.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Misc\xVlVenct.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr001.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr001_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr002.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr003.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr003_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr004.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr004_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr005.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr005_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr006.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr006_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr007.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr007_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr008.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr008_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr009.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr010.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr011.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr011_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr011_old1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr012.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr012_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr012_old1.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr013.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr014.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr014_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr015.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr016.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr016_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr017.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr017_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr018.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr018_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\Cfinr019.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr022.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR024.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR024_old.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR026.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR028.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR029.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr030.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr031.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR032.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr055.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR19.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR20.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR20_old.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR21.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR21_old.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR23.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR25.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinr999.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\cfinrcrt.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Relato\CFINR_new.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Sispag\BB001_CC.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Sispag\BB002_CC.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Sispag\bordero.PRW
+M:\Protheus11\my projects\rdmake\Financeiro\Sispag\CFINA300.PRX
+M:\Protheus11\my projects\rdmake\Financeiro\Sispag\pagar341.prw
+M:\Protheus11\my projects\rdmake\Financeiro\Sispag\ST033_MD.prw
+M:\Protheus11\my projects\rdmake\Importa‡Æo\FIBANAT.prw
+M:\Protheus11\my projects\rdmake\Importa‡Æo\FIBANAT_A.prw
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpCR_ATIV.PRW
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpPlano.prw
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpSA1.PRW
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpSA2.PRW
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpSB3.prw
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpSB7.PRW
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpSB9.prw
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpSI1.prw
+M:\Protheus11\my projects\rdmake\Importa‡Æo\ImpTab.prw
+M:\Protheus11\my projects\rdmake\Importa‡Æo\SI3toCTT.prw
+M:\Protheus11\my projects\rdmake\Libs\COMPSX3.prw
+M:\Protheus11\my projects\rdmake\Misc\AJCODSB2.prw
+M:\Protheus11\my projects\rdmake\Misc\AJCODSB9.prw
+M:\Protheus11\my projects\rdmake\Misc\cmisc01.prw
+M:\Protheus11\my projects\rdmake\Misc\GetCpoVal.prw
+M:\Protheus11\my projects\rdmake\Misc\GetSld.prw
+M:\Protheus11\my projects\rdmake\Misc\GetXECus.prw
+M:\Protheus11\my projects\rdmake\Misc\rddemo.prw
+M:\Protheus11\my projects\rdmake\Misc\Sql2dbf.prw
+M:\Protheus11\my projects\rdmake\Misc\Sql2dbf_AP5.prw
+M:\Protheus11\my projects\rdmake\Misc\TEPOFIN.PRW
+M:\Protheus11\my projects\rdmake\Projetos\CPRJA01.prw
+M:\Protheus11\my projects\rdmake\Projetos\CPRJR01.PRW
+M:\Protheus11\my projects\rdmake\Projetos\CPRJR02.prw
+M:\Protheus11\my projects\rdmake\Projetos\CPRJW01.prw
+M:\Protheus11\my projects\rdmake\Projetos\TSTLINK.prw
+M:\Protheus11\my projects\rdmake\Temp\appre1.prv
+M:\Protheus11\my projects\rdmake\Temp\Cripta.prw
+M:\Protheus11\my projects\rdmake\Temp\DIALOG.PRV
+M:\Protheus11\my projects\rdmake\Temp\MATR080.PRX
+M:\Protheus11\my projects\rdmake\Temp\MATR440.PRX
+M:\Protheus11\my projects\rdmake\Temp\Teste.prw
+M:\Protheus11\my projects\rdmake\Temp\TESTE01.prw
+M:\Protheus11\my projects\rdmake\Temp\tstAxc.prw
+M:\Protheus11\my projects\rdmake\Temp\xAjSE2.prw
+M:\Protheus11\my projects\rdmake\Temp\xCriaTab.prw

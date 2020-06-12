@@ -1,0 +1,4457 @@
+#INCLUDE "RWMAKE.CH"   
+#INCLUDE "MATA410.CH"
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "XMLXFUN.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "FWEVENTVIEWCONSTS.CH"       
+#INCLUDE "FWADAPTEREAI.CH"     
+#INCLUDE "FWMVCDEF.CH"
+#INCLUDE "CRMDEF.CH"
+
+#DEFINE ITENSSC6 300                          
+                             
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Função    ³ MATA410  ³ Rev.  ³ Eduardo Riera         ³ Data ³ 26.08.2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³ Programa de atualizacao de Pedidos de Venda                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Void MATA410(void)                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Generico                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Andre Veiga  ³24/01/06³089953³-Tratamento do codigo do cliente com PadR³±±
+±±³              ³        ³      ³ para completar a posicao do array com o ³±±
+±±³              ³        ³      ³ tamanho correto do campo. No portal,    ³±±
+±±³              ³        ³      ³ o cliente 169 loja 01 estava sendo      ³±±
+±±³              ³        ³      ³ considerado como 16901 loja 01          ³±±
+±±³              ³        ³      ³                                         ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MATA410(xAutoCab,xAutoItens,nOpcAuto,lSimulacao,cRotina,cCodCli,cLoja,xRatCTBPC,xAdtPC,xParamAuto,lSigaDPR,cFilDef,aAddFil,cVDefault)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local aCores   := {}
+Local cRoda    := ""
+Local bRoda    := {|| .T.}
+Local xRet     := Nil
+Local nPos	   := 0
+Local cFilSQL  := Nil
+Local oMBrowse := Nil
+Local oTableAtt	:= Nil
+Local nX			:= 0
+Local nScan		:= 0
+
+PRIVATE lOnUpdate  := .T.	
+PRIVATE l410Auto   := xAutoCab <> NIL  .And. xAutoItens <> NIL
+PRIVATE aAutoCab   := {}
+PRIVATE aAutoItens := {} 
+Private aParamAuto := {}
+PRIVATE aRotina	 := MenuDef()
+	
+PRIVATE aRatCTBPC  := If(xRatCTBPC<>NIL,xRatCTBPC,{})
+PRIVATE aAdtPC     := If(xAdtPC <> NIL,xAdtPC,{})
+PRIVATE nAutoAdt   := If(nOpcAuto <> NIL,nOpcAuto,0)
+PRIVATE cCadastro := OemToAnsi(STR0007) //"Atualização de Pedidos de Venda"
+If ( cPaisLoc != "BRA" )
+	PRIVATE aArrayAE:={}
+	PRIVATE lImpMsg:=.T.
+EndIf
+
+DEFAULT nOpcAuto   := 3
+DEFAULT lSimulacao := .F.
+DEFAULT lSigaDPR   := .F.
+Default cFilDef    := ""
+Default aAddFil    := {}
+Default cVDefault  := ""
+
+PRIVATE aHeadLEA :={} //Template GEM - Solidarios
+PRIVATE aColsLEA :={} //Template GEM - Solidarios
+PRIVATE lShowOpc := .T.
+PRIVATE aMemoSC6 := { { 'C6_CODINF', 'C6_INFAD' } }
+Private lPlanRaAtv	:= .F.	//LOGICO PARA VALIDACAO DA PLANILHA
+Private cFilAux	   := cFilAnt // Variavel utilizada no FINC010	
+
+Private lExAutoDPR	:= lSigaDPR	
+
+AjustaSX3()
+
+aCores :=	{{	"Empty(C5_LIBEROK).And.Empty(C5_NOTA) .And. Empty(C5_BLQ)"	,	'GREEN'	,	STR0264	},;		//Pedido em Aberto
+			{	"!Empty(C5_NOTA).Or.C5_LIBEROK=='E' .And. Empty(C5_BLQ)"	,	'RED'		,	STR0265	},;		//Pedido Encerrado
+			{	"!Empty(C5_LIBEROK).And.Empty(C5_NOTA).And. Empty(C5_BLQ)"	,	'YELLOW'	,	STR0266	},;		//Pedido Liberado
+			{	"C5_BLQ == '1'"													,	'BLUE'		,	STR0267	},;		//Pedido Bloquedo por regra
+			{	"C5_BLQ == '2'"													,	'ORANGE'	,	STR0268	}}		//Pedido Bloquedo por verba
+			
+If cPaisLoc <> "BRA"
+	aAdd(aCores,{})
+	Ains(aCores,1)
+	aCores[1] := {"AllTrim(C5_NOTA)=='REMITO'",'GREY',STR0263} //Remito
+Endif          
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Ajuste no SX3                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+A410AjuSX3()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Tratamento de Rotina Automatica            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If ValType( cRotina ) == "C"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Faz tratamento para chamada por outra rotina             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !Empty( nScan := AScan( aRotina, { |x| Upper(Alltrim(x[2])) == Upper(Alltrim(cRotina)) } ) )
+		bRoda := &( "{ || " + cRotina + "( 'SC5', SC5->( Recno() ), " + Str(nScan,2) + If(ValType(cCodCli)=="C",",nil,nil,nil,nil,nil,cCodCli,cLoja", "" ) + ") } " )
+		xRet  := Eval( bRoda )
+	EndIf
+
+Else
+
+	If  ( Type("l410Auto") <> "U" .And. l410Auto )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Tratamento do tamanho do campo do C5_CLIENTE. Por algum motivo, ³
+		//³ a MBrowseAuto sempre retornava este campo concatenado com o     ³
+		//³ C5_LOJA, por isto, foi feito o tratamento com o PadR para manter³
+		//³ o tamanho do campo C5_CLIENTE cf. o SX3                         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nPos := aScan( xAutoCab, {|x| Alltrim( Upper( x[1] ) ) == "C5_CLIENTE" } )
+		If nPos > 0
+			xAutoCab[nPos][2] := PadR( xAutoCab[nPos][2], TamSX3("C5_CLIENTE")[1] )
+		Endif
+
+		// Valida o array Rateio por CCusto - rotina automatica
+		If a410RatAut(aRatCTBPC)
+			lOnUpdate  := !lSimulacao
+			aAutoCab   := xAutoCab
+			aAutoItens := xAutoItens
+			aParamAuto := IIf(xParamAuto<>NIL,xParamAuto,{})
+			MBrowseAuto(nOpcAuto,Aclone(aAutoCab),"SC5")
+			xAutoCab   := aAutoCab
+			xAutoItens := aAutoItens
+		Endif
+
+	Else 
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Define variaveis de parametrizacao de lancamentos    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ MV_PAR01 Sugere Quantidade Liberada ? Sim/Nao        ³
+		//³ MV_PAR02 Preco Venda Com Substituicao ? Sim?Nao      ³
+		//³ MV_PAR03 Utiliz.Op.Triangular     ?   Sim/Nao        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Ativa tecla F-10 para parametros                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		SetKey(VK_F12,{|| a410Ativa()})
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Ponto de Entrada para alterar cores do Browse do Cadastro    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ExistBlock("MA410COR")
+			aCores := ExecBlock("MA410COR",.F.,.F.,aCores)
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Endereca a funcao de BROWSE                          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ExistTemplate("MT410BRW")
+			ExecTemplate("MT410BRW",.F.,.F.)
+		EndIf
+
+		If ExistBlock("MT410BRW")
+			ExecBlock("MT410BRW",.F.,.F.)
+		EndIf
+
+		oMBrowse := FWMBrowse():New()
+		oMBrowse:SetAlias( "SC5" )			
+		oMBrowse:SetDescription( cCadastro )
+		
+		#IFDEF TOP
+			If ExistBlock("M410FSQL")	// Filtro SQL na MBrowser
+				cFilSQL := ExecBlock("M410FSQL",.F.,.F.)
+				If !Empty( cFilSQL ) 
+					oMBrowse:AddFilter( STR0244, cFilSQL, .T., .T., "SC5", , , "SC5_FILENT" )		// "Filtro do Ponto de Entrada - M410FSQL"		 
+					oMBrowse:ExecuteFilter()
+				EndIf	
+			EndIf
+		#ENDIF
+
+		//Adiciona a legenda
+		For nX := 1 To Len( aCores )
+			oMBrowse:AddLegend( aCores[nX][1], aCores[nX][2], aCores[nX][3] )
+		Next nX
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Filtro Default do Browse                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty( cFilDef )
+			oMBrowse:SetFilterDefault( cFilDef )
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Filtros adicionais do Browse                           ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For nX := 1 To Len( aAddFil )
+			oMBrowse:DeleteFilter( aAddFil[nX][ADDFIL_ID] )
+			oMBrowse:AddFilter( aAddFil[nX][ADDFIL_TITULO], ;
+							      aAddFil[nX][ADDFIL_EXPR], ;
+					             aAddFil[nX][ADDFIL_NOCHECK], ;
+							      aAddFil[nX][ADDFIL_SELECTED], ;
+							      aAddFil[nX][ADDFIL_ALIAS], ;
+							      aAddFil[nX][ADDFIL_FILASK], ;
+							      aAddFil[nX][ADDFIL_FILPARSER], ;
+							      aAddFil[nX][ADDFIL_ID] )		 
+			oMBrowse:ExecuteFilter()	
+		Next nX		
+		
+		//Adiciona as visões e gráficos
+		oMBrowse:SetAttach(.T.)
+		oTableAtt := TableAttDef()
+		
+		If oTableAtt <> Nil			
+			oMBrowse:SetViewsDefault(oTableAtt:aViews)
+			oMBrowse:SetChartsDefault(oTableAtt:aCharts)
+
+			// selecionando a visão inicial 
+			If !Empty( cVDefault ) 
+				nScan := aScan( oTableAtt:aViews, { |x| x:cID == cVDefault } )
+				If nScan > 0 
+					oMBrowse:SetIDViewDefault( oTableAtt:aViews[nScan]:cID )
+				EndIf
+			EndIf
+			
+			oMBrowse:SetIDChartDefault( "DSTotVend" )
+		EndIf
+				
+		//Se não for SIGACRM inibe a exibição do gráfico
+		If nModulo <> 73
+			oMBrowse:SetOpenChart( .F. )
+		EndIf			
+		oMBrowse:SetTotalDefault('C5_FILIAL','COUNT',STR0246) //'Total de Registros'		
+		oMBrowse:Activate()
+	Endif
+
+EndIf
+
+dbSelectArea("SC5")
+dbSetOrder(1)
+dbClearFilter()
+SetKey(VK_F12,Nil)
+
+Return( .T. )
+
+//------------------------------------------------------------------------------
+/*/	{Protheus.doc} TableAttDef
+
+Cria as visões e gráficos padrão para Pedidos de Venda.
+
+@sample	TableAttDef()
+
+@param		Nenhum
+
+@return	ExpA - Array de Objetos com as Visoes e Gráficos.
+
+@author	Aline Kokumai
+@since		02/05/2014
+@version	12
+/*/
+//------------------------------------------------------------------------------
+
+Static Function TableAttDef()
+
+Local oTableAtt	:= FWTableAtt():New()
+Local oDSAberto	:= Nil // Pedidos Abertos
+Local oDSEncerr	:= Nil // Pedidos Encerrados
+Local oDSLibera	:= Nil // Pedidos Liberados
+Local oDSBqRegr	:= Nil // Pedidos Bloqueados por Regra
+Local oDSBqVerb	:= Nil // Pedidos Bloqueados por Verba
+Local oDSAtivos	:= Nil // Pedidos Ativos
+Local oDSInativ	:= Nil // Pedidos Inativos
+Local oDSTotVend	:= Nil // Colunas: Total do Pedido Por Vendedor
+Local oDSTotProd	:= Nil // Colunas: Valor Total Por Produto 
+Local oDSVendReg	:= Nil // Colunas: Vendas Por Região
+
+If IsInCallStack("CRMA310") .OR. IsInCallStack("CRMA290") .OR. IsInCallStack("CRMA290A") .Or. IsInCallStack( "CA290CWDGT" )
+	
+	// Meus Pedidos
+	oDSMyPedid := FWDSView():New()
+	oDSMyPedid:SetName(STR0269) //"Meus Pedidos"
+	oDSMyPedid:SetID("DSMyPedid") 
+	oDSMyPedid:SetOrder(1) // C5_FILIAL+C5_NUM
+	oDSMyPedid:SetCollumns({	"C5_FILIAL","C5_NUM","C5_CLIENTE","C5_LOJACLI","C5_CLIENT","C5_LOJAENT",;
+								"C5_CONDPAG","C5_TABELA","C5_VEND1","C5_EMISSAO","C5_MSBLQL","C5_TIPO" })
+	oDSMyPedid:SetPublic( .T. )
+	oDSMyPedid:AddFilterRelation( "AO4", "AO4_CHVREG", "C5_FILIAL+C5_NUM" )
+	oDSMyPedid:AddFilter(STR0269, "AO4_ENTIDA='SC5' .AND. AO4_CODUSR == '"+RetCodUsr()+"' .AND. AO4_CTRLTT == .T.","AO4") //"Meus Pedidos"
+	oTableAtt:AddView(oDSMyPedid)
+
+EndIf
+	
+// Pedidos Abertos
+oDSAberto := FWDSView():New()
+oDSAberto:SetName(STR0258) //"Pedidos Abertos"
+oDSAberto:SetID("DSAberto") 
+oDSAberto:SetOrder(1) // C5_FILIAL+C5_NUM
+oDSAberto:SetCollumns({	"C5_FILIAL","C5_NUM","C5_CLIENTE","C5_LOJACLI","C5_CLIENT","C5_LOJAENT",;
+							"C5_CONDPAG","C5_TABELA","C5_VEND1","C5_EMISSAO","C5_MSBLQL","C5_TIPO" })
+oDSAberto:SetPublic( .T. )
+oDSAberto:AddFilter(STR0258, "Empty(C5_LIBEROK).And.Empty(C5_NOTA) .And. Empty(C5_BLQ)") //"Pedidos Abertos"
+oTableAtt:AddView(oDSAberto)
+
+// Pedidos Encerrados
+oDSEncerr := FWDSView():New()
+oDSEncerr:SetName(STR0259) //"Pedidos Encerrados"
+oDSEncerr:SetID("DSEncerr") 
+oDSEncerr:SetOrder(1) // C5_FILIAL+C5_NUM
+oDSEncerr:SetCollumns({	"C5_FILIAL","C5_NUM","C5_CLIENTE","C5_LOJACLI","C5_CLIENT","C5_LOJAENT",;
+							"C5_CONDPAG","C5_TABELA","C5_VEND1","C5_EMISSAO","C5_MSBLQL","C5_TIPO" })
+oDSEncerr:SetPublic( .T. )
+oDSEncerr:AddFilter(STR0259, "!Empty(C5_NOTA).Or.C5_LIBEROK=='E' .And. Empty(C5_BLQ)") //"Pedidos Encerrados"
+oTableAtt:AddView(oDSEncerr)
+
+// Pedidos Liberados
+oDSLibera := FWDSView():New()
+oDSLibera:SetName(STR0260) //"Pedidos Liberados"
+oDSLibera:SetID("DSLibera") 
+oDSLibera:SetOrder(1) // C5_FILIAL+C5_NUM
+oDSLibera:SetCollumns({	"C5_FILIAL","C5_NUM","C5_CLIENTE","C5_LOJACLI","C5_CLIENT","C5_LOJAENT",;
+							"C5_CONDPAG","C5_TABELA","C5_VEND1","C5_EMISSAO","C5_MSBLQL","C5_TIPO" })
+oDSLibera:SetPublic( .T. )
+oDSLibera:AddFilter(STR0260, "!Empty(C5_LIBEROK).And.Empty(C5_NOTA).And. Empty(C5_BLQ)") //"Pedidos Liberados"
+oTableAtt:AddView(oDSLibera)
+
+// Pedidos Bloqueados Por Regra
+oDSBqRegr := FWDSView():New()
+oDSBqRegr:SetName(STR0261) //"Pedidos Bloqueados Por Regra"
+oDSBqRegr:SetID("DSBqRegr") 
+oDSBqRegr:SetOrder(1) // C5_FILIAL+C5_NUM
+oDSBqRegr:SetCollumns({	"C5_FILIAL","C5_NUM","C5_CLIENTE","C5_LOJACLI","C5_CLIENT","C5_LOJAENT",;
+							"C5_CONDPAG","C5_TABELA","C5_VEND1","C5_EMISSAO","C5_MSBLQL","C5_TIPO" })
+oDSBqRegr:SetPublic( .T. )
+oDSBqRegr:AddFilter(STR0261, "C5_BLQ == '1'") //"Pedidos Bloqueados Por Regra"
+oTableAtt:AddView(oDSBqRegr)
+
+// Pedidos Bloqueados Por Verba
+oDSBqVerb := FWDSView():New()
+oDSBqVerb:SetName(STR0262) //"Pedidos Bloqueados Por Verba"
+oDSBqVerb:SetID("DSBqVerb") 
+oDSBqVerb:SetOrder(1) // C5_FILIAL+C5_NUM
+oDSBqVerb:SetCollumns({	"C5_FILIAL","C5_NUM","C5_CLIENTE","C5_LOJACLI","C5_CLIENT","C5_LOJAENT",;
+							"C5_CONDPAG","C5_TABELA","C5_VEND1","C5_EMISSAO","C5_MSBLQL","C5_TIPO" })
+oDSBqVerb:SetPublic( .T. )
+oDSBqVerb:AddFilter(STR0262, "C5_BLQ == '2'") //"Pedidos Bloqueados Por Verba"
+oTableAtt:AddView(oDSBqVerb)
+
+// Pedidos Ativos
+oDSAtivos := FWDSView():New()
+oDSAtivos:SetName(STR0247) //"Pedidos Ativos"
+oDSAtivos:SetID("DSAtivos") 
+oDSAtivos:SetOrder(1) // C5_FILIAL+C5_NUM
+oDSAtivos:SetCollumns({	"C5_FILIAL","C5_NUM","C5_CLIENTE","C5_LOJACLI","C5_CLIENT","C5_LOJAENT",;
+							"C5_CONDPAG","C5_TABELA","C5_VEND1","C5_EMISSAO","C5_MSBLQL","C5_TIPO" })
+oDSAtivos:SetPublic( .T. )
+oDSAtivos:AddFilter(STR0247, "C5_MSBLQL == '2'") //"Pedidos Ativos"
+oTableAtt:AddView(oDSAtivos)
+
+// Pedidos Inativos
+oDSInativ := FWDSView():New()
+oDSInativ:SetName(STR0248) //"Pedidos Inativos"
+oDSInativ:SetID("DSInativ") 
+oDSInativ:SetOrder(1) // C5_FILIAL+C5_NUM
+oDSInativ:SetCollumns({	"C5_FILIAL","C5_NUM","C5_CLIENTE","C5_LOJACLI","C5_CLIENT","C5_LOJAENT",;
+							"C5_CONDPAG","C5_TABELA","C5_VEND1","C5_EMISSAO","C5_MSBLQL","C5_TIPO" })
+oDSInativ:SetPublic( .T. )
+oDSInativ:AddFilter(STR0248, "C5_MSBLQL == '1'") //"Pedidos Inativos"
+oTableAtt:AddView(oDSInativ)
+
+// GRAFICOS
+// Colunas: Vendas Por Vendedor
+oDSTotVend := FWDSChart():New()	
+oDSTotVend:SetName(STR0249) //"Vendas Por Vendedor"
+oDSTotVend:setTitle(STR0249) //"Vendas Por Vendedor"
+oDSTotVend:SetID("DSTotVend") 
+oDSTotVend:SetType("BARCOMPCHART")
+oDSTotVend:SetSeries({ {"SC6", "C6_VALOR", "SUM"} })
+oDSTotVend:SetCategory( { {"SA3", "A3_NOME"} } )
+oDSTotVend:SetPublic( .T. )
+oDSTotVend:SetLegend( CONTROL_ALIGN_BOTTOM ) //Inferior
+oDSTotVend:SetTitleAlign( CONTROL_ALIGN_CENTER ) 
+oTableAtt:AddChart(oDSTotVend)
+
+// Colunas: Vendas Por Produto 
+oDSTotProd := FWDSChart():New()	
+oDSTotProd:SetName(STR0250) //"Vendas Por Produto"
+oDSTotProd:setTitle(STR0250) //"Vendas Por Produto"
+oDSTotProd:SetID("DSTotProd") 
+oDSTotProd:SetType("BARCOMPCHART")
+oDSTotProd:SetSeries({ {"SC6", "C6_VALOR", "SUM"} })
+oDSTotProd:SetCategory( { {"SC6", "C6_PRODUTO"} } )
+oDSTotProd:SetPublic( .T. )
+oDSTotProd:SetLegend( CONTROL_ALIGN_BOTTOM ) //Inferior
+oDSTotProd:SetTitleAlign( CONTROL_ALIGN_CENTER ) 
+oTableAtt:AddChart(oDSTotProd)
+
+// Colunas: Vendas Por Região
+oDSVendReg := FWDSChart():New()	
+oDSVendReg:SetName(STR0251) //"Vendas Por Região"
+oDSVendReg:setTitle(STR0251) //"Vendas Por Região"
+oDSVendReg:SetID("DSVendReg") 
+oDSVendReg:SetType("BARCOMPCHART")
+oDSVendReg:SetSeries({ {"SC6", "C6_VALOR", "SUM"} })
+oDSVendReg:SetCategory( { {"SA1", "A1_REGIAO"} } )
+oDSVendReg:SetPublic( .T. )
+oDSVendReg:SetLegend( CONTROL_ALIGN_BOTTOM ) //Inferior
+oDSVendReg:SetTitleAlign( CONTROL_ALIGN_CENTER ) 
+oTableAtt:AddChart(oDSVendReg)
+
+oTableAtt:SetAlias("SC5")
+
+Return (oTableAtt)	
+	
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³a410Visual³ Rev.  ³Eduardo Riera          ³ Data ³26.08.2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Visualizacao do Pedido de Venda                             ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN2: Recno do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN3: Opcao do arotina                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³Esta rotina tem como objetivo efetuar a interface com o usua³±±
+±±³          ³rio e o pedido de vendas                                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais/Distribuicao/Logistica                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A410Visual(cAlias,nReg,nOpc)
+
+Local aArea    := GetArea()
+Local aCpos1   := {"C6_QTDVEN ","C6_QTDLIB"}
+Local aCpos2   := {}
+Local aBackRot := aClone(aRotina)
+Local aPosObj  := {}
+Local aObjects := {}
+Local aSize    := {}
+Local aPosGet  := {}
+Local aInfo    := {}
+
+Local lContinua:= .T.
+Local lGrade   := MaGrade()
+Local lQuery   := .F.
+Local lFreeze  := (SuperGetMv("MV_PEDFREZ",.F.,0) <> 0)
+
+Local nGetLin  := 0
+Local nOpcA    := 0
+Local nTotPed  := 0
+Local nTotDes  := 0
+Local nCntFor  := 0
+Local nNumDec  := TamSX3("C6_VALOR")[2]
+Local nColFreeze:= SuperGetMv("MV_PEDFREZ",.F.,0)
+Local nCont    := 0
+
+Local cArqQry  := "SC6"
+Local cCadastro:= IIF(Type('cCadastro') == 'U',OemToAnsi("STR0007"),cCadastro) //"Atualização de Pedidos de Venda"
+Local oGetd
+Local oSAY1
+Local oSAY2
+Local oSAY3
+Local oSAY4
+Local oDlg
+Local lMt410Ace:= Existblock("MT410ACE")
+
+Local bCond     := {|| .T. }
+Local bAction1  := {|| Mta410Vis(cArqQry,@nTotPed,@nTotDes,lGrade) }	
+Local bAction2  := {|| .T. }
+Local cSeek     := ""
+Local aNoFields := {"C6_NUM","C6_QTDEMP","C6_QTDENT","C6_QTDEMP2","C6_QTDENT2"}		// Campos que nao devem entrar no aHeader e aCols
+Local bWhile    := {|| }
+Local cQuery    := ""
+Local lGrdOk	:= If(lGrade.And.MatOrigGrd()=="SB4",VldDocGrd(1,SC5->C5_NUM),.T.)
+Local aRecnoSE1RA
+Local aHeadAGG    := {}
+Local aColsAGG    := {}
+Local cMemo       := ''
+Local cCampo      := ''
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa a Variaveis Privates.                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aTrocaF3  := {}
+PRIVATE aTELA[0][0],aGETS[0]
+PRIVATE aHeader	  := {}
+PRIVATE aCols	  := {}
+PRIVATE aHeadFor  := {}
+PRIVATE aColsFor  := {}
+PRIVATE N         := 1
+PRIVATE aGEMCVnd  := {"",{},{}} //Template GEM - Condicao de Venda 
+PRIVATE oGetPV	  := Nil
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o campo de codigo de lancamento cat 83 ³
+//³deve estar visivel no acols                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !SuperGetMV("MV_CAT8309",,.F.)
+	aAdd(aNoFields,"C6_CODLAN")
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Agroindustria  									                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If FindFunction("OGXUtlOrig") //Encontra a função
+	If OGXUtlOrig()
+		If (FindFunction("OGX220"))//Encontra a função
+			lContinua := OGX220()
+		EndIf
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Agroindustria  									                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If FindFunction("OGXUtlOrig") //Encontra a função
+	If OGXUtlOrig()
+	   If FindFunction("OGX225")//Encontra a função
+	      lContinua := OGX225()
+	   EndIf
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de entrada para validar acesso do usuario na funcao ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lMt410Ace
+	lContinua := Execblock("MT410ACE",.F.,.F.,{nOpc})
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Ambiente/Objeto para tratamento de grade        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ        
+If IsAtNewGrd()
+		PRIVATE oGrade	  := MsMatGrade():New('oGrade',,"C6_QTDVEN",,"a410GValid()",;
+							{ 	{VK_F4,{|| A440Saldo(.T.,oGrade:aColsAux[oGrade:nPosLinO][aScan(oGrade:aHeadAux,{|x| AllTrim(x[2])=="C6_LOCAL"})])}} },;
+	  						{ 	{"C6_QTDVEN",.T., {{"C6_UNSVEN",{|| ConvUm(AllTrim(oGrade:GetNameProd(,nLinha,nColuna)),aCols[nLinha][nColuna],0,2) } }} },;
+	  							{"C6_QTDLIB",NIL,NIL},;
+	  							{"C6_QTDENT",NIL,NIL},;
+	  							{"C6_ITEM"	,NIL,NIL},;
+	  							{"C6_UNSVEN",NIL, {{"C6_QTDVEN",{|| ConvUm(AllTrim(oGrade:GetNameProd(,nLinha,nColuna)),0,aCols[nLinha][nColuna],1) }}} },;
+	  							{"C6_OPC",NIL,NIL},;
+								{"C6_NUMOP",NIL,NIL},;
+								{"C6_ITEMOP",NIL,NIL},;
+	  							{"C6_BLQ",NIL,NIL}})	
+	//-- Inicializa grade multicampo
+	A410InGrdM()
+Else
+	PRIVATE aColsGrade:= {}
+	PRIVATE aHeadGrade:= {}
+EndIf
+
+If Type("Inclui") == "U"
+	Inclui := .F.
+	Altera := .F.
+EndIf
+Pergunte("MTA410",.F.) 
+//Carrega as variaveis com os parametros da execauto
+Ma410PerAut()
+
+If ( lGrade )
+	aRotina[nOpc][4] := 6
+EndIf
+
+If lGrdOk
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Inicializa a Variaveis da Enchoice.                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	RegToMemory( "SC5", .F., .F. )
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Filtros para montagem do aCols                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SC6")
+	dbSetOrder(1)
+	#IFDEF TOP
+		lQuery  := .T.
+		cQuery := "SELECT * "
+		cQuery += "FROM "+RetSqlName("SC6")+" SC6 "
+		cQuery += "WHERE SC6.C6_FILIAL='"+xFilial("SC6")+"' AND "
+		cQuery += "SC6.C6_NUM='"+SC5->C5_NUM+"' AND "
+		cQuery += "SC6.D_E_L_E_T_<>'*' "
+		cQuery += "ORDER BY "+SqlOrder(SC6->(IndexKey()))
+	
+		dbSelectArea("SC6")
+		dbCloseArea()
+	#ENDIF
+	cSeek  := xFilial("SC6")+SC5->C5_NUM
+	bWhile := {|| C6_FILIAL+C6_NUM }
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Montagem do aHeader e aCols                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³FillGetDados( nOpcx, cAlias, nOrder, cSeekKey, bSeekWhile, uSeekFor, aNoFields, aYesFields, lOnlyYes,       ³
+	//³				  cQuery, bMountFile, lInclui )                                                                ³
+	//³nOpcx			- Opcao (inclusao, exclusao, etc).                                                         ³
+	//³cAlias		- Alias da tabela referente aos itens                                                          ³
+	//³nOrder		- Ordem do SINDEX                                                                              ³
+	//³cSeekKey		- Chave de pesquisa                                                                            ³
+	//³bSeekWhile	- Loop na tabela cAlias                                                                        ³
+	//³uSeekFor		- Valida cada registro da tabela cAlias (retornar .T. para considerar e .F. para desconsiderar ³
+	//³				  o registro)                                                                                  ³
+	//³aNoFields	- Array com nome dos campos que serao excluidos na montagem do aHeader                         ³
+	//³aYesFields	- Array com nome dos campos que serao incluidos na montagem do aHeader                         ³
+	//³lOnlyYes		- Flag indicando se considera somente os campos declarados no aYesFields + campos do usuario   ³
+	//³cQuery		- Query para filtro da tabela cAlias (se for TOP e cQuery estiver preenchido, desconsidera     ³
+	//³	           parametros cSeekKey e bSeekWhiele)                                                              ³
+	//³bMountFile	- Preenchimento do aCols pelo usuario (aHeader e aCols ja estarao criados)                     ³
+	//³lInclui		- Se inclusao passar .T. para qua aCols seja incializada com 1 linha em branco                 ³
+	//³aHeaderAux	-                                                                                              ³
+	//³aColsAux		-                                                                                              ³
+	//³bAfterCols	- Bloco executado apos inclusao de cada linha no aCols                                         ³
+	//³bBeforeCols	- Bloco executado antes da inclusao de cada linha no aCols                                     ³
+	//³bAfterHeader -                                                                                              ³
+	//³cAliasQry	- Alias para a Query                                                                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	FillGetDados(nOPc,"SC6",1,cSeek,bWhile,{{bCond,bAction1,bAction2}},aNoFields,/*aYesFields*/,/*lOnlyYes*/,cQuery,/*bMontCols*/,.F.,/*aHeaderAux*/,/*aColsAux*/,{|| AfterCols(cArqQry) },/*bBeforeCols*/,/*bAfterHeader*/,"SC6")
+	
+	If"MATA410" $ SuperGetMV("MV_GRDMULT",.F.,"") .And. lGrade
+		aCols := aColsGrade(oGrade,aCols,aHeader,"C6_PRODUTO","C6_ITEM","C6_ITEMGRD",aScan(aHeader,{|x| AllTrim(x[2]) == "C6_DESCRI"}))
+	EndIf
+
+	A410FRat(@aHeadAGG,@aColsAGG)	
+	
+	If lQuery
+		dbSelectArea("SC6")
+		dbCloseArea()
+		ChkFile("SC6",.F.)
+	EndIf
+	
+	
+	For nCntFor := 1 To Len(aHeader)
+		If aHeader[nCntFor][8] == "M"
+			aAdd(aCpos1,aHeader[nCntFor][2])
+		EndIf
+	Next nCntFor
+
+	nTotDes  += A410Arred(nTotPed*M->C5_PDESCAB/100,"C6_VALOR")
+	nTotPed  -= A410Arred(nTotPed*M->C5_PDESCAB/100,"C6_VALOR")	
+	nTotPed  -= M->C5_DESCONT
+	nTotDes  += M->C5_DESCONT
+
+	If ( lQuery )
+		dbSelectArea(cArqQry)
+		dbCloseArea()
+		ChkFile("SC6",.F.)
+		dbSelectArea("SC6")
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Monta o array com as formas de pagamento       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Ma410MtFor(@aHeadFor,@aColsFor)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Caso nao ache nenhum item , abandona rotina.         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( Len(aCols) == 0 )
+		Help(" ",1,"A410SEMREG")
+		lContinua := .F.
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Ponto de Entrada para visualizao do pedido de vendas  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	
+	If ExistBlock("M410VIS")
+		ExecBlock("M410VIS",.F.,.F.)
+	EndIf
+	
+	If ( lContinua )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Faz o calculo automatico de dimensoes de objetos     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aSize := MsAdvSize()
+		aObjects := {}
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 020, .t., .f. } )
+	
+		aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+		aPosObj := MsObjSize( aInfo, aObjects )
+	
+		aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,;
+			{{003,033,160,200,240,263}} )
+	
+		DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL STYLE nOr(WS_VISIBLE,WS_POPUP)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Estabelece a Troca de Clientes conforme o Tipo do Pedido de Venda      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ( M->C5_TIPO $ "DB" )
+			aTrocaF3 := {{"C5_CLIENTE","SA2"}}
+		Else
+			aTrocaF3 := {}
+		EndIf
+		oGetPV:=MSMGet():New( cAlias, nReg, nOpc, , , , , aPosObj[1],aCpos2,3,,,"A415VldTOk")
+		nGetLin := aPosObj[3,1]
+		//@ nGetLin,aPosGet[1,1]  SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009)) SIZE 020,09 PIXEL	//"Fornec.:"###"Cliente: "
+		@ nGetLin,aPosGet[1,2]  SAY oSAY1 VAR Space(40)						SIZE 120,09 PICTURE "@!" OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,3]  SAY OemToAnsi(STR0011)						SIZE 020,09 OF oDlg PIXEL	//"Total :"
+		@ nGetLin,aPosGet[1,4]  SAY oSAY2 VAR 0 PICTURE TM(0,22,Iif(cPaisloc=="CHI" .And. M->C5_MOEDA == 1,NIL,nNumDec))		SIZE 060,09 OF oDlg	PIXEL
+		@ nGetLin,aPosGet[1,5]  SAY OemToAnsi(STR0012)						SIZE 030,09 OF oDlg PIXEL	//"Desc. :"
+		@ nGetLin,aPosGet[1,6]  SAY oSAY3 VAR 0 PICTURE TM(0,22,Iif(cPaisloc=="CHI" .And. M->C5_MOEDA == 1,NIL,nNumDec))		SIZE 060,09 OF oDlg	PIXEL RIGHT
+		@ nGetLin+10,aPosGet[1,5] SAY OemToAnsi("=")							SIZE 020,09 OF oDlg PIXEL
+		@ nGetLin+10,aPosGet[1,6] SAY oSAY4 VAR 0								SIZE 060,09 PICTURE TM(0,22,Iif(cPaisloc=="CHI" .And. M->C5_MOEDA == 1,NIL,nNumDec)) OF oDlg PIXEL RIGHT
+		oDlg:Cargo	:= {|c1,n2,n3,n4| oSay1:SetText(c1),;
+			oSay2:SetText(n2),;
+			oSay3:SetText(n3),;
+			oSay4:SetText(n4) }
+		oGetd   := MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,,,"",,aCpos1,nColFreeze,,,"A410FldOk(1)",,,,,lFreeze)	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Desabilitar os gets de cliente e loja de entrega na visualização para quando utilizado ³
+		//³pedidos do tipo D ou B pois é utilizado fornecedores		                                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SC5->C5_TIPO $ "D|B"
+			nPosCliEnt := AsCan(oGetPV:aENTRYCTRLS,{|x| UPPER(TRIM(x:cReadVar))=="SC5->C5_CLIENT"})
+			nPosLojEnt := AsCan(oGetPV:aENTRYCTRLS,{|x| UPPER(TRIM(x:cReadVar))=="SC5->C5_LOJAENT"})
+		 	If nPosCliEnt > 0 .And. nPosLojEnt > 0
+				oGetPV:AENTRYCTRLS[nPosCliEnt]:LACTIVE := .F.
+				oGetPV:AENTRYCTRLS[nPosLojEnt]:LACTIVE := .F.
+			EndIf	
+		EndIf
+	   
+	   	A410Bonus(2)
+		Ma410Rodap(oGetd,nTotPed,nTotDes)
+		ACTIVATE MSDIALOG oDlg ON INIT (A410Limpa(.F.,M->C5_TIPO),Ma410Bar(oDlg,{||nOpcA:=1,oDlg:End()},{||oDlg:End()},nOpc,oGetD,nTotPed,@aRecnoSE1RA,@aHeadAGG,@aColsAGG))
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Ponto de Entrada apos visualizao do pedido de vendas  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ExistBlock("MTA410V")
+		ExecBlock("MTA410V",.F.,.F.)
+	EndIf
+EndIf	
+
+aRotina := aClone(aBackRot)
+RestArea(aArea)
+
+Return( nOpcA )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³a410Inclui³ Rev.  ³Eduardo Riera          ³ Data ³26.08.2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Inclusao do do pedido de venda                              ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN2: Recno do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN3: Opcao do arotina                                     ³±±
+±±³          ³ExpL4: Indica se a inclusao vem de um orcamento             ³±±
+±±³          ³ExpL5: Recnos do arquivo SC5 de um orcamento                ³±±
+±±³          ³ExpL6: Indica se a inclusao vem de um contrato de parceria  ³±±
+±±³          ³ExpN7: Tipo do contrato (1=Aprovacao / 2=Remessa)           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³Esta rotina tem como objetivo efetuar a interface com o usua³±±
+±±³          ³rio e o pedido de vendas                                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais/Distribuicao/Logistica                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A410Inclui(cAlias,nReg,nOpc,lOrcamento,nStack,aRegSCK,lContrat,nTpContr,cCodCli,cLoja,cMedPMS)
+
+Local aPosObj   := {}
+Local aObjects  := {}
+Local aSize     := {}
+Local aPosGet   := {}
+Local aInfo     := {}
+Local aCpos     := Nil
+Local nOpcA 	:= 0
+Local nCntFor	:= 0
+Local nNumDec   := TamSX3("C6_VALOR")[2]
+Local nGetLin   := 0
+Local nColFreeze:= SuperGetMv("MV_PEDFREZ",.F.,0)
+Local cCadastro := IIF(cCadastro == Nil,OemToAnsi("STR0007"),cCadastro) //"Atualização de Pedidos de Venda"
+Local cPedido   := "" 
+Local cCpoContr := SuperGetMv("MV_CPOCONT",.F.,"C6_QTDVEN|C6_QTDLIB|C6_PRCVEN|C6_PRCUNIT")
+Local cHblContr := SuperGetMv("MV_HBLCONT",.F.,"22")
+Local cReadBkp  := ReadVar()
+Local lHabilOrc := SuperGetMv("MV_HBLORC",.F.,"1") == "1"
+Local lMt410Inc := Existblock("MT410INC")
+Local lTMt410Inc:= ExistTemplate("MT410INC")
+Local lM410Stts := ExistBlock("M410STTS")
+Local lM410Bar  := ExistBlock("M410CODBAR")
+Local lLiber	:= .F.
+Local lTransf	:= .F.
+Local lMemory   := .F.
+Local lFreeze   := (SuperGetMv("MV_PEDFREZ",.F.,0) <> 0)
+Local lContTPV  := SuperGetMv("MV_TELAPVX",.F.,.F.)
+Local oDlg
+Local oGetD
+Local oSAY1
+Local oSAY2
+Local oSAY3
+Local oSAY4
+Local aNoFields := {}		// Campos que nao devem entrar no aHeader e aCols
+Local aRecnoSE1RA := {} // Array com os titulos selecionados pelo Adiantamento
+Local aCabCN120  := {} //-- Cabecalho para rotina automatica CNTA120
+Local aItemCN120 := {} //-- Itens para rotina automatica CNTA120
+Local nQUANT	 := 0
+Local nTOTAL	 := 0
+Local nENTREG	 := 0
+Local nITEMED    := 0
+Local nITEM	     := 0
+Local nPRODUTO   := 0
+Local nPRCVEN	 := 0      
+Local nTS        := 0
+Local cItem      := ""
+Local lCNTA120   := .F.
+Local nTotDesc   := 0
+Local aHeadAGG    := {}
+Local aColsAGG    := {}
+
+DEFAULT nStack := GetSX8Len() 
+DEFAULT cCodCli   := ""
+DEFAULT cLoja     := ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Criar array PRIVATE p/ integracao com sistema de Distribuicao - NAO REMOVER ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aDistrInd:={}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Carrega perguntas do MATA440 e MATA410                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte("MTA440",.F.)
+lLiber := MV_PAR02 == 1
+lTransf:= MV_PAR01 == 1
+Pergunte("MTA410",.F.) 
+//Carrega as variaveis com os parametros da execauto
+Ma410PerAut()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variavel utilizada p/definir Op. Triangulares.       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IsTriangular( (MV_PAR03==1) )
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array para controlar relacionamento com SD4 (Remessa para Beneficiamento ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aColsBn := {}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a entrada de dados do arquivo                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aTela[0][0]
+PRIVATE aGets[0]
+PRIVATE bArqF3
+PRIVATE bCpoF3
+PRIVATE aTrocaF3  := {}
+PRIVATE aHeadFor  := {}
+PRIVATE aColsFor  := {}
+PRIVATE N         := 1
+PRIVATE oGetPV	  := Nil     
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis para integração com SIGAGCT                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE cContra  := Space(TamSX3("CN9_NUMERO")[1])
+PRIVATE cRevisa  := Space(TamSX3("CN9_REVISA")[1])
+PRIVATE cCompet  := Space(TamSX3("CNF_COMPET")[1])
+PRIVATE cPlan    := Space(TamSX3("CNA_NUMERO")[1])
+PRIVATE cParcel  := Space(TamSX3("CNF_PARCEL")[1])
+PRIVATE lFixo    := .T. //Contrato Fixo
+
+//Se não for rotina automática, inclui campos no array para não exibir
+If ( Type("l410Auto") <> "U" .And. !l410Auto )
+	aNoFields := { "C6_NUM","C6_QTDEMP","C6_QTDENT","C6_QTDEMP2","C6_QTDENT2", "C6_SLDALIB" }
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o campo de codigo de lancamento cat 83 ³
+//³deve estar visivel no acols                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !SuperGetMV("MV_CAT8309",,.F.)
+	aAdd(aNoFields,"C6_CODLAN")
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Agroindustria  									                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If FindFunction("OGXUtlOrig") //Encontra a função
+	If OGXUtlOrig()
+		If (FindFunction("OGX220"))//Encontra a função
+			lContinua := OGX220()
+		EndIf
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Ambiente/Objeto para tratamento de grade        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If IsAtNewGrd()
+		PRIVATE oGrade	  := MsMatGrade():New('oGrade',,"C6_QTDVEN",,"a410GValid()",;
+	{ 	{VK_F4,{|| A440Saldo(.T.,oGrade:aColsAux[oGrade:nPosLinO][aScan(oGrade:aHeadAux,{|x| AllTrim(x[2])=="C6_LOCAL"})])}} },;
+	{ 	{"C6_QTDVEN",.T., {{"C6_UNSVEN",{|| ConvUm(AllTrim(oGrade:GetNameProd(,nLinha,nColuna)),aCols[nLinha][nColuna],0,2) } }} },;
+	{"C6_QTDLIB",NIL,NIL},;
+	{"C6_QTDENT",NIL,NIL},;
+	{"C6_ITEM"	,NIL,NIL},;
+	{"C6_OPC"	,NIL,NIL},;
+	{"C6_BLQ"	,NIL,NIL},;
+	{"C6_NUMOP",NIL,NIL},;
+	{"C6_ITEMOP",NIL,NIL},;	
+	{"C6_UNSVEN",NIL, {{"C6_QTDVEN",{|| ConvUm(AllTrim(oGrade:GetNameProd(,nLinha,nColuna)),0,aCols[nLinha][nColuna],1) }}} };
+	})
+
+	//-- Inicializa grade multicampo
+	A410InGrdM(.T.)
+Else
+	PRIVATE aColsGrade:= {}
+	PRIVATE aHeadGrade:= {}
+EndIf
+
+DEFAULT aRegSCK   := {}
+DEFAULT nTpContr  := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³O Orcamento de Venda n„o permite grade de produtos                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+lOrcamento := If(ValType(lOrcamento)=="L",lOrcamento,.F.)
+lContrat   := If(ValType(lContrat)  =="L",lContrat  ,.F.)
+l416Auto   := If (Type("l416Auto") == "U",.f.,l416Auto)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³A inicializacao das variaveis ja foi feita pela rotina de Orcamento     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( !lOrcamento )
+	PRIVATE aHeader   := {}
+	PRIVATE aCols     := {}
+
+	PRIVATE aGEMCVnd :={"",{},{}} //Template GEM - Condicao de Venda
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Salva a integridade dos campos de Bancos de Dados    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SC5")
+	dbSetOrder(1)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Inicializa desta forma para criar uma nova instancia de variaveis private ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	RegToMemory( "SC5", .T., .F. )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Montagem do aHeader e aCols                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	FillGetDados(nOPc,"SC6",1,/*cSeek*/,/*{|| &cWhile }*/,{||.T.},aNoFields,/*aYesFields*/,/*lOnlyYes*/,/*cQuery*/,/*bMontCols*/,.T.)
+	aCols[1][1] := "01"
+	
+
+	If !Empty(cCodCli) .And. !Empty(cLoja)
+
+		ALTERA   := (aRotina[nOpc,4] == 4)
+		INCLUI   := (aRotina[nOpc,4] == 3)
+		lRefresh := .T.
+
+		M->C5_CLIENTE := cCodCli
+		__ReadVar := "M->C5_CLIENTE"
+		lRet := CheckSX3("C5_CLIENTE")
+
+		If lRet
+			If ExistTrigger("C5_CLIENTE")
+				RunTrigger(1,Nil,Nil,,"C5_CLIENTE")
+			Endif
+
+
+			M->C5_LOJACLI := cLoja
+			__ReadVar := "M->C5_LOJACLI"
+			lRet := CheckSX3("C5_LOJACLI")
+
+			If lRet
+				If ExistTrigger("C5_CLIENTE")
+					RunTrigger(1,Nil,Nil,,"C5_LOJACLI")
+				Endif
+			Endif
+
+		Endif
+
+		__ReadVar := cReadBkp
+
+	Endif
+
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica os campos do contrato se serao habilitados      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lContrat
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica os os parametros estao ativos para a movimentacao  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (nTpContr == 1 .And. SubStr(cHblContr,1,1) == "1") .Or. (nTpContr == 2 .And. SubStr(cHblContr,2,1) == "1")
+		aCpos:= {}
+		For nCntFor := 1 To Len(aHeader)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Verifica o campos esta no parametro MV_CPOCONTR          ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If !(Alltrim(aHeader[nCntFor][2]) $ cCpoContr)
+				aAdd(aCpos,aHeader[nCntFor][2])
+			EndIf
+		Next nCntFor
+	Endif
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica os campos da Medicao do PMS que serao liberados para visualizacao na getdados ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cMedPMS <> Nil
+	aCpos:= {}
+	For nCntFor := 1 To Len(aHeader)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica o campos esta no parametro MV_CPOCONTR          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !(Alltrim(aHeader[nCntFor][2]) $ cMedPMS)
+			aAdd(aCpos,aHeader[nCntFor][2])
+		EndIf
+	Next nCntFor
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa ambiente de integração com Planilha ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+A410RvPlan("","",.T.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Monta o array com as formas de pagamento do SX5³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Ma410MtFor(@aHeadFor,@aColsFor)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Estabelece a Troca de Clientes conforme o Tipo do Pedido de Venda      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( M->C5_TIPO $ "DB" )
+	aTrocaF3 := {{"C5_CLIENTE","SA2"}}
+Else
+	aTrocaF3 := {}
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se eh rotina de inclusao automatica          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( Type("l410Auto") == "U" .Or. ! l410Auto )
+	If !( l416Auto )
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Caso seja orcamento verifica se o parametro permite a alteracao do     ³
+		//³ pedido na efetivacao. Caso nao permita troca variaveis de parametro da ³
+		//³ Enchoice para apenas visualizacao.                                     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lOrcamento
+			lMemory   := .T.
+			If !lHabilOrc .Or. (lContrat .And. SubStr(cHblContr,3,1) == "1")
+				Private aRotina := {{"","",0,2}}
+				nOpc      := 1
+			Else
+				Private aRotina := MenuDef()
+				nOpc      := 3
+			EndIf
+		Endif
+        //Antes da abertura da Tela de Inclusao
+		If ( (ExistBlock("M410INIC")) )
+			ExecBlock("M410INIC",.F.,.F.)
+		EndIf
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Faz o calculo automatico de dimensoes de objetos     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aSize := MsAdvSize()
+		aObjects := {}
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 020, .t., .f. } )
+		aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+		aPosObj := MsObjSize( aInfo, aObjects )
+		aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,{{003,033,160,200,240,263}} )
+		nGetLin := aPosObj[3,1]
+		If lContTPV		
+			DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL STYLE nOr(WS_VISIBLE,WS_POPUP) 
+		Else
+			DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL  
+		EndIf
+		oGetPV:=MSMGet():New( "SC5", nReg, nOpc, , , , , aPosObj[1],,3,,,"A415VldTOk",,,lMemory)
+//		@ nGetLin,aPosGet[1,1]  SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009)) SIZE 020,09 PIXEL	//"Fornec.:"###"Cliente: "
+		@ nGetLin,aPosGet[1,2]  SAY oSAY1 VAR Space(40)						SIZE 120,09 PICTURE "@!"	OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,3]  SAY OemToAnsi(STR0011)						SIZE 020,09 OF oDlg	PIXEL //"Total :"
+		@ nGetLin,aPosGet[1,4]  SAY oSAY2 VAR 0 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec))		SIZE 060,09 OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,5]  SAY OemToAnsi(STR0012)						SIZE 030,09 OF oDlg PIXEL	//"Desc. :"
+		@ nGetLin,aPosGet[1,6]  SAY oSAY3 VAR 0 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec))		SIZE 060,09 OF oDlg	PIXEL	RIGHT
+		@ nGetLin+10,aPosGet[1,5]  SAY OemToAnsi("=")							SIZE 020,09 OF oDlg PIXEL
+		@ nGetLin+10,aPosGet[1,6]  SAY oSAY4 VAR 0								SIZE 060,09 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec)) OF oDlg PIXEL RIGHT
+		oDlg:Cargo	:= {|c1,n2,n3,n4| oSay1:SetText(c1),;
+			oSay2:SetText(n2),;
+			oSay3:SetText(n3),;
+			oSay4:SetText(n4) }
+		SetKey(VK_F4,{||A440Stok(NIL,"A410")})
+		#IFDEF TOP
+			SetKey(VK_F9,{||A410KeyF9()})
+		#ENDIF
+		oGetd:=MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,"A410LinOk","A410TudOk","+C6_ITEM/C6_Local/C6_TES/C6_CF/C6_PEDCLI",.T.,aCpos,nColFreeze,,ITENSSC6*IIF(MaGrade(),1,3.33),"A410FldOk(3)",,,"A410ValDel(.F.)",,lFreeze)
+		Private oGetDad:=oGetd
+		If Type("lCodBarra") <> "U"
+			oGetd:oBrowse:bGotFocus:={|| IIF(lCodBarra .And. !lM410Bar,a410EntraBarra(oGetD),IIF(lCodBarra .And. lM410Bar,Execblock("M410CODBAR",.F.,.F.,{nOpc,oGetD}),))}
+		EndIf
+		A410Bonus(2)
+		Ma410Rodap(oGetd)
+		ACTIVATE MSDIALOG oDlg ON INIT (A410Limpa(.F.,M->C5_TIPO),Ma410Bar(oDlg,{||nOpcA:=1,If(A410VldTOk(nOpc, aRecnoSE1RA).And.oGetd:TudoOk(),If(!obrigatorio(aGets,aTela),nOpcA:=0,oDlg:End()),nOpcA:=0)},{||Iif(Ma410VldUs(nOpca),oDlg:End(), ) },nOpc,oGetD,0,@aRecnoSE1RA,@aHeadAGG,@aColsAGG))
+		SetKey(VK_F4,)
+		SetKey(VK_F9,)
+	EndIf
+Else
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Variaveis utilizadas pela rotina de inclusao automatica     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If EnchAuto(cAlias,aAutoCab,{|| Obrigatorio(aGets,aTela)},aRotina[nOpc][4]) .and. MsGetDAuto(aAutoItens,"A410LinOk",{|| A410VldTOk(nOpc) .and. A410TudOk()},aAutoCab)
+		nOpcA := 1
+	EndIf
+EndIf
+If ( l416Auto )
+	A410TudOk()
+	nOpcA := 1
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Efetua a Gravacao do Pedido de Venda                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( nOpcA == 1 )
+
+	If lOrcamento
+		a410Trava()
+	Endif
+
+	A410Bonus(1)
+	cPedido := M->C5_NUM
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se eh orcamento para realizar a transacao total e nao por item ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Type("lOnUpDate") == "U" .Or. lOnUpdate
+		If lOrcamento
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Troca o status de visualizacao para inclusao caso nao permita a alte   ³
+			//³ racao do pedido de venda na efetivacao do orcamento                    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+			If !lHabilOrc
+				INCLUI := .T.
+			Endif
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Inicializa a gravacao dos lancamentos do SIGAPCO          ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoIniLan("000100")
+			Begin Transaction
+				If ( !A410Grava(lLiber,lTransf,1,aHeadFor,aColsFor,,,,aColsBn,aRecnoSE1RA,aHeadAGG,aColsAGG) )
+					Help(" ",1,"A410NAOREG")
+				Else
+					If ( cPedido <> M->C5_NUM )
+						If !( Type("l410Auto") <> "U" .And. l410Auto )
+							Help(" ",1,"NUMSEQ",,M->C5_NUM,4,15)
+						EndIf
+					EndIf
+				EndIf
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Chama  funcao de atualizacao do orcamento com os dados do pedido        ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				M416AtuSCK(aRegSCK)
+
+			End Transaction
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Finaliza a gravacao dos lancamentos do SIGAPCO            ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoFinLan("000100")
+
+		Else
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Inicializa a gravacao dos lancamentos do SIGAPCO          ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoIniLan("000100") 
+			
+			If !Empty(M->C5_MDCONTR) .And. Empty(M->C5_MDNUMED)
+				lCNTA120 := .T.
+				cNumMed := CriaVar("CND_NUMMED")
+				M->C5_MDNUMED := cNumMed
+			EndIf
+
+			If ( !A410Grava(lLiber,lTransf,1,aHeadFor,aColsFor,NIL,NIL,nStack,aColsBn,aRecnoSE1RA,aHeadAGG,aColsAGG) )
+				Help(" ",1,"A410NAOREG")
+			Else	
+				If ( cPedido <> M->C5_NUM )
+					If !( Type("l410Auto") <> "U" .And. l410Auto )
+						Help(" ",1,"NUMSEQ",,M->C5_NUM,4,15)
+					EndIf
+				EndIf
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Tratamento para, quando PV integrado com GCT, grave a  ³
+				//³ medicao via rotina automatica (CNTA120).			   ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ				
+				If lCNTA120
+					nQUANT   := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_QTDVEN"})
+					nTOTAL   := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_VALOR"})
+					nENTREG  := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_ENTREG"})
+					nITEMED  := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_ITEMED"})
+					nITEM	 := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_ITEM"})
+					nPRODUTO := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_PRODUTO"})
+					nPRCVEN  := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_PRCVEN"})
+					nPRUNIT  := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_PRUNIT"})     
+					nTS		 := aScan(aHeader,{|x| AllTrim(x[2]) == "C6_TES"})
+									
+					aAdd(aCabCN120,{"CND_CONTRA",cContra,NIL})
+					aAdd(aCabCN120,{"CND_REVISA",cRevisa,NIL})
+					aAdd(aCabCN120,{"CND_COMPET",cCompet,NIL})
+					aAdd(aCabCN120,{"CND_NUMERO",cPlan,NIL})
+					aAdd(aCabCN120,{"CND_NUMMED",cNumMed,NIL})
+					If !Empty(CND->(FieldPos("CND_PARCEL")))
+						aAdd(aCabCN120,{"CND_PARCEL",cParcel,NIL})
+					EndIf
+					aAdd(aCabCN120,{"CND_MOEDA",M->C5_MOEDA,NIL})
+					//Calcula desconto aplicado
+					aEval(aCols,{|x| nTotDesc += x[nPRUNIT]*x[nQUANT] - x[nPRCVEN]*x[nQUANT]})
+					If nTotDesc > 0
+						aAdd(aCabCN120,{"CND_DESCME",A410Arred(nTotDesc,"C6_VALOR"),NIL})
+					EndIf
+					aAdd(aCabCN120,{"CND_OBS",STR0136 +cPedido +".",NIL}) //Medição gerada automaticamente a partir da inclusão do pedido de venda número ###.
+					aAdd(aCabCN120,{"NUMPED",cPedido,NIL})
+					aAdd(aCabCN120,{"CND_SERVIC","1",NIL})
+					
+					For nCntFor := 1 To Len(aCols)
+						If !lFixo .And. aCols[nCntFor,Len(aHeader)+1]
+							Loop
+						ElseIf !lFixo .Or. !Empty(aCols[nCntFor,nITEMED])
+							aAdd(aItemCN120,{})
+							//-- Preenche item da medicao, de acordo com a existencia de planilha
+							If lFixo
+								cItem := aCols[nCntFor,nITEMED]
+							Else
+								cItem := Right(aCols[nCntFor,nITEM],TamSX3("CNB_ITEM")[1])
+								cItem := PadL(cItem,TamSX3("CNB_ITEM")[1],"0")
+							EndIf
+							
+							aAdd(aItemCN120[Len(aItemCN120)],{"CNE_ITEM",cItem,NIL})
+							aAdd(aItemCN120[Len(aItemCN120)],{"CNE_PRODUT",aCols[nCntFor,nPRODUTO],NIL})
+							If !aCols[nCntFor,Len(aHeader)+1]
+								aAdd(aItemCN120[Len(aItemCN120)],{"CNE_QUANT",aCols[nCntFor,nQUANT],NIL})
+								If !lFixo
+									aAdd(aItemCN120[Len(aItemCN120)],{"CNE_VLUNIT",aCols[nCntFor,nPRCVEN],NIL})    	
+								EndIf
+							Else
+								aAdd(aItemCN120[Len(aItemCN120)],{"CNE_QUANT",0,NIL})
+								aAdd(aItemCN120[Len(aItemCN120)],{"CNE_VLTOT",0,NIL})
+							EndIf
+							aAdd(aItemCN120[Len(aItemCN120)],{"CNE_DTENT",aCols[nCntFor,nENTREG],NIL})          
+							aAdd(aItemCN120[Len(aItemCN120)],{"CNE_TS"   ,aCols[nCntFor,nTS],NIL})
+						EndIf
+					Next nCntFor
+					
+					//Processa Medicao - CNTA120
+					MsgRun(STR0131,STR0127,{|| A410GrvMed(aCabCN120,aItemCN120)}) //SIGAGCT - Aguarde, processsando Medição...
+				EndIf				
+			EndIf
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Finaliza a gravacao dos lancamentos do SIGAPCO            ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoFinLan("000100")
+
+		Endif
+	Else
+		aAutoCab := MsAuto2Ench("SC5")
+		aAutoItens := MsAuto2Gd(aHeader,aCols)
+	EndIf
+
+	If lTMt410Inc
+		ExecTemplate("MT410INC",.F.,.F.)
+	Endif
+
+	If lMt410Inc
+		Execblock("MT410INC",.F.,.F.)
+	Endif
+
+	If lM410Stts
+		ExecBlock("M410STTS",.f.,.f.)
+	EndIf
+Else
+	If !( nModulo <> 5 .And. Type("l410Auto") <> "U" .And. l410Auto)
+		While GetSX8Len() > nStack 
+			RollBackSX8()
+		EndDo
+	EndIf
+	If ( (ExistBlock("M410ABN")) )
+		ExecBlock("M410ABN",.f.,.f.)
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Limpa cliente anterior para proximo pedido                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+a410ChgCli("")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Restaura a Integridade da Tela de Entrada                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+
+Return( nOpcA )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³a410Altera³ Rev.  ³Eduardo Riera          ³ Data ³26.08.2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Alteracao do Pedido de Venda                                ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN2: Recno do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN3: Opcao do arotina                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³Esta rotina tem como objetivo efetuar a interface com o usua³±±
+±±³          ³rio e o pedido de vendas                                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais/Distribuicao/Logistica                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A410Altera(cAlias,nReg,nOpc)
+
+Local aArea     := GetArea()
+Local aPosObj   := {}
+Local aObjects  := {}
+Local aSize     := {}
+Local aPosGet   := {}
+Local aRegSC6   := {}
+Local aRegSCV   := {}
+Local aInfo     := {}
+Local lLiber 	:= .F.
+Local lTransf	:= .F.
+Local lGrade	:= MaGrade()
+Local lBloqueio := .T.
+Local lNaoFatur := .F.
+Local lContrat  := .F.
+Local lQuery    := .F.
+Local lContinua := .T.
+Local lMt410Alt := Existblock("MT410ALT")
+Local lM410Stts := ExistBlock("M410STTS")
+Local lTM410Stts:= ExistTemplate("M410STTS")
+Local lM410Bar  := ExistBlock("M410CODBAR")
+Local lFreeze   := (SuperGetMv("MV_PEDFREZ",.F.,0) <> 0)
+Local lContTPV  := SuperGetMv("MV_TELAPVX",.F.,.F.)
+Local lAltPrcCtr:= (SuperGetMv("MV_ALTCTR2",.F.,"2") == "1")
+Local lIntACD	:= SuperGetMV("MV_INTACD",.F.,"0") == "1"
+Local nOpcA		:= 0
+Local nCntFor   := 0
+Local nTotalPed := 0
+Local nTotalDes := 0
+Local nAux	    := 0
+Local nNumDec   := TamSX3("C6_VALOR")[2]
+Local nGetLin   := 0
+Local nStack    := GetSX8Len()
+Local nColFreeze:= SuperGetMv("MV_PEDFREZ",.F.,0)
+Local cArqQry   := "SC6"
+Local cCadastro := IIF(cCadastro == Nil,OemToAnsi("STR0007"),cCadastro) //"Atualização de Pedidos de Venda"
+Local oDlg
+Local oGetd
+Local oSAY1
+Local oSAY2
+Local oSAY3
+Local oSAY4
+Local lMt410Ace := Existblock("MT410ACE")
+Local nX 		:= 0
+//Gestao de Contratos
+Local lGCT     := (!Empty(SC5->C5_MDCONTR))
+Local aPedCpo  := NIL
+
+Local cSeek     	:= ""
+Local aNoFields 	:= {}		// Campos que nao devem entrar no aHeader e aCols, NÃO INCLUIR CAMPOS DIRETAMENTE AQUI
+Local aYesFields	:= Nil		// Campos que devem entrar no aCols obrigatoriamente, em caso de execução automática
+Local bWhile    	:= {|| }
+Local cQuery    	:= ""
+Local bCond     	:= {|| .T. }
+Local bAction1  	:= {|| Mta410Alt(cArqQry,@nTotalPed,@nTotalDes,lGrade,@lBloqueio,@lNaoFatur,@lContrat,@aRegSC6) }	
+Local bAction2  	:= {|| .T. }
+Local aRecnoSE1RA	:= {} // Array com os titulos selecionados pelo Adiantamento   
+Local aMTA177PER 	:= {}  // Array para carregar as perguntas de central de compras
+Local aHeadAGG	:= {}
+Local aColsAGG	:= {}
+Local cRotAnt		:= ''
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array para controlar relacionamento com SD4 (Remessa para Beneficiamento ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aColsBn := A410CarBen(SC5->C5_NUM)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Criar array PRIVATE p/ integracao com sistema de Distribuicao - NAO REMOVER ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aDistrInd:={}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas na LinhaOk                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aCols      := {}
+PRIVATE aHeader    := {}
+PRIVATE aHeadFor   := {}
+PRIVATE aColsFor   := {}
+PRIVATE N          := 1
+PRIVATE oGetPV		:= nil
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a entrada de dados do arquivo                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aTELA[0][0],aGETS[0]
+
+PRIVATE aGEMCVnd :={"",{},{}} //Template GEM - Condicao de Venda
+
+// gravando o historico dos itens em caso de alteracao do tipo do produto e/ou codigo do produto
+PRIVATE aColsHist := {}
+
+//Se não for rotina automática, inclui campos no array para não exibir
+If ( Type("l410Auto") <> "U" .And. !l410Auto )
+	aNoFields := {"C6_NUM","C6_QTDEMP","C6_QTDENT","C6_QTDEMP2","C6_QTDENT2"}
+Else
+	aYesFields := {}
+	DbSelectArea("SX3")
+	SX3->(DbSetOrder(1))	//X3_ARQUIVO + X3_ORDEM
+	SX3->(DbSeek( "SC6" ))
+	While ( SX3->(!Eof()) .And. SX3->X3_ARQUIVO == "SC6" )
+		aAdd( aYesFields, AllTrim(SX3->X3_CAMPO) )
+		SX3->(DbSkip())
+	EndDo
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o usuario tem premissao para alterar o ³
+//³pedido de venda                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cPaisLoc <> "BRA" .AND. FieldPos("C5_CATPV") > 0 .AND. !Empty(SC5->C5_CATPV)
+	If AliasIndic("AGS") //Tabela que relaciona usuario com os Tipos de Pedidos de vendas que ele tem acesso
+		DBSelectArea("AGS")
+		DBSetOrder(1)
+		If DBSeek(xFilial("AGS") + __cUserId) //Se não encontrar o usuário na tabela, permite ele alterar o pedido
+			If !DBSeek(xFilial("AGS") + __cUserId + SC5->C5_CATPV) //Verifica se o usuario tem premissao
+				MsgStop(STR0167 + " " +STR0004 + " " + STR0168)//"Este usuario nao tem permissao para alterar pedidos de venda com essa categoria."
+				lContinua := .F.
+			EndIf
+		EndIf
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o campo de codigo de lancamento cat 83 ³
+//³deve estar visivel no acols                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !SuperGetMV("MV_CAT8309",,.F.)
+	aAdd(aNoFields,"C6_CODLAN")
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Agroindustria  									                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If FindFunction("OGXUtlOrig") //Encontra a função
+	If OGXUtlOrig()
+		If (FindFunction("OGX220"))
+			lContinua := OGX220()
+		EndIf
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de entrada para validar acesso do usuario na funcao ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lMt410Ace
+	lContinua := Execblock("MT410ACE",.F.,.F.,{nOpc})
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Ambiente/Objeto para tratamento de grade        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ        
+If IsAtNewGrd()
+	PRIVATE oGrade	  := MsMatGrade():New('oGrade',,"C6_QTDVEN",,"a410GValid()",;
+							{ 	{VK_F4,{|| A440Saldo(.T.,oGrade:aColsAux[oGrade:nPosLinO][aScan(oGrade:aHeadAux,{|x| AllTrim(x[2])=="C6_LOCAL"})])}} },;
+	  						{ 	{"C6_QTDVEN",.T., {{"C6_UNSVEN",{|| ConvUm(AllTrim(oGrade:GetNameProd(,nLinha,nColuna)),aCols[nLinha][nColuna],0,2) } }} },;
+	  							{"C6_QTDLIB",NIL,NIL},;
+	  							{"C6_QTDENT",NIL,NIL},;
+	  							{"C6_ITEM"	,NIL,NIL},;
+	  							{"C6_UNSVEN",NIL, {{"C6_QTDVEN",{|| ConvUm(AllTrim(oGrade:GetNameProd(,nLinha,nColuna)),0,aCols[nLinha][nColuna],1) }}} },;
+	  							{"C6_OPC",NIL,NIL},;
+	  							{"C6_BLQ",NIL,NIL}})	  							
+
+	//-- Inicializa grade multicampo
+	A410InGrdM(.T.)
+Else
+	PRIVATE aColsGrade := {}
+	PRIVATE aHeadgrade := {}	
+EndIf
+	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Carrega perguntas do MTA177, MATA440 e MATA410                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte ("MTA177",.F.)
+aAdd (aMTA177PER,{MV_PAR17,MV_PAR18} )
+Pergunte("MTA440",.F.)
+lLiber := MV_PAR02 == 1
+lTransf:= MV_PAR01 == 1
+Pergunte("MTA410",.F.)
+//Carrega as variaveis com os parametros da execauto
+Ma410PerAut()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variavel utilizada p/definir Op. Triangulares.       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IsTriangular( MV_PAR03==1 )
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Salva a integridade dos campos de Bancos de Dados    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+IF ( (ExistTemplate("M410ALOK")) )
+	If (! ExecTemplate("M410ALOK",.F.,.F.) )
+		lContinua := .F.
+	EndIf
+EndIf
+
+IF lContinua .And. ( (ExistBlock("M410ALOK")) )
+	If (! ExecBlock("M410ALOK",.F.,.F.) )
+		lContinua := .F.
+	EndIf
+EndIf
+
+IF ( SC5->C5_FILIAL <> xFilial("SC5") )
+	Help(" ",1,"A000FI")
+	lContinua := .F.
+EndIf
+  
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado de um EDITAL - Nao Altera  |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ             
+
+If !Empty(SC5->C5_NUMPR) .Or. !Empty(SC5->C5_CODED)
+	Help(" ",1,"A410EDITAL") //"Pedido de Venda pertence a um Edital, e nao podera ser alterado, copiado ou excluido"
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no SIGAEEC - Nao Altera    |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//| Somente altera se o parametro MV_EEC0023 estiver .T. |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SC5")
+IF !GetMV("MV_EEC0023",,.F.) .AND. !Empty(SC5->C5_PEDEXP) .And. nModulo != 29 .And. ( Type("l410Auto") == "U" .OR. !l410Auto )
+	Help(" ",1,"MTA410ALT")
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no SIGATMS - Nao Altera    |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(SC5->C5_SOLFRE)
+	Help(" ",1,"A410TMSNAO")
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no SIGALOJA - Nao Altera    |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(SC5->C5_ORCRES) .AND. (Type("l410Auto") == "U" .OR. !l410Auto)
+	//"Este Pedido foi gerado através do módulo de Controle de Lojas, e não poderá ser alterado."
+	MsgAlert(STR0115)
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Verifica se o pedido tem carga montada               |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If OmsHasCg(SC5->C5_NUM)
+	Help(" ",1,"A410CARGA")
+Endif 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Salva a integridade dos campos de Bancos de Dados    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+If !SoftLock(cAlias)
+	lContinua := .F.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa desta forma para criar uma nova instancia de variaveis private ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RegToMemory( "SC5", .F., .F. )
+
+If lContinua
+	lContinua := If(lGrade.And.MatOrigGrd()=="SB4",VldDocGrd(1,SC5->C5_NUM),.T.)
+EndIf
+
+//-- Como e alteracao so ira mostrar opcionais
+//-- caso alterere algo na linha (controle na A410FldOk)
+If Type("lShowOpc") == "L"
+	lShowOpc := .F.
+EndIf
+
+If ( lContinua )
+	dbSelectArea("SC6")
+	dbSetOrder(1)
+	#IFDEF TOP
+		If TcSrvType()<>"AS/400" .And. !InTransact() .And. Ascan(aHeader,{|x| x[8] == "M"}) == 0
+			lQuery  := .T.
+			cQuery := "SELECT SC6.*,SC6.R_E_C_N_O_ SC6RECNO "
+			cQuery += "FROM "+RetSqlName("SC6")+" SC6 "
+			cQuery += "WHERE SC6.C6_FILIAL='"+xFilial("SC6")+"' AND "
+			cQuery += "SC6.C6_NUM='"+SC5->C5_NUM+"' AND "
+			cQuery += "SC6.D_E_L_E_T_<>'*' "
+			cQuery += "ORDER BY "+SqlOrder(SC6->(IndexKey()))
+
+			dbSelectArea("SC6")
+			dbCloseArea()
+		EndIf	
+	#ENDIF
+	cSeek  := xFilial("SC6")+SC5->C5_NUM
+	bWhile := {|| C6_FILIAL+C6_NUM }
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Montagem do aHeader e aCols                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	FillGetDados(nOPc,"SC6",1,cSeek,bWhile,{{bCond,bAction1,bAction2}},aNoFields, aYesFields, /*lOnlyYes*/,cQuery,/*bMontCols*/,Inclui,/*aHeaderAux*/,/*aColsAux*/,{|| AfterCols(cArqQry) },/*bBeforeCols*/,/*bAfterHeader*/,"SC6")	
+	aColsHist := aClone(aCols)	
+
+	If "MATA410" $ SuperGetMV("MV_GRDMULT",.F.,"") .And. lGrade
+		aCols := aColsGrade(oGrade,aCols,aHeader,"C6_PRODUTO","C6_ITEM","C6_ITEMGRD",aScan(aHeader,{|x| AllTrim(x[2]) == "C6_DESCRI"}))
+	EndIf
+
+	A410FRat(@aHeadAGG,@aColsAGG)	
+
+	nTotalDes  += A410Arred(nTotalPed*M->C5_PDESCAB/100,"C6_VALOR")
+	nTotalPed  -= A410Arred(nTotalPed*M->C5_PDESCAB/100,"C6_VALOR")
+	nTotalPed  -= M->C5_DESCONT
+	nTotalDes  += M->C5_DESCONT
+
+	
+	If ( lQuery )
+		dbSelectArea(cArqQry)
+		dbCloseArea()
+		ChkFile("SC6",.F.)
+		dbSelectArea("SC6")
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa ambiente de integração com Planilha ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+A410RvPlan("","",.T.)
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Monta o array com as formas de pagamento do SX5³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Ma410MtFor(@aHeadFor,@aColsFor,@aRegSCV)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Caso nao ache nenhum item , abandona rotina.         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( lContinua )
+	//
+	// Template GEM - Gestao de Empreendimentos Imobiliarios
+	//
+	// faz a copia da condicao de venda se a mesma tiver 
+	// uma vinculacao com a condicao de pagamento
+	//
+	If ExistBlock("GEM410PV")
+		aGEMCVnd := ExecBlock("GEM410PV",.F.,.F.,{ M->C5_NUM ,M->C5_CONDPAG ,M->C5_EMISSAO ,nTotalPed })
+	ElseIf ExistTemplate("GEM410PV")
+		// Copia a condicao de venda
+		aGEMCVnd := ExecTemplate("GEM410PV",.F.,.F.,{ M->C5_NUM ,M->C5_CONDPAG ,M->C5_EMISSAO ,nTotalPed })
+	EndIf
+
+	If ( Len(aCols) == 0 )
+		lContinua := .F.
+		Help(" ",1,"A410S/ITEM")
+	EndIf
+	If ( (ExistBlock("M410GET")) )
+		ExecBlock("M410GET",.F.,.F.)
+	EndIf
+	If ( lBloqueio )
+		Help(" ",1,"A410ELIM")
+		lContinua := .F.
+	EndIf
+	If (!(SuperGetMv("MV_ALTPED")=="S") .And. !lNaoFatur) .And. !(!Empty(SC5->C5_PEDEXP) .And. SuperGetMv("MV_EECFAT") .And. AvIntEmb())
+		Help(" ",1,"A410PEDFAT")
+		lContinua := .F.
+	EndIf
+	If ( lContrat ) .And. !lAltPrcCtr
+		Help(" ",1,"A410CTRPAR")
+		lContinua := .F.
+	EndIf
+EndIf
+If ( lContinua )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Atualiza com cliente original do pedido caso troque  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	A410ChgCli(M->C5_CLIENTE+M->C5_LOJACLI)
+
+	If ( Type("l410Auto") == "U" .OR. !l410Auto )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Faz o calculo automatico de dimensoes de objetos     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aSize := MsAdvSize()
+		aObjects := {}
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 020, .t., .f. } )
+		aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+		aPosObj := MsObjSize( aInfo, aObjects )
+		aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,{{003,033,160,200,240,263}} )
+		nGetLin := aPosObj[3,1]
+		If lContTPV		
+			DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL STYLE nOr( WS_VISIBLE,WS_POPUP )
+		Else 
+			DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL 
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Armazenar dados do Pedido anterior.                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF M->C5_TIPO $ "DB"
+			aTrocaF3 := {{"C5_CLIENTE","SA2"}}
+		Else
+			aTrocaF3 := {}
+		EndIf
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica campos especificos para edicao - SIGAGCT    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lGCT
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Adiciona campos padrão								    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			aPedCpo := {{"C5_MENNOTA","C5_TRANSP", "C5_MENPAD", "C5_NATUREZ", "C5_ESTPRES", "C5_MUNPRES"},{}}
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Adiciona campos do usuário do cabeçalho			    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SX3")
+			dbSetOrder(1)
+			If SX3->( dbSeek( "SC5" ) )
+			    While !SX3->( Eof() ) .And. SX3->X3_ARQUIVO == "SC5"
+			        If (Alltrim(SX3->X3_PROPRI) == "U") 
+			            aAdd(aPedCpo[1],SX3->X3_CAMPO)
+			        EndIf
+			        SX3->( dbSkip() )
+			    End
+			EndIf
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Adiciona campos do usuário do item					    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If SX3->( dbSeek( "SC6" ) )
+			    While !SX3->( Eof() ) .And. SX3->X3_ARQUIVO == "SC6"
+			        If (Alltrim(SX3->X3_PROPRI) == "U") 
+			            aAdd(aPedCpo[2],SX3->X3_CAMPO)
+			        EndIf
+			        SX3->( dbSkip() )
+			    End
+			EndIf
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Ponto de entrada para substituição dos campos	    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ExistBlock("GCTPEDCPO")
+				aPedCpo := ExecBlock("GCTPEDCPO",.F.,.F.)
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Em cenário em que o Faturamento está integrado com o Export, somente serão habilitados para  ³
+		//³ edição os campos não integrados quando o parametro MV_EEC0023 estiver habilitado             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		
+		oGetPV:=MSMGet():New( "SC5", nReg, nOpc, , , , , aPosObj[1],If(lGCT,aPedCpo[1],If(!Empty(SC5->C5_PEDEXP) .AND. GetMV("MV_EEC0023",,.F.),FAT2CposInt("SC5"),NIL)),3,,,"A415VldTOk")
+		//@ nGetLin,aPosGet[1,1]  SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009)) SIZE 020,09 PIXEL	//"Fornec.:"###"Cliente: "
+		@ nGetLin,aPosGet[1,2]  SAY oSAY1 VAR Space(40)						SIZE 120,09 PICTURE "@!"	OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,3]  SAY OemToAnsi(STR0011)						SIZE 020,09 OF oDlg PIXEL	//"Total :"
+		@ nGetLin,aPosGet[1,4]  SAY oSAY2 VAR 0 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec))	SIZE 060,09 OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,5]  SAY OemToAnsi(STR0012)						SIZE 030,09 OF oDlg PIXEL 	//"Desc. :"
+		@ nGetLin,aPosGet[1,6]  SAY oSAY3 VAR 0 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec))		SIZE 060,09 OF oDlg PIXEL RIGHT
+		@ nGetLin+10,aPosGet[1,5]  SAY OemToAnsi("=")							SIZE 020,09 OF oDlg PIXEL
+		If cPaisLoc == "BRA"
+			@ nGetLin+10,aPosGet[1,6]  SAY oSAY4 VAR 0								SIZE 060,09 PICTURE TM(0,22,nNumDec) OF oDlg PIXEL RIGHT
+		Else
+			@ nGetLin+10,aPosGet[1,6]  SAY oSAY4 VAR 0								SIZE 050,09 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec)) OF oDlg PIXEL RIGHT
+		EndIf
+		oDlg:Cargo	:= {|c1,n2,n3,n4| oSay1:SetText(c1),;
+			oSay2:SetText(n2),;
+			oSay3:SetText(n3),;
+			oSay4:SetText(n4) }
+		SetKey(VK_F4,{||A440Stok(NIL,"A410")})	
+		oGetd:=MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,"A410LinOk","A410TudOk","+C6_ITEM/C6_Local/C6_TES/C6_CF/C6_PEDCLI",.T.,If(lGCT,aPedCpo[2],If(!Empty(SC5->C5_PEDEXP) .AND. GetMV("MV_EEC0023",,.F.),FAT2CposInt("SC6"),NIL)),nColFreeze,,ITENSSC6*IIF(MaGrade(),1,3.33),"A410Blq()",,,"A410ValDel()",,lFreeze)	
+	   		
+		If lIntACD 
+			For nX:=1  To len(oGetd:AINFO)
+			   		oGetd:AINFO[nX,4]:=IIF(Empty(oGetd:AINFO[nX,4]),"CBM410ACDL()",Trim(oGetd:AINFO[nX,4])+" .AND. CBM410ACDL()")
+			Next nX
+		EndIf 
+		
+		Private oGetDad := oGetD
+		If Type("lCodBarra") <> "U"
+			oGetd:oBrowse:bGotFocus:={|| IIF(lCodBarra .And. !lM410Bar,a410EntraBarra(oGetD),IIF(lCodBarra .And. lM410Bar,Execblock("M410CODBAR",.F.,.F.,{nOpc,oGetD}),))}
+		EndIf
+		A410Bonus(2)
+		Ma410Rodap(oGetD,nTotalPed,nTotalDes)
+		ACTIVATE MSDIALOG oDlg ON INIT (A410Limpa(.F.,M->C5_TIPO),Ma410Bar(oDlg,{||nOpcA:=1,if(A410VldTOk(nOpc, aRecnoSE1RA).And.oGetD:TudoOk(),If(!obrigatorio(aGets,aTela),nOpcA := 0,oDlg:End()),nOpcA := 0)},{||Iif( Ma410VldUs(nOpca), oDlg:End(),)},nOpc,oGetD,nTotalPed,@aRecnoSE1RA,@aHeadAGG,@aColsAGG))
+		SetKey(VK_F4,)
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Permite alterar a data de entrega de um item do pedido, ou   ³
+		//³ sugerir uma data de entrega a partir da analise do APS       ³		
+		//³ que somente eh executado via webservice/rotina automatica.   ³				
+		//³ Valido somente para Integracao APS DRUMMER.                  ³						
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SuperGetMv("MV_APS",.F.,"") == "DRUMMER"
+			
+			/* ---- LOGICA UTILIZADA EM PORTUGUES ESTRUTURADO PARA MAIOR ENTENDIMENTO -----
+		
+			SE ( NAO EXISTIR O CAMPO SUGERIDO PARA DATA DE ENTREGA) ENTAO
+				PROCURA AS REFERENCIAS DO C6_ENTREG NOS ITENS E SE ACHAR APAGA
+			SENAO SE ( PARAMETRO QUE INDICA ONDE SERA FEITA A ATUALIZACAO DE ENTREGA FOR INFORMADO FOR PARA GRAVAR NO CAMPO SUGERIDO C6_SUGENTR ) ENTAO
+				PROCURA NOS ITEMS DE ARRAY AS REFERENCIAS DE C6_ENTREG E ALTERA PARA C6_SUGENTR
+			FIM SE
+		    
+		    */
+		
+     		If SuperGetMv("MV_CPOPVEN",.F.,"C6_SUGENTR") == "C6_SUGENTR"
+            	For nCntFor:= 1 To Len(aAutoItens)
+					nPos := AsCan(aAutoItens[nCntFor],{|x| AllTrim(x[1])=="C6_ENTREG"})            		
+					If ( nPos > 0 )
+						aAutoItens[nCntFor][nPos,1] := "C6_SUGENTR"
+					EndIf
+            	Next nCntFor   				     			
+			EndIf						
+		EndIf
+		 
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ validando dados pela rotina automatica                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If EnchAuto(cAlias,aAutoCab,{|| Obrigatorio(aGets,aTela)},aRotina[nOpc][4]) .And. MsGetDAuto(aAutoItens,"A410LinOk",{|| A410VldTOk(nOpc) .and. A410TudOk()},aAutoCab,aRotina[nOpc][4])
+			nOpcA := 1
+		EndIf 
+	EndIf
+	If ( nOpcA == 1 )                           
+		//
+		// Template GEM - Gestao de Empreendimentos Imobiliarios
+		// Gera o contrato baseado nos dados do pedido de venda
+		//   
+		If HasTemplate("LOT") .AND. ExistTemplate("GEMXPV",,.T.)
+			// atualiza o status do empreendimento  
+			For nX := 1 to Len(aCols)
+				ExecTemplate("GEMXPV",.F.,.F.,{ aCols[nX][Len(aCols[nX])] ,SC6->C6_CODEMPR, 1 })
+			Next nX
+		EndIf		
+		//  Amarracao do Pedido de venda com o pedido de compras 
+		//  para a Central de Compras.		
+		If nOpcA == 1   
+			A410CCPed(aCols,aHeader,aMTA177PER,2)   
+		EndIf
+		A410Bonus(1)
+		If Type("lOnUpDate") == "U" .Or. lOnUpdate
+			If a410Trava()
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Inicializa a gravacao dos lancamentos do SIGAPCO          ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				PcoIniLan("000100")
+				Begin Transaction
+					If !A410Grava(lLiber,lTransf,2,aHeadFor,aColsFor,aRegSC6,aRegSCV,nStack,aColsBn,aRecnoSE1RA,aHeadAGG,aColsAGG)
+						Help(" ",1,"A410NAOREG")
+					EndIf 				
+				End Transaction
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Finaliza a gravacao dos lancamentos do SIGAPCO            ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				PcoFinLan("000100")
+
+				If lMt410Alt
+					Execblock("MT410ALT",.F.,.F.)
+				Endif
+
+				If lTM410Stts
+					ExecTemplate("M410STTS",.f.,.f.)
+				Endif
+
+				If lM410Stts
+					ExecBlock("M410STTS",.f.,.f.)
+				Endif
+			EndIf
+		Else
+			aAutoCab := MsAuto2Ench("SC5")
+			aAutoItens := MsAuto2Gd(aHeader,aCols)
+		EndIf
+	Else
+		If ( (ExistBlock("M410ABN")) )
+			ExecBlock("M410ABN",.f.,.f.)
+		EndIf
+	EndIf
+	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Limpa cliente anterior para proximo pedido                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+a410ChgCli("")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Destrava Todos os Registros                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MsUnLockAll()
+RestArea(aArea)
+Return( nOpcA )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³	³ Rev.  ³Eduardo Riera          ³ Data ³26.08.2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Delecao do Pedido de Venda                                  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN2: Recno do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN3: Opcao do arotina                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³Esta rotina tem como objetivo efetuar a interface com o usua³±±
+±±³          ³rio e o pedido de vendas                                    ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais/Distribuicao/Logistica                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A410Deleta(cAlias,nReg,nOpc)
+
+Local aArea     := GetArea()
+Local aPosObj   := {}
+Local aObjects  := {}
+Local aSize     := {}
+Local aPosGet   := {}
+Local aRegSC6   := {}
+Local aRegSCV   := {}
+Local aInfo     := {}
+Local lLiber 	:= .F.
+Local lContinua := .T.
+Local lGrade	:= MaGrade()
+Local lFaturado := .F.
+Local lQuery    := .F.
+Local lContrat  := .F.
+Local lPedTLMK  := .F.
+Local lFreeze   := (SuperGetMv("MV_PEDFREZ",.F.,0) <> 0)
+Local lContTPV  := SuperGetMv("MV_TELAPVX",.F.,.F.)
+Local nOpcA		:= 0
+Local nTotalPed := 0
+Local nTotalDes := 0
+Local nGetLin   := 0
+Local nNumDec   := TamSX3("C6_VALOR")[2]
+Local nColFreeze:= SuperGetMv("MV_PEDFREZ",.F.,0)
+Local cArqQry   := "SC6"
+Local cCadastro := IIF(cCadastro == Nil,OemToAnsi("STR0007"),cCadastro) //"Atualização de Pedidos de Venda"
+Local oDlg
+Local oGetd
+Local oSAY1
+Local oSAY2
+Local oSAY3
+Local oSAY4
+Local lMt410Ace := Existblock("MT410ACE")
+
+//Gestao de Contratos
+Local lGCT     := (!Empty(SC5->C5_MDCONTR))
+
+Local cSeek     := ""
+Local aNoFields := {}		// Campos que nao devem entrar no aHeader e aCols
+Local bWhile    := {|| }
+Local cQuery   := ""
+Local bCond     := {|| .T. }
+Local bAction1  := {|| Mta410Del(cArqQry,@nTotalPed,@nTotalDes,lGrade,@aRegSC6,@lPedTLMK,@lLiber,@lFaturado,lContrat) }	
+Local bAction2  := {|| .T. }
+Local aRecnoSE1RA := {} // Array com os titulos selecionados pelo Adiantamento     
+Local aMTA177PER := {}  // Array para carregar as perguntas de central de compras
+Local cEventID   := 0    // Variavel usada para armazenar o ID do EventViewer	  
+Local cMessagem  := " " // Variavel para armazenar a mensagem utilizada no eventviewer
+Local aHeadAGG    := {}
+Local aColsAGG    := {}
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas na LinhaOk                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aCols      := {}
+PRIVATE aHeader    := {}
+PRIVATE aHeadFor   := {}
+PRIVATE aColsFor   := {}
+PRIVATE N          := 1
+PRIVATE aOPs       := {}
+PRIVATE aTELA[0][0],aGETS[0]
+PRIVATE oGetPV		:= Nil
+
+PRIVATE aGEMCVnd :={"",{},{}} //Template GEM - Condicao de Venda
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o usuario tem premissao para alterar o ³
+//³pedido de venda                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cPaisLoc <> "BRA" .AND. FieldPos("C5_CATPV") > 0 .AND. !Empty(SC5->C5_CATPV)
+	If AliasIndic("AGS") //Tabela que relaciona usuario com os Tipos de Pedidos de vendas que ele tem acesso
+		DBSelectArea("AGS")
+		DBSetOrder(1)
+		If DBSeek(xFilial("AGS") + __cUserId) //Se não encontrar o usuário na tabela, permite ele alterar o pedido
+			If !DBSeek(xFilial("AGS") + __cUserId + SC5->C5_CATPV) //Verifica se o usuario tem premissao
+				MsgStop(STR0167 + " " + STR0005 + " " + STR0168)//"Este usuario nao tem permissao para excluir pedidos de venda com essa categoria."
+				lContinua := .F.
+			EndIf
+		EndIf
+	EndIf
+EndIf
+
+//Se não for rotina automática, inclui campos no array para não exibir
+If ( Type("l410Auto") <> "U" .And. !l410Auto )
+	aNoFields := {"C6_NUM","C6_QTDEMP","C6_QTDENT","C6_QTDEMP2","C6_QTDENT2"}
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o campo de codigo de lancamento cat 83 ³
+//³deve estar visivel no acols                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !SuperGetMV("MV_CAT8309",,.F.)
+	aAdd(aNoFields,"C6_CODLAN")
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de entrada para validar acesso do usuario na funcao ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lMt410Ace
+	lContinua := Execblock("MT410ACE",.F.,.F.,{nOpc})
+Endif
+    
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado de um EDITAL - Nao Exclui  |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ  
+
+If !Empty(SC5->C5_NUMPR) .Or. !Empty(SC5->C5_CODED)
+	Help(" ",1,"A410EDITAL") //"Pedido de Venda pertence a um Edital, e nao podera ser alterado, copiado ou excluido"
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Agroindustria  									                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If FindFunction("OGXUtlOrig") //Encontra a função
+	If OGXUtlOrig()
+		If (FindFunction("OGX220"))
+			lContinua := OGX220()
+		EndIf
+	EndIf
+EndIf
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Ambiente/Objeto para tratamento de grade        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                     
+If IsAtNewGrd()
+		PRIVATE oGrade	  := MsMatGrade():New('oGrade',,"C6_QTDVEN",,"a410GValid()", ,;
+	  						{ 	{"C6_QTDVEN",NIL,NIL},;
+	  							{"C6_QTDLIB",NIL,NIL},;
+	  							{"C6_QTDENT",NIL,NIL},;
+	  							{"C6_ITEM"	,NIL,NIL},;
+	  							{"C6_UNSVEN",NIL,NIL},;
+	  							{"C6_OPC",NIL,NIL},;
+								{"C6_NUMOP",NIL,NIL},;
+								{"C6_ITEMOP",NIL,NIL},;
+	  							{"C6_BLQ",NIL,NIL}	}) 
+
+	//-- Inicializa grade multicampo
+	A410InGrdM()
+Else
+	PRIVATE aColsGrade := {}
+	PRIVATE aHeadgrade := {}	
+EndIf	 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Carrega perguntas do MTA177, MATA440 e MATA410                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ    
+Pergunte ("MTA177",.F.)
+aAdd (aMTA177PER,{MV_PAR17,MV_PAR18} )
+Pergunte("MTA440",.F.)
+lTransf:= MV_PAR01 == 1 
+Pergunte("MTA410",.F.)
+//Carrega as variaveis com os parametros da execauto
+Ma410PerAut()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variavel utilizada p/definir Op. Triangulares.       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IsTriangular( MV_PAR03==1 )
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Executa o ponto de entrada M410ALOK                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+IF ( (ExistBlock("M410ALOK")) )
+	If (! ExecBlock("M410ALOK",.F.,.F.) )
+		lContinua := .F.
+	EndIf
+EndIf
+
+//Valida se o pedido foi Gerado por outra rotina ou produto
+If lContinua .And. (Alltrim(SC5->C5_ORIGEM) == "PMSWMT410" .Or. Alltrim(SC5->C5_ORIGEM) == "MSGEAI" .Or. Alltrim(SC5->C5_ORIGEM) == "LOGIX") .And. !l410Auto
+	msgalert(STR0239)//"Este Pedido não pode ser excluido pois foi gerado por outra rotina"
+	lcontinua:=.F.
+EndIf
+
+IF ( SC5->C5_FILIAL <> xFilial("SC5") )
+	Help(" ",1,"A000FI")
+	lContinua := .F.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no SIGAEEC - Nao Exclui    |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SC5")
+IF !Empty(SC5->C5_PEDEXP)  .AND. NMODULO != 29 .And. ( Type("l410Auto") == "U" .OR. !l410Auto )
+	Help(" ",1,"MTA410DEL")
+	lContinua := .F.
+EndIf
+        
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no SIGAGCT - Nao Exclui    |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SC5")
+
+IF lGCT .And. (FunName() != "CNTA120" .And. FunName() != "CNTA150" .And. FunName() != "TECA930" .And. FunName() != "CNTA300"  )
+	Help(" ",1,"MTA410GCT")
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Verifica se o pedido tem carga montada               |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If OmsHasCg(SC5->C5_NUM)
+	Help(" ",1,"A410CARGA")
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no SIGATMS, verificar se   |
+//| existe NF de Conhecimento.                           |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(SC5->C5_SOLFRE)
+	DT5->(dbSetOrder(1))
+	If DT5->(dbSeek(xFilial("SC5")+SC5->C5_SOLFRE+SC5->C5_ITESOL))
+		Help(" ",1, "A410NFCON")
+		lContinua := .F.
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no SIGALOJA - Nao Exclui    |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(SC5->C5_ORCRES) .AND. (Type("l410Auto") == "U" .OR. !l410Auto)
+	//"Este Pedido foi gerado através do módulo de Controle de Lojas, e somente poderá ser excluído através da exclusão da Venda que o originou."
+	MsgAlert(STR0116)
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no Totvs Reserve - Nao Exclui    |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If AllTrim(SC5->C5_ORIGEM) $ 'FINA665#FINA677' .AND. (Type("l410Auto") == "U" .OR. !l410Auto)
+	MsgAlert(STR0241)
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Não exclui quando for um pedido de remessa da Locação | 
+//| de Equipamento do SIGATEC - Gestão de Serviços        | 
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lContinua 
+	
+	DbSelectArea('TEW')
+	TEW->( DbSetOrder( 4 ) ) //TEW_FILIAL+TEW_NUMPED+TEW_ITEMPV
+	
+	If TEW->( DbSeek( xFilial('TEW')+SC5->C5_NUM ) )
+		lContinua := .F.
+		Help(,,'A410GSLOC',, STR0229,1,0) // 'Pedido não pode ser excluído por ter sido gerado para remessa de equipamento para locação'
+	EndIf
+	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Salva a integridade dos campos de Bancos de Dados    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+If !SoftLock(cAlias)
+	lContinua := .F.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa desta forma para criar uma nova instancia de variaveis private ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RegToMemory( "SC5", .F., .F. )
+
+If lContinua
+	lContinua := If(lGrade.And.MatOrigGrd()=="SB4",VldDocGrd(1,SC5->C5_NUM),.T.)
+EndIf
+
+If lContinua .And. SuperGetMV("MV_ISSXMUN",.F.,.F.)
+	lContinua := a410ISSCAMARK()
+EndIf
+
+If ( lContinua )
+	dbSelectArea("SC6")
+	dbSetOrder(1)
+	#IFDEF TOP
+		If ( TcSrvType()<>"AS/400"  .And. !InTransact() .And. Ascan(aHeader,{|x| x[8] == "M"}) == 0 )
+			lQuery  := .T.
+			cQuery := "SELECT SC6.*,R_E_C_N_O_ SC6RECNO "
+			cQuery += "FROM "+RetSqlName("SC6")+" SC6 "
+			cQuery += "WHERE SC6.C6_FILIAL='"+xFilial("SC6")+"' AND "
+			cQuery += "SC6.C6_NUM='"+SC5->C5_NUM+"' AND "
+			cQuery += "SC6.D_E_L_E_T_<>'*' "
+			cQuery += "ORDER BY "+SqlOrder(SC6->(IndexKey()))
+
+			dbSelectArea("SC6")
+			dbCloseArea()
+		EndIf	
+	#ENDIF
+	cSeek  := xFilial("SC6")+SC5->C5_NUM
+	bWhile := {|| C6_FILIAL+C6_NUM }
+
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Montagem do aHeader e aCols                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	FillGetDados(nOPc,"SC6",1,cSeek,bWhile,{{bCond,bAction1,bAction2}},aNoFields,/*aYesFields*/,/*lOnlyYes*/,cQuery,/*bMontCols*/,Inclui,/*aHeaderAux*/,/*aColsAux*/,{|| AfterCols(cArqQry) },/*bBeforeCols*/,/*bAfterHeader*/,"SC6")	
+
+	If "MATA410" $ SuperGetMV("MV_GRDMULT",.F.,"") .And. lGrade
+		aCols := aColsGrade(oGrade,aCols,aHeader,"C6_PRODUTO","C6_ITEM","C6_ITEMGRD",aScan(aHeader,{|x| AllTrim(x[2]) == "C6_DESCRI"}))
+	EndIf
+
+	A410FRat(@aHeadAGG,@aColsAGG)	   
+
+	nTotalDes  += A410Arred(nTotalPed*M->C5_PDESCAB/100,"C6_VALOR")
+	nTotalPed  -= A410Arred(nTotalPed*M->C5_PDESCAB/100,"C6_VALOR")
+	nTotalPed  -= M->C5_DESCONT
+	nTotalDes  += M->C5_DESCONT
+	
+	If ( lQuery )
+		dbSelectArea(cArqQry)
+		dbCloseArea()
+		ChkFile("SC6",.F.)
+		dbSelectArea("SC6")
+	EndIf
+	
+EndIf
+If ( lContinua )
+	//
+	// Template GEM - Gestao de Empreendimentos Imobiliarios
+	//
+	// faz a copia da condicao de venda se a mesma tiver 
+	// uma vinculacao com a condicao de pagamento
+	//
+	If ExistBlock("GEM410PV") 
+		aGEMCVnd := ExecBlock("GEM410PV",.F.,.F.,{ M->C5_NUM ,M->C5_CONDPAG ,M->C5_EMISSAO ,nTotalPed })
+	ElseIf ExistTemplate("GEM410PV") 
+		// Copia a condicao de venda
+		aGEMCVnd := ExecTemplate("GEM410PV",.F.,.F.,{ M->C5_NUM ,M->C5_CONDPAG ,M->C5_EMISSAO ,nTotalPed })
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Caso nao ache nenhum item , abandona rotina.         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( Len(aCols)  == 0 )
+		Help(" ",1,"A410SEMREG")
+		lContinua := .F.
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Caso algum item ja tenha sido FATURADO , impede a exclusao do PV ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( lFaturado )
+		Help(" ",1,"A410REGFAT")
+		lContinua := .F.
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Caso algum item ja tenha sido LIBERADO , impede a exclusao do PV ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( lLiber )
+		Help(" ",1,"A410LIBER")
+		lContinua  := .F.
+	EndIf
+	If ( ExistBlock("A410EXC") )
+		lRdRet := ExecBlock("A410EXC",.F.,.F.)
+		If ValType(lRdRet)=="L" .And. !lRdRet
+			lContinua  := .F.
+		EndIf
+	EndIf
+	If ( lContrat )
+		Help(" ",1,"A410CTRPAR")
+		lContinua := .F.
+	EndIf
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Se algum item originou-se no telemarketing, impede a exclusao          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lPedTLMK
+		Help( " ", 1, "A410TLMK" ) // Nao e possivel excluir um pedido com itens originados no TLMK
+		lContinua := .F.
+	EndIf
+
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Monta o array com as formas de pagamento do SX5³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Ma410MtFor(@aHeadFor,@aColsFor,@aRegSCV)
+If ( lContinua )
+	If ( Type("l410Auto") == "U" .OR. !l410Auto )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Faz o calculo automatico de dimensoes de objetos     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aSize := MsAdvSize()
+		aObjects := {}
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 020, .t., .f. } )
+		aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+		aPosObj := MsObjSize( aInfo, aObjects )
+		aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,{{003,033,160,200,240,263}} )
+		nGetLin := aPosObj[3,1]
+		If lContTPV		
+			DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL STYLE nOr(WS_VISIBLE,WS_POPUP)
+		Else
+			DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL 
+		EndIf			
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Armazenar dados do Pedido anterior.                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF M->C5_TIPO $ "DB"
+			aTrocaF3 := {{"C5_CLIENTE","SA2"}}
+		Else
+			aTrocaF3 := {}
+		EndIf
+		oGetPV:=MSMGet():New( "SC5", nReg, nOpc, , , , , aPosObj[1],,3,,,"A415VldTOk")
+//		@ nGetLin,aPosGet[1,1] SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009)) SIZE 020,09 OF oDlg PIXEL	//"Fornec.:"###"Cliente: "
+		@ nGetLin,aPosGet[1,2] SAY oSAY1 VAR Space(40)						SIZE 120,09 PICTURE "@!"	OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,3] SAY OemToAnsi(STR0011)						SIZE 020,09 OF oDlg PIXEL	//"Total :"
+		@ nGetLin,aPosGet[1,4]  SAY oSAY2 VAR 0 PICTURE TM(0,22,Iif(cPaisloc=="CHI" .And. M->C5_MOEDA == 1,NIL,nNumDec))		SIZE 060,09 OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,5]  SAY OemToAnsi(STR0012)						SIZE 030,09 OF oDlg PIXEL 	//"Desc. :"
+		@ nGetLin,aPosGet[1,6]  SAY oSAY3 VAR 0 PICTURE TM(0,22,Iif(cPaisloc=="CHI" .And. M->C5_MOEDA == 1,NIL,nNumDec))		SIZE 060,09 OF oDlg PIXEL RIGHT
+		@ nGetLin+10,aPosGet[1,5]  SAY OemToAnsi("=")							SIZE 020,09 OF oDlg PIXEL
+		@ nGetLin+10,aPosGet[1,6]  SAY oSAY4 VAR 0								SIZE 060,09 PICTURE TM(0,22,Iif(cPaisloc=="CHI" .And. M->C5_MOEDA == 1,NIL,nNumDec)) OF oDlg PIXEL	 RIGHT
+		oDlg:Cargo	:= {|c1,n2,n3,n4| oSay1:SetText(c1),;
+			oSay2:SetText(n2),;
+			oSay3:SetText(n3),;
+			oSay4:SetText(n4) }
+		Set Key VK_F4 to A440Stok(NIL,"A410")
+		oGetd:=MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,"A410LinOk","A410DelOk","+C6_ITEM/C6_Local/C6_TES/C6_CF/C6_PEDCLI",.T.,,nColFreeze,,ITENSSC6*IIF(MaGrade(),1,3.33),"A410Blq()",,,,,lFreeze)	
+		Ma410Rodap(oGetD,nTotalPed,nTotalDes)
+		ACTIVATE MSDIALOG oDlg ON INIT (A410Limpa(.F.,M->C5_TIPO),Ma410Bar(oDlg,{||If(A410DelOk().And.A410VldTOk(nOpc, aRecnoSE1RA),(nOpcA:=2,oDlg:End()),nOpcA := 0)},{||Iif( Ma410VldUs( nOpca ), oDlg:End(),  ) },nOpc,oGetD,nTotalPed,@aRecnoSE1RA,@aHeadAGG,@aColsAGG))
+	Else
+		nOpcA := 2
+	EndIf
+	If ( nOpcA == 2  )
+		If Type("lOnUpDate") == "U" .Or. lOnUpdate
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Inicializa a gravacao dos lancamentos do SIGAPCO          ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoIniLan("000100")
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Aciona integração via mensagem única          				³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+			If FindFunction('GETROTINTEG') .And. FWHasEAI("MATA410",.T.,,.T.)
+				FwIntegDef( 'MATA410' )
+			EndIf
+
+			A410Grava(lLiber,lTransf,3,aHeadFor,aColsFor,aRegSC6,aRegSCV,,,aRecnoSE1RA,aHeadAGG,aColsAGG)
+
+            //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Event Viewer - Envia e-mail ou RSS para exclusao de pedidos de vendas   ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ 
+			cEventID  := "031" //Exclusao de pedidos de vendas
+			cMessagem := STR0160+SC5->C5_NUM+"."	
+			EventInsert(FW_EV_CHANEL_ENVIRONMENT, FW_EV_CATEGORY_MODULES, cEventID,FW_EV_LEVEL_INFO,""/*cCargo*/,STR0159,cMessagem)
+	
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Integracao com SIGASGA (NG Informatica)                    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If SuperGetMv("MV_NGSGAFA",.F.,"2") == "1" 
+				SG530CANC(SC5->C5_NUM)//Cancela MTR
+			Endif
+		       			
+			If ( (ExistTemplate("M410STTS") ) )
+				ExecTemplate("M410STTS",.f.,.f.)
+			Endif
+
+			If ( (ExistBlock("M410STTS") ) )
+				ExecBlock("M410STTS",.f.,.f.)
+			Endif
+            
+			//  Amarracao do Pedido de venda com o pedido de compras 
+		    //  para a Central de Compras.		
+			
+			A410CCPed(aCols,aHeader,aMTA177PER,1)   
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Finaliza a gravacao dos lancamentos do SIGAPCO            ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoFinLan("000100")
+
+		Else
+			aAutoCab := MsAuto2Ench("SC5")
+			aAutoItens := MsAuto2Gd(aHeader,aCols)
+		EndIf
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Exclui a amarracao com os conhecimentos                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MsDocument( "SC5", SC5->( RecNo() ), 2, , 3 )            
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Exclusao de Anotações    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		                                                                        
+If nModulo == 73 
+	CRMA090Del( "SC5", SC5->( Recno() ) )
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Destrava Todos os Registros                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MsUnLockAll()
+RestArea(aArea)
+Return nOpcA
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³a410PCopia³ Autor ³ Henry Fila            ³ Data ³17/09/2004³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Prepara a funcao de copia para evitar que seja chamada a   ³±±
+±±³          ³ janela de filiais                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN2: Recno do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN3: Opcao do arotina                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Function a410PCopia(cAlias,nReg,nOpc)
+
+Local aRotBkp := aClone(aRotina)
+Local lRet:=.T.
+
+aRotina := { { OemToAnsi(STR0001),"AxPesqui"  ,0,1},;		//"Pesquisar"
+	{ OemToAnsi(STR0002),"A410Visual",0,2},;		//"Visual"
+	{ OemToAnsi(STR0003),"A410Copia",0,3}}		//"Incluir"
+  
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado de um EDITAL - Nao COPIA   |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ  
+
+If !Empty(SC5->C5_NUMPR) .Or. !Empty(SC5->C5_CODED)
+	Help(" ",1,"A410EDITAL") //"Pedido de Venda pertence a um Edital, e nao podera ser alterado, copiado ou excluido"
+	lRet:=.F.
+EndIf
+
+
+If lRet
+	a410Copia(calias,nReg,3)
+EndIf
+
+aRotina := aClone(aRotBkp)
+
+Return(lRet)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³a410Copia ³Autor  ³Eduardo Riera          ³ Data ³07.09.2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Copia do Pedido de Venda                                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN2: Recno do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN3: Opcao do arotina                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³Esta rotina tem como objetivo efetuar a interface com o usua³±±
+±±³          ³rio e o pedido de vendas                                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais/Distribuicao/Logistica                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A410Copia(cAlias,nReg,nOpc)
+
+Local aArea     := GetArea()
+Local aPosObj   := {}
+Local aObjects  := {}
+Local aSize     := {}
+Local aPosGet   := {}
+Local aRegSC6   := {}
+Local aRegSCV   := {}
+Local aInfo     := {}
+Local lLiber 	:= .F.
+Local lTransf	:= .F.
+Local lGrade	:= MaGrade()
+Local lQuery    := .F.
+Local lContinua := .T.
+Local lFreeze   := (SuperGetMv("MV_PEDFREZ",.F.,0) <> 0)
+Local nOpcA		:= 0
+Local nTotalPed := 0
+Local nTotalDes := 0
+Local nNumDec   := TamSX3("C6_VALOR")[2]
+Local nGetLin   := 0
+Local nStack    := GetSX8Len() 
+Local nColFreeze:= SuperGetMv("MV_PEDFREZ",.F.,0)
+Local lContTPV  := SuperGetMv("MV_TELAPVX",.F.,.F.)
+Local cArqQry   := "SC6"
+Local cCadastro := IIF(cCadastro == Nil,OemToAnsi("STR0007"),cCadastro) //"Atualização de Pedidos de Venda"
+Local cTipoDat  := SuperGetMv("MV_TIPCPDT",.F.,"1")
+Local oDlg
+Local oGetd
+Local dOrig     := Ctod("//")
+Local dCopia    := Ctod("//")
+Local oSAY1
+Local oSAY2
+Local oSAY3
+Local oSAY4
+Local lMt410Ace := Existblock("MT410ACE")
+
+Local cSeek     := ""
+Local aNoFields := {"C6_NUM","C6_QTDEMP","C6_QTDENT","C6_QTDEMP2","C6_QTDENT2"}		// Campos que nao devem entrar no aHeader e aCols
+Local bWhile    := {|| }
+Local cQuery    := ""
+Local bCond     := {|| .T. }
+Local lCopia    := .T.
+Local bAction1  := {|| Mta410Cop(cArqQry,@nTotalPed,@nTotalDes,lGrade, lCopia) }	
+Local bAction2  := {|| .T. }
+Local aRecnoSE1RA := {} // Array com os titulos selecionados pelo Adiantamento
+Local aHeadAGG    := {}
+Local aColsAGG    := {}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas na LinhaOk                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aCols      := {}
+PRIVATE aHeader    := {}
+PRIVATE aHeadFor   := {}
+PRIVATE aColsFor   := {}
+PRIVATE N          := 1
+PRIVATE oGetPV		:= Nil
+
+PRIVATE aGEMCVnd :={"",{},{}} //Template GEM - Condicao de Venda
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a entrada de dados do arquivo                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aTELA[0][0],aGETS[0]
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Array para controlar relacionamento com SD4 (Remessa para Beneficiamento ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aColsBn := {}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se o campo de codigo de lancamento cat 83 ³
+//³deve estar visivel no acols                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !SuperGetMV("MV_CAT8309",,.F.)
+	aAdd(aNoFields,"C6_CODLAN")
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de entrada para validar acesso do usuario na funcao ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lMt410Ace
+	lContinua := Execblock("MT410ACE",.F.,.F.,{nOpc})
+Endif
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria Ambiente/Objeto para tratamento de grade        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ    
+If IsAtNewGrd()
+		PRIVATE oGrade	  := MsMatGrade():New('oGrade',,"C6_QTDVEN",,"a410GValid()",;
+	  						{ 	{VK_F4,{|| A440Saldo(.T.,oGrade:aColsAux[oGrade:nPosLinO][aScan(oGrade:aHeadAux,{|x| AllTrim(x[2])=="C6_LOCAL"})])}} },;
+	  						{ 	{"C6_QTDVEN",.T.,{{"C6_UNSVEN",{|| ConvUm(AllTrim(oGrade:GetNameProd(,nLinha,nColuna)),aCols[nLinha][nColuna],0,2) } }} },;
+	  							{"C6_QTDLIB",NIL,NIL},;
+	  							{"C6_QTDENT",NIL,NIL},;
+	  							{"C6_ITEM"	,NIL,NIL},;
+	  							{"C6_UNSVEN", {{"C6_QTDVEN",{|| ConvUm(AllTrim(oGrade:GetNameProd(,nLinha,nColuna)),0,aCols[nLinha][nColuna],1) }}} },;
+	  							{"C6_OPC",NIL,NIL},;
+								{"C6_NUMOP",NIL,NIL},;
+								{"C6_ITEMOP",NIL,NIL},;
+	  							{"C6_BLQ",NIL,NIL};
+	  						}) 
+
+
+	//-- Inicializa grade multicampo
+	A410InGrdM(.T.)
+Else
+	PRIVATE aColsGrade := {}
+	PRIVATE aHeadgrade := {}
+EndIf	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Carrega perguntas do MATA440 e MATA410                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+INCLUI := .T.
+ALTERA := .F.
+
+Pergunte("MTA440",.F.)
+lLiber := MV_PAR02 == 1
+lTransf:= MV_PAR01 == 1
+Pergunte("MTA410",.F.)
+//Carrega as variaveis com os parametros da execauto
+Ma410PerAut()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variavel utilizada p/definir Op. Triangulares.       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IsTriangular( MV_PAR03==1 )
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Salva a integridade dos campos de Bancos de Dados    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+IF ( (ExistBlock("M410ALOK")) )
+	If (! ExecBlock("M410ALOK",.F.,.F.) )
+		lContinua := .F.
+	EndIf
+EndIf
+IF ( SC5->C5_FILIAL <> xFilial("SC5") )
+	Help(" ",1,"A000FI")
+	lContinua := .F.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Se o Pedido foi originado no SIGATMS - Nao Copia     |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(SC5->C5_SOLFRE)
+	Help(" ",1,"A410TMSNAO")
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa desta forma para criar uma nova instancia de variaveis private ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RegToMemory( "SC5", .F., .F. )
+
+dOrig  := M->C5_EMISSAO
+dCopia := CriaVar("C5_EMISSAO",.T.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Limpa as variaveis que possuem amarracoes do pedido anterior              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+M->C5_NOTA  := Space(Len(SC5->C5_NOTA))
+M->C5_SERIE := Space(Len(SC5->C5_SERIE))
+M->C5_OS    := Space(Len(SC5->C5_OS))
+M->C5_PEDEXP:= Space(Len(SC5->C5_PEDEXP))
+M->C5_DTLANC:= Ctod("")
+
+
+//Limpa as variaveis que tem referencia com o contrato GCT
+M->C5_MDCONTR  	:= Space(Len(M->C5_MDCONTR))
+M->C5_MDNUMED 	:= Space(Len(SC5->C5_MDNUMED))
+M->C5_MDPLANI   := Space(Len(SC5->C5_MDPLANI))
+
+If lContinua
+	lContinua := If(lGrade.And.MatOrigGrd()=="SB4",VldDocGrd(1,SC5->C5_NUM),.T.)
+EndIf
+
+If ( lContinua )
+	dbSelectArea("SC6")
+	dbSetOrder(1)
+	#IFDEF TOP
+		If TcSrvType()<>"AS/400" .And. !InTransact() .And. Ascan(aHeader,{|x| x[8] == "M"}) == 0
+			lQuery  := .T.
+			cQuery := "SELECT SC6.*,SC6.R_E_C_N_O_ SC6RECNO "
+			cQuery += "FROM "+RetSqlName("SC6")+" SC6 "
+			cQuery += "WHERE SC6.C6_FILIAL='"+xFilial("SC6")+"' AND "
+			cQuery += "SC6.C6_NUM='"+SC5->C5_NUM+"' AND "
+			cQuery += "SC6.D_E_L_E_T_<>'*' "
+			cQuery += "ORDER BY "+SqlOrder(SC6->(IndexKey()))
+
+			dbSelectArea("SC6")
+			dbCloseArea()
+		EndIf
+	#ENDIF
+	cSeek  := xFilial("SC6")+SC5->C5_NUM
+	bWhile := {|| C6_FILIAL+C6_NUM }
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Montagem do aHeader e aCols                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	FillGetDados(7,"SC6",1,cSeek,bWhile,{{bCond,bAction1,bAction2}},aNoFields,/*aYesFields*/,/*lOnlyYes*/,cQuery,/*bMontCols*/,.F.,/*aHeaderAux*/,/*aColsAux*/,{|| AfterCols(cArqQry,cTipoDat,dCopia,dOrig,lCopia) },/*bBeforeCols*/,/*bAfterHeader*/,"SC6")	
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Carrega os dados do rateio³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	A410FRat(@aHeadAGG,@aColsAGG)	
+
+	nTotalDes  += A410Arred(nTotalPed*M->C5_PDESCAB/100,"C6_VALOR")
+	nTotalPed  -= A410Arred(nTotalPed*M->C5_PDESCAB/100,"C6_VALOR")	
+	nTotalPed  -= M->C5_DESCONT
+	nTotalDes  += M->C5_DESCONT
+
+	If ( lQuery )
+		dbSelectArea(cArqQry)
+		dbCloseArea()
+		ChkFile("SC6",.F.)
+		dbSelectArea("SC6")
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa ambiente de integração com Planilha ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+A410RvPlan("","",.T.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Monta o array com as formas de pagamento do SX5³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Ma410MtFor(@aHeadFor,@aColsFor)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Caso nao ache nenhum item , abandona rotina.         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( lContinua )
+	If ( Len(aCols) == 0 )
+		lContinua := .F.
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ajusta as variaveis para copia                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+M->C5_NUM := CriaVar("C5_NUM",.T.)
+M->C5_EMISSAO := CriaVar("C5_EMISSAO",.T.)
+aRegSC6 := {}
+aRegSCV := {}
+//
+// Template GEM - Gestao de Empreendimentos Imobiliarios
+//
+// Carrega a condicao de venda se a mesma tiver 
+// uma vinculacao com a pedido/condicao de pagamento
+//
+If ExistBlock("GEM410PV") 
+	aGEMCVnd := ExecBlock("GEM410PV",.F.,.F.,{ SC5->C5_NUM ,SC5->C5_CONDPAG ,M->C5_EMISSAO ,nTotalPed })
+ElseIf ExistTemplate("GEM410PV") 
+	// Copia a condicao de venda
+	aGEMCVnd := ExecTemplate("GEM410PV",.F.,.F.,{ SC5->C5_NUM ,SC5->C5_CONDPAG ,M->C5_EMISSAO ,nTotalPed })
+EndIf
+
+If ExistBlock("MT410CPY")
+	ExecBlock("MT410CPY",.F.,.F.)
+EndIf
+If ( lContinua )
+	If ( Type("l410Auto") == "U" .OR. !l410Auto )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Faz o calculo automatico de dimensoes de objetos     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aSize := MsAdvSize()
+		aObjects := {}
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 100, .t., .t. } )
+		aAdd( aObjects, { 100, 020, .t., .f. } )
+		aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+		aPosObj := MsObjSize( aInfo, aObjects )
+		aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,{{003,033,160,200,240,263}} )
+		nGetLin := aPosObj[3,1]
+		If lContTPV
+			DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL STYLE nOR( WS_VISIBLE ,DS_MODALFRAME )
+		Else
+			DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL  
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Armazenar dados do Pedido anterior.                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF M->C5_TIPO $ "DB"
+			aTrocaF3 := {{"C5_CLIENTE","SA2"}}
+		Else
+			aTrocaF3 := {}
+		EndIf
+		oGetPV:=MSMGet():New( "SC5", nReg, nOpc, , , , , aPosObj[1],,3,,,"A415VldTOk")
+//		@ nGetLin,aPosGet[1,1]  SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009)) SIZE 020,09 PIXEL	//"Fornec.:"###"Cliente: "
+		@ nGetLin,aPosGet[1,2]  SAY oSAY1 VAR Space(40)						SIZE 120,09 PICTURE "@!"	OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,3]  SAY OemToAnsi(STR0011)						SIZE 020,09 OF oDlg PIXEL	//"Total :"
+		@ nGetLin,aPosGet[1,4]  SAY oSAY2 VAR 0 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec))	SIZE 060,09 OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,5]  SAY OemToAnsi(STR0012)						SIZE 030,09 OF oDlg PIXEL 	//"Desc. :"
+		@ nGetLin,aPosGet[1,6]  SAY oSAY3 VAR 0 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec))		SIZE 060,09 OF oDlg PIXEL RIGHT
+		@ nGetLin+10,aPosGet[1,5]  SAY OemToAnsi("=")							SIZE 020,09 OF oDlg PIXEL
+		If cPaisLoc == "BRA"
+			@ nGetLin+10,aPosGet[1,6]  SAY oSAY4 VAR 0								SIZE 060,09 PICTURE TM(0,22,2) OF oDlg PIXEL RIGHT
+		Else
+			@ nGetLin+10,aPosGet[1,6]  SAY oSAY4 VAR 0								SIZE 050,09 PICTURE IIf(cPaisloc=="CHI",Nil,TM(0,22,nNumDec)) OF oDlg PIXEL RIGHT
+		EndIf
+		oDlg:Cargo	:= {|c1,n2,n3,n4| oSay1:SetText(c1),;
+			oSay2:SetText(n2),;
+			oSay3:SetText(n3),;
+			oSay4:SetText(n4) }
+		Set Key VK_F4 to A440Stok(NIL,"A410")
+		oGetd:=MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,"A410LinOk","A410TudOk","+C6_ITEM/C6_Local/C6_TES/C6_CF/C6_PEDCLI",.T.,,nColFreeze,,ITENSSC6*IIF(MaGrade(),1,3.33),"A410Blq()",,,"A410ValDel(.F.)",,lFreeze)
+		Private oGetDad:=oGetd
+		A410Bonus(2)
+		Ma410Rodap(oGetD,nTotalPed,nTotalDes)
+		ACTIVATE MSDIALOG oDlg ON INIT (A410Limpa(.F.,M->C5_TIPO),Ma410Bar(oDlg,{||nOpcA:=1,if(A410VldTOk(nOpc, aRecnoSE1RA).And.oGetd:TudoOk(),If(!obrigatorio(aGets,aTela),nOpcA := 0,oDlg:End()),nOpcA := 0)},{||oDlg:End()},nOpc,oGetD,nTotalPed,@aRecnoSE1RA,@aHeadAGG,@aColsAGG))
+		SetKey(VK_F4,)
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ validando dados pela rotina automatica                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If EnchAuto(cAlias,aAutoCab,{|| Obrigatorio(aGets,aTela)},aRotina[nOpc][4]) .and. MsGetDAuto(aAutoItens,"A410LinOk",{|| A410VldTOk(nOpc) .and. A410TudOk()},aAutoCab)
+			nOpcA := 1
+		EndIf
+	EndIf
+	If ( nOpcA == 1 )
+		A410Bonus(1)
+		If Type("lOnUpDate") == "U" .Or. lOnUpdate
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Inicializa a gravacao dos lancamentos do SIGAPCO          ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoIniLan("000100")
+
+			If !A410Grava(lLiber,lTransf,1,aHeadFor,aColsFor,aRegSC6,aRegSCV,nStack,aColsBn,aRecnoSE1RA,aHeadAGG,aColsAGG)
+				Help(" ",1,"A410NAOREG")
+			EndIf
+			If ( (ExistBlock("M410STTS") ) )
+				ExecBlock("M410STTS",.f.,.f.)
+			EndIf
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Finaliza a gravacao dos lancamentos do SIGAPCO            ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoFinLan("000100")
+
+		Else
+			aAutoCab := MsAuto2Ench("SC5")
+			aAutoItens := MsAuto2Gd(aHeader,aCols)
+		EndIf
+	Else
+		While GetSX8Len() > nStack
+			RollBackSX8()
+		EndDo
+		If ( (ExistBlock("M410ABN")) )
+			ExecBlock("M410ABN",.f.,.f.)
+		EndIf
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Destrava Todos os Registros                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MsUnLockAll()
+RestArea(aArea)
+Return( nOpcA )
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Função    ³a410IncRap³ Autor ³ Eduardo Riera         ³ Data ³          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³ Programa exclusivo para inclusao no MATA410                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void a410IncRap(ExpC1,ExpN1,,lOrcamento)                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Alias do arquivo                                   ³±±
+±±³          ³ ExpN1 = Numero do registro                                 ³±±
+±±³          ³ ExpL1 = Define se a inclusao foi efetuado pelo MATA416     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A410IncRap(cAlias,nReg,nOpc)
+
+Local nOpcA 	:= 0
+
+Local nCntFor	:= 0
+Local nStack    := GetSX8Len() 
+
+
+Local nUsado	:= 0
+
+Local lLiber	:= .F.
+Local lTransf	:= .F.
+Local lGravou	:= .F.
+Local nPProduto:= 0
+Local bCampo	:= { |nCPO| Field(nCPO) }
+Local oDlg
+Local oGetD
+Local oSAY1
+Local oSAY2
+Local oSAY3
+Local oSAY4
+Local nNumDec := TamSX3("C6_VALOR")[2]
+
+Local aPosObj   := {}
+Local aObjects  := {}
+Local aSize     := {}
+Local aPosGet   := {}
+Local nGetLin   := 0
+Local lM410Bar  := ExistBlock("M410CODBAR")
+Local aRecnoSE1RA := {} // Array com os titulos selecionados pelo Adiantamento
+Local aHeadAGG    := {}
+Local aColsAGG    := {}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Carrega perguntas do MATA440 e MATA410                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte("MTA440",.F.)
+lLiber := MV_PAR02 == 1
+lTransf:= MV_PAR01 == 1
+Pergunte("MTA410",.F.)
+//Carrega as variaveis com os parametros da execauto
+Ma410PerAut()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variavel utilizada p/definir Op. Triangulares.       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IsTriangular( (MV_PAR03==1) )
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a entrada de dados do arquivo                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aTela[0][0]
+PRIVATE aGets[0]
+PRIVATE bArqF3
+PRIVATE bCpoF3
+PRIVATE aTrocaF3	:= {}
+PRIVATE aValidGet	:= {}   
+PRIVATE oGetPV		:= Nil
+
+PRIVATE cCondPAdt   := "0" //Controle p/ cond. pgto. com aceite de Adt. 0=normal 1=Adt
+
+If (! MaGrade() )
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Salva a integridade dos campos de Bancos de Dados    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SC5")
+	dbSetOrder(1)
+
+	RegToMemory( "SC5", .T., .F. )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Salva a integridade dos campos de Bancos de Dados    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	PRIVATE aHeader[0]
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Montagem do aHeader                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SX3")
+	dbSetOrder(1)
+	MsSeek("SC6")
+	While ( !Eof() .And. (SX3->X3_ARQUIVO == "SC6") )
+		IF ( X3USO(SX3->X3_USADO) .And. cNivel >= SX3->X3_NIVEL ) .And.;
+				(	!AllTrim(SX3->X3_CAMPO)=="C6_NUM" 	.And.;
+				!SX3->X3_CAMPO$"C6_QTDEMP #C6_QTDENT " .And.;
+				!SX3->X3_CAMPO$"C6_RESERVA#C6_BLQ    " .And.;
+				!SX3->X3_CAMPO$"C6_NFORI  #C6_SERIORI#C6_ITEMORI" .And.;
+				!SX3->X3_CAMPO$"C6_LOTECTL#C6_NUMLOTE#C6_DTVALID#C6_NUMSERI#C6_LOCALIZ" )
+			nUsado++
+			aAdd(aHeader,{ AllTrim(X3Titulo()),;
+				SX3->X3_CAMPO	,;
+				SX3->X3_PICTURE,;
+				SX3->X3_TAMANHO,;
+				SX3->X3_DECIMAL,;
+				SX3->X3_VALID	,;
+				SX3->X3_USADO	,;
+				SX3->X3_TIPO	,;
+				SX3->X3_ARQUIVO,;
+				SX3->X3_CONTEXT } )
+		EndIf
+		dbSelectArea("SX3")
+		dbSkip()
+	EndDo
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Montagem do aCols                                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	PRIVATE aCOLS[1][nUsado+1]
+	For nCntFor	:= 1 To nUsado
+		aCols[1][nCntFor] := CriaVar(aHeader[nCntFor][2])
+		If ( AllTrim(aHeader[nCntFor][2]) == "C6_ITEM" )
+			aCols[1][nCntFor] := "01"
+		EndIf
+	Next nCntFor
+	aCOLS[1][Len(aHeader)+1] := .F.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Rotina de inclusao automatica                         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( Type("l410Auto") <> "U" .And. l410Auto )
+		MsAuto2Acols()
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Estabelece a Troca de Clientes conforme o Tipo do Pedido de Venda      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( M->C5_TIPO $ "DB" )
+		aTrocaF3 := {{"C5_CLIENTE","SA2"}}
+	Else
+		aTrocaF3 := {}
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se eh rotina de inclusao automatica          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( Type("l410Auto") == "U" .or. ! l410Auto )
+		aSize := MsAdvSize()
+		aObjects := {}
+		aAdd( aObjects, { 100, 100, .T., .T. } )
+		aAdd( aObjects, { 100, 100, .T., .T. } )
+		aAdd( aObjects, { 100, 015, .T., .F. } )
+		aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+		aPosObj := MsObjSize( aInfo, aObjects )
+		aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,{{003,033,160,200,240,263}})
+		nGetLin := aPosObj[3,1]
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Armazenar dados do Pedido anterior.                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL
+
+		oGetPV:=MSMGet():New( "SC5", nReg, nOpc, , , , , APOSOBJ[1],,3)
+//		@ nGetLin,aPosGet[1,1] SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009)) SIZE 020,09 PIXEL //"Fornec.:"###"Cliente: "
+		@ nGetLin,aPosGet[1,2] SAY oSAY1 VAR Space(40)						SIZE 120,09 PICTURE "@!"	OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,3] SAY OemToAnsi(STR0011)						SIZE 020,09 OF oDlg PIXEL	//"Total :"
+		@ nGetLin,aPosGet[1,4] SAY oSAY2 VAR 0 PICTURE TM(0,16,Iif(cPaisloc=="CHI",NIL,nNumDec))		SIZE 050,09 OF oDlg PIXEL
+		@ nGetLin,aPosGet[1,5] SAY OemToAnsi(STR0012)						SIZE 030,09 OF oDlg PIXEL 	//"Desc. :"
+		@ nGetLin,aPosGet[1,6] SAY oSAY3 VAR 0 PICTURE TM(0,16,Iif(cPaisloc=="CHI",NIL,nNumDec))		SIZE 050,09 OF oDlg PIXEL RIGHT
+		@ nGetLin+10,aPosGet[1,5] SAY OemToAnsi("=")							SIZE 020,09 OF oDlg PIXEL
+		@ nGetLin+10,aPosGet[1,6] SAY oSAY4 VAR 0								SIZE 050,09 PICTURE TM(0,16,Iif(cPaisloc=="CHI",NIL,nNumDec)) OF oDlg PIXEL	 RIGHT
+		oDlg:Cargo	:= {|c1,n2,n3,n4| oSay1:SetText(c1),;
+			oSay2:SetText(n2),;
+			oSay3:SetText(n3),;
+			oSay4:SetText(n4) }
+		SetKey(VK_F4,{||A440Stok(NIL,"A410")})
+		oGetd:=MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,"Ma410GrvIt","A410TudOk","+C6_ITEM/C6_Local/C6_TES/C6_CF/C6_PEDCLI",.T.,,1,,1200)
+		If Type("lCodBarra")<>"U"
+			oGetd:oBrowse:bGotFocus:={|| IIF(lCodBarra .And. !lM410Bar,a410EntraBarra(oGetD),IIF(lCodBarra .And. lM410Bar,Execblock("M410CODBAR",.F.,.F.,{nOpc,oGetD}),))}
+		EndIf
+		Private oGetDad:=oGetd
+		Ma410Rodap(oGetd)
+		ACTIVATE MSDIALOG oDlg ON INIT Ma410Bar(oDlg,{||nOpcA:=1,If(oGetd:TudoOk(),If(!obrigatorio(aGets,aTela),nOpcA:=0,oDlg:End()),nOpcA:=0)},{||oDlg:End()},nOpc,oGetD,nTotalPed,@aRecnoSE1RA,@aHeadAGG,@aColsAGG)
+		SetKey(VK_F4,)
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Variaveis utilizadas pela rotina de inclusao automatica     ³
+		//³ aValidGet                                                   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aValidGet := {}
+		nOpcA := 1
+		If ! SC5->(MsVldGAuto(aValidGet)) // consiste os gets
+			nOpcA := 0
+		EndIf
+		If (nOpcA == 0) .or. !(SC6->(MsVldAcAuto(aValidGet,"A410LinOk(o)","A410TudOk()")))   // consiste o campos do Acols
+			nOpcA := 0
+		EndIf
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Efetua a Gravacao do Pedido de Venda                                    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nPProduto := aScan(aHeader,{|x| AllTrim(x[2])=="C6_PRODUTO"})
+	For nCntfor := 1 To Len(aCols)
+		If ( Empty(aCols[nCntFor][nPProduto]) )
+			aCols[nCntFor][nUsado+1] := .T.
+		EndIf
+		If ( !aCols[nCntfor][nUsado+1] )
+			lGravou := .T.
+		EndIf
+	Next nCntFor
+	If ( nOpcA == 1 .And. lGravou )
+		While GetSX8Len() > nStack 
+			ConfirmSX8()
+		EndDo
+		EvalTrigger()
+	Else
+		For nCntFor := 1 To Len(aCols)
+			If ( !aCols[nCntFor][nUsado+1] )
+				aCols[nCntFor][nUsado+1] := .T.
+				n := nCntFor
+				Ma410GrvIt()
+			EndIf
+		Next nCntFor
+		While GetSX8Len() > nStack 
+			RollBackSx8()
+		EndDo
+	EndIf
+	If ( lGravou )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Grava arquivo SC5 (Cabec.do pedido de Venda)        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea("SC5")
+		dbSetOrder(1)
+		If ( !MsSeek(xFilial("SC5")+M->C5_NUM) )
+			RecLock("SC5",.T.)
+		Else
+			RecLock("SC5")
+		EndIf
+		For nCntFor := 1 TO FCount()
+			If "FILIAL"$FieldName(nCntFor)
+				FieldPut(nCntFor,xFilial("SC5"))
+			ElseIf (("TABELA" $ FieldName(nCntFor)) .And. (M->&(EVAL(bCampo,nCntFor)) == PadR("1",Len(DA0->DA0_CODTAB))))
+				FieldPut(nCntFor,"")
+			Else
+				FieldPut(nCntFor,M->&(EVAL(bCampo,nCntFor)))
+			EndIf
+		Next nCntFor
+		MsUnLock()
+	EndIf
+	dbSelectArea("SC6")
+	dbSetOrder(1)
+	If ( !MsSeek(xFilial("SC6")+M->C5_NUM) )
+		dbSelectArea("SC5")
+		dbSetOrder(1)
+		If ( MsSeek(xFilial("SC5")+M->C5_NUM) )
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Grava os lancamentos nas contas orcamentarias SIGAPCO    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoDetLan("000100","04","MATA410")
+
+			RecLock("SC5")
+			dbDelete()
+			MsUnLock()
+		EndIf
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Restaura a Integridade da Tela de Entrada                               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea(cAlias)
+EndIf
+Return( nOpcA )
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Função    ³A410AltRap³ Autor ³ Claudinei M. Benzi    ³ Data ³          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³ Programa exclusivo ao MATA410 para alteracao               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ Void A410AltRap(ExpC1,ExpN1)                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Alias do arquivo                                   ³±±
+±±³          ³ ExpN1 = Numero do registro                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Mata410                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A410AltRap(cAlias,nReg,nOpc)
+
+Local bCampo	:= { |nCPO| Field(nCPO) }
+Local nOpcA		:= 0
+
+Local lLiber 	:= .F.
+Local lTransf	:= .F.
+Local cCampo	:=""
+Local lContinua:= .T.
+Local nUsado   := 0
+Local nCntFor  := 0
+Local nTotalPed:= 0
+Local nTotalDes:= 0
+Local lGrade	:= MaGrade()
+Local lBloqueio:= .T.
+Local aLiberado:= {}
+Local nPIdentB6:= 0
+Local nPNfOrig := 0
+Local nPSerOrig:= 0
+Local nPItOrig := 0
+Local nAux		:= 0
+Local lNaoFatur:= .F.
+
+Local lQuery   := .F.
+Local cArqQry  := ""
+Local oDlg
+Local oGetd
+Local oSAY1
+Local oSAY2
+Local oSAY3
+Local oSAY4
+Local nNumDec := TamSX3("C6_VALOR")[2]
+Local aPosObj   := {}
+Local aObjects  := {}
+Local aSize     := {}
+Local aPosGet   := {}
+Local nGetLin   := 0
+Local aRecnoSE1RA := {} // Array com os titulos selecionados pelo Adiantamento
+Local aHeadAGG    := {}
+Local aColsAGG    := {}
+
+#IFDEF TOP
+	Local cQuery     := ""
+#ENDIF 	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas na LinhaOk                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aCols    	:= {}
+PRIVATE aHeader  	:= {}
+PRIVATE aAlterado := {}  
+If IsAtNewGrd()
+	PRIVATE oGrade	  := MsMatGrade():New('oGrade',,"C6_QTDVEN", ,"a410GValid()",{ {VK_F4,{|| A440Saldo(.T.,oGrade:aColsAux[oGrade:nPosLinO][aScan(oGrade:aHeadAux,{|x| AllTrim(x[2])=="C6_LOCAL"})] )}} }) 
+Else
+	PRIVATE aColsGrade:= {}
+	PRIVATE aHeadgrade:= {}
+EndIf
+
+PRIVATE oGetPV 	:= Nil
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a entrada de dados do arquivo                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aTELA[0][0],aGETS[0]
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Carrega perguntas do MATA440 e MATA410                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte("MTA440",.F.)
+lLiber := MV_PAR02 == 1
+lTransf:= MV_PAR01 == 1  
+Pergunte("MTA410",.F.) 
+//Carrega as variaveis com os parametros da execauto
+Ma410PerAut()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variavel utilizada p/definir Op. Triangulares.       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IsTriangular( MV_PAR03==1 )
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Salva a integridade dos campos de Bancos de Dados    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+IF ( (ExistBlock("M410ALOK")) )
+	If (! ExecBlock("M410ALOK",.F.,.F.) )
+		lContinua := .F.
+	EndIf
+EndIf
+
+IF ( SC5->C5_FILIAL <> xFilial("SC5") )
+	Help(" ",1,"A000FI")
+	lContinua := .F.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Salva a integridade dos campos de Bancos de Dados    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea(cAlias)
+#IFDEF TOP
+	TcSrvMap("SC5")
+	dbGoto(RecNo())
+#ENDIF
+If !SoftLock(cAlias)
+	lContinua := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa desta forma para criar uma nova instancia de variaveis private ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RegToMemory( "SC5", .F., .F. )
+
+dbSelectArea("SX3")
+dbSetOrder(1)
+MsSeek("SC6")
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Montagem do aHeader                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+While ( !EOF() .And. (SX3->X3_ARQUIVO == "SC6") )
+	If (	X3USO(SX3->X3_USADO) .And.;
+			!( Trim(SX3->X3_CAMPO) == "C6_NUM" );
+			.And. Trim(x3_campo) <> "C6_QTDEMP";
+			.And. Trim(x3_campo) <> "C6_QTDENT";
+			.And. cNivel >= SX3->X3_NIVEL )
+		nUsado++
+		aAdd(aHeader,{ TRIM(X3Titulo()),;
+			SX3->X3_CAMPO,;
+			SX3->X3_PICTURE,;
+			SX3->X3_TAMANHO,;
+			SX3->X3_DECIMAL,;
+			SX3->X3_VALID,;
+			SX3->X3_USADO,;
+			SX3->X3_TIPO,;
+			SX3->X3_ARQUIVO,;
+			SX3->X3_CONTEXT } )
+		If ( AllTrim(SX3->X3_CAMPO)=="C6_IDENTB6" )
+			nPIdentB6 := nUsado
+		EndIf
+		If ( AllTrim(SX3->X3_CAMPO)=="C6_NFORI" )
+			nPNfOrig := nUsado
+		EndIf
+		If ( AllTrim(SX3->X3_CAMPO)=="C6_SERIORI" )
+			nPSerOrig:= nUsado
+		EndIf
+		If ( AllTrim(SX3->X3_CAMPO)=="C6_ITEMORI" )
+			nPItOrig := nUsado
+		EndIf
+	EndIf
+	dbSelectArea("SX3")
+	dbSkip()
+EndDo
+If ( lContinua )
+	dbSelectArea("SC6")
+	dbSetOrder(1)
+	#IFDEF TOP
+		If ( TcSrvType()<>"AS/400" )
+			cArqQry := "MATA410"
+			lQuery  := .T.
+			cQuery := "SELECT SC6.*,R_E_C_N_O_ SC6RECNO "
+			cQuery += "FROM "+RetSqlName("SC6")+" SC6 "
+			cQuery += "WHERE SC6.C6_FILIAL='"+xFilial("SC6")+"' AND "
+			cQuery += "SC6.C6_NUM='"+SC5->C5_NUM+"' AND "
+			cQuery += "SC6.D_E_L_E_T_<>'*' "
+			cQuery += "ORDER BY "+SqlOrder(SC6->(IndexKey()))
+
+			cQuery := ChangeQuery(cQuery)
+
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cArqQry,.T.,.T.)
+			For nCntFor := 1 To Len(aHeader)
+				If ( aHeader[nCntFor,8]<>"C" .And. aHeader[nCntFor,10] <>  "V" )
+					TcSetField(cArqQry,AllTrim(aHeader[nCntFor][2]),aHeader[nCntFor,8],aHeader[nCntFor,4],aHeader[nCntFor,5])
+				EndIf
+			Next nCntFor
+		Else
+	#ENDIF
+		cArqQry := "SC6"
+		MsSeek(xFilial("SC6")+SC5->C5_NUM)
+		#IFDEF TOP
+		EndIf
+		#ENDIF
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Montagem do aCols                                    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	While ( !Eof() .And. (cArqQry)->C6_FILIAL	== xFilial("SC6") .And.;
+			(cArqQry)->C6_NUM 	== SC5->C5_NUM		.And.;
+			lContinua )
+		
+		dbSelectArea("SF4")
+		dbSetOrder(1)
+		dbSeek(xFilial("SF4")+(cArqQry)->C6_TES)
+		If ( (cArqQry)->C6_QTDENT < (cArqQry)->C6_QTDVEN .AND. SF4->F4_QTDZERO <> "1" ) .OR. ;
+		   ((cArqQry)->C6_QTDENT == (cArqQry)->C6_QTDVEN .AND. SF4->F4_QTDZERO == "1" .AND. Empty((cArqQry)->C6_NOTA))
+	  		lNaoFatur := .T.
+		EndIf
+		If !(("R"$Alltrim((cArqQry)->C6_BLQ)).And.(SuperGetMv("MV_RSDOFAT")=="N")) .And. (cArqQry)->C6_QTDENT < (cArqQry)->C6_QTDVEN
+			lBloqueio := .F.
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se este item foi digitada atraves de uma    ³
+		//³ grade, se for junta todos os itens da grade em uma   ³
+		//³ referencia , abrindo os itens so quando teclar enter ³
+		//³ na quantidade                                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ( (cArqQry)->C6_GRADE == "S" .And. lGrade )
+			a410Grade(.T.,,cArqQry)
+		Else
+			aAdd(aCols,Array(Len(aHeader)+1))
+			For nCntFor := 1 To Len(aHeader)
+				cCampo := Alltrim(aHeader[nCntFor,2])
+				If ( aHeader[nCntFor,10] # "V" )
+					aCols[Len(aCols)][nCntFor] := FieldGet(FieldPos(cCampo))
+				Else
+					If ( lQuery )
+						SC6->(MsGoto((cArqQry)->SC6RECNO))
+					EndIf
+					aCols[Len(aCols)][nCntFor] := CriaVar(cCampo)
+				EndIf
+			Next nCntFor
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Mesmo nao sendo um item digitado atraves de grade e' necessa-³
+			//³ rio criar o Array referente a este item para controle da     ³
+			//³ grade                                                        ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ   
+			If IsAtNewGrd()
+				oGrade:MatGrdMont(Len(aCols))       
+			Else
+				MatGrdMont(Len(aCols))
+			EndIf
+		EndIf
+		If ( SC5->C5_TIPO <> "D" )
+			nAux := aScan(aLiberado,{|x| x[2] == aCols[Len(aCols)][nPIdentB6]})
+			If ( nAux == 0 )
+				aAdd(aLiberado,{ (cArqQry)->C6_ITEM , aCols[Len(aCols)][nPIdentB6] , (cArqQry)->C6_QTDEMP ,(cArqQry)->C6_QTDENT})
+			Else
+				aLiberado[nAux][3] += (cArqQry)->C6_QTDEMP
+				aLiberado[nAux][4] += (cArqQry)->C6_QTDENT
+			EndIf
+		Else
+			nAux := aScan(aLiberado,{|x| x[1] == (cArqQry)->C6_SERIORI .And.;
+				x[2] == (cArqQry)->C6_NFORI   .And.;
+				x[3] == (cArqQry)->C6_ITEMORI })
+			If ( nAux == 0 )
+				aAdd(aLiberado,{ (cArqQry)->C6_SERIORI , (cArqQry)->C6_NFORI , (cArqQry)->C6_ITEMORI , (cArqQry)->C6_QTDEMP })
+			Else
+				aLiberado[nAux][4] += (cArqQry)->C6_QTDEMP
+			EndIf
+		EndIf
+		nTotalPed += (cArqQry)->C6_VALOR
+		If ( (cArqQry)->C6_PRUNIT = 0 )
+			nTotalDes += (cArqQry)->C6_VALDESC
+		Else
+			nTotalDes += ((cArqQry)->C6_PRUNIT*(cArqQry)->C6_QTDVEN)-((cArqQry)->C6_PRCVEN*(cArqQry)->C6_QTDVEN)
+		EndIf
+		aCols[Len(aCols)][Len(aHeader)+1] := .F.
+		dbSelectArea(cArqQry)
+		dbSkip()
+	EndDo
+	If ( lQuery )
+		dbSelectArea(cArqQry)
+		dbCloseArea()
+		dbSelectArea("SC6")
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Caso nao ache nenhum item , abandona rotina.         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( Len(aCols) == 0 )
+	lContinua := .F.
+	Help(" ",1,"A410S/ITEM")
+EndIf
+If ( (ExistBlock("M410GET")) )
+	ExecBlock("M410GET",.F.,.F.)
+EndIf
+If ( lBloqueio )
+	Help(" ",1,"A410ELIM")
+	lContinua := .F.
+EndIf
+If ((!(SuperGetMv("MV_ALTPED")=="S") .And. !lNaoFatur ) .And. !(SC5->C5_TIPO $ "CIP")) .And. !(!Empty(SC5->C5_PEDEXP) .And. SuperGetMv("MV_EECFAT") .And. AvIntEmb())
+	Help(" ",1,"A410PEDFAT")
+	lContinua := .F.
+EndIf
+
+If ( lContinua )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Faz o calculo automatico de dimensoes de objetos     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	aSize := MsAdvSize()
+
+	aObjects := {}
+	aAdd( aObjects, { 100, 100, .t., .t. } )
+	aAdd( aObjects, { 100, 100, .t., .t. } )
+	aAdd( aObjects, { 100, 015, .t., .f. } )	
+
+	aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+	aPosObj := MsObjSize( aInfo, aObjects )
+
+	aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,;
+		{{003,033,160,200,240,263}} )
+
+	nGetLin := aPosObj[3,1]
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Armazenar dados do Pedido anterior.                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL 
+
+	IF M->C5_TIPO $ "DB"
+		aTrocaF3 := {{"C5_CLIENTE","SA2"}}
+	Else
+		aTrocaF3 := {}
+	EndIf
+	oGetPV:=MSMGet():New( "SC5", nReg, nOpc, , , , , aPosObj[1], , 3)
+//	@ nGetLin,aPosGet[1,1] SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009))		//"Fornec.:"###"Cliente: "
+//	@ nGetLin,aPosGet[1,1] SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009)) SIZE 020,09 PIXEL	//"Fornec.:"###"Cliente: "
+	@ nGetLin,aPosGet[1,2] SAY oSAY1 VAR Space(40)						SIZE 120,09 PICTURE "@!"	OF oDlg PIXEL
+	@ nGetLin,aPosGet[1,3] SAY OemToAnsi(STR0011)						SIZE 020,09 OF oDlg PIXEL	//"Total :"
+	@ nGetLin,aPosGet[1,4] SAY oSAY2 VAR 0 PICTURE TM(0,16,Iif(cPaisloc=="CHI",NIL,nNumDec))		SIZE 050,09 OF oDlg PIXEL
+	@ nGetLin,aPosGet[1,5] SAY OemToAnsi(STR0012)						SIZE 030,09 OF oDlg PIXEL 	//"Desc. :"
+	if cPaisLoc == "BRA"	
+		@ nGetLin,aPosGet[1,6] SAY oSAY3 VAR 0 PICTURE TM(0,16,2)		SIZE 050,09 OF oDlg PIXEL RIGHT
+	Else
+		@ nGetLin,aPosGet[1,6] SAY oSAY3 VAR 0 PICTURE TM(0,16,Iif(cPaisloc=="CHI",NIL,nNumDec))		SIZE 050,09 OF oDlg	PIXEL RIGHT
+	EndIf	
+	@ nGetLin+10,aPosGet[1,5] SAY OemToAnsi("=")							SIZE 020,09 OF oDlg PIXEL
+	if cPaisLoc == "BRA"
+		@ nGetLin+10,aPosGet[1,6] SAY oSAY4 VAR 0								SIZE 050,09 PICTURE TM(0,16,2) OF oDlg PIXEL RIGHT
+	Else
+		@ nGetLin+10,aPosGet[1,6] SAY oSAY4 VAR 0								SIZE 050,09 PICTURE TM(0,16,Iif(cPaisloc=="CHI",NIL,nNumDec)) OF oDlg PIXEL RIGHT	
+	EndIf
+	oDlg:Cargo	:= {|c1,n2,n3,n4| oSay1:SetText(c1),;
+		oSay2:SetText(n2),;
+		oSay3:SetText(n3),;
+		oSay4:SetText(n4) }
+	Set Key VK_F4 to A440Stok(NIL,"A410")
+	oGetd:=MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,"A410LinOk","A410TudOk","+C6_ITEM/C6_Local/C6_TES/C6_CF/C6_PEDCLI",.T.,,1,,1200,"Ma410ItAlt()")
+	Private oGetDad:=oGetd	
+	Ma410Rodap(oGetD,nTotalPed,nTotalDes)
+	ACTIVATE MSDIALOG oDlg ON INIT Ma410Bar(oDlg,{||nOpcA:=1,if(oGetd:TudoOk(),If(!obrigatorio(aGets,aTela),nOpcA := 0,oDlg:End()),nOpcA := 0)},{||oDlg:End()},nOpc,oGetD,nTotalPed,@aRecnoSE1RA,@aHeadAGG,@aColsAGG)
+	SetKey(VK_F4,)
+	If ( nOpcA == 1 )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Efetua as Alteracoes                                                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For nCntFor := 1 To Len(aAlterado)
+
+			N := aAlterado[nCntFor]
+			Ma410GrvIt()
+
+		Next nCntFor
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Efetua as Delecoes                                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For nCntFor := 1 To Len(aCols)
+			If ( aCols[nCntfor][nUsado+1] )
+				N := nCntFor
+				Ma410GrvIt()
+			EndIf
+		Next nCntFor
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Efetua a Gravacao SC5                                                   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		RecLock("SC5")
+		For nCntFor := 1 TO FCount()
+			If "FILIAL"$FieldName(nCntFor)
+				FieldPut(nCntFor,xFilial("SC5"))
+			ElseIf (("TABELA" $ FieldName(nCntFor)) .And. (M->&(EVAL(bCampo,nCntFor)) == PadR("1",Len(DA0->DA0_CODTAB))))
+				FieldPut(nCntFor,"")
+			Else
+				FieldPut(nCntFor,M->&(EVAL(bCampo,nCntFor)))
+			EndIf
+		Next nCntFor
+		SC5->(MsUnLock())
+	Else
+		If ( (ExistBlock("M410ABN")) )
+			ExecBlock("M410ABN",.f.,.f.)
+		EndIf
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Destrava Todos os Registros                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MsUnLockAll()
+dbSelectArea(cAlias)
+
+Return( nOpcA )     
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Ma410Track³ Autor ³ Sergio Silveira       ³ Data ³18/12/2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Faz o tratamento da chamada do System Tracker              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ .T.                                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function A410Track()
+
+Local aEnt     := {}
+Local cPedido  := M->C5_NUM
+Local nPosItem := GDFieldPos( "C6_ITEM" )
+Local nLoop    := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Inicializa a funcao fiscal                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nLoop := 1 To Len( aCols )
+	aAdd( aEnt, { "SC6", cPedido + aCols[ nLoop, nPosItem ] } )
+Next nLoop
+
+MaTrkShow( aEnt )
+
+Return( .T. )         
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³a410Barra ³ Rev.  ³Eduardo Riera          ³ Data ³26.08.2001³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Inclusao via codigo de barra                                ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN2: Recno do cabecalho do pedido de venda                ³±±
+±±³          ³ExpN3: Opcao do arotina                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³Esta rotina tem como objetivo efetuar a interface com o usua³±±
+±±³          ³rio e o pedido de vendas                                    ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Observacao³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais/Distribuicao/Logistica                           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A410Barra(cAlias,nReg,nOpc)
+
+LOCAL lRetorno := .F.
+PRIVATE lCodBarra := .T.
+If aRotina[nOpc][4] == 3
+	lRetorno := A410Inclui("SC5",SC5->(Recno()),nOpc)
+Else
+	lRetorno := A410Altera(cAlias,nReg,nOpc)
+EndIf
+lCodBarra := .F.
+Return(lRetorno)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Função    ³A410Legend³Autor  ³ Eduardo Riera         ³ Data ³13.09.2000 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³Demonstra a legenda das cores da mbrowse                     ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                       ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                       ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³Esta rotina monta uma dialog com a descricao das cores da    ³±±
+±±³          ³Mbrowse.                                                     ³±±
+±±³          ³                                                             ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A410Legend()
+Local aCores := {}
+
+aCores := {{"ENABLE",STR0033},;      //Pedido em aberto
+{"DISABLE",STR0034},;    //Pedido encerrado
+{"BR_AMARELO",STR0035}}
+
+If !__lPyme
+	aAdd(aCores,{"BR_AZUL",STR0058})
+	aAdd(aCores,{"BR_LARANJA",STR0059})  //Pedido Liberado
+EndIf
+
+If cPaisLoc <> "BRA"
+	aAdd(aCores,{"BR_CINZA",STR0034 + " (" + AllTrim(GetDescRem()) + ")"}) //Pedido finalizado (Remito)
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de Entrada para alterar cores da legenda    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistBlock("MA410LEG")
+	aCores := ExecBlock("MA410LEG",.F.,.F.,aCores)
+Endif
+BrwLegenda(cCadastro,STR0032,aCores)
+
+Return(.T.)                
+                    
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Ma410Bar  ³ Autor ³ Eduardo Riera         ³ Data ³ 18.02.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ EnchoiceBar especifica do Mata410                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ oDlg: 	Objeto Dialog                                     ³±±
+±±³          ³ bOk:  	Code Block para o Evento Ok                       ³±±
+±±³          ³ bCancel: Code Block para o Evento Cancel                   ³±±
+±±³          ³ nOpc:    nOpc transmitido pela mbrowse                     ³±±
+±±³          ³ aForma: Array com as formas de pagamento                   ³±±
+±±³          ³ nTotalPed: Inteiro com o valor do Pedido                   ³±±
+±±³          ³ aRecnoSE1: Array com os titulos de Adiantamento            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Ma410Bar(oDlg,bOk,bCancel,nOpc,oGetD,nTotalPed,aRecnoSE1,aHeadAGG,aColsAGG,cCondPAdt)
+
+Local aAreaSC5	:= SC5->(GetArea())
+Local aButtons  := {}
+Local aButtonUsr:= {}
+Local nI        := 0
+LOCAL lOpcPadrao:= GetNewPar("MV_REPGOPC","N") == "N"
+Local nEmpBn 	:= A410CtEmpBN()
+Local nPProduto	:= aScan(aHeader,{|x| AllTrim(x[2])=="C6_PRODUTO"})
+Local nPQtdVen	:= aScan(aHeader,{|x| AllTrim(x[2])=="C6_QTDVEN"})
+Local nPEntreg	:= aScan(aHeader,{|x| AllTrim(x[2])=="C6_ENTREG"})
+Local nPVeic	:= aScan(aHeader,{|x| AllTrim(x[2])=="C6_BASVEIC"})
+Local nPOpcional:= If(lOpcPadrao,aScan(aHeader,{|x| AllTrim(x[2])=="C6_OPC"}),aScan(aHeader,{|x| AllTrim(x[2])=="C6_MOPC"}))
+Local lAltRat	:= .F.
+Local nLAutoAdt := 0
+Local aAreaSB1	:= SB1->(GetArea())
+Local lIntGFE	:= SuperGetMV("MV_INTGFE",.F.,.F.)
+Local lBxOrcam	:= (nOpc == 2 .And. (Upper(Funname()) == "MATA416"))
+
+Default cCondPAdt :="0"
+Default aHeadAGG := {}
+Default aColsAGG := {}
+
+If Type( "nAutoAdt" ) == "N" .AND. nAutoAdt > 0
+	nLAutoAdt := nAutoAdt
+EndIf
+
+If ( nOpc == 3 .Or. nOpc == 4 .Or. (nOpc == 2 .And. !AtIsRotina("A450F4CON")) )
+	aAdd(aButtons,{"POSCLI",{|| If(M->C5_TIPO=="N".And.!Empty(M->C5_CLIENTE),a450F4Con(),.F.),Pergunte("MTA410",.F.)},STR0022,STR0067 }) 	//"Posição de Cliente"
+EndIf
+aAdd(aButtons,{"BUDGET",{|| Ma410ForPg(nOpc)},STR0041, STR0068 }) //"Formas de Pagamento"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Ponto de entrada para verificar se o usuário pode acessar o botão Planilha Financeira    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistBlock("A410PLAN")
+	If Execblock("A410PLAN",.F.,.F.)
+    	aAdd(aButtons,{"RELATORIO",{|| Pergunte("MTA410",.F.), Ma410Impos(aRotina[ nOpc, 4 ]) },STR0043, STR0069 })	//"Planilha Financeira"
+    Endif
+Else
+	aAdd(aButtons,{"RELATORIO",{|| Pergunte("MTA410",.F.), Ma410Impos(aRotina[ nOpc, 4 ]) },STR0043, STR0069 })	//"Planilha Financeira"
+Endif                                                                                                                            
+
+If SuperGetMV("MV_CALCVEI",,.F.) == .T. .Or. SuperGetMV("MV_VEICICM",,.F.) == .T.
+	dbSelectArea("SB1")
+	dbSetOrder(1)
+	msSeek(xFilial("SB1")+aCols[N,nPProduto])
+  	aAdd(aButtons,{"CARGA",{|| F4Veicu(nOpc,SB1->B1_COD,SB1->B1_CHASSI,@aCols,N)},"Veiculos", "Veiculos" })	//"Planilha Financeira"
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Ponto de entrada para verificar se o usuario pode acessar a formacao    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If VerSenha(107) //Permite consulta a Formacao de Precos
+	If ExistBlock("A410BPRC")
+		If ExecBlock("A410BPRC",.F.,.F.)
+			aAdd(aButtons,{"AUTOM",{||Ma410Forma()},STR0056,STR0070 })	//"Formacao de Precos"
+		Endif
+	Else
+		aAdd(aButtons,{"AUTOM",{||Ma410Forma()},STR0056,STR0070 })	//"Formacao de Precos"
+	Endif
+EndIf
+
+If ( aRotina[ nOpc, 4 ] == 2 .Or. aRotina[ nOpc, 4 ] == 6 ) .And. !AtIsRotina("A410TRACK")
+	aAdd(aButtons,{ "BMPVISUAL", {|| A410Track() }, STR0050, STR0071 } )  // "System Tracker"
+EndIf
+If !( nOpc == 2 .Or. nOpc == 5 ) .And. AtIsRotina("MATA410")
+	If ExistBlock("A410BPRO")
+		If ExecBlock("A410BPRO",.F.,.F.)
+			aAdd(aButtons,{"PRODUTO", {|| Ma410BOM(aHeader,aCols,N) } ,STR0085,STR0086}) //"Estrutura de Produto"###"Estr.Prod."
+		EndIf
+	Else
+		aAdd(aButtons,{"PRODUTO", {|| Ma410BOM(aHeader,aCols,N) } ,STR0085,STR0086}) //"Estrutura de Produto"###"Estr.Prod."	
+	EndIf
+EndIf
+aAdd(aButtons,{"PESQUISA",{|| GdSeek(oGetD,STR0001,,,.F.)},STR0001,STR0001}) //"Pesquisar"
+If ( nOpc == 1 .Or. nOpc == 2 .Or. nOpc == 5 ) .And. nPOpcional > 0
+	aAdd(aButtons,{"SDUCOUNT", {|| SeleOpc(2,"MATA410",aCols[n][nPProduto],,,Ma410Opc(lOpcPadrao,nPOpcional),"M->C6_PRODUTO",.T.,aCols[n,nPQtdVen],aCols[n,nPEntreg]) } ,STR0106,STR0107}) //"Opcionais Selecionados"###"Opcionais"
+EndIf
+If (nEmpBn != 0) .And. (nOpc == 3)
+	aAdd(aButtons,{"UP_MDI",{|| A410RemBen()},STR0120,STR0121}) //"Remessa para Beneficiamento"###"Beneficiamento"
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³O processo de Recebimento Antecipado estará disponivel ³
+//³apenas para TOP no Financeiro.                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+#IFDEF TOP 
+	If cPaisLoc $ "ANG|BRA" 
+		aRecnoSE1 := FPedAdtPed( "R", {M->C5_NUM},,nLAutoAdt )
+		If (nOpc == 3 .OR. nOpc == 4 .OR. nOpc == 6 .OR. lBxOrcam) .And. (Empty(M->C5_NOTA)) 
+			aAdd(aButtons,{"FINIMG32",{|| A410Adiant(M->C5_NUM, M->C5_CONDPAG, 0/*nTotalPed*/, @aRecnoSE1, , M->C5_CLIENTE, M->C5_LOJACLI,,Iif(!lBxOrcam,aRatCTBPC,Nil),Iif(!lBxOrcam,aAdtPC,Nil),@cCondPAdt)},STR0123,STR0124}) //"Recebimento antecipado"##"Adiantamento"
+		Else
+			aAdd(aButtons,{"FINIMG32",{|| FPDxADTREL("R", M->C5_NUM, 0, @aRecnoSE1, M->C5_CLIENTE, M->C5_LOJACLI, .T.)},STR0123,STR0124}) //"Recebimento antecipado"##"Adiantamento"		
+		EndIf
+	EndIf
+#ENDIF
+
+//Rateio por item
+
+lAltRat := nOpc == 3 .OR. nOpc == 4 .OR. nOpc == 6 .OR. nOpc == 8
+aAdd(aButtons , {'S4WB013N' ,{|| a410RatCC(@aHeadAGG,@aColsAGG,lAltRat,N) },STR0145,STR0144} ) //"Rateio por Item do pedido de venda"##"Rateio"
+
+If lIntGfe
+	aAdd(aButtons , {'SMLFRETE' ,{|| Processa ({|| a410SmlFrt()})},STR0193,STR0204} ) //"Simulação de Frete"##"Simulação""												
+EndIf
+
+//Amarracao NF Servico
+aAdd(aButtons , {"AUTOM" ,{|| a410IncRem() },STR0217,STR0217} ) //"Amarração Nf. Servico"
+
+//BUSCAR ABATIMENTO ISS
+If SuperGetMV("MV_ISSXMUN",.F.,.F.) .And. (nOpc == 3 .OR. nOpc == 4)
+	aAdd(aButtons , {'OMSDIVIDE' ,{|| a410ISSMun() },"Abat. ISS","Abat. ISS"} ) //"Rateio por Item do pedido de venda"##"Rateio"
+EndIf 
+	
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//³Pontos de Entrada 													   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistTemplate("A410CONS",,.T.)
+	aButtonUsr := ExecTemplate("A410CONS",.F.,.F.)
+	If ValType(aButtonUsr) == "A"
+		For nI   := 1  To  Len(aButtonUsr)
+			aAdd(aButtons,aClone(aButtonUsr[nI]))
+		Next nI
+	EndIf
+EndIf
+If ExistBlock("A410CONS",,.T.)
+	aButtonUsr := ExecBlock("A410CONS",.F.,.F.)
+	If ValType(aButtonUsr) == "A"
+		For nI   := 1  To  Len(aButtonUsr)
+			aAdd(aButtons,aClone(aButtonUsr[nI]))
+		Next nI
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica motivo de bloqueio por regra/verba                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If	SuperGetMv("MV_VEBLQRG", .F., .F.)	
+	aAdd(aButtons,{"REGRA",{|| A410BlqReg() }, OemToAnsi(STR0192),  OemToAnsi(STR0192) })	//"Blq. Regra"
+EndIf
+
+aAdd(aButtons,{"GRAF2D",{|| Iif(Empty(M->C5_CLIENTE) .OR. Empty(M->C5_LOJACLI),MsgAlert(STR0215),TK010Con(,,,,,"SA1",M->C5_CLIENTE+M->C5_LOJACLI)) }, STR0216,  STR0216}) //"Preencha o Cliente a Loja"#"Perfil"	           
+
+//                                                  
+// Template GEM - Gestao de Empreendimentos Imobiliarios
+//
+// Adiciona botoes na enchoice
+// 
+aButtonUsr:= {}
+If ExistBlock("GMMA410BUT",,.T.)
+	aButtonUsr := ExecBlock("GMMA410BUT",.F.,.F.,{nOpc ,M->C5_NUM ,M->C5_CLIENTE ,M->C5_LOJACLI})
+ElseIf ExistTemplate("GMMA410BUT",,.T.)
+	aButtonUsr := ExecTemplate("GMMA410BUT",.F.,.F.,{nOpc ,M->C5_NUM ,M->C5_CLIENTE ,M->C5_LOJACLI})
+Endif	
+If ValType(aButtonUsr) == "A"
+	For nI := 1 To Len(aButtonUsr)
+		aAdd(aButtons,aClone(aButtonUsr[nI]))
+	Next nI
+EndIf
+
+If nOpc == 2 .Or. nOpc == 4
+	aButtons := CRMXAddAct("SC5",aButtons) //Adcionar Rotinas no 'Ações relacionadas' do Formulário                                          
+EndIf
+
+RestArea(aAreaSB1)
+RestArea(aAreaSC5)
+                                                               
+Return(EnchoiceBar(oDlg,bOK,bcancel,,aButtons))       
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Função    ³MyMata410 ³ Autor ³ Eduardo Riera         ³ Data ³17.04.2003 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³Rotina de teste da rotina automatica do programa MATA410     ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                       ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                       ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descrição ³Esta rotina tem como objetivo efetuar testes na rotina de    ³±±
+±±³          ³pedido de venda                                              ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MyMata410()
+
+Local aCabec := {}
+Local aItens := {}
+Local aLinha := {}
+Local nX     := 0
+Local nY     := 0
+Local cDoc   := ""
+Local lOk    := .T.
+PRIVATE lMsErroAuto := .F.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Abertura do ambiente                                         |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ConOut(Repl("-",80))
+ConOut(PadC("Teste de Inclusao de 10 pedidos de venda  com 30 itens cada",80))
+PREPARE ENVIRONMENT EMPRESA "99" FILIAL "01" MODULO "FAT" TABLES "SC5","SC6","SA1","SA2","SB1","SB2","SF4"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Verificacao do ambiente para teste                           |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SB1")
+dbSetOrder(1)
+If !SB1->(MsSeek(xFilial("SB1")+"PA001"))
+	lOk := .F.
+	ConOut("Cadastrar produto: PA001")
+EndIf
+dbSelectArea("SF4")
+dbSetOrder(1)
+If !SF4->(MsSeek(xFilial("SF4")+"501"))
+	lOk := .F.
+	ConOut("Cadastrar TES: 501")
+EndIf
+dbSelectArea("SE4")
+dbSetOrder(1)
+If !SE4->(MsSeek(xFilial("SE4")+"001"))
+	lOk := .F.
+	ConOut("Cadastrar condicao de pagamento: 001")
+EndIf
+If !SB1->(MsSeek(xFilial("SB1")+"PA002"))
+	lOk := .F.
+	ConOut("Cadastrar produto: PA002")
+EndIf
+dbSelectArea("SA1")
+dbSetOrder(1)
+If !SA1->(MsSeek(xFilial("SA1")+"CL000101"))
+	lOk := .F.
+	ConOut("Cadastrar cliente: CL000101")
+EndIf
+If lOk
+	ConOut("Inicio: "+Time())
+	For nY := 1 To 10
+		cDoc := GetSxeNum("SC5","C5_NUM")
+		RollBAckSx8()
+		aCabec := {}
+		aItens := {}
+		aAdd(aCabec,{"C5_NUM"   ,cDoc,Nil})
+		aAdd(aCabec,{"C5_TIPO" ,"N",Nil})
+		aAdd(aCabec,{"C5_CLIENTE",SA1->A1_COD,Nil})
+		aAdd(aCabec,{"C5_LOJACLI",SA1->A1_LOJA,Nil})
+		aAdd(aCabec,{"C5_LOJAENT",SA1->A1_LOJA,Nil})
+		aAdd(aCabec,{"C5_CONDPAG",SE4->E4_CODIGO,Nil})
+		If cPaisLoc == "PTG"
+			aAdd(aCabec,{"C5_DECLEXP","TESTE",Nil})
+		Endif
+		For nX := 1 To 30
+			aLinha := {}
+			aAdd(aLinha,{"C6_ITEM",StrZero(nX,2),Nil})
+			aAdd(aLinha,{"C6_PRODUTO",SB1->B1_COD,Nil})
+			aAdd(aLinha,{"C6_QTDVEN",1,Nil})
+			aAdd(aLinha,{"C6_PRCVEN",100,Nil})
+			aAdd(aLinha,{"C6_PRUNIT",100,Nil})
+			aAdd(aLinha,{"C6_VALOR",100,Nil})
+			aAdd(aLinha,{"C6_TES","501",Nil})
+			aAdd(aItens,aLinha)
+		Next nX
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//| Teste de Inclusao                                            |
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		MATA410(aCabec,aItens,3)
+		If !lMsErroAuto
+			ConOut("Incluido com sucesso! "+cDoc)
+		Else
+			ConOut("Erro na inclusao!")
+		EndIf
+	Next nY
+	ConOut("Fim  : "+Time())
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//| Teste de alteracao                                           |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aCabec := {}
+	aItens := {}
+	aAdd(aCabec,{"C5_NUM",cDoc,Nil})
+	aAdd(aCabec,{"C5_TIPO","N",Nil})
+	aAdd(aCabec,{"C5_CLIENTE",SA1->A1_COD,Nil})
+	aAdd(aCabec,{"C5_LOJACLI",SA1->A1_LOJA,Nil})
+	aAdd(aCabec,{"C5_LOJAENT",SA1->A1_LOJA,Nil})
+	aAdd(aCabec,{"C5_CONDPAG",SE4->E4_CODIGO,Nil})
+	If cPaisLoc == "PTG"
+		aAdd(aCabec,{"C5_DECLEXP","TESTE",Nil})
+	Endif
+	For nX := 1 To 30
+		aLinha := {}
+		aAdd(aLinha,{"LINPOS","C6_ITEM",StrZero(nX,2)})
+		aAdd(aLinha,{"AUTDELETA","N",Nil})
+		aAdd(aLinha,{"C6_PRODUTO",SB1->B1_COD,Nil})
+		aAdd(aLinha,{"C6_QTDVEN",2,Nil})
+		aAdd(aLinha,{"C6_PRCVEN",100,Nil})
+		aAdd(aLinha,{"C6_PRUNIT",100,Nil})
+		aAdd(aLinha,{"C6_VALOR",200,Nil})
+		aAdd(aLinha,{"C6_TES","501",Nil})
+		aAdd(aItens,aLinha)
+	Next nX	
+	ConOut(PadC("Teste de alteracao",80))
+	ConOut("Inicio: "+Time())
+	MATA410(aCabec,aItens,4)
+	ConOut("Fim  : "+Time())
+	ConOut(Repl("-",80))	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//| Teste de Exclusao                                            |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	ConOut(PadC("Teste de exclusao",80))
+	ConOut("Inicio: "+Time())
+	MATA410(aCabec,aItens,5)
+	If !lMsErroAuto
+		ConOut("Exclusao com sucesso! "+cDoc)
+	Else
+		ConOut("Erro na exclusao!")
+	EndIf
+	ConOut("Fim  : "+Time())
+	ConOut(Repl("-",80))
+EndIf
+
+RESET ENVIRONMENT
+
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³MenuDef   ³ Autor ³ Marco Bianchi         ³ Data ³01/09/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Utilizacao de menu Funcional                               ³±±
+±±³          ³                                                            ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Array com opcoes da rotina.                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Parametros do array a Rotina:                               ³±±
+±±³          ³1. Nome a aparecer no cabecalho                             ³±±
+±±³          ³2. Nome da Rotina associada                                 ³±±
+±±³          ³3. Reservado                                                ³±±
+±±³          ³4. Tipo de Transação a ser efetuada:                        ³±±
+±±³          ³	  1 - Pesquisa e Posiciona em um Banco de Dados           ³±±
+±±³          ³    2 - Simplesmente Mostra os Campos                       ³±±
+±±³          ³    3 - Inclui registros no Bancos de Dados                 ³±±
+±±³          ³    4 - Altera o registro corrente                          ³±±
+±±³          ³    5 - Remove o registro corrente do Banco de Dados        ³±±
+±±³          ³5. Nivel de acesso                                          ³±±
+±±³          ³6. Habilita Menu Funcional                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Static Function MenuDef()
+
+Local nPos       := 0
+Local aEntRelac  := {}
+Local aAtiv      := {}
+Local aAnotac    := {}
+    
+Local aRotina2  := {{STR0003,"A410Barra",0,3},;							   // "Incluir"
+				    {STR0004,"A410Barra",0,4}}								// "Alterar"
+Local aRotina3  := {{ OemToAnsi(STR0005),"A410Deleta"	,0,5,21,NIL},;
+					{ OemToAnsi(STR0109),"Ma410Resid",0,2,0,NIL}}			//"Residuo"
+
+Private aRotina := {	{	OemToAnsi(STR0001),"AxPesqui"		,0,1,0 ,.F.},;		//"Pesquisar"
+							{ OemToAnsi(STR0002),"A410Visual"	,0,2,0 ,NIL},;		//"Visual"
+							{ OemToAnsi(STR0003),"A410Inclui"	,0,3,0 ,NIL},;		//"Incluir"
+							{ OemToAnsi(STR0004),"A410Altera"	,0,4,20,NIL},;		//"Alterar"
+							{ OemToAnsi(STR0005),IIf((Type("l410Auto") <> "U" .And. l410Auto),"A410Deleta",aRotina3),0,5,0,NIL},; // Excluir
+							{ OemToAnsi(STR0006),aRotina2 		,0,3,0 ,NIL},;		//"Cod.barra"
+							{ OemToAnsi(STR0042),"a410PCopia('SC5',SC5->(RecNo()),4)"	,0,6,0 ,NIL},;		//"Copia"
+							{ OemToAnsi(STR0052),"A410Devol('SC5',SC5->(RecNo()),4)"	,0,3,0 ,NIL},;		//"Dev. Compras"
+							{ OemToAnsi(STR0095),"Ma410PvNfs"	,0,2,0 ,NIL},;		//"Prep.Doc.Saída"
+							{ OemToAnsi(STR0311),"CTBC662", 0, 7, 0, Nil },; 		//"Tracker Contábil"
+							{ OemToAnsi(STR0032),"A410Legend"	,0,1,0 ,.F.} }		//"Legenda"
+	
+
+Aadd(aEntRelac, { STR0103, "MsDocument('SC5',SC5->(RecNo()),4)", 0, 4, 0, NIL })//"Conhecimento"
+
+If nModulo == 73
+	
+	Aadd(aEntRelac, { STR0243, "CRMA200('SC5')", 0, 8, 0, NIL })//"Privilégios" 
+	
+	aEntRelac := CRMXINCROT("SC5",aEntRelac)
+	
+	nPos := ASCAN(aEntRelac, { |x| IIF(ValType(x[2]) == "C", x[2] == "CRMA190Con()",Nil) })
+	If nPos > 0 
+		ADD OPTION aRotina TITLE aEntRelac[nPos][1] ACTION aEntRelac[nPos][2] OPERATION 8  ACCESS 0//"Conectar"
+		Adel(aEntRelac,nPos)
+		Asize(aEntRelac,Len(aEntRelac)-1)
+	EndIf
+	
+	nPos := ASCAN(aEntRelac, { |x|  IIF(ValType(x[2]) == "C", x[2] == "CRMA180()", Nil) })
+	If nPos > 0
+		ADD OPTION aAtiv   TITLE STR0253 ACTION "CRMA180(,,,3,,)" OPERATION 3  ACCESS 0 //"Nova Atividade" 
+		ADD OPTION aAtiv   TITLE STR0254 ACTION "CRMA180()" OPERATION 8  ACCESS 0 //"Todas as ATividades"
+		aEntRelac[nPos][2] := aAtiv
+	EndIf
+	
+	nPos := ASCAN(aEntRelac, { |x| IIF(ValType(x[2]) == "C", x[2] == "CRMA090()", Nil)})
+	If nPos > 0
+		ADD OPTION aAnotac   TITLE STR0255 ACTION "CRMA090(3)" OPERATION 3  ACCESS 0 //"Nova Anotação"
+		ADD OPTION aAnotac   TITLE STR0256 ACTION "CRMA090()" OPERATION 8  ACCESS 0 //"Todas as Anotações" 
+		aEntRelac[nPos][2] := aAnotac
+	EndIf
+EndIf
+
+Asort(aEntRelac,,,{ | x,y | y[1] > x[1] } )
+Aadd(aRotina, {STR0257,aEntRelac	, 0 , 8 , 3 	, .T.	})//"Relacionadas"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica motivo de bloqueio por regra/verba                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If	SuperGetMv("MV_VEBLQRG", .F., .F.)	
+	aAdd(aRotina,{ OemToAnsi(STR0192) ,"BlqRegBrw",0,0,0 ,NIL} )		//"Blq. Regra"
+EndIf
+				
+If ExistBlock("MA410MNU")
+	ExecBlock("MA410MNU",.F.,.F.)
+EndIf
+
+Return(aRotina)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  |A410AjuSX3ºAutor  ³Marcelo Alexandre   º Data ³ 11/07/2007  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ MATA410		                                              º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+Static Function A410AjuSX3()
+
+Local aAreaSX3 := SX3->(GetArea())
+Local aAreaAnt := GetArea()
+Local nCntfor  := 0
+Local nNrVend  := Fa440CntVen()
+Local aPHelpPor := {"Indica se a ordem de separação (SIGAWMS)",;
+					"deve ser gerada na liberação do pedido,",;
+					"na montagem ou na unitização da carga." }
+Local aPHelpEng := {"Indica si el O.S. (SIGAWMS)",;
+					"debe ser generada en el pedido,",;
+					"en el montaje o en la unitization."}
+Local aPHelpSpa := {"It indicates if generates S.O.(SIGAWMS)",;
+					"in Sales Order, in Assemble Load",;
+					"or in unitizacion."}
+
+SX3->(dbSetOrder(2))
+
+//-- SIGAWMS: Ajuste do ComboBox
+If	SX3->(dbSeek("C5_GERAWMS"))
+	If	SX3->(Empty(X3_CBOX) .Or. Empty(X3_CBOXSPA) .Or. Empty(X3_CBOXENG))
+		RecLock("SX3",.F.)
+		SX3->X3_CBOX    := "1=no Pedido;2=na Montagem da Carga;3=na Unitizacao da Carga"
+		SX3->X3_CBOXSPA := "1=en el Pedido;2=en el Montaje de Carga;3=en la Unitizacion"
+		SX3->X3_CBOXENG := "1=in Sales Order;2=in Assemble Load;3=in Unitization"
+		MsUnLock()
+	EndIf
+	PutHelp("PC5_GERAWMS",aPHelpPor,aPHelpEng,aPHelpSpa,.T.)
+EndIf
+
+SX3->(dbSetOrder(2))
+For nCntfor := 1 To nNrVend
+	SX3->(dbSeek("C5_VEND"+Str(nCntfor,1)))
+	If '.OR. EXISTCPO("SA3")' $ Upper(SX3->X3_VALID)
+		RecLock("SX3",.F.)
+		Replace SX3->X3_VALID With StrTran(AllTrim(Upper(SX3->X3_VALID)),'.OR. EXISTCPO("SA3")','')
+		Replace SX3->X3_VALID With StrTran(AllTrim(Upper(SX3->X3_VALID)),'.AND. VAZIO()','.OR. VAZIO()')
+		MsUnLock()
+	Else
+		Exit
+	EndIf
+Next nCntfor
+
+If cPaisLoc == "ANG"
+	If	SX3->(dbSeek("C5_DOCGER")) 
+		If AllTrim(SX3->X3_CBOX) <> '1=Factura;2=Guia de Transporte;3=Entrega Futura'
+			RecLock("SX3",.F.)
+			SX3->X3_CBOX := '1=Factura;2=Guia de Transporte;3=Entrega Futura'
+			MsUnLock()
+		EndIf
+	EndIf
+EndIf
+           
+//Impede que o campo C6_QTDLIB deixe de ser "Usado". 
+SX3->(dbSetOrder(2))
+if SX3->( dbSeek( "C6_QTDLIB" ) ) .and. SX3->X3_USADO <> "€€€€€€€€€€€€€€ "
+         RecLock("SX3", .F.) 
+         SX3->X3_USADO  := "€€€€€€€€€€€€€€ " 
+         SX3->( msUnlock() )
+endif 
+
+SX3->(dbSetOrder(2))
+if SX3->( dbSeek( "D2_ITEMPV" ) ) .and. Alltrim(SX3->X3_PICTURE) <> "@!"
+         RecLock("SX3", .F.) 
+         SX3->X3_PICTURE  := "@!" 
+         SX3->( msUnlock() )
+endif
+
+SX3->(dbSeek("C6_PRCVEN"))
+If !("A410QtdGra" $ SX3->X3_VALID)
+	RecLock("SX3",.F.)
+	Replace SX3->X3_VALID With StrTran(SX3->X3_VALID,"A410MultT","A410QtdGra() .And. A410MultT")
+	MsUnLock()
+EndIf
+
+SX3->(dbSeek("C6_BLQ"))
+If !("A410QtdGra" $ SX3->X3_VALID)
+	RecLock("SX3",.F.)
+	Replace SX3->X3_VALID With StrTran(SX3->X3_VALID,"ExistCpo","A410QtdGra() .And. ExistCpo")
+	MsUnLock()
+EndIf
+
+SX3->(dbSeek("C5_CONDPAG"))
+If !("A410Recalc" $ SX3->X3_VALID)
+	RecLock("SX3",.F.)
+	Replace SX3->X3_VALID With AllTrim(SX3->X3_VALID)+" .AND. A410Recalc()"
+	MsUnLock()
+EndIf      
+
+SX3->(dbSeek("C5_TRANSP"))
+If SX3->X3_PYME <> "S"
+	RecLock("SX3", .F.)
+	SX3->X3_PYME := "S"
+	MsUnLock()
+EndIf
+
+
+If SX3->(dbSeek("C6_OPER")) .AND. !('Vazio() .Or. ExistCpo("SX5","DJ"+M->C6_OPER) .And. A410SitTrib() .AND. MTA410OPER(n)' $ AllTrim(SX3->X3_VALID))
+	RecLock("SX3",.F.)
+	SX3->X3_VALID := 'Vazio() .Or. ExistCpo("SX5","DJ"+M->C6_OPER) .And. A410SitTrib() .AND. MTA410OPER(n)'
+	MsUnlock()
+EndIf
+
+If SX3->(dbSeek("C6_TES")) .and. !('A410MultT() .And. A410SitTrib()' $ AllTrim(SX3->X3_VALID))
+	RecLock("SX3",.F.)
+	Replace SX3->X3_VALID With "A410MultT() .And. A410SitTrib()"
+	MsUnLock()
+EndIf
+
+RestArea(aAreaSX3)
+RestArea(aAreaAnt)         
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³MATA410_V ºAutor  ³Andre Anjos         º Data ³  03/05/10   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±³Descri‡…o ³ Funcao utilizada para verificar a ultima versao do fonte   ³±±
+±±³			 ³ MATA410.PRW aplicado no rpo do cliente, assim verificando  ³±±
+±±³			 ³ a necessidade de uma atualizacao neste fonte.              ³±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ FATURAMENTO                    	                          º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function MATA410_V()
+Return 20110131         
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³Ma410PerAutºAutor  ³Alvaro Camillo Neto º Data ³  07/22/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Carrega as variaveis com os parametros da execauto          º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function Ma410PerAut()
+Local nX 		:= 0
+Local cVarParam := ""
+
+If Type("aParamAuto") == "A"
+	For nX := 1 to Len(aParamAuto)
+		cVarParam := Alltrim(Upper(aParamAuto[nX][1]))
+		If "MV_PAR" $ cVarParam
+			&(cVarParam) := aParamAuto[nX][2]
+		EndIf
+	Next nX
+EndIf
+
+Return
+
+
+//-------------------------------------
+/*	Definição de Integração
+@author  	Jefferson Tomaz
+@version 	P10 R1.4
+@build		7.00.101202A
+@since 		15/08/2011
+@return 		{ lRet, cXml }*/
+//-------------------------------------
+
+Static Function IntegDef( cXML, nTypeTrans, cTypeMessage )
+
+Local aRet := {}
+
+If ( FWXX4Seek( 'ORDER', 2 ) )
+	aRet := MATI410( cXML, nTypeTrans, cTypeMessage )
+						
+//Usado para manter a compatibilidade com a SalesOrder
+ElseIf FWXX4Seek( 'SALESORDER', 2 )    
+	cRotAnt := GetRotInteg()
+	SetRotInteg( 'MATA411')
+	aRet := MATI411( cXML, nTypeTrans, cTypeMessage )
+	SetRotInteg( cRotAnt )
+ElseIf cTypeMessage == EAI_MESSAGE_WHOIS
+	//WhoIs
+	//MATI410  v1.000|3.000|3.001|3.002
+	//MATI411  v1.000
+	aRet := {.T., '1.000|3.000|3.001|3.002'}
+EndIf
+
+Return aRet
+
+
+                     
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³A410ConPadºAutor  ³ Caio Murakami        º Data ³  27/12/12   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Consulta especifica para a SC5                               º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ C6_PEDVINC                                                	 º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Function A410ConPad()
+Local aArea 		:= GetArea()
+Local aAreaSC5    := SC5->( GetArea() ) 
+Local lRet 			:= .F.
+Local aCampos     := {}
+Local   aRotina   := {}
+Private nOpcSel   := 0 
+
+aAdd(aCampos, "C5_NUM")
+aAdd(aCampos, "C5_CLIENTE")
+aAdd(aCampos, "C5_LOJACLI")
+aAdd(aCampos, "C5_EMISSAO")
+
+aAdd( aRotina, { STR0198,'TMSConfSel',0,2,,,.T.} ) //-- 'Confirmar'  
+
+MaWndBrowse(0,0,300,600,cCadastro,"SC5",aCampos,aRotina,,,,.T.)
+
+If nOpcSel == 1
+	VAR_IXB := SC5->C5_NUM
+	lRet    := .T.
+EndIf
+
+RestArea( aAreaSC5 )
+RestArea( aArea    ) 
+
+Return lRet                                           
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ AjustaSX3³ Autor ³ VENDAS CRM		   ³ Data ³ 25/04/2013³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Ajuste do dicionario de dados		                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA410  		                        				  |±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function AjustaSX3()
+Local aArea 	:= GetArea()
+
+dbSelectArea("SX3")
+dbSetOrder(2)                              
+
+If dbSeek("C6_LOTECTL") .And. SX3->X3_NIVEL <> 1
+	RecLock("SX3",.F.)
+	SX3->X3_NIVEL := 1
+	MsUnlock()
+EndIf
+
+If dbSeek("C6_NUMLOTE") .And. SX3->X3_NIVEL <> 1
+	RecLock("SX3",.F.)
+	SX3->X3_NIVEL := 1
+	MsUnlock()
+EndIf     
+
+If dbSeek("C6_PRCVEN") .and. !'MTA410TROP' $ Upper(SX3->X3_VALID)
+	Reclock("SX3",.F.)
+	SX3->X3_VALID := 'A410QtdGra() .And. A410MultT() .And. A410Zera() .AND. MTA410TROP(n)'
+	MsUnlock()
+Endif                 
+
+
+RestArea(aArea)
+
+Return
+

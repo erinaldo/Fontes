@@ -1,0 +1,146 @@
+<html>
+<head>
+	<script type="text/javascript" src="/portal/resources/js/jquery/jquery.js"></script>
+	<link type="text/css" rel="stylesheet" href="/portal/resources/style-guide/css/fluig-style-guide.min.css"/>
+	<script type="text/javascript" src="/portal/resources/style-guide/js/fluig-style-guide.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="scripts.js"></script>
+</head>
+<body>
+	<div class="fluig-style-guide">
+		<form name="form" role="form"> 
+			<h1>Solicitação de compras</h1>
+			<br/>
+			<h4><b>Informações da Solicitação</b></h4>
+			<div class="col-md-12">
+			<div class="form-group">
+				<div class="row">
+					<div class="col-md-4">
+						<label for="txtSolicitante">Solicitante:</label>
+			    		<input type="text" name="txtSolicitante" id="txtSolicitante" class="form-control" readonly="readonly" />
+			    		<input type="hidden" id="txtMatSolicitante" name="txtMatSolicitante" readonly>	        
+						<input type="hidden" id="txtEmailSolicitante" name="txtEmailSolicitante" readonly>
+						<input type="hidden" id="txtEmpresa" name="txtEmpresa" readonly>
+						<input type="hidden" id="txtFilial" name="txtFilial" readonly>							
+					</div>
+					<div class="col-md-4">
+						<label for="txtNumeroFluig">Número Fluig:</label>
+						<input type="text" name="txtNumeroFluig" id="txtNumeroFluig" class="form-control" readonly="readonly" />
+					</div>
+					<div class="col-md-4">
+						<label for="txtDataSolicitacao">Data solicitação:</label>
+						<input type="text" name="txtDataSolicitacao" id="txtDataSolicitacao" class="form-control" readonly="readonly" />
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-4">
+						<label for="txtRamal">Ramal:</label>
+						<input type="text" name="txtRamal" id="txtRamal" class="form-control" style="width: 120px;" mask="0000"/>
+					</div>					
+					<div class="col-md-4">
+						<label for="txtCodCR">C. Responsabilidade:</label>
+						<input type="text" name="txtCodCR" id="txtCodCR" class="form-control" style="width: 120px;" readonly="readonly" />
+					</div>
+					<div class="col-md-4">
+						<label for="txtDescricaoCR">Descrição:</label>
+						<input type="text" name="txtDescricaoCR" id="txtDescricaoCR" class="form-control" style="width: 240px;" size="20" readonly="readonly" />
+					</div>
+				</div>							
+			</div>
+			<div class="form-group">					
+				<label for="dsJustificativa">Justificar compras:</label>
+				<textarea name="dsJustificativa" id="dsJustificativa" class="form-control" rows="3"> </textarea>	
+			</div>				
+			<div class="form-group">	
+				<div class="row">								
+					<div>
+						&nbsp;&nbsp;&nbsp;<label for="txtAprovNec">Aprovações Necessárias:</label>
+						&nbsp;&nbsp;&nbsp;<input type="checkbox" name="cbSupervisor" value="1" id ="cbSupervisor"> Supervisor
+						&nbsp;&nbsp;&nbsp;<input type="checkbox" name="cbGerencia" value="2" id ="cbGerencia"> Gerência
+						&nbsp;&nbsp;&nbsp;<input type="checkbox" name="cbSuperintendencia" value="3" id = "cbSuperintendencia"> Superintendência
+						&nbsp;&nbsp;&nbsp;<input type="checkbox" name="cbPresidencia" value="4" id = "cbPresidencia"> Presidência
+						&nbsp;&nbsp;&nbsp;<input type="checkbox" name="cbAreaTecnica" value="5" id = "cbAreaTecnica"> Area Técnica	
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-md-6">
+						<label for="txtResultadosEsperados">Resultados Esperados:</label>
+						<input type="text" name="txtResultadosEsperados" id="txtResultadosEsperados" class="form-control" style="width: 100%;"/>							
+					</div>
+					<div class="col-md-6">
+						<label for="txtValEstimado">Valor estimado de compras:</label>
+						<input type="text" name="txtValEstimado" id="txtValEstimado" class="form-control" style="width: 100%;" mask="000000000" />						
+					</div>
+				</div>
+				<br>			
+				<div class="row">
+					<div class="col-md-6">
+						<label for="txtPrazoDesejado">Prazo Desejado:</label>
+						<input type="text" name="txtPrazoDesejado" id="txtPrazoDesejado" class="form-control" style="width: 100%;" mask="99/99/9999"/>
+					</div>
+					<div class="col-md-6">
+						<label for="txtConsequencia">Consequência da não aprovação:</label>
+						<input type="text" name="txtConsequencia" id="txtConsequencia" class="form-control" style="width: 100%;" />						
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="col-md-6">
+						<label for="txtAquiCont">Aquisição/Contratação:</label>
+			    		<label class="radio-inline">
+				    		<input type="radio" name="rdTpAquiCont" id="cbNova" value="1" checked="checked"> Nova
+						</label>
+						<label class="radio-inline">
+				    		<input type="radio" name="rdTpAquiCont" id="cbRenovacao" value="2"> Renovação
+						</label>
+						<label class="radio-inline">
+				    		<input type="radio" name="rdTpAquiCont" id="cbSubstituicao" value="3"> Substituição
+						</label>						
+					</div>
+				</div>																										
+			</div>				
+			<div class="form-group">
+				<div>
+					<table class="table table-striped" id="tbScItens" tablename="tbScItens" noaddbutton="true">
+		            	<thead>
+		                	<tr>
+		                		<th style="width: 10%;">Item</th>
+		                        <th style="width: 70%;">Descrição</th>
+		                        <th style="width: 10%;">Quantidade.</th>
+		                        <th style="width: 10%;">Unidade</th>           
+		                    </tr>
+		                </thead>
+		                <tbody>
+		                	<tr>
+		                        <td>
+		                        	<input type="text" class="form-control" id="txtSeqItem" name="txtSeqItem" style="width: 100%;" readonly="readonly" >	                         	           
+		                        </td>
+		                        <td>
+		                        	<input type="text" class="form-control" id="txtDescItem" name="txtDescItem" style="width: 100%;">	                        
+		                        </td>
+		                        <td>
+		                        	<input type="text" class="form-control" id="txtQtdeItem" name="txtQtdeItem" style="width: 100%;">
+		                        </td>
+		                        <td>	                        
+		                        	<input type="text" class="form-control" id="txtUnidItem" name="txtUnidItem" style="width: 100%;">	                        
+		                        </td>
+		                    </tr>
+						</tbody>
+					</table>
+				</div>
+				<div align="right">
+					<input type="button" onclick="addItem('tbScItens');" value="Adicionar item" class="btn btn-primary" />
+					
+				</div>			
+			</div>		
+			<br>
+			<br>						
+			<div>
+				<ul class="list-group">
+				    <li class="list-group-item list-group-item-danger">Nota:<br>Caso queira anexar um documento a está solicitação, não esquecer de ir a aba anexo, opção Incluir anexo upload.</li>			
+				</ul>					
+			</div>													
+		</form>
+	</div>
+</body>
+</html>

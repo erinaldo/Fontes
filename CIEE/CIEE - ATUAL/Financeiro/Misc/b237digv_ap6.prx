@@ -1,0 +1,38 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+User Function b237digv()        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_CDIGVER,")
+
+_aArea := GetArea()  
+_aAreaE2 := SE2->(GetArea())
+_aAreaEA := SEA->(GetArea())
+
+**************************************************************************
+* Programa...: PAGDIGV.PRX
+* Finalidade.: Retornar o numero do Digito Verificador do Codigo de Barras
+*              ou da Linha Digitavel
+**************************************************************************
+
+_cDigVer := "0"
+
+If !Empty(SE2->E2_CODBAR)
+   _cDigVer := SubStr(SE2->E2_CODBAR,5,1)
+ElseIf !Empty(SE2->E2_LD)
+   _cDigVer := SubStr(SE2->E2_LD,33,1)
+Endif
+
+SEA->(RestArea(_aAreaEA))
+SE2->(RestArea(_aAreaE2))
+RestArea(_aArea)
+
+// Substituido pelo assistente de conversao do AP6 IDE em 15/07/02 ==> __Return(_cDigVer)
+Return(_cDigVer)        // incluido pelo assistente de conversao do AP6 IDE em 15/07/02
+   

@@ -1,0 +1,11 @@
+
+.btZoom {
+	background:#ffffff;
+	background-image: zoom.png;
+	background-repeat:no-repeat;
+	background-position:center;	
+	border: 0px;
+	cursor: pointer;
+	width:25px;
+	height:17px;
+}
