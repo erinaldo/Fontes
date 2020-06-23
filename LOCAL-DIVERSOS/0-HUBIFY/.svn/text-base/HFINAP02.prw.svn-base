@@ -1,0 +1,14 @@
+#include 'protheus.ch'
+#include 'parmtype.ch'
+
+user function HFINAP02()
+
+//consulta faturas
+//ID Fatura - campo ZAB_REFER (sem os espaços em branco)
+//api_token
+//https://api.iugu.com/v1/invoices/14575557D2D240C2BC244E64EC1F8D81?api_token=e3a203c0cfaf1f396fe9d45e22b7bea4
+
+
+
+	
+return

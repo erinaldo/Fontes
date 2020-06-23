@@ -1,0 +1,220 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "REPORT.CH"  
+#INCLUDE "Topconn.ch"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ PROFR010  บAutor  ณ Felipe Santos        บ Data ณ  24/01/15บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Relat๓rio Cronologia de Pagamento - Visใo Titulo SE2		  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ MำDULO FINANCEIRO    	                                  บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+User Function PROFR010()
+
+Private oReport		:= nil
+Private cTitulo		:= "Relat๓rio Cronologia de Pagamento" 
+Private cPerg		:= "XPROFR10"   
+Private cAliasQry 	:= GetNextAlias()  
+Private oSecCab  	:= Nil
+
+If TRepInUse()
+	CriaSX1(cPerg)
+	ReportDef()
+	oReport:PrintDialog()
+	
+EndIf
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ ReportDef  บAutor  ณ Felipe Santos       บ Data ณ  24/01/15บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Relat๓rio Cronologia de Pagamento	                      บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณMำDULO FINANCEIRO  	                                      บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+Static Function ReportDef()
+Local cDesc		:= ""
+
+cDesc += "Este programa tem como objetivo imprimir a  "
+cDesc += "cronologia de pagamento (Contas a Pagar) "
+ 
+oReport := TReport():New("PROFR010","Relat๓rio Cronologia de Pagamento",cPerg,{|oReport| PrintReport(oReport)},cDesc)
+oReport:SetLandscape(.T.)
+ 
+oSecCab := TRSection():New( oReport , "Titulos", {"QRY"})
+TRCell():New( oSecCab, "E2_MDCONTR"     , "QRY","Num.Contrata็ใo",,10)
+TRCell():New( oSecCab, "A2_NOME"    	, "QRY","Fornecedor",,40)  
+TRCell():New( oSecCab, "A2_NREDUZ"     	, "QRY","Mnem๔nico",,15)
+TRCell():New( oSecCab, "Status"    		, "QRY","Status",,10)
+TRCell():New( oSecCab, "E2_DATALIB"    	, "QRY","Data Libera็ใo",PesqPict("SE2","E2_DATALIB"),10)
+TRCell():New( oSecCab, "E2_NUM"   		, "QRY","Num.Titulo",,09)
+TRCell():New( oSecCab, "E2_EMISSAO"     , "QRY","Emissใo",PesqPict("SE2","E2_EMISSAO"),10) 
+TRCell():New( oSecCab, "E2_VENCTO"	    , "QRY","Vencimento",PesqPict("SE2","E2_VENCTO"),10) 
+TRCell():New( oSecCab, "E2_BAIXA"   	, "QRY","Pagto",PesqPict("SE2","E2_BAIXA"),10) 
+TRCell():New( oSecCab, "E2_VALOR"   	, "QRY","Val.Bruto",PesqPict("SE2","E2_VALOR"), 12) 
+TRCell():New( oSecCab, "E2_DESCONT"		, "QRY","Desconto (*)",PesqPict("SE2","E2_DESCONT"),10) 
+TRCell():New( oSecCab, "E2_VALLIQ" 		, "QRY","Liquido",PesqPict("SE2","E2_VALOR"),10)  
+TRCell():New( oSecCab, "E2_XORDLIB"		, "QRY","Ordem",PesqPict("SE2","E2_XORDLIB"),3)  
+TRCell():New( oSecCab, "LIQ" 			, "QRY","Liquido  Acumulado",PesqPict("SE2","E2_VALOR"),10)  
+
+
+Return Nil
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ RepGCP     บAutor  ณ Felipe Santos       บ Data ณ  24/01/15บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ RELATำRIO DE CONTRIBUIวรO DE VENDAS POR LINHA DE PRODUTO   บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณMำDULO DE FATURAMENTO	                                      บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/              
+Static Function PrintReport(oReport)
+ 
+Local cQuery     := ""
+Local oSB1 		 := oReport:Section(1) 
+Local cNextAlias := GetNextAlias()
+
+Pergunte(cPerg,.F.)
+
+
+cQuery += " SELECT X.*,   "+ CRLF
+cQuery += " (   "+ CRLF
+cQuery += " 	SELECT SUM(Y.E2_VALLIQ)     "+ CRLF
+cQuery += " 	FROM (   "+ CRLF
+cQuery += " 	SELECT     "+ CRLF
+cQuery += " 	ROW_NUMBER() OVER (ORDER BY E2_DATALIB DESC) AS SEQ    "+ CRLF
+cQuery += " 	 ,E2_VALOR as E2_VALLIQ    "+ CRLF
+cQuery += " 	 ,E2_XORDLIB as E2_XORDLIB    "+ CRLF
+cQuery += " FROM "+RetSqlName("SE2")+" SE2 "+ CRLF
+cQuery += " INNER JOIN "+RetSqlName("SA2")+" SA2 ON "+ CRLF
+cQuery += "  		A2_COD = SE2.E2_FORNECE AND A2_LOJA = SE2.E2_LOJA AND   "+ CRLF  
+cQuery += "  		SA2.D_E_L_E_T_ = ''	    "+ CRLF
+cQuery += " 	 WHERE E2_XORDLIB <> '' AND E2_ORIGEM <> ''    "+ CRLF
+cQuery += " AND E2_NUM BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"'"
+If !EMPTY(MV_PAR03) .AND. !EMPTY(MV_PAR04)
+	cQuery += " AND E2_EMISSAO BETWEEN '"+DTOS(MV_PAR03)+"' AND '"+DTOS(MV_PAR04)+"'"
+EndIf	
+If !EMPTY(MV_PAR05) .AND. !EMPTY(MV_PAR06)
+	cQuery += " AND E2_VENCREA BETWEEN '"+DTOS(MV_PAR05)+"' AND '"+DTOS(MV_PAR06)+"'"
+EndIf
+If MV_PAR07 = 1 //LIBERADO
+	cQuery += " AND E2_DATALIB  IS NOT NULL "
+Elseif MV_PAR07 = 2
+	cQuery += " AND E2_DATALIB  IS NULL "
+EndIf
+If MV_PAR08 = 1 //PAGO
+	cQuery += " AND E2_BAIXA  <> '' "
+Elseif MV_PAR08 = 2
+	cQuery += " AND E2_BAIXA  = '' "
+EndIf
+cQuery += " AND A2_COD BETWEEN '"+MV_PAR09+"' AND '"+MV_PAR10+"'" 
+cQuery += " AND E2_MDCONTR  BETWEEN '"+MV_PAR11+"' AND '"+MV_PAR12+"'" 
+cQuery += " AND E2_VALOR  BETWEEN '"+CVALTOCHAR(MV_PAR13)+"' AND '"+CVALTOCHAR(MV_PAR14)+"'" 
+cQuery += " 	 )Y WHERE Y.SEQ <= X.SEQ   "+ CRLF
+cQuery += " ) AS LIQ   "+ CRLF
+cQuery += " FROM (   "+ CRLF
+cQuery += " SELECT     "+ CRLF
+cQuery += " ROW_NUMBER() OVER (ORDER BY E2_DATALIB DESC) AS SEQ   "+ CRLF
+cQuery += " ,E2_MDCONTR    "+ CRLF
+cQuery += " ,A2_NOME    "+ CRLF
+cQuery += "  ,A2_NREDUZ    "+ CRLF
+cQuery += "  ,E2_VENCREA    "+ CRLF
+cQuery += "  ,CASE     "+ CRLF
+cQuery += "  	WHEN E2_DATALIB IS NOT NULL THEN  'Aprovado'    "+ CRLF
+cQuery += "  	ELSE  'Reprovado'    "+ CRLF
+cQuery += "  	End  as Status    "+ CRLF
+cQuery += "  ,CONVERT(VARCHAR,CAST(E2_DATALIB AS DATETIME),103) AS E2_DATALIB    "+ CRLF
+cQuery += "  ,E2_NUM    "+ CRLF
+cQuery += "  ,CONVERT(VARCHAR,CAST(E2_EMISSAO AS DATETIME),103) AS E2_EMISSAO    "+ CRLF
+cQuery += "  ,CONVERT(VARCHAR,CAST(E2_VENCTO AS DATETIME),103) AS E2_VENCTO    "+ CRLF
+cQuery += "  ,CASE WHEN E2_BAIXA <> '' THEN  CONVERT(VARCHAR,CAST(E2_BAIXA AS DATETIME),103) ELSE  '' END AS E2_BAIXA    "+ CRLF
+cQuery += "  ,E2_VALOR as E2_VALOR    "+ CRLF
+cQuery += "  ,E2_DESCONT as E2_DESCONT    "+ CRLF
+cQuery += "  ,E2_VALOR as E2_VALLIQ    "+ CRLF
+cQuery += "  ,E2_XORDLIB as E2_XORDLIB    "+ CRLF
+cQuery += " FROM "+RetSqlName("SE2")+" SE2 "+ CRLF
+cQuery += " INNER JOIN "+RetSqlName("SA2")+" SA2 ON "+ CRLF
+cQuery += "  	A2_COD = SE2.E2_FORNECE AND  A2_LOJA = SE2.E2_LOJA AND  "+ CRLF  
+cQuery += "  	SA2.D_E_L_E_T_ = ''	    "+ CRLF
+cQuery += "  Where E2_XORDLIB <> '' AND E2_ORIGEM <> ''    "+ CRLF
+cQuery += " AND E2_NUM BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"'"
+
+If !EMPTY(MV_PAR03) .AND. !EMPTY(MV_PAR04)
+	cQuery += " AND E2_EMISSAO BETWEEN '"+DTOS(MV_PAR03)+"' AND '"+DTOS(MV_PAR04)+"'"
+EndIf	
+If !EMPTY(MV_PAR05) .AND. !EMPTY(MV_PAR06)
+	cQuery += " AND E2_VENCREA BETWEEN '"+DTOS(MV_PAR05)+"' AND '"+DTOS(MV_PAR06)+"'"
+EndIf
+If MV_PAR07 = 1 //LIBERADO
+	cQuery += " AND E2_DATALIB  IS NOT NULL "
+Elseif MV_PAR07 = 2
+	cQuery += " AND E2_DATALIB  IS NULL "
+EndIf
+If MV_PAR08 = 1 //PAGO
+	cQuery += " AND E2_BAIXA  <> '' "
+Elseif MV_PAR08 = 2
+	cQuery += " AND E2_BAIXA  = '' "
+EndIf
+cQuery += " AND A2_COD BETWEEN '"+MV_PAR09+"' AND '"+MV_PAR10+"'" 
+cQuery += " AND E2_MDCONTR  BETWEEN '"+MV_PAR11+"' AND '"+MV_PAR12+"'" 
+cQuery += " AND E2_VALOR  BETWEEN '"+CVALTOCHAR(MV_PAR13)+"' AND '"+CVALTOCHAR(MV_PAR14)+"'" 
+cQuery += " AND SE2.D_E_L_E_T_ = '' "
+cQuery += " AND SA2.D_E_L_E_T_ = ''   "
+cQuery += "  )X  ORDER BY X.E2_VENCREA, X.E2_VALOR "+ CRLF
+
+
+cQuery := ChangeQuery(cQuery)
+
+If Select("QRY") > 0
+    Dbselectarea("QRY")  
+    QRY->(DbClosearea())
+EndIf
+
+TcQuery cQuery New Alias "QRY"
+ 
+
+
+oSecCab:BeginQuery()
+oSecCab:EndQuery({{"QRY"},cQuery})
+oSecCab:Print()
+ 
+Return Nil       
+
+
+
+Static Function CriaSX1(cPerg)
+
+
+putSx1(cPerg, '01', 'Titulo de ?'            	  , '', '', 'mv_ch1', 'C', 9, 0, 0, 'G', '', 'SE2', '', '', 'mv_par01')
+putSx1(cPerg, '02', 'Titulo at้?'            	  , '', '', 'mv_ch2', 'C', 9, 0, 0, 'G', '', 'SE2', '',  '', 'mv_par02') 
+putSx1(cPerg, '03', 'Emissใo de?'              	  , '', '', 'mv_ch3', 'D', 8, 0, 0, 'G', '', '' , '', '', 'mv_par03')
+putSx1(cPerg, '04', 'Emissใo at้?'             	  , '', '', 'mv_ch4', 'D', 8, 0, 0, 'G', '', '' , '', '', 'mv_par04')
+putSx1(cPerg, '05', 'Vencimento de?'              , '', '', 'mv_ch5', 'D', 8, 0, 0, 'G', '', '' , '', '', 'mv_par05')
+putSx1(cPerg, '06', 'Vencimento at้?'             , '', '', 'mv_ch6', 'D', 8, 0, 0, 'G', '', '' , '', '', 'mv_par06')
+PutSx1(cPerg, '07', 'Libera็ใo'                	  , '', '', 'mv_ch7', "N", 2, 0, 1, 'C', '', ''    , '', 'S', 'MV_PAR07','Liberado','','','','Nใo Liberado')
+PutSx1(cPerg, '08', 'Pagamento'                	  , '', '', 'mv_ch8', "N", 2, 0, 1, 'C', '', ''    , '', 'S', 'MV_PAR08','Pago','','','','Nใo Pago')
+putSx1(cPerg, '09', 'Fornecedor de?'              , '', '', 'mv_ch09', 'C', 6, 0, 0, 'G', '', 'SA2' , '', '', 'mv_par09')
+putSx1(cPerg, '10', 'Fornecedor at้?'             , '', '', 'mv_ch10', 'C', 6, 0, 0, 'G', '', 'SA2' , '', '', 'mv_par10')  
+putSx1(cPerg, '11', 'Contrata็ใo de?'             , '', '', 'mv_ch11', 'C', 8, 0, 0, 'G', '', '' , '', '', 'mv_par11')
+putSx1(cPerg, '12', 'Contrata็ใo at้?'            , '', '', 'mv_ch12', 'C', 8, 0, 0, 'G', '', '' , '', '', 'mv_par12') 
+putSx1(cPerg, '13', 'Valor de?'                   , '', '', 'mv_ch13', 'N', 12, 2, 0, 'G', '', '' , '', '', 'mv_par13')
+putSx1(cPerg, '14', 'Valor at้?'                  , '', '', 'mv_ch14', 'N', 12, 2, 0, 'G', '', '' , '', '', 'mv_par14')                                        
+Return(.T.)

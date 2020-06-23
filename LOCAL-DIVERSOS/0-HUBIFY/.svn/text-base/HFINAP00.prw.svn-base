@@ -1,0 +1,81 @@
+#include 'protheus.ch'
+#include 'parmtype.ch'
+#INCLUDE "rwmake.ch"
+
+/*/{Protheus.doc} HFINCAD1
+//Cadastro de Cliente
+@author emerson.natali
+@since 05/05/2018
+@version undefined
+
+@type function
+/*/
+user function HFINCAD1()
+
+Local lVldAlt := ".T." // Validacao para permitir a alteracao. Pode-se utilizar ExecBlock.
+Local lVldExc := ".T." // Validacao para permitir a exclusao. Pode-se utilizar ExecBlock.
+
+Private cCadastro 	:= 'Cadastro de Cliente' //texto do cabeçalho da tabela
+Private cAlias 		:= 'ZAA' //tabelas para cadastro
+Private nOrdem		:= '1' //ordem indice
+
+CHKFILE(cAlias)
+
+dbSelectArea(cAlias)
+dbSetOrder(&nOrdem)
+
+AxCadastro(cAlias,cCadastro, lVldExc, lVldAlt)
+
+return(.T.)
+
+/*/{Protheus.doc} HFINCAD2
+//Faturas IUGU
+@author emerson.natali
+@since 05/05/2018
+@version undefined
+
+@type function
+/*/
+user function HFINCAD2()
+
+Local lVldAlt := ".T." // Validacao para permitir a alteracao. Pode-se utilizar ExecBlock.
+Local lVldExc := ".T." // Validacao para permitir a exclusao. Pode-se utilizar ExecBlock.
+
+Private cCadastro 	:= 'Faturas IUGU' //texto do cabeçalho da tabela
+Private cAlias 		:= 'ZAB' //tabelas para cadastro
+Private nOrdem		:= '1' //ordem indice
+
+CHKFILE(cAlias)
+
+dbSelectArea(cAlias)
+dbSetOrder(&nOrdem)
+
+AxCadastro(cAlias,cCadastro, lVldExc, lVldAlt)
+
+return(.T.)
+
+/*/{Protheus.doc} HFINCAD3
+//Notas Fiscais
+@author emerson.natali
+@since 05/05/2018
+@version undefined
+
+@type function
+/*/
+user function HFINCAD3()
+
+Local lVldAlt := ".T." // Validacao para permitir a alteracao. Pode-se utilizar ExecBlock.
+Local lVldExc := ".T." // Validacao para permitir a exclusao. Pode-se utilizar ExecBlock.
+
+Private cCadastro 	:= 'Notas Fiscais' //texto do cabeçalho da tabela
+Private cAlias 		:= 'ZAC' //tabelas para cadastro
+Private nOrdem		:= '1' //ordem indice
+
+CHKFILE(cAlias)
+
+dbSelectArea(cAlias)
+dbSetOrder(&nOrdem)
+
+AxCadastro(cAlias,cCadastro, lVldExc, lVldAlt)
+
+return(.T.)

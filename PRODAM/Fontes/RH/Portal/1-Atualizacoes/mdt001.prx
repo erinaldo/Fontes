@@ -1,0 +1,839 @@
+#INCLUDE "Mdta695.ch"
+#Include "Protheus.ch"  
+   
+#DEFINE _nVERSAO 32 //Versao do fonte
+/*/       
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MDT001  ³ Autor ³                        ³ Data ³12/01/2016³±±   
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Rotina para consulta de EPI atraves de chamada pelo        ³±±  
+±±³          ³ Portal RH, utilizando Smartclient HTML                     ³±±
+±±³          ³ (autorizado pelo gerencia do projeto PRODAM)               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Objetivo  ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß 
+/*/   
+User Function MDT001( cProgCham, xAutoCab, xAutoItens, nOpcAuto ) 
+
+//Rotina Automática
+Private l695Auto 	:= .f. 
+Private aAutoItens	:= {}
+Private aAutoCab		:= {}
+
+Private lSigaMdtPS	:= If( SuperGetMv("MV_MDTPS",.F.,"N") == "S", .t. , .f. )
+Private lHist695  	:= .f.
+Private aRotina   := MenuDef()  
+Private cCadastro := ""
+Private cPerg     := "MDT695    "
+Private nEPIDev
+Private lCpoLegX  := .F. //Indica se existe a coluna do Semaforo
+Private lTabTLW   := NGCADICBASE("TLW_MAT","D","TLW",.F.)
+Private lCpDtDev  := NGCADICBASE("TNF_DTDEVO","D","TNF",.F.)
+Private lLoteTNF  := If( NGCADICBASE("TNF_LOTECT","D","TNF",.F.) .and. NGCADICBASE("TNF_LOTESB","D","TNF",.F.) .and. ;
+						 NGCADICBASE("TNF_ENDLOC","D","TNF",.F.) .and. NGCADICBASE("TNF_NSERIE","D","TNF",.F.) , .t. , .f. )
+
+//Integracao com o Estoque
+Private cUsaInt1   := AllTrim(GetMv("MV_NGMDTES"))
+Private cUsaLocz   := AllTrim(GetMv("MV_LOCALIZ"))
+Private cUsaRast   := AllTrim(GetMv("MV_RASTRO"))
+Private lESTNEGA   := If(AllTrim(GETMV("MV_ESTNEG")) == 'S',.T.,.F.)
+Private lCpoNumSep := If(TNF->(FieldPos("TNF_NUMSEQ"))>0,.t.,.f.) .AND. lCpDtDev
+Private cMdtDurab  := SuperGetMv("MV_NG2EPDU",.F.,"0") //Indica se verifica se o Epi deve ser trocado
+Private lMdtGerSA  := If( SuperGetMv("MV_NG2SA",.F.,"N") == "S", .t. , .f. ) //Indica se gera SA ao inves de requisitar do estoque
+Private lGera_SA   := If(NGCADICBASE("TNF_ITEMSA","D","TNF",.F.) .and.;
+						 NGCADICBASE("TNF_NUMSA","D","TNF",.F.) , .T. , .F. )
+Private dDataBloq  := SuperGetMv("MV_DBLQMOV") //Data para bloqueio de movimentos.
+
+//Devolução Biométrica						 
+Private lDEVBIO := NGCADICBASE("TNF_DEVBIO","D","TNF",.F.)						 
+
+If AMiIn( 35 ) // Somente autorizado para SIGAMDT
+	If lHist695 //Se a rotina MDTA695 for chamada pela rotina MDTA696, não fazer integração com estoque
+		cUsaInt1  := "N"
+		lMdtGerSA := .f.
+		lGera_SA  := .f.
+	Endif
+	
+	If cUsaInt1 != "S" .or. !lMdtGerSA
+		lGera_SA := .f.
+	Endif
+	
+	If !lLoteTNF .or. (cUsaInt1 != "S" .or. cUsaLocz != "S" .and. cUsaRast != "S")
+		lLoteTNF := .F.
+		cUsaLocz := "N"
+		cUsaRast := "N"
+	Endif
+	
+	If lGera_SA
+		dbSelectArea("SX3")
+		dbSetOrder(2)
+		If dbSeek("TNF_INDDEV") .and. Alltrim(SX3->X3_RELACAO) <> "'3'"
+			RecLock("SX3",.F.)
+			SX3->X3_RELACAO := "'3'"
+			SX3->(MsUnLock())
+		Endif
+	Else
+		dbSelectArea("SX3")
+		dbSetOrder(2)
+		If dbSeek("TNF_INDDEV") .and. Alltrim(SX3->X3_RELACAO) == "'3'"
+			RecLock("SX3",.F.)
+			SX3->X3_RELACAO := "'2'"
+			SX3->(MsUnLock())
+		Endif
+	Endif
+		
+	Pergunte(cPerg,.F.)
+	
+	nEPIDev := MV_PAR01
+	
+	//Carrega variaveis da rotina automatica.
+	aAutoCab   := aClone(xAutoCab)
+	aAutoItens := aClone(xAutoItens)
+	
+	If lSigaMdtps
+	
+		cCadastro := OemtoAnsi(STR0071)  //"Clientes"
+		
+		DbSelectArea("SA1")
+		DbSetOrder(1)
+		
+		mBrowse( 6, 1,22,75,"SA1")
+	
+	Else
+	
+		//---------------------------------------------------
+		// Define o cabecalho da tela de atualizacoes
+		//---------------------------------------------------
+		Private nIndexTNF := RetIndex("TNF")
+		cCadastro := OemtoAnsi(STR0004)  //"Epis Entregues por Funcionario"
+		PRIVATE aCHKDEL := {}, bNGGRAVA
+		PRIVATE nSizeSA2 := If((TAMSX3("A2_COD")[1]) < 1,6,(TAMSX3("A2_COD")[1]))
+		PRIVATE nSizeFOR := If((TAMSX3("A2_NOME")[1]) < 1,30,(TAMSX3("A2_NOME")[1]))
+		PRIVATE nSizeLoj := If((TAMSX3("A2_LOJA")[1]) < 1,2,(TAMSX3("A2_LOJA")[1]))
+		PRIVATE lTabTOH := .f.
+		lTabTOH := SX2->(Dbseek("TOH"))
+		
+		PRIVATE lCodFun  := .f.
+		PRIVATE c1CodFun := "RA_CODFUNC"
+		PRIVATE c2CodFun := "TNF_CODFUN"
+		PRIVATE c3CodFun := "TNB_CODFUN"
+		PRIVATE c1NomFun := "RJ_DESC"
+		PRIVATE cTab_Fun := "SRJ"
+		PRIVATE nIndTNB  := 1
+		PRIVATE cHora695 := Substr(Time(),1,7)
+		PRIVATE cEpie695 := Space(15)
+		
+		Private nTamFor := If((TAMSX3("A2_COD")[1]) < 1, 6,(TAMSX3("A2_COD")[1]))
+		Private nTamLoj := If((TAMSX3("A2_LOJA")[1]) < 1, 6,(TAMSX3("A2_LOJA")[1]))
+		Private lForPad := .F., cForPad := ""
+		
+		cMVForPd := AllTrim(GetNewPar("MV_NGFORPD"," "))
+		If !Empty(cMVForPd)
+			dbSelectArea("SA2")
+			dbSetOrder(1)
+			If dbSeek(xFilial("SA2")+SubStr(GetMv("MV_NGFORPD"),1,nTamFor)+SubStr(Getmv("MV_NGFORPD"),nTamFor+1,(nTamFor+nTamLoj)))
+				lForPad := .T.
+				cForPad := GetMv("MV_NGFORPD")
+			Endif
+		Endif
+	
+		If TNF->(FieldPos("TNF_CODPOS")) > 0 .and. SRA->(FieldPos("RA_POSTO")) > 0
+			lCodFun  := .t.		
+			c1CodFun := "RA_POSTO"
+			c2CodFun := "TNF_CODPOS"
+			c3CodFun := "TNB_CODPOS"
+			c1NomFun := "ZZI_DESC"
+			cTab_Fun := "ZZI"
+			nIndTNB  := 4
+		Endif
+		
+		//---------------------------------------------------
+		// Endereca a funcao de BROWSE
+		//---------------------------------------------------
+		DbSelectArea("SRA")
+		DbSetOrder(1)
+		If l695Auto // Caso a a chamada seja para Rotina Automatica
+			cPrograma := "MDTA695"
+			MBrowseAuto(nOpcAuto,aClone(aAutoCab),"SRA")
+		Else
+			aIndexSRA := {}
+			cFiltro := "(RA_FILIAL=='"+cFilMDT_+"' .and. RA_MAT=='"+cMatMDT_+"')"
+			bFiltraBrw 	:= {|| FilBrowse("SRA",@aIndexSRA,@cFiltro) }
+			Eval( bFiltraBrw )
+			mBrowse( 06,01,22,75,"SRA" )
+		EndIf
+	
+	Endif
+EndIf
+
+Return .T.
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³NGFUN695   ³ Autor³Elisangela Costa       ³ Data ³29/05/02  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Programa de Inclusao,alteracao,exclusao                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ cAlias - Alias do arquivo                                  ³±±
+±±³          ³ nReg   - Numero do registro                                ³±±
+±±³          ³ nOpcx  - Opcao selecionada no menu                         ³±±
+±±³          ³ oParent- Objeto pai onde serão criados os objetos          ³±±
+±±³          ³ oGet   - Objeto MSGetDados passado por referencia          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MDTA695                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß/*/
+User Function NGFUN695(cAlias,nReg,nOpcx,oParent,oGet)
+
+Local LVar01:=1 , nLinhas:=0 , bCampo , cSaveMenuh , nCnt
+Local GetList:={} , nSavRec
+Local oDlg, i, oMenu 
+Local aNoFields	:= {}
+Local aButtons		:= {}
+Local xRetorno
+Local aFind := {STR0085,STR0086,STR0087,STR0088,STR0089,STR0090}  //{"Data de Entrega","Hora de Entrega","Código EPI","Nome EPI","Fornecedor + Loja","Num. C. A."}
+Local oCbx, nX
+Local x, y, nXX, nYY
+Local nCpodata 
+Local nCpohora 
+Local nCpoCodE
+Local nPOSCOD
+Local nPOSNUM
+Local nPOSDAT
+Local nPOSHOR
+Local nCont
+Local aSize := MsAdvSize(,.f.,430)
+Local lParent := ValType(oParent) == "O"
+Local nIDADE
+Local nOrdem  := 1
+Local cFind, cValPesq
+Local nTamFor := If((TAMSX3("A2_COD")[1]) < 1, 6,(TAMSX3("A2_COD")[1]))
+Local nTamLoj := If((TAMSX3("A2_LOJA")[1]) < 1, 6,(TAMSX3("A2_LOJA")[1]))
+
+Local lPerEntEPI := AllTrim(GetNewPar("MV_NGEPIEN"," ")) == "N"
+Local lRetEPI    := .F.
+
+Private l695Auto	:= Type("aAutoCab") == "A" .And. Type("aAutoItens") == "A" .And. IsInCallStack("MDTA695") // Variável definida para utilização da rotina automatica
+Private lContinua := !l695Auto
+Private lAtuGet := .F.
+Private lWhenEpi 	:= .f.
+Private cIndRelac	:= " "
+Private cMARCA		:= GetMark()
+Private aCOLStnf 
+Private cFilif		:= Nil   
+Private oRadOp2
+
+Private nTa2		:= If((TAMSX3("A2_COD")[1]) < 1,6,(TAMSX3("A2_COD")[1]))
+Private nTa2L		:= If((TAMSX3("A2_LOJA")[1]) < 1,2,(TAMSX3("A2_LOJA")[1]))
+Private aVencidos	:= {}
+
+Private lWh695TNF	:= .T. //Variavel que controla o X3_WHEN dos campos da TNF
+Private lWh695IND	:= .T. //Variavel que controla o X3_WHEN do campo TNF_INDDEV
+Private lWh695LOT	:= .T. //Variavel que controla o X3_WHEN do campo Lote SubLote
+
+Private nPosChv	:= 0
+Private nPosAnt	:= 0
+
+Private lTabTLW   := NGCADICBASE("TLW_MAT","D","TLW",.F.)
+Private lVld695e := .t.
+
+//Controle da rotina automatica
+Private aColsAut		:= {}
+Private aHeaderAut	:= {}	
+Private l695ExibeMsg := .T.//Controla a verificação da apresentação da Mensagem do Controle de Estoque (MDTMOVEST - MDTUTIL)
+/*
+If ExistBlock("MDTA6951")
+	xRetorno := ExecBlock("MDTA6951",.F.,.F.)
+Endif
+*/
+Private nOpcVenc := 3 //1-Entrega EPI Vencido / 2-Não entrega EPI Vencido / 3-Pergunta se entrega EPI Vencido
+
+//Define variaveis privadas caso não seja pela Nova Ficha Médica
+If !IsInCallStack( "MDTA410" )
+	Private aHeader		:= {}
+	Private aCols		:= {}
+	Private aOldACols	:= {}
+	Private aColsTLW	:= {} //Dados temporarios da TLW
+	Private aHeadTLW	:= {} //Cabeçalho da TLW
+	Private aOld_TLW	:= {} //Dados salvos da TLW
+	Private dDtMin		:= dDataBase
+	Private dDtMax		:= dDataBase
+	Private aChvTNF		:= {}
+	Private nINDDEV, aDevEpi := {}
+Else
+	aHeader  := {}
+	aCols    := {}
+	aOldACols:= {}
+	aColsTLW := {} //Dados temporarios da TLW
+	aHeadTLW := {} //Cabeçalho da TLW
+	aOld_TLW := {} //Dados salvos da TLW
+EndIf
+
+If !lHist695
+	SetKey( VK_F4 , {|| MDT695Loc( oGet ) } )
+EndIf
+
+cMDTEPIV := GetNewPar("MV_MDTEPIV"," ")
+If ValType( cMDTEPIV ) == "C"
+	cMDTEPIV := AllTrim( cMDTEPIV )
+EndIf
+
+If !Empty(cMDTEPIV)
+	If GETMV("MV_MDTEPIV") == 1
+		nOpcVenc := 1
+	ElseIf GETMV("MV_MDTEPIV") == 2
+		nOpcVenc := 2
+	Endif
+Endif
+
+If ValType(xRetorno) == "A"
+	aButtons := xRetorno
+Elseif ValType(xRetorno) == "L"
+	If !xRetorno
+		Return .F.
+	Endif
+Endif
+
+Aadd(aButtons,{"NG_ICO_LEGENDA",{|| LegMdtTNF()},STR0016,STR0016}) //"Legenda"
+
+cTextoMsg := ""
+lRetEPI := MDTFunAti( SRA->RA_MAT , l695Auto )
+
+If lRetEPI
+	Return lRetEPI
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica qual tipo de produto eh o tipo EPI              ³
+//³e atualiza a consulta padrao de EPI's de acordo com isso ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private cTipo := SuperGetMv("MV_MDTPEPI",.F.,"")
+Private lSX5  := !Empty(cTipo)  //Variaveis utilizadas na validacao do campo TNX_EPI
+	 
+nSavRec := RecNo()
+nOpcao:=nOpcx:=2
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se existe algum dado no arquivo                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cALIAS := "TNF"
+dbSelectArea( cAlias )
+dbSetOrder(1)
+
+FOR i := 1 TO FCount()
+    x   := "m->" + FieldName(i)
+    &x. := FieldGet(i)
+Next i
+
+cALIAS := "TNF"
+
+If lSigaMdtps
+	nIndTNF := 8  //TNF_FILIAL+TNF_CLIENT+TNF_LOJACL+TNF_MAT+TNF_CODEPI+DTOS(TNF_DTENTR)+TNF_HRENTR
+	cSeekTNF := xFilial("TNF")+cCliMdtps+SRA->RA_MAT
+	cCondTNF := "TNF->TNF_FILIAL+TNF->TNF_CLIENT+TNF->TNF_LOJACL+TNF->TNF_MAT"
+	
+	nInd2TNF:= NGRETORDEM("TNF","TNF_FILIAL+TNF_FORNEC+TNF_LOJA+TNF_CLIENT+TNF_LOJACL+TNF_CODEPI+TNF_NUMCAP+TNF_MAT+DTOS(TNF_DTENTR)+TNF_HRENTR",.F.)
+	nIndTNF	:= If(nIndTNF > 0,nIndTNF,11)  //TNF_FILIAL+TNF_FORNEC+TNF_LOJA+TNF_CLIENT+TNF_LOJACL+TNF_CODEPI+TNF_NUMCAP+TNF_MAT+DTOS(TNF_DTENTR)+TNF_HRENTR
+
+Else
+	nIndTNF := 3  //TNF_FILIAL+TNF_MAT+TNF_CODEPI+DTOS(TNF_DTENTR)+TNF_HRENTR
+	cSeekTNF := xFilial("TNF")+SRA->RA_MAT
+	cCondTNF := "TNF->TNF_FILIAL+TNF->TNF_MAT"
+	
+	nInd2TNF := 1  //TNF_FILIAL+TNF_FORNEC+TNF_LOJA+TNF_CODEPI+TNF_NUMCAP+TNF_MAT+DTOS(TNF_DTENTR)+TNF_HRENTR
+Endif
+
+dbSelectArea("TNF") 
+dbSetOrder(nIndTNF)
+dbSeek(cSeekTNF)
+nCnt := 0
+While !EOF() .And. &(cCondTNF) = cSeekTNF
+	nCnt++
+	dbSkip()
+End
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a entrada de dados do arquivo                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aTELA[0][0],aGETS[0],nUsado:=0
+bHotArea 	:= {|| HotAreas(12, 2,20,74,nUsado)}
+bCampo 		:= {|nCPO| Field(nCPO) }
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta o cabecalho                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+dbSelectArea("SX2")
+dbSeek("TNF")
+//Adiciona os campos Cod. Epi, Desc. Epi, Fornecedor, Loja e C.A.
+dbSelectArea("SX3")
+Dbsetorder(2)
+
+aAdd(aNoFields, 'TNF_MAT')
+aAdd(aNoFields, 'TNF_NOME')
+aAdd(aNoFields, 'TNF_CODFUN')
+If cUsaInt1 != "S"
+	aAdd(aNoFields, "TNF_TIPODV")
+	aAdd(aNoFields, "TNF_NUMSEQ")
+	aAdd(aNoFields, "TNF_CUSTO" )
+	aAdd(aNoFields, "TNF_LOCAL" )
+	aAdd(aNoFields, "TNF_LOTECT")
+	aAdd(aNoFields, "TNF_LOTESB")
+	aAdd(aNoFields, "TNF_ENDLOC")
+	aAdd(aNoFields, "TNF_NSERIE")
+	aAdd(aNoFields, "TNF_LOCDV")
+Else
+	If cUsaLocz != "S"
+		aAdd(aNoFields, "TNF_ENDLOC")
+		aAdd(aNoFields, "TNF_NSERIE")
+	Endif
+	If cUsaRast != "S"
+		aAdd(aNoFields, "TNF_LOTECT")
+		aAdd(aNoFields, "TNF_LOTESB")
+	Endif
+Endif
+
+If lSigaMdtps
+	aAdd(aNoFields, 'TNF_CLIENT')
+	aAdd(aNoFields, 'TNF_LOJACL')
+
+	#IFDEF TOP
+		cQuery := "SELECT * FROM "+RetSqlName("TNF")+" TNF WHERE TNF.TNF_FILIAL = '"+xFilial("TNF")+"' AND TNF.TNF_CLIENT = '"+SA1->A1_COD+"'"+;
+					" AND TNF.TNF_LOJACL = '"+SA1->A1_LOJA+"'"+;
+					" AND TNF.TNF_MAT = '"+SRA->RA_MAT+"' AND TNF.D_E_L_E_T_ = ' '"
+		If nEPIDev == 2 //Mostrar EPI's devolvidos 
+			cQuery +=  " AND TNF.TNF_INDDEV = '1'"
+		ElseIf nEPIDev == 3 //Nao devolvidos
+			cQuery +=  " AND TNF.TNF_INDDEV <> '1'"
+		EndIf
+		FillGetDados( 4, "TNF", 10, xFilial("TNF")+cCliMdtps+SRA->RA_MAT, {|| "TNF->TNF_FILIAL + TNF->TNF_CLIENT + TNF->TNF_LOJACL + TNF->TNF_MAT"},;
+					{|| .T.},aNoFields,,,cQuery)
+
+	#ELSE
+		cGETWHTPB := "TNF->TNF_FILIAL == '"+xFilial("TNF")+"' .AND. TNF->TNF_CLIENT == '"+SA1->A1_COD+"' .AND. TNF->TNF_LOJACL == '"+SA1->A1_LOJA+"'"+;
+					 " .AND. TNF->TNF_MAT = '"+SRA->RA_MAT+"'"	
+		If nEPIDev == 2 //Mostrar EPI's devolvidos 
+			cFilif :=  " TNF->TNF_INDDEV == '1'"
+		ElseIf nEPIDev == 3 //Nao devolvidos			
+			cFilif :=  " TNF->TNF_INDDEV <> '1'"
+		EndIf
+		FillGetDados( 4, "TNF", 10, "SA1->A1_COD + SA1->A1_LOJA + SRA->RA_MAT", {|| }, {|| .T.},aNoFields,,,,;
+					{|| NGMontaAcols("TNF",SA1->A1_COD + SA1->A1_LOJA + SRA->RA_MAT,cGETWHTPB,cFilif)}) 
+	#ENDIF
+Else
+	cGETWHTPB := "TNF->TNF_FILIAL == '"+xFilial("TNF")+"' .AND. TNF->TNF_MAT = '"+SRA->RA_MAT+"'"
+	If nEPIDev == 2 //Mostrar EPI's devolvidos 
+		cFilif :=  " TNF->TNF_INDDEV == '1'"
+	ElseIf nEPIDev == 3 //Nao devolvidos			
+		cFilif :=  " TNF->TNF_INDDEV <> '1'"
+	EndIf
+	
+	FillGetDados( 4, "TNF", 5, "SRA->RA_MAT", {|| }, {|| .T.},aNoFields,,,,;
+				{|| NGMontaAcols("TNF", SRA->RA_MAT,cGETWHTPB,cFilif)})
+				 			
+	If l695Auto //Efetua validação da getdados através da rotina automática
+		aColsAut	:= aClone(aCols)
+		aHeaderAut	:= aClone(aHeader)
+		aAutoCab := MsAuto2Ench("SRA")
+		//MsGetDAuto ( aField   ,[ uLinhaOk ], [ uTudoOk ]   ,[ aEnchAuto ], [ nOpc ] [ lClear ] ) --> lVALIDO
+		If MsGetDAuto(aAutoItens,"NG695LinOk",{|| NG695TudOk()},aAutoCab    , 4 )
+			If !lMSErroAuto
+				lContinua := .T.
+			EndIf
+		EndIf
+	EndIf
+EndIf
+
+If lContinua //Validação da GetDados através da rotina automática, caso não seja rotina automática o default é .T.
+
+	lCpoLegX := TNFColBmp(1, @aHeader , @aCols ) //Adiciona a coluna BMP no aHeader e aCols
+	If l695Auto
+		lCpoLegX := TNFColBmp(1, @aHeaderAut , @aColsAut ) //Adiciona a coluna BMP no aHeader e aCols
+	EndIf
+	
+	nCpodata := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_DTENTR" })
+	nCpohora := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_HRENTR" })
+	nCpoCodE := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_CODEPI" })
+	nCpoDtDv := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_DTDEVO" })
+	nCpoForn := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_FORNEC" })
+	nCpoLoja := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_LOJA" 	  })
+	nCpoNumC := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_NUMCAP" })
+	nCpoLote := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_LOTECT" })
+	nCpoSubL := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_LOTESB" })
+	nCpoLocz := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_ENDLOC" })
+	nCpoNSer := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_NSERIE" })
+	
+	If Empty(aCols)
+		aCols := BlankGetd(aHeader)
+	ElseIf cMdtDurab $ "1/2/3"
+		nCnt := 0
+		For nCnt:=1 to Len(aCols)
+			If Empty(aCols[nCnt][nCpoDtDv])
+				//Verifica se o EPI está vencido
+				If aScan(aVencidos,{|x| ALLTRIM(UPPER(x[1])) == ALLTRIM(UPPER(aCols[nCnt][nCpoCodE]))}) == 0
+					nDurabi := 0
+					dbSelectArea("TN3")
+					If lSigaMdtps
+						dbSetOrder(3)
+						If dbSeek(xFilial("TN3")+aCols[nCnt][nCpoForn]+aCols[nCnt][nCpoLoja]+SA1->A1_COD+SA1->A1_LOJA+aCols[nCnt][nCpoCodE]+aCols[nCnt][nCpoNumC])
+							If TN3->TN3_INDEVO == Substr(cMdtDurab,1,1) .or. Substr(cMdtDurab,1,1) == "3"
+								nDurabi := TN3->TN3_DURABI
+							Endif
+						Endif
+					Else
+						dbSetOrder(1)
+						If dbSeek(xFilial("TN3")+aCols[nCnt][nCpoForn]+aCols[nCnt][nCpoLoja]+aCols[nCnt][nCpoCodE]+aCols[nCnt][nCpoNumC])
+							If TN3->TN3_INDEVO == Substr(cMdtDurab,1,1) .or. Substr(cMdtDurab,1,1) == "3"
+								nDurabi := TN3->TN3_DURABI
+							Endif
+						Endif
+					Endif
+					nAfast := 0
+					//Verifica se a durabilidade do EPI eh por dias de Uso e desconta os afastamentos
+					If NGCADICBASE("TN3_TPDURA","A","TN3",.F.)
+						If TN3->TN3_TPDURA == "U"
+							dbSelectArea("SR8")
+							dbSetOrder(1)//R8_FILIAL+R8_MAT+DTOS(R8_DATAINI)
+							dbSeek(xFilial("SR8")+SRA->RA_MAT)
+							While !eof() .and. xFilial("SR8")+SRA->RA_MAT == SR8->R8_FILIAL+SR8->R8_MAT .and. SR8->R8_DATAINI <= dDataBase
+								If (Empty(SR8->R8_DATAFIM) .or. SR8->R8_DATAFIM > aCols[nCnt][nCpoData])
+									nAfast += (dDataBase - SR8->R8_DATAINI)
+								ElseIf SR8->R8_DATAFIM >= aCols[nCnt][nCpoData] .and. SR8->R8_DATAINI <= aCols[nCnt][nCpoData]
+									nAfast += (SR8->R8_DATAFIM - aCols[nCnt][nCpoData])
+								ElseIf SR8->R8_DATAFIM <= dDataBase .and. SR8->R8_DATAINI >= aCols[nCnt][nCpoData]
+									nAfast += (SR8->R8_DATAFIM - SR8->R8_DATAINI)
+								Endif
+								dbSelectArea("SR8")
+								dbSkip()
+							End
+						Endif
+					Endif
+					If (dDataBase - aCols[nCnt][nCpodata] - nAfast) > nDurabi .AND. nDurabi > 0
+						aADD(aVencidos, {aCols[nCnt][nCpoCodE], AllTrim(NGSEEK("SB1",aCols[nCnt][nCpoCodE],1,"B1_DESC"))})
+					Endif
+				Endif
+			Endif
+		Next nCnt
+	EndIf
+	aSort( aCols , , , { |x,y| DTOS(x[nCpodata]) + x[nCpohora] + x[nCpoCodE] < DTOS(y[nCpodata]) + y[nCpohora] + y[nCpoCodE] } )    //Data Entrega + Hora Entrega + Código EPI
+	
+	If lTabTLW //Devolução parcial
+		nEPI    := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_CODEPI" })
+		nFORNEC := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_FORNEC" })
+		nLOJA   := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_LOJA"   })
+		nNUMCAP := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_NUMCAP" })
+		nDTENTR := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_DTENTR" })
+		nHRENTR := aSCAN(aHEADER, {|x| AllTrim(Upper(X[2])) == "TNF_HRENTR" })
+	
+		aNaoTLW  := {}
+		If cUsaInt1 != "S"
+			aAdd(aNaoTLW, "TLW_TIPODV")
+			aAdd(aNaoTLW, "TLW_LOCAL" )
+		Endif
+	
+		aHeadTLW := CABECGETD("TLW", aNaoTLW )
+		nPosDt := aSCAN(aHeadTLW, {|x| AllTrim(Upper(X[2])) == "TLW_DTDEVO" })
+		nPosHr := aSCAN(aHeadTLW, {|x| AllTrim(Upper(X[2])) == "TLW_HRDEVO" })
+		
+		For nXX := 1 To Len(aCols)
+			cKEY := aCols[nXX,nFORNEC] + aCols[nXX,nLOJA] + aCols[nXX,nEPI] + aCols[nXX,nNUMCAP]
+			cKEY += SRA->RA_MAT + DtoS( aCols[nXX,nDTENTR] ) + aCols[nXX,nHRENTR]
+			aAdd(aColsTLW , {cKEY, {} } )
+			nTemp := Len(aColsTLW)
+			cGETWHILE := "TLW_FORNEC+TLW_LOJA+TLW_CODEPI+TLW_NUMCAP+TLW_MAT+DTOS(TLW_DTENTR)+TLW_HRENTR == '"+cKEY+"'"
+			dbSelectArea("TLW")
+			dbSetOrder(1)
+			aDadosTMP := MAKEGETD("TLW", cKEY, aHeadTLW, cGETWHILE,,.F.)
+			For nYY := 1 To Len(aDadosTMP)
+				aAdd( aColsTLW[nTemp,2] , aDadosTMP[nYY] )
+			Next nYY
+			//Ordenando por data+hora devolucao
+			aSort( aColsTLW[nTemp,2] , , , { |x,y| DTOS(x[nPosDt]) + x[nPosHr] < DTOS(y[nPosDt]) + y[nPosHr] } )
+		Next nXX
+		
+		aOld_TLW := aClone(aColsTLW)
+	Endif
+	
+	/*Caso seja rotina automática atribui os backup's feitos antes da interferência da função MSGETDAUTO
+	e define a variavel de controle 'nOpca' == 1 como se tivesse sido confirmada a tela */
+	If l695Auto
+		aCOLStnf	:= aClone(aColsAut)
+		aHeaTNF		:= aClone(aHeaderAut)
+		nOpca		:= 1
+	Else
+		aCOLStnf	:= aClone(aCOLS)
+		aHeaTNF 	:= aClone(aHEADER)
+		nOpca		:= 0
+	EndIf
+	
+	Inclui := .t.
+	lPrimeiro := .F.
+	
+		If lParent
+        	oDlg := oParent
+		Else
+			DEFINE MSDIALOG oDlg TITLE cCadastro From 0,0 To aSize[6],aSize[5] OF oMainWnd PIXEL
+		EndIf
+			
+		nIDADE := R555ID(SRA->RA_NASC,dDataBase)
+		
+		oPanel := TPanel():New(0,0,,oDlg,,,,,,0,175,.F.,.F.)
+			oPanel:Align := CONTROL_ALIGN_ALLCLIENT
+		
+			oPnlSup := TPanel():New(0,0,,oPanel,,,,,,0,175,.F.,.F.)
+				oPnlSup:Align := CONTROL_ALIGN_TOP
+			
+				@ 0.5 ,.8  SAY OemToAnsi(STR0005) Of oPnlSup //"Matricula"
+				@ 0.5 ,3.5  MSGET SRA->RA_MAT SIZE 25,10 Of oPnlSup WHEN .F.
+				@ 0.5 ,8   SAY OemToAnsi(STR0006) Of oPnlSup //"Nome"
+				@ 0.5 ,11  MSGET SRA->RA_NOME SIZE 120,10 Of oPnlSup WHEN .F.
+				@ 0.5 ,27  SAY OemToAnsi(STR0007) Of oPnlSup //"Data Nasc."
+				@ 0.5 ,32  MSGET SRA->RA_NASC SIZE 44,10 Of oPnlSup WHEN .F. HASBUTTON
+			
+				@ 1.7 ,.8  SAY OemToAnsi(STR0008) Of oPnlSup //"Idade"
+				@ 1.7 ,3.5 MSGET nIDADE SIZE 19,10 Of oPnlSup WHEN .F.
+				@ 1.7 ,7   SAY OemToAnsi(STR0009) Of oPnlSup //"Sexo"
+				@ 1.7 ,9   MSGET SRA->RA_SEXO SIZE 9,10 Of oPnlSup WHEN .F.
+				@ 1.7 ,11  SAY OemToAnsi(STR0010) Of oPnlSup //"C.Custo"
+				@ 1.7 ,14  MSGET SRA->RA_CC SIZE 70,10 Of oPnlSup WHEN .F.
+				@ 1.7 ,23  SAY OemToAnsi(Substr(STR0011,1,8)+".") Of oPnlSup //"Nome C.Custo"
+			
+			If Alltrim(GETMV("MV_MCONTAB")) == "CTB"
+				dbSelectArea("CTT")
+				dbSetOrder(1)
+				dbSeek(xFilial("CTT")+SRA->RA_CC)
+				@ 1.7 ,27  MSGET CTT->CTT_DESC01 SIZE 80,10 Of oPnlSup WHEN .F.
+			Else
+				dbSelectArea("SI3")
+				dbSetOrder(1)
+				dbSeek(xFilial("SI3")+SRA->RA_CC)
+				@ 1.7 ,27  MSGET SI3->I3_DESC SIZE 80,10 Of oPnlSup WHEN .F.
+			Endif
+		
+		dbSelectArea(cTab_Fun)
+		dbSetOrder(1)
+		dbSeek(xFilial(cTab_Fun)+SRA->(&(c1CodFun)))
+		@ 2.9 ,.8  SAY OemToAnsi(If(!lCodFun,STR0012,STR0061)) Of oPnlSup //"Funcao" //"Posto"
+		@ 2.9 ,3.5   MSGET SRA->(&(c1CodFun)) SIZE 18,10 Of oPnlSup WHEN .F.
+		@ 2.9 ,8   SAY OemToAnsi(If(!lCodFun,STR0013,STR0062)) Of oPnlSup //"Nome Func." //"Nome Posto"
+		@ 2.9 ,13  MSGET &(cTab_Fun+"->"+c1NomFun) SIZE 100,10 Of oPnlSup WHEN .F.
+		@ 2.9 ,27  SAY OemToAnsi(STR0014) Of oPnlSup//"Data Admissao."
+		@ 2.9 ,32  MSGET SRA->RA_ADMISSA SIZE 45,10 Of oPnlSup WHEN .F. HASBUTTON
+	
+		x := 058
+		y := 293
+/*			
+		@ x,y BUTTON STR0197 SIZE 54,12 Of oPnlSup PIXEL ACTION (MDT695EPIN(oGet)) When oGet:lActive//"Epi's Necessários"
+		If lTabTLW 
+			x += 15
+			@ x,y BUTTON STR0134 SIZE 54,12 Of oPnlSup PIXEL ACTION (MDT695DVPA(nOpcx,oGet)) When oGet:lActive//"Devolução Parcial"
+		Endif
+*/
+		cFind := aFind[1]
+		cValPesq := Space(8)
+	
+		x := 005 // 057
+		y := 305 //5
+	
+		@ x,y To x+61,y+132 LABEL Oemtoansi(STR0091) Of oPnlSup PIXEL  //"Ordem dos EPI's Entregues"
+		@ x+11,y+7 RADIO oRadOp2 VAR nOrdem ITEMS	STR0092,;  //"Data Entrega + Hora Entrega + Código EPI"
+		STR0093,;  //"Código EPI + Data Entrega + Hora Entrega"
+		STR0094 ;  //"Nome EPI + Data Entrega + Hora Entrega"
+		3D ON CHANGE fAlterCus(oGet,nOrdem) SIZE 123,11.5 PIXEL Of oPnlSup
+		@ x+43.7,y+7 BUTTON oReodernar PROMPT "&Reordernar" Of oPnlSup SIZE 60,12 PIXEL ACTION fAlterCus(oGet,nOrdem)  //"&Reordernar"
+		
+		****************************
+		y := 440// 150
+		
+		@ x,y TO x+61,y+126 LABEL STR0099 Of oPnlSup Pixel  //"Pesquisa de EPI's Entregues"
+			
+		@ x+12,y+7 Say OemtoAnsi("Objeto") Of oPnlSup Pixel  //"Objeto:"
+		@ x+10.8,y+30  COMBOBOX oCbx VAR cFind ITEMS aFind SIZE 70,6 Of oPnlSup Pixel Valid MDT695PES(cFind,@cValPesq)
+		@ x+29,y+7 Say OemtoAnsi("Valor") Of oPnlSup Pixel  //"Valor:"
+		@ x+27.8,y+30 Msget cValPesq SIZE 70,6 When .T. Of oPnlSup Pixel
+		
+		@ x+43.7,y+7 BUTTON "An&terior" Of oPnlSup SIZE 45,12 PIXEL ACTION MDTPes695(1,oGet,cValPesq)  //"An&terior"
+		@ x+43.7,y+62.2 BUTTON "Próxim&o" Of oPnlSup SIZE 45,12 PIXEL ACTION MDTPes695(2,oGet,cFind,cValPesq)	 //"Próxim&o"
+		
+		If lForPad
+			@ x+65,y TO x+90,y+136 LABEL STR0128 Of oPnlSup Pixel  //"Fornecedor Padrao"
+			@ x+76,y+8 Say OemtoAnsi(STR0129) Of oPnlSup Pixel  //"Fornecedor"
+			@ x+75.8,y+40 Msget SubStr(cForPad,1,nTamFor) SIZE 48,6 When .F. Of oPnlSup Pixel
+			@ x+76,y+90 Say OemtoAnsi(STR0130) Of oPnlSup Pixel  //"Loja"
+			@ x+75.8,y+105 Msget SubStr(cForPad,nTamFor+1,(nTamFor+nTamLoj)) SIZE 24,6 When .F. Of oPnlSup Pixel
+		Endif
+		
+		//oPnlInf := TPanel():New(0,0,,oPanel,,,,,,1500,1500,.F.,.F.)
+		//	oPnlInf:Align := CONTROL_ALIGN_ALLCLIENT
+		
+		dbSelectArea("TNF")
+		
+		x := ( aSize[6]/2.02 ) - 10
+		y := ( aSize[5]/2.01 ) - 1
+			    
+		oGet := MSGetDados():New(90,4,x,y,nOpcx,"NG695LinOk","NG695TudOk","",.t.,,,,3000,,,,"NG695EXCC()",oPnlSup)
+		oGet:oBrowse:Align := CONTROL_ALIGN_BOTTOM     
+		oGet:oBrowse:bChange:= {|| fChangeGD(oGet) }
+		
+		fChgWhTNF(oGet,"fChg695GD()",lHist695)
+/*		
+		If ExistBlock("MDTA6952")
+			ExecBlock("MDTA6952",.F.,.F.)
+		Endif
+*/		
+		If Type("aSMenu") == "A" .And. Len(aSMenu) > 0
+			NGPOPUP(asMenu,@oMenu)
+			oDlg:bRClicked:= { |o,x,y| oMenu:Activate(x,y,oDlg)}
+		Endif
+		
+		aOldACols := aClone(aCols)
+				
+		If !lParent
+			ACTIVATE MSDIALOG oDlg ON INIT EnchoiceBar(oDlg,{||nOpca:=1,if(oGet:TudoOk(),oDlg:End(),nOpca := 0)},{||oDlg:End(),nOpca := 0}, ,aButtons)
+		Else
+			Return .t.
+		EndIf
+EndIf
+	     
+Return .T.
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MenuDef  ³ Autor ³ Rafael Diogo Richter  ³ Data ³29/11/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Utilizacao de Menu Funcional.                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ SigaMDT                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Array com opcoes da rotina.                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Parametros do array a Rotina:                               ³±±
+±±³          ³1. Nome a aparecer no cabecalho                             ³±±
+±±³          ³2. Nome da Rotina associada                                 ³±±
+±±³          ³3. Reservado                                                ³±±
+±±³          ³4. Tipo de Transa‡„o a ser efetuada:                        ³±±
+±±³          ³		1 - Pesquisa e Posiciona em um Banco de Dados         ³±±
+±±³          ³    2 - Simplesmente Mostra os Campos                       ³±±
+±±³          ³    3 - Inclui registros no Bancos de Dados                 ³±±
+±±³          ³    4 - Altera o registro corrente                          ³±±
+±±³          ³    5 - Remove o registro corrente do Banco de Dados        ³±±
+±±³          ³5. Nivel de acesso                                          ³±±
+±±³          ³6. Habilita Menu Funcional                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±± 
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ F.O  ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³            ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function MenuDef( lSigaMdtPs )
+
+Local aRotina
+Local lHist := .F.
+
+Default lSigaMdtPS	:= SuperGetMv( "MV_MDTPS" , .F. , "N" ) == "S"
+
+If Type("lHist695") == "L"
+	If lHist695
+		lHist := .T.
+	Endif
+Endif
+
+aRotina :=	{ { "Consultar", "U_NGFUN695()", 0 , 2}} 
+    				
+Return aRotina
+
+/*
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Fun‡…o   ³ fChangeGD ³ Autor ³ Denis                ³ Data ³27/11/2009³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Descri‡…o³ Funcao executada quando o foco muda de linha da GD         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MDTA695 e MDTA630                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function fChangeGD(oGet)
+fChg695GD(oGet)
+If ValType(oGet) == "O" .And. oGet:oBrowse:nColPos == 1
+	oGet:oBrowse:nColPos := 2
+	oGet:oBrowse:Refresh()
+Endif
+Return .t.
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fPanel6Show³ Autor ³ Denis Hyroshi de Souza³ Data ³ 09/05/08³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Abre painel 6                                              ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function fAlterCus(oGet,nOrdem)
+
+Local nPOSEpi  := aSCAN( aHEADER, { |x| Trim( Upper(x[2]) ) == "TNF_CODEPI"})
+Local nPOS3 := aSCAN( aHEADER, { |x| Trim( Upper(x[2]) ) == "TNF_FORNEC"})
+Local nPOS4 := aSCAN( aHEADER, { |x| Trim( Upper(x[2]) ) == "TNF_LOJA"})
+Local nPOS5 := aSCAN( aHEADER, { |x| Trim( Upper(x[2]) ) == "TNF_NUMCAP"})
+Local nPOS1 := aSCAN( aHEADER, { |x| Trim( Upper(x[2]) ) == "TNF_DTENTR"})
+Local nPOS2 := aSCAN( aHEADER, { |x| Trim( Upper(x[2]) ) == "TNF_HRENTR"})
+Local nPOSa := aSCAN( aHEADER, { |x| Trim( Upper(x[2]) ) == "TNF_DESC"})
+Local nPOSb := aSCAN( aHEADER, { |x| Trim( Upper(x[2]) ) == "TNF_MAT"})
+
+//FORNEC+TNF_LOJA+TNF_CODEPI+TNF_NUMCAP+TNF_MAT+DTOS(TNF_DTENTR)+TNF_HRENTR
+Local cChave := aCols[n][nPos3]+aCols[n][nPos4]+aCols[n][nPOSEpi]+aCols[n][nPos5]+SRA->RA_MAT+DtoS(aCols[n][nPos1])+aCols[n][nPos2]
+Local nLinha
+
+CursorWait()
+
+/*-------------------------------------------------------------------------
+1- "Data Entrega + Hora Entrega + Código EPI",;
+2- "Código EPI + Data Entrega + Hora Entrega",;
+3- "Nome EPI + Data Entrega + Hora Entrega",;
+4- "Fornecedor + Loja + Código EPI + Data Entrega + Hora Entrega",;
+5- "Código EPI +  Num. C. A.",;
+6- "Num. C. A. + Código EPI";
+----------------------------------------------------------------------------*/
+
+If nOrdem == 1
+	aSort( aCols , , , { |x,y| DTOS(x[nPos1]) + x[nPos2] + x[nPOSEpi] < DTOS(y[nPos1]) + y[nPos2] + y[nPOSEpi] } ) 
+Elseif nOrdem == 2
+	aSort( aCols , , , { |x,y| x[nPOSEpi] + DTOS(x[nPos1]) + x[nPos2] < y[nPOSEpi] + DTOS(y[nPos1]) + y[nPos2] } ) 
+Elseif nOrdem == 3
+	aSort( aCols , , , { |x,y| x[nPosa] + DTOS(x[nPos1]) + x[nPos2] < y[nPosa] + DTOS(y[nPos1]) + y[nPos2] } )
+Elseif nOrdem == 4
+	aSort( aCols , , , { |x,y| x[nPos3] + x[nPos4] + x[nPOSEpi] + DTOS(x[nPos1]) + x[nPos2] < y[nPos3] + y[nPos4] + y[nPOSEpi] + DTOS(y[nPos1]) + y[nPos2] } )
+Elseif nOrdem == 5
+	aSort( aCols , , , { |x,y| x[nPOSEpi] + x[nPos5] + DTOS(x[nPos1]) < y[nPOSEpi] + y[nPos5] + DTOS(y[nPos1]) } )
+Elseif nOrdem == 6
+	aSort( aCols , , , { |x,y| x[nPos5] + x[nPOSEpi] + DTOS(x[nPos1]) < y[nPos5] + y[nPOSEpi] + DTOS(y[nPos1]) } )
+Endif
+
+nLinha := aSCAN( aCols, { |x| x[nPos3]+x[nPos4]+x[nPOSEpi]+x[nPos5]+SRA->RA_MAT+DtoS(x[nPos1])+x[nPos2] == cChave} )
+
+oGet:oBrowse:Refresh()
+oGet:oBrowse:SetFocus()
+oGet:oBrowse:Refresh()
+			
+CursorArrow()
+
+Return
+

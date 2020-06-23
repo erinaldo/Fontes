@@ -1,0 +1,104 @@
+#include 'protheus.ch'
+#include 'parmtype.ch'
+
+/*/{Protheus.doc} HFINAP01
+//Consumindo API Iugu Extrato Financeiro
+@author emerson.natali
+@since 01/05/2018
+@version undefined
+
+	//[1,2,1,1] == "transactions"
+	//[1,2,1,2] array contendo as informações
+	//[1][2][1][2][1][2][1] -> ARRAY (    2) [...]
+	//[1][2][1][2][1][2][1][1] -> C (    6) [amount]  //campo
+	//[1][2][1][2][1][2][1][2] -> C (    10) [amount] //valor
+
+@type function
+/*/
+user function HFINAP01()
+
+Local cUrl			:= "https://api.iugu.com/v1/accounts/financial"
+Local cApi_Token	:= "api_token=e3a203c0cfaf1f396fe9d45e22b7bea4"
+Local _cYear		:= ""
+Local _cMonth		:= ""
+Local _cDay			:= ""
+Local _cLimit		:= "limit=100"
+Local _cStart		:= "start"
+Local cGetParams	:= ""
+Local nTimeOut		:= 200
+Local aHeadStr		:= {}
+Local cHeaderGet	:= ""
+Local cRetorno		:= ""
+Local oObjJson		:= Nil
+Local aJsonFields 	:= {}
+Local nlenRetJson 	:= 0
+Local nRetParser 	:= 0
+
+RpcSetType(3)
+RpcSetEnv("99", "01")
+
+dDini := ctod("01/03/2017")
+dDfim := ctod("04/05/2018")
+nCont := 1
+
+Do While .T.
+	
+	aJsonFields 	:= {}
+	_cYear		:= "year=" + strzero(year(dDini),4) 	//"year=2018"
+	_cMonth		:= "month="+ strzero(month(dDini),2) 	//"month=02"
+	_cDay		:= "day="  + strzero(day(dDini),2) 		//"day=28"
+	cGetParams	:= "" + cApi_Token + "&" + _cYear + "&" + _cMonth + "&" + _cDay + "&" + _cLimit + "&" + _cStart
+	
+	cRetorno	:= HttpGet( cUrl, cGetParams, nTimeOut, aHeadStr, @cHeaderGet)
+	
+	oObjJson 	:= tJsonParser():New()
+	nlenRetJson := Len(cRetorno)
+	
+	lRet := oObjJson:Json_Parser(cRetorno, nlenRetJson, @aJsonFields, @nRetParser)
+	   
+	If ( lRet == .F. )
+		ConOut("##### [JSON][ERR] " + "Parser 1 com erro" + " MSG len: " + AllTrim(Str(nlenRetJson)) + " bytes lidos: " + AllTrim(Str(nRetParser)))
+		ConOut("Erro a partir: " + SubStr(cRetorno, (nRetParser+1)))
+	Else
+		ConOut("[JSON] "+ "+++++ PARSER OK dia processado: " +DTOC(dDini) +" ARRAY "+ AllTrim(Str(Len(aJsonFields))) + " MSG len: " + AllTrim(Str(nlenRetJson)) + " bytes lidos: " + AllTrim(Str(nRetParser)))
+	//	printJson(aJsonFields, "| ")
+	
+		For _nI := 1 to Len(aJsonFields[1,2,1,2])
+			acampos := {}
+			For _nY := 1 to Len(aJsonFields[1,2,1,2,_nI,2]) //array com o conteudo (campos e valores)
+				aadd(acampos,aJsonFields[1,2,1,2,_nI,2,_nY,2]) //valor do campo
+			Next _nY
+			RecLock("ZAB",.T.)
+			ZAB->ZAB_FILIAL		:= xFilial("ZAB")
+			ZAB->ZAB_AMOUNT		:= VAL(StrTran(SUBSTR(acampos[01],3,50), "," , "." ))
+			ZAB->ZAB_TYPE		:= acampos[02]
+			ZAB->ZAB_DESC		:= acampos[03]
+			ZAB->ZAB_DATE		:= STOD(StrTran(acampos[04],"-",""))
+			ZAB->ZAB_REFER		:= acampos[05]
+			ZAB->ZAB_TYPEREF	:= acampos[06]
+			ZAB->ZAB_ACCOUN		:= acampos[07]
+			ZAB->ZAB_TYPETR		:= acampos[08]
+			ZAB->ZAB_BALANC		:= VAL(StrTran(StrTran(SUBSTR(acampos[09],3,50), "," , "." ), "." , ""))/100
+			ZAB->ZAB_REFCUS		:= acampos[10]
+			MsUnLock()
+		Next _nI
+	
+	EndIf
+	ConOut("-------------------------------------------------------", "")
+
+	dDini := dDini + nCont
+
+	If dDini > dDfim
+		Exit
+	EndIf
+
+EndDo	 
+
+
+RpcClearEnv()
+
+return(Nil)
+
+Static Function printJson(aJson, niv)
+  VarInfo(niv, aJson)
+Return .T.

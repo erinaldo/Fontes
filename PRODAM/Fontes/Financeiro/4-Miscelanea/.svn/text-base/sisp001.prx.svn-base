@@ -1,0 +1,36 @@
+#include "rwmake.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ SISP001  ³ Autor ³ Alexandre da Silva    ³ Data ³ 01/09/00 ³±±
+±±³Programa  ³ SISP001  ³ MODIFI³ Cesar Moura           ³ Data ³ 03/03/05 ³±±
+±±³Programa  ³ SISP001  ³ MODIFI³ Cesar Moura           ³ Data ³ 22/02/07 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ ExecBlock disparado do SISPAG.PAG para retornar agencia e  ³±±
+±±³          ³ conta do fornecedor - Campo 024-043.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CNAB SISPAG                                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function SISP001()
+Local _cReturn
+
+cBanco := SA2->A2_BANCO
+cAgenc := SA2->A2_AGENCIA
+cConta := STRZERO(VAL(STRTRAN(SA2->A2_NUMCON,"-","")),12)
+
+IF cBanco == "341"
+	_cReturn :=	StrZero(Val(Alltrim(Substr(cAgenc,1,4))),5)+" "+STRZERO(VAL(SUBSTR(cConta,1,len(cConta)-1)),12)+" "+ IIF(SEA->EA_MODELO $ "10/02", "0",Right(cConta,1))
+	//_cReturn := "0"+SUBSTR(SA2->A2_AGENCIA,1,4)+" "+"0000000"+SUBSTR(SA2->A2_NUMCON,1,5)+" "+ IIF(SEA->EA_MODELO $ "10/02", "0",SUBSTR(SA2->A2_NUMCON,6,1))
+	
+Else
+	_cReturn :=	StrZero(Val(Alltrim(Substr(cAgenc,1,4))),5)+" "+STRZERO(VAL(SUBSTR(cConta,1,len(cConta)-1)),12)+" "+Right(cConta,1)
+	
+Endif
+
+Return(_cReturn)

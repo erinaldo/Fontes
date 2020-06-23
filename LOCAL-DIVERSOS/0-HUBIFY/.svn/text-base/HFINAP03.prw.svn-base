@@ -1,0 +1,17 @@
+#include 'protheus.ch'
+#include 'parmtype.ch'
+
+user function HFINAP03()
+
+//CLIENTES IUGU
+//lista cliente
+//https://api.iugu.com/v1/customers
+
+//busca clientes
+//https://api.iugu.com/v1/customers/6437208CE1494E339A1E6CFE9419747A?api_token=e3a203c0cfaf1f396fe9d45e22b7bea4
+id
+email
+name
+cpf_cnpj
+
+return

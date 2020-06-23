@@ -1,0 +1,63 @@
+#INCLUDE 'Protheus.ch'
+
+//------------------------------------------------------------------------------
+/*/{Protheus.doc} MT120FIM() 
+
+Ponto de entrada após gravação do PC
+/*/
+//------------------------------------------------------------------------------
+User Function MT120FIM()
+Local nOpc	 := PARAMIXB[1]
+Local cNumPC := PARAMIXB[2]
+Local nOpcA  := PARAMIXB[3]
+
+If nOpcA == 0 //Se cancelar a tela return e não faz nada
+	Return
+EndIf
+
+If nOpc == 4 .Or. nOpc == 5
+	U_ResAtuPC(cNumPC)
+
+//Alterado por Emerson Natali - 09/12/2019
+ElseIf nOpc == 3 //Inclusão do Pedido de Compras - verificar Pedidos de Vendas e Propostas em Aberto para gerar o registro vinculado ao PC
+	
+	//
+	BeginSQL Alias "SC7TRB"
+		SELECT SC7.C7_NUM, SC7.C7_PRODUTO 
+		FROM %Table:SC7% SC7
+		WHERE SC7.%NotDel%
+		AND C7_NUM = %Exp:cNumPC%
+	EndSQL
+	
+	Do While !SC7TRB->(EOF())
+		BeginSQL Alias "SC6TRB"
+			SELECT SC6.C6_ENTREG, SC6.C6_NUM, SC6.C6_ITEM, SC6.C6_PRODUTO, SC6.C6_LOCAL, ZP1.ZP1_ITEMPV, SUM(ISNULL(ZP1.ZP1_QTDE,0)) ZP1_QTDE, SC6.C6_QTDVEN, SC6.C6_QTDENT,(SC6.C6_QTDVEN)-SUM(ISNULL(ZP1.ZP1_QTDE,0)) DIFQTDE
+			FROM %Table:SC6% SC6
+			LEFT JOIN %Table:ZP1% ZP1 ON ZP1.%NotDel% AND ZP1.ZP1_NUMPV = SC6.C6_NUM AND ZP1.ZP1_ITEMPV = SC6.C6_ITEM AND ZP1.ZP1_FLAGEF = 'T'
+			WHERE SC6.C6_PRODUTO = %Exp:SC7TRB->C7_PRODUTO%
+			AND SC6.%NotDel%
+			AND SC6.C6_BLQ = ''
+			AND SC6.C6_QTDENT < SC6.C6_QTDVEN
+			GROUP BY SC6.C6_ENTREG, SC6.C6_NUM,  SC6.C6_ITEM, ZP1.ZP1_ITEMPV, SC6.C6_PRODUTO, SC6.C6_LOCAL,SC6.C6_QTDVEN,SC6.C6_QTDENT
+			ORDER BY SC6.C6_ENTREG, SC6.C6_NUM,  SC6.C6_ITEM, ZP1.ZP1_ITEMPV, SC6.C6_PRODUTO, SC6.C6_LOCAL,SC6.C6_QTDVEN,SC6.C6_QTDENT
+		EndSQL	
+		
+		Do While !SC6TRB->(EOF())
+			If SC6TRB->DIFQTDE > 0
+				U_ResLoad2(SC6TRB->C6_NUM,.T.)
+				U_ResManut(SC6TRB->C6_NUM, SC6TRB->C6_ITEM, SC6TRB->C6_PRODUTO, SC6TRB->C6_LOCAL, IIF(SC6TRB->DIFQTDE <> NIL,SC6TRB->DIFQTDE,SC6TRB->C6_QTDVEN)/*SC6TRB->C6_QTDVEN*/, .T., , .T. )
+				U_ResGrav1(SC6TRB->C6_NUM, .T., .F., SC6TRB->C6_ITEM)
+			EndIf
+			SC6TRB->(dbSkip())
+		EndDo
+		SC6TRB->(dbCloseArea())
+		
+		SC7TRB->(dbSkip())
+	
+	EndDo
+	
+	SC7TRB->(dbCloseArea())
+	
+EndIf
+
+Return 

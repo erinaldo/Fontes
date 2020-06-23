@@ -1,0 +1,189 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBEX.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ PGCH_AHO   บAutor  ณ Marcos Pereira    บ Data ณ  07/01/16  บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Customiza็๕es no Portal GCH                                บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Funcao de Alteracao de Horario, chamando a U_PGCH001 para executar a PONA160 (troca de turno) //
+////////////////////////////////////////////////////////////////////////////////////////////////////
+WebUser Function PGCH_AHO()
+
+Local cHtml	:=""
+Private cArqLink
+
+WEB EXTENDED INIT cHtml                                  
+
+fGetInfRotina("B_PGCH_AHO.APW")
+
+MontaEquipe() // Busca a equipe direta do usuario logado no portal //
+
+cHtml += '<html><head><title></title>'
+cHtml += '<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">'
+cHtml += '<link href="styles/consulta.css" rel="stylesheet" type="text/css">'
+cHtml += '<link href="styles/estilo.css" rel="stylesheet" type="text/css">'
+cHtml += '</head><body>
+cHtml += '<h2>Altera็ใo de Horแrio</h2>
+cHtml += '<tr>'
+//Monta o link para chamar a U_PGCH001, a qual chamara a PONA160
+cHtml += '<a href=http://10.10.73.89/?auto=true&StartProg=SIGABPM&Comm=TCP&Env=Prodamhml_rh&p0=16&p1=U_PGCH("e8a97zb3","'+cArqLink+'") >Clique aqui e aguarde para visualizar o processo</a>'
+cHtml += '</tr></body></html>'               
+
+WEB EXTENDED END
+
+Return(cHtml)
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//  Funcao de Autoriza็ใo de Horas Extra, chamando a U_PGCH002 para executar a PONA300 //
+/////////////////////////////////////////////////////////////////////////////////////////
+WebUser Function PGCH_AHE()
+
+Local cHtml	:=""
+Private cArqLink
+
+WEB EXTENDED INIT cHtml                                  
+
+fGetInfRotina("B_PGCH_AHE.APW")
+
+MontaEquipe() // Busca a equipe direta do usuario logado no portal //
+
+cHtml += '<html><head><title></title>'
+cHtml += '<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">'
+cHtml += '<link href="styles/consulta.css" rel="stylesheet" type="text/css">'
+cHtml += '<link href="styles/estilo.css" rel="stylesheet" type="text/css">'
+cHtml += '</head><body>
+cHtml += '<h2>Autoriza็ใo Horas Extras</h2>
+cHtml += '<tr>'
+//Monta o link para chamar a U_PGCH002, a qual chamara a PONA300
+cHtml += '<a href=http://10.10.73.89/?auto=true&StartProg=SIGABPM&Comm=TCP&Env=Prodamhml_rh&p0=16&p1=U_PGCH("64fo2vy7","'+cArqLink+'") >Clique aqui e aguarde para visualizar o processo</a>'
+cHtml += '</tr></body></html>'               
+
+WEB EXTENDED END
+
+Return(cHtml)
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//  Funcao de consulta dos EPIs do funcionario, chamando a U_PGCH003 para executar a MDTA395 //
+///////////////////////////////////////////////////////////////////////////////////////////////
+WebUser Function PGCH_EPI()
+
+Local cHtml	:=""
+Local cFil_	:=""
+Local cMat_	:=""
+Private cArqLink
+
+WEB EXTENDED INIT cHtml                                  
+
+//fGetInfRotina("B_PGCH_EPI.APW")
+
+//MontaEquipe() // Busca a equipe direta do usuario logado no portal //
+
+cFil_	:= HttpSession->aUser[02]
+cMat_	:= HttpSession->aUser[03]
+
+cArqLink := "Q1W2E3R4T5" + cFil_ + "A6S7D8F9G0" + cMat_
+cArqLink := strtran(cArqLink," ","_")
+cArqLink := embaralha(cArqLink,0)
+
+cHtml += '<html><head><title></title>'
+cHtml += '<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">'
+cHtml += '<link href="styles/consulta.css" rel="stylesheet" type="text/css">'
+cHtml += '<link href="styles/estilo.css" rel="stylesheet" type="text/css">'
+cHtml += '</head><body>
+cHtml += '<h2>Consulta de EPIs</h2>
+cHtml += '<tr>'
+//Monta o link para chamar a U_PGCH003, a qual chamara a MDTA695
+cHtml += '<a style=display-none; href=http://10.10.73.89/?auto=true&StartProg=SIGABPM&Comm=TCP&Env=Prodamhml_rh&p0=35&p1=U_PGCH("u466w78i","'+cArqLink+'") >Clique aqui e aguarde para visualizar o processo</a>'
+cHtml += '</tr></body></html>'               
+
+WEB EXTENDED END
+
+Return(cHtml)
+
+
+
+
+
+////////////////////////////////////////////////////////////////////
+// Funcao para montar a equipe direta do usuario logado no portal //
+////////////////////////////////////////////////////////////////////
+Static Function MontaEquipe()
+
+Local cFil_	:= HttpSession->aUser[02]
+Local cMat_	:= HttpSession->aUser[03]
+Local oOrg 
+Local nPageTotal := 1
+Local aStructure := {}
+Local nHdl, nX, nY 
+Local cPatch	:= "\temp\"
+
+//VarInfo("cFil_",cFil_)
+//VarInfo("cMat_",cMat_)
+//VarInfo("HttpSession->aInfRotina",HttpSession->aInfRotina)
+
+oOrg := WSORGSTRUCTURE():New()
+WsChgURL(@oOrg,"ORGSTRUCTURE.APW",,,)  
+                               
+oOrg:cEmployeeFil   := cFil_
+oOrg:cRegistration  := cMat_
+oOrg:cVision        := HttpSession->aInfRotina:cVisao
+oOrg:nPage         	:= 1
+
+//Arquivo temporario onde constarao filial/matricula da equipe direta do usuario logado no portal
+cArqLink := "Q1W2E3R4T5" + cFil_ + "A6S7D8F9G0" + cMat_
+cArqLink := strtran(cArqLink," ","_")
+cArqLink := embaralha(cArqLink,0)
+
+//varinfo("cArqLink->",cArqLink)
+ 
+If File(cPatch+cArqLink)
+	fErase(cPatch+cArqLink)
+EndIf 
+nHdl := fCreate(cPatch+cArqLink)
+
+//Executa While para buscar toda a equipe. Por padrao a GetStructure retorna de 10 em 10
+While oOrg:nPage <= nPageTotal
+                                
+	IF oOrg:GetStructure()
+		aadd(aStructure,aClone(oOrg:oWSGetStructureResult:oWSLISTOFEMPLOYEE:OWSDATAEMPLOYEE))
+	    nPageTotal 		       := oOrg:oWSGetStructureResult:nPagesTotal
+//	    varinfo('Estrutura-> ', aStructure) 
+	EndIF
+	
+//	varinfo('aStructure[1][1]:CEMPLOYEEFILIAL-> ', aStructure[1][1]:CEMPLOYEEFILIAL) 
+//	varinfo('aStructure[1][1]:CREGISTRATION-> ', aStructure[1][1]:CREGISTRATION) 
+//	VarInfo("oOrg:nPage",oOrg:nPage)
+//	VarInfo("nPageTotal",nPageTotal)
+	oOrg:nPage += 1
+	                               
+EndDo
+                               
+If Len(aStructure) > 0
+	For nX := 1 to len(aStructure)
+		For nY := 1 to len(aStructure[nX])
+			If !(aStructure[nX][nY]:CEMPLOYEEFILIAL == cFil_ .and. aStructure[nX][nY]:CREGISTRATION == cMat_)  //Despreza o proprio usuario logado
+				//Grava no arquivo texto a filial e matricula de cada funcionario da equipe direta
+				FWrite( nHdl, aStructure[nX][nY]:CEMPLOYEEFILIAL + aStructure[nX][nY]:CREGISTRATION + Chr(13)+Chr(10) )
+			EndIf
+		Next nY
+	Next nX
+EndIf
+        
+fClose(nHdl)
+
+
+Return()

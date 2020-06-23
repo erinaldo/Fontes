@@ -1,0 +1,197 @@
+ACODIGO DO BANCO0010030"001"                                                       
+ALOTE DE SERVICO0040070"0000"                                                      
+AREG.HEADER ARQ.0080080"0"                                                         
+AUSO FEBRABAN   0090170                                                            
+ATP.INSCR. EMPRE0180180"2"                                                         
+AN. INCR.EMPRESA0190320SM0->M0_CGC                                                 
+ACOD. CONV. BCO.0330520SEE->EE_CODEMP                                              
+AAG. MANT. CONTA0530570STRZERO(VAL(SEE->EE_AGENCIA),5)                             
+ADIGITO VER. AG.0580580SEE->EE_DVAGE                                               
+ANUM. C/CORRENTE0590700STRZERO(VAL(SEE->EE_CONTA),12)                              
+ADIG. VER. CONTA0710710SEE->EE_DVCTA                                               
+ADIG. VER. AG/C.0720720                                                            
+ANOME EMPRESA   0731020SUBSTR(SM0->M0_NOMECOM,1,30)                                
+ANOME BANCO     1031320"BANCO DO BRASIL SA"                                        
+AUSO FEBRABAN   1331420                                                            
+ACOD. REM/RETOR.1431430"1"                                                         
+ADT. GERAC. ARQ.1441510DTOS(DDATABASE)                                             
+AHORA GER.ARQ.  1521570SUBS(TIME(), 1, 2) + SUBS(TIME(), 4, 2) + SUBS(TIME(), 7, 2)
+AN.SEQUEN.ARQ.  1581630SEE->EE_ULTDSK                                              
+AN.VERSAO L.OUT.1641660"030"                                                       
+ADENSID. GRAVAC.1671710"00000"                                                     
+AP/ USO RES.BCO 1721910                                                            
+AP/USO RES.EMPRE1922110                                                            
+AUSO FEBRABAN   2122220                                                            
+AIDENT.COB.S/PAP2232250"CSP"                                                       
+AUSO EXCL.VANS  2262280SPACE(3)                                                    
+ATIPO SERVICO   2292300SPACE(2)                                                    
+ACOD.OCORRENCIAS2312400SPACE(10)                                                   
+FBANCO          0010030"001"                                                       
+FLOTE           0040070"9999"                                                      
+FREGISTRO       0080080"9"                                                         
+FCNAB           0090170SPACE(9)                                                    
+FQTDE LOTES ARQ 0180230"000001"                                                    
+FQTDE REGISTROS 0240290STRZERO(FNLINCNAB2(),6)                                     
+FQTDE CONTAS    0300350"000000"                                                    
+FCNAB           0362400SPACE(205)                                                  
+BBANCO          0010030"001"                                                       
+BLOTE           00400700001                                                        
+BREGISTRO HEADER0080080"1"                                                         
+BTIPO OPERACAO  0090090"C"                                                         
+BSERVICO        0100110"20"                                                        
+BFORM.LANCTO    0120130SEA->EA_MODELO                                              
+BLAYOUT DO LOTE 0140160"020"                                                       
+BUSO FEBRABAN   0170170                                                            
+BTIPO INSCR.    0180180"2"                                                         
+BNUMERO INCR.   0190320SM0->M0_CGC                                                 
+BCONVENIO       0330520SEE->EE_CODEMP                                              
+BCOD. AGENCIA   0530570STRZERO(VAL(SEE->EE_AGENCIA),5)                             
+BDIG. VERIFIC   0580580SEE->EE_DVAGE                                               
+BNUM. C/CORR    0590700STRZERO(VAL(SEE->EE_CONTA),12)                              
+BDIGITO VER.CONT0710710SEE->EE_DVCTA                                               
+BDIG. VERIF.AG/C0720720                                                            
+BNOME DA EMPRESA0731020SUBSTR(SM0->M0_NOMECOM,1,30)                                
+BMENSAGEM       1031420                                                            
+BLOGRADOURO     1431720LEFT(SM0->M0_ENDCOB,AT(",",SM0->M0_ENDCOB)-1)               
+BNUMERO         1731770SUBS(SM0->M0_ENDCOB,AT(",",SM0->M0_ENDCOB)+1,5)             
+BCOMPLEMENTO    1781920                                                            
+BCIDADE         1932120SM0->M0_CIDCOB                                              
+BCEP            2132170LEFT(SM0->M0_CEPCOB,5)                                      
+BCOMPL. CEP     2182200SUBSTR(SM0->M0_CEPCOB,6,3)                                  
+BESTADO         2212220SM0->M0_ESTCOB                                              
+BUSO FEBRABAN   2232300                                                            
+BOCORRENCIAS    2312400SPACE(10)                                                   
+GBANCO          0010030"001"                                                       
+GLOTE           00400700001                                                        
+GREGISTRO       0080080"3"                                                         
+GNUM. REG.      0090130NSEQ                                                        
+GSEGMENTO       0140140"A"                                                         
+GTIPO           0150150"0"                                                         
+GCODIGO         0160170"00"                                                        
+GCOMPENSACAO    0180201IIF(SEA->EA_MODELO$"41.43","018","700")                     
+GBANCO          0210230IIF(EMPTY(SA2->A2_XRELINT),SA2->A2_BANCO,U_RETINTERM(1))    
+GAG.FAVOREC.    0240280U_ESFINE01("1")                                             
+GDV             0290290                                                            
+GNUM. C/C       0300410U_ESFINE01("2")                                             
+GDV             0420420                                                            
+GDV             0430430                                                            
+GNOME FAVOREC.  0440730IIF(EMPTY(SA2->A2_XRELINT),SA2->A2_NOME, U_RETINTERM(4))    
+GSEU NUMERO     0740930SE2->E2_IDCNAB                                              
+GDATA LANCTO    0941010DTOS(DDATABASE)                                             
+GTIPO           1021040"BRL"                                                       
+GQUANTIDADE     1051190"000000000000000"                                           
+GVALOR LCTO     1201340STRZERO(INT(SE2->E2_VALOR*100),15)                          
+GNOSSO NUMERO   1351540                                                            
+GDATA REAL      1551620"00000000"                                                  
+GVALOR REAL     1631770"000000000000000"                                           
+GINFORMACAO     1782170                                                            
+GCNAB           2182290                                                            
+GAVISO          2302300"0"                                                         
+GOCORRENCIAS    2312400                                                            
+HBANCO          0010030"001"                                                       
+HLOTE DE SERVICO0040070"0001"                                                      
+HREGISTRO       0080080"3"                                                         
+HNUM. REG.      0090130STRZERO(F420SEQLOT(),5)                                     
+HSEGMENTO       0140140"B"                                                         
+HCNAB           0150170SPACE(3)                                                    
+HTIPO FAVOR.    0180180U_ESFINE01("3")                                             
+HINSCR. FAVOR.  0190320U_ESFINE01("4")                                             
+HLOGRADOURO     0330620U_ESFINE01("5")                                             
+HNUMERO         0630670U_ESFINE01("6")                                             
+HCOMPLEMENTO    0680820U_ESFINE01("7")                                             
+HBAIRRO         0830970U_ESFINE01("8")                                             
+HCIDADE         0981170U_ESFINE01("9")                                             
+HCEP            1181250U_ESFINE01("10")                                            
+HESTADO         1261270U_ESFINE01("11")                                            
+HVENCIMENTO     1281350U_ESFINE01("12")                                            
+HVALOR NOMINAL  1361500U_ESFINE01("13")                                            
+HABATIMENTO     1511650REPLICATE("0",15)                                           
+HDESCONTO       1661800REPLICATE("0",15)                                           
+HMORA           1811950REPLICATE("0",15)                                           
+HMULTA          1962100REPLICATE("0",15)                                           
+HCOD FAVOR.     2112250SPACE(15)                                                   
+HCNAB           2262400SPACE(15)                                                   
+DBANCO          0010030"001"                                                       
+DLOTE           0040070"0001"                                                      
+DREGISTRO       0080080"5"                                                         
+DUSO FEBRABAN   0090170SPACE(9)                                                    
+DQTDE REGISTROS 0180230STRZERO(F420LINLOT(),6)                                     
+DVALOR DEB/CRED 0240410STRZERO(SOMAVALOR(),18)                                     
+DQDTE MOEDA     0420590SPACE(18)                                                   
+DUSO FEBRABAN   0602300SPACE(171)                                                  
+DOCORRENCIAS    2312400SPACE(10)                                                   
+CBANCO          0010030"001"                                                       
+CLOTE           00400700001                                                        
+CREGISTRO HEADER0080080"1"                                                         
+CTIPO OPERACAO  0090090"C"                                                         
+CSERVICO        0100110"20"                                                        
+CFORM.LANCTO    0120130SEA->EA_MODELO                                              
+CLAYOUT DO LOTE 0140160"020"                                                       
+CCNAB           0170170                                                            
+CTIPO INSCR.    0180180"2"                                                         
+CNUMERO INCR.   0190320SM0->M0_CGC                                                 
+CCONVENIO       0330520STRZERO(VAL(SEE->EE_CODEMP),20)                             
+CCOD. AGENCIA   0530570SEE->EE_DVAGE                                               
+CDIG. VERIFIC   0580580"1"                                                         
+CNUM. C/CORR    0590700STRZERO(VAL(SEE->EE_CONTA),12)                              
+CDIGITO VER.CONT0710710SEE->EE_DVCTA                                               
+CDIG. VERIF.AG/C0720720                                                            
+CNOME DA EMPRESA0731020SM0->M0_NOMECOM                                             
+CMENSAGEM       1031420                                                            
+CLOGRADOURO     1431720LEFT(SM0->M0_ENDCOB,AT(",",SM0->M0_ENDCOB)-1)               
+CNUMERO         1731770SUBSTR(SM0->M0_ENDCOB,AT(",",SM0->M0_ENDCOB)+1)             
+CCOMPLEMENTO    1781920                                                            
+CCIDADE         1932120SM0->M0_CIDCOB                                              
+CCEP            2132170LEFT(SM0->M0_CEPCOB,5)                                      
+CCOMPL. CEP     2182200SUBSTR(SM0->M0_CEPCOB,6,3)                                  
+CESTADO         2212220SM0->M0_ESTCOB                                              
+CCNAB           2232300SPACE(8)                                                    
+COCORRENCIAS    2312400SPACE(10)                                                   
+JCOD.BANCO      0010030"001"                                                       
+JLOTE SERVICO   00400700001                                                        
+JREGISTRO DETALH0080080"3"                                                         
+JNR.SEQ.LOTE    0090130NSEQ                                                        
+JCOD.SEQMENTO   0140140"J"                                                         
+JTIPO MOVIMENTO 0150150"0"                                                         
+JCOD.INSTRUCAO  0160170"00"                                                        
+JCOD.BCO.DESTINO0180200SUBS(SE2->E2_CODBAR,1,3)                                    
+JCOD.MOEDA      0210210"9"                                                         
+JDIG.VER.COD.BAR0220220"9"                                                         
+JVALOR COD.BARRA0230362STRZERO(INT(SE2->E2_SALDO*100),14)                          
+JCAMP LIVRE CB  0370610                                                            
+JCEDENTE        0620910SUBS(SA2->A2_NOME,1,30)                                     
+JVENCIMENTO     0920990DTOS(SE2->E2_VENCREA)                                       
+JVALOR TITULO   1001142STRZERO(INT(SE2->E2_VALOR*100),15)                          
+JVALOR DESCONTO 1151292STRZERO(INT(SE2->E2_DESCONT*100),15)                        
+JVALOR JUROS    1301442STRZERO(INT(SE2->E2_JUROS*100),15)                          
+JDATA PAGTO.    1451520                                                            
+JVALOR PAGTO.   1531672STRZERO(INT(SE2->E2_SALDO*100),15)                          
+JQTDE. MOEDA    1681820"000000000000000"                                           
+JCOD.REF.SACADO 1832020SE2->E2_IDCNAB                                              
+JNR.DOC.BANCO   2032220                                                            
+JBRANCOS        2232300                                                            
+JCOD.OCORR.RETOR2312400                                                            
+EBANCO          0010030"001"                                                       
+ELOTE           0040070"0001"                                                      
+EREGISTRO       0080080"5"                                                         
+ECNAB           0090170                                                            
+EQTDE REGISTROS 0180230STRZERO(M->NSEQ+2,6)                                        
+EVALOR DEB/CRED 0240410STRZERO(SOMAVALOR(),18)                                     
+EQDTE MOEDA     0420590"000000000000000000"                                        
+ECNAB           0602400                                                            
+OCOD.BANCO      0010030"001"                                                       
+OLOTE SERVICO   00400700001                                                        
+OREGISTRO DETALH0080080"3"                                                         
+ONR.SEQ.LOTE    0090130NSEQ                                                        
+OCOD.SEQMENTO   0140140"O"                                                         
+OTIPO MOVIMENTO 0150150"0"                                                         
+OCOD.INSTRUCAO  0160170"00"                                                        
+OCODIGO DE BARRA0180610ALLTRIM(SE2->E2_CODBAR)                                     
+ONOME CONC/ORG P0620910SUBSTR(SA2->A2_NOME,1,30)                                   
+ODATA VENCIMENTO0920990GRAVADATA(SE2->E2_VENCREA,.F.,5)                            
+ODATA PAGAMENTO 1001070GRAVADATA(SE2->E2_VENCREA,.F.,5)                            
+OVALOR PAGAMENTO1081222STRZERO(VAL(SUBSTR(SE2->E2_CODBAR,5,11)),15)                
+ODOC ATRIB EMPRE1231420SE2->E2_IDCNAB                                              
+ODOC ATRIB BANCO1431620SPACE(20)                                                   
+OCNAB           1632300SPACE(68)                                                   
+OCOD OCORRENCIAS2312400SPACE(10)                                                   

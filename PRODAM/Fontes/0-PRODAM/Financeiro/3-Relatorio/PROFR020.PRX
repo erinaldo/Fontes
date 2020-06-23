@@ -1,0 +1,212 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "REPORT.CH"  
+#INCLUDE "Topconn.ch"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ PROFR010  บAutor  ณ Felipe Santos        บ Data ณ  24/01/15บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Relat๓rio Cronologia de Pagamento - Visใo NF Entrada		  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ MำDULO FINANCEIRO    	                                  บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+User Function PROFR020()
+
+Private oReport		:= nil
+Private cTitulo		:= "Relat๓rio Pgtos. por Diretoria / Gerencia" 
+Private cPerg			:= "XPROFR20"   
+Private cAliasQry 	:= GetNextAlias()  
+Private oSecCab  		:= Nil
+
+If TRepInUse()
+	CriaSX1(cPerg)
+	ReportDef()
+	oReport:PrintDialog()
+EndIf
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ ReportDef  บAutor  ณ Felipe Santos       บ Data ณ  24/01/15บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Relat๓rio Cronologia de Pagamento	                      บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณMำDULO FINANCEIRO  	                                      บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+Static Function ReportDef()
+Local cDesc		:= ""
+
+cDesc += "Este programa tem como objetivo imprimir os "
+cDesc += "Pagamentos por Diretoria / Gerencia "
+ 
+oReport := TReport():New("PROFR020","Relat๓rio de Pgtos. por Diretoria / Gerencia",cPerg,{|oReport| PrintReport(oReport)},cDesc)
+oReport:SetLandscape(.T.)
+ 
+oSecCab := TRSection():New( oReport 	, "Titulos", {"QRY"})
+TRCell():New( oSecCab, "E2_MDCONTR"	, "QRY","Num.Contrata็ใo",,(TamSx3("E2_MDCONTR")[1]))
+TRCell():New( oSecCab, "A2_NOME"		, "QRY","Fornecedor",,)  
+TRCell():New( oSecCab, "Status"			, "QRY","Status",,10)
+TRCell():New( oSecCab, "Diretoria"    	, "QRY","Diretoria",,40)
+TRCell():New( oSecCab, "Gerencia"    	, "QRY","Gerencia",,40)
+TRCell():New( oSecCab, "D1_DOC"   		, "QRY","Num.Doc",,)
+TRCell():New( oSecCab, "E2_EMISSAO"	, "QRY","Emissใo",PesqPict("SE2","E2_EMISSAO"),10) 
+TRCell():New( oSecCab, "E2_VENCTO"		, "QRY","Vencimento",PesqPict("SE2","E2_VENCTO"),10) 
+TRCell():New( oSecCab, "E2_BAIXA"   	, "QRY","Pagto",PesqPict("SE2","E2_BAIXA"),10) 
+//TRCell():New( oSecCab, "D1_DESC"		, "QRY","Desconto",PesqPict("SD1","D1_DESC"),8) 
+TRCell():New( oSecCab, "D1_TOTAL"   	, "QRY","Valor",PesqPict("SD1","D1_TOTAL"), (TamSx3("D1_TOTAL")[1]+TamSx3("D1_TOTAL")[2])) 
+//TRCell():New( oSecCab, "E2_NUM"   		, "QRY","Titulo",, 9) 
+
+
+Return Nil
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ RepGCP     บAutor  ณ Felipe Santos       บ Data ณ  24/01/15บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ RELATำRIO DE CONTRIBUIวรO DE VENDAS POR LINHA DE PRODUTO   บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณMำDULO DE FATURAMENTO	                                      บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/              
+Static Function PrintReport(oReport)
+ 
+Local cQuery     := ""
+Local oSB1 		 := oReport:Section(1) 
+
+Pergunte(cPerg,.F.)
+
+cQuery += " SELECT  "+ CRLF
+cQuery += " E2_MDCONTR"+ CRLF
+cQuery += " ,A2_NOME"+ CRLF
+cQuery += " ,A2_NREDUZ"+ CRLF
+cQuery += " ,CASE "+ CRLF
+cQuery += " 	WHEN E2_BAIXA <> '' THEN  'Pago'"+ CRLF
+cQuery += " 	ELSE  'Nใo Pago'"+ CRLF
+cQuery += " 	End  as Status"+ CRLF
+cQuery += ", ("+ CRLF
+cQuery += " SELECT CTT_DESC01 FROM "+RetSqlName("CTT")+" CTT_1 "+ CRLF
+cQuery += " WHERE CTT_1.CTT_CUSTO = SUBSTRING(CTT.CTT_CUSTO,1,3) + REPLICATE('0',DATALENGTH(CTT.CTT_CUSTO)-3)"+ CRLF
+cQuery += " ) AS DIRETORIA"+ CRLF
+cQuery += " ,CTT_DESC01 as GERENCIA"+ CRLF
+cQuery += " ,D1_DOC"+ CRLF
+cQuery += " ,E2_EMISSAO AS E2_EMISSAO"+ CRLF
+cQuery += " ,E2_VENCTO AS E2_VENCTO"+ CRLF
+cQuery += " ,CASE "+ CRLF
+cQuery += " 	WHEN E2_BAIXA <> '' THEN  ''"+ CRLF
+cQuery += " 	ELSE  E2_BAIXA"+ CRLF
+cQuery += " 	End  as E2_BAIXA"+ CRLF
+cQuery += " , D1_DESC"+ CRLF
+cQuery += " , D1_TOTAL"+ CRLF
+cQuery += " ,E2_NUM "+ CRLF
+cQuery += " FROM "+RetSqlName("SE2")+" SE2 "+ CRLF
+cQuery += " INNER JOIN "+RetSqlName("SA2")+" SA2 ON "+ CRLF
+cQuery += " 	A2_COD = SE2.E2_FORNECE AND A2_LOJA = SE2.E2_LOJA AND "+ CRLF
+cQuery += " 	SA2.D_E_L_E_T_ = ''	 "+ CRLF
+cQuery += " 	INNER JOIN "+RetSqlName("SD1")+" SD1 ON"+ CRLF
+cQuery += " 		E2_NUM = D1_DOC AND "+ CRLF
+cQuery += " 		E2_PREFIXO = D1_SERIE	AND"+ CRLF
+cQuery += " 		SE2.D_E_L_E_T_ = '' AND"+ CRLF
+cQuery += " 		SD1.D_E_L_E_T_ = ''"+ CRLF
+cQuery += " 	INNER JOIN "+RetSqlName("CTD")+" CTD ON"+ CRLF
+cQuery += " 		D1_ITEMCTA = CTD_ITEM AND "+ CRLF
+cQuery += " 		CTD.D_E_L_E_T_ = '' "+ CRLF
+cQuery += " 	INNER JOIN "+RetSqlName("CTT")+" CTT ON"+ CRLF
+cQuery += " 		D1_CC = CTT_CUSTO AND "+ CRLF
+cQuery += " 		CTT.D_E_L_E_T_ = '' "+ CRLF
+cQuery += " 	WHERE E2_ORIGEM = 'MATA100 '"+ CRLF
+
+If !EMPTY(MV_PAR01) .AND. !EMPTY(MV_PAR02)
+	cQuery += " AND E2_EMISSAO BETWEEN '"+DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"'"
+EndIf	
+If !EMPTY(MV_PAR03) .AND. !EMPTY(MV_PAR04)
+	cQuery += " AND E2_VENCREA BETWEEN '"+DTOS(MV_PAR03)+"' AND '"+DTOS(MV_PAR04)+"'"
+EndIf
+If !EMPTY(MV_PAR05) .AND. EMPTY(MV_PAR06) 
+	//CASO SEJA ENVIADA A DIRETORIA APENAS BUSCA PELA DIRETORIA
+	cQuery += " AND CTT_CUSTO IN ("+BuscaGer(MV_PAR05)+")"
+Elseif !EMPTY(MV_PAR05).AND. !EMPTY(MV_PAR06)
+   //CASO SEJA ENVIADA A DIRETORIA E A GERENCIA APENAS BUSCA PELA GERENCIA
+	cQuery += " AND CTT_CUSTO = '"+MV_PAR06+"'"
+Elseif EMPTY(MV_PAR05).AND. !EMPTY(MV_PAR06)
+   //CASO SEJA ENVIADA A GERENCIA APENAS BUSCA PELA GERENCIA
+	cQuery += " AND CTT_CUSTO = '"+MV_PAR06+"'"
+EndIf	
+
+cQuery := ChangeQuery(cQuery)
+ 
+If Select("QRY") > 0
+    Dbselectarea("QRY")
+    QRY->(DbClosearea())
+EndIf
+ 
+TcQuery cQuery New Alias "QRY"
+TcSetField("QRY","E2_EMISSAO","D")
+TcSetField("QRY","E2_VENCTO","D")
+ 
+oSecCab:BeginQuery()
+oSecCab:EndQuery({{"QRY"},cQuery})
+oSecCab:Print()
+ 
+Return Nil       
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ BuscaGer  บAutor  ณ Felipe Santos       บ Data ณ  24/01/15บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ BUSCA GERENCIA											  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณMำDULO DE FINANCEIRO	                                      บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/  
+Static Function BuscaGer(cCC)
+Local cCC		 := ""
+Local cQuery     := ""
+
+cQuery += " SELECT CTT_CUSTO from "+RetSqlName("CTT")+" "+ CRLF
+cQuery += " WHERE SUBSTRING(CTT_CUSTO,1,3) = SUBSTRING('"+cCC+"',1,3) "
+
+cQuery := ChangeQuery(cQuery)
+
+TcQuery cQuery New Alias "QryCC"
+
+While QryCC->(!EOF()) 
+	 cCC += QryCC->CTT_CUSTO + ","
+     QryCC->(DbSkip()) 
+End 
+
+cCC := SUBSTR(cCC,1,LEN(cCC)-1)
+
+Return cCC
+
+
+
+Static Function CriaSX1(cPerg)
+
+
+putSx1(cPerg, '01', 'Emissใo de?'              , '', '', 'mv_ch1', 'D', 8, 0, 0, 'G', '', '' , '', '', 'mv_par01')
+putSx1(cPerg, '02', 'Emissใo at้?'             , '', '', 'mv_ch2', 'D', 8, 0, 0, 'G', '', '' , '', '', 'mv_par02')
+putSx1(cPerg, '03', 'Vencimento de?'           , '', '', 'mv_ch3', 'D', 8, 0, 0, 'G', '', '' , '', '', 'mv_par03')
+putSx1(cPerg, '04', 'Vencimento at้?'          , '', '', 'mv_ch4', 'D', 8, 0, 0, 'G', '', '' , '', '', 'mv_par04')
+putSx1(cPerg, '05', 'Diretoria?'          	   , '', '', 'mv_ch5', 'C', 9, 0, 0, 'G', '', 'CTT', '', '', 'mv_par05')
+putSx1(cPerg, '06', 'Gerencia ?'               , '', '', 'mv_ch6', 'C', 9, 0, 0, 'G', '', 'CTT', '', '', 'mv_par06')  
+Return(.T.)
