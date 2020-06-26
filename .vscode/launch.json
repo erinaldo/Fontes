@@ -4,10 +4,10 @@
 		{
 			"type": "totvs_language_debug",
 			"request": "launch",
-			"name": "Debug_12_1_25",
+			"name": "Debug",
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
-			"smartclientBin": "C:/TOTVS 12/Protheus/bin_12-1-25/smartclient/smartclient.exe",
+			"smartclientBin": "C:/Users/emerson.natali/Desktop/VM smartclient 12.1.27/smartclient.exe",
 			"isMultiSession": true,
 			"enableTableSync": true,
 			"programArguments": "SIGAMDI",
@@ -27,14 +27,9 @@
 		},
 		{
 			"args": [],
-			"label": "SIGAADV",
-			"description": ""
-		},
-		{
-			"args": [],
-			"label": "u_ajuszp1",
+			"label": "SIGAFIN",
 			"description": ""
 		}
 	],
-	"lastProgramExecuted": "SIGAMDI"
+	"lastProgramExecuted": "SIGAFIN"
 }

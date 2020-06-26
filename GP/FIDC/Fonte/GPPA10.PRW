@@ -15,7 +15,7 @@ User Function GPPA10(cAlias, nReg, nOpc)
 Default cAlias   := 'SE1'
 Default nReg     := SE1->(RecNo())
 
-If nOpc == 1
+If nOpc == 11
 	// -------------------------------------------
 	// SELECAO DOS TITULOS PARA O PROCESSO DE FIDC
 	// ------------------------------------------- 
@@ -312,7 +312,8 @@ For nCountA := 1 To Len(aTitulos)
 						{'E1_VENCTO'	, StoD(aTitulos[nCountA, 08])	, NIL},;
 						{'E1_VALOR'		, aTitulos[nCountA, 07]			, NIL},;
 						{'E1_FLUXO'		, 'N'							, NIL},;
-						{'E1_RECORI'	, aTitulos[nCountA, 23]			, NIL}}
+						{'E1_RECORI'	, aTitulos[nCountA, 23]			, NIL},;
+						{'E1_HIST'		, 'NF ORIGEM: '+aTitulos[nCountA, 05], NIL}}
 
 		lMsErroAuto := .F.
 		MSExecAuto({|x,y| FINA040(x, y)}, aDadosAuto, 3)   
