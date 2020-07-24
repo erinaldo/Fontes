@@ -7,7 +7,7 @@
 			"name": "Debug",
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
-			"smartclientBin": "C:/Users/emerson.natali/Desktop/VM smartclient 12.1.27/smartclient.exe",
+			"smartclientBin": "C:/TOTVS 12/Protheus/bin_12-1-25/smartclient/smartclient.exe",
 			"isMultiSession": true,
 			"enableTableSync": true,
 			"programArguments": "SIGAMDI",
@@ -29,7 +29,12 @@
 			"args": [],
 			"label": "SIGAFIN",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_UPDFSW",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "SIGAFIN"
+	"lastProgramExecuted": "U_UPDFSW"
 }
