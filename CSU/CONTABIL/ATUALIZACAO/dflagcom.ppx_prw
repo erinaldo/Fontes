@@ -1,0 +1,94 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\dflagcom.prw"
+Function U_Dflagcom()
+
+
+
+private _cPerg:="DSFCOM"
+Private _cMens := "Nenhum dado foi desmarcado. Verifique os parametros da rotina."
+validperg(_cPerg)
+
+oBase := MSDialog():New(100, 091, 250, 610, OemToAnsi(OemToAnsi("Eliminacao do flag de contabilizacao - Compras")),,,,,,,,, .t. ,,,)
+ IW_Say(012,016,u__fAjTxt("Esta rotina elimina os flags de contabilizacao das tabelas do modulo citado,"),,,,, )
+ IW_Say(022,016,u__fAjTxt("no periodo definido pelos parametros. O lote ao qual o movimento se refere e 008850"),,,,, )
+
+ SButton():New(045, 090, 1,{|| (_fProssegue(),oBase:End())},,)
+ SButton():New(045, 130, 5,{|| (_fPar())},,)
+ SButton():New(045, 170, 2,{|| oBase:End()},,)
+oBase:Activate(,,,.T.,, ,)
+Return
+
+
+static function _fPar()
+
+
+pergunte(_cPerg, .t. )
+return
+
+
+static Function _fProssegue
+
+
+
+_cFiltro:="dtos(f1_dtdigit)>='"+dtos(mv_par01)+"'.and.dtos(f1_dtdigit)<='"+dtos(mv_par02)+"'"
+_cFiltro+=".AND. F1_FORNECE >= '"+MV_PAR07+"' .AND. F1_FORNECE <= '"+MV_PAR08+"'"
+_cFiltro+=".AND. F1_DOC >= '"+MV_PAR03+"' .AND. F1_DOC <= '"+MV_PAR04+"'"
+_cFiltro+=".AND. F1_SERIE >= '"+MV_PAR05+"' .AND. F1_SERIE <= '"+MV_PAR06+"'"
+sf1->(IndRegua(alias(),criatrab(, .f. ),indexkey(),,_cFiltro))
+
+cursorwait()
+processa({||_fDesfl()},"Eliminando flags de contabilizacao")
+cursorarrow()
+sf1->(retindex(alias()))
+
+
+static Function _fDesfl()
+
+
+sf1->(dbgotop())
+_nDesSf1:=0
+while sf1->(!eof())
+	if !empty(sf1->f1_dtlanc)
+		while sf1->(!reclock(alias(), .f. ))
+		enddo
+		sf1->f1_dtlanc:= Ctod("  /  /  ")
+		sf1->(msunlock())
+		_nDesSf1++
+	endif
+
+	incproc(_cMens:="Desmarcados SF1 ("+alltrim(str(_nDesSF1))+")")
+	sf1->(dbskip(1))
+enddo
+
+procregua(1)
+incproc()
+
+IW_MsgBox("Concluido, "+_cMens)
+
+return
+
+
+Static Function VALIDPERG(_cPerg)
+
+
+local aRegs := {}
+
+
+
+
+
+
+
+AADD(aRegs,{_cPerg,"01","Dt. Digitacao de      :","mv_ch1","D",08,0,0,"G","","mv_par01",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"02","Dt. Digitacao ate     :","mv_ch2","D",08,0,0,"G","","mv_par02",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"03","Documento de          :","mv_ch3","C",06,0,0,"G","","mv_par03",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"04","Documento ate         :","mv_ch4","C",06,0,0,"G","","mv_par04",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"05","Serie de              :","mv_ch5","C",03,0,0,"G","","mv_par05",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"06","Serie ate             :","mv_ch6","C",03,0,0,"G","","mv_par06",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"07","Fornecedor de         :","mv_ch7","C",06,0,0,"G","","mv_par07",""    ,"","",""      ,"","","","","","","","","","","SA2"})
+AADD(aRegs,{_cPerg,"08","Fornecedor até        :","mv_ch8","C",06,0,0,"G","","mv_par08",""    ,"","",""      ,"","","","","","","","","","","SA2"})
+
+u__fAtuSx1(padr(_cPerg,len(sx1->x1_grupo)),aRegs)
+Return

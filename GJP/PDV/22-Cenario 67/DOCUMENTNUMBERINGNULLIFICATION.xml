@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TOTVSMessage>
+	<MessageInformation version="1.000">
+		<UUID>6cc6a3ac-e049-4606-b76d-eb4115b45546</UUID>
+		<Type>BusinessMessage</Type>
+		<Transaction>DOCUMENTNUMBERINGNULLIFICATION</Transaction>
+		<StandardVersion>1.000</StandardVersion>
+		<SourceApplication>Bematech PDV Hospitality</SourceApplication>
+		<CompanyId>61</CompanyId>
+		<BranchId>61</BranchId>
+		<GeneratedOn>2016-07-26T14:58:55</GeneratedOn>
+		<DeliveryType>Async</DeliveryType>
+		<Product name="BEMATECH" version="1.3.1.4"/>
+	</MessageInformation>
+	<BusinessMessage>
+		<BusinessEvent>
+			<Entity>DOCUMENTNUMBERINGNULLIFICATION</Entity>
+			<Event>upsert</Event>
+		</BusinessEvent>
+		<BusinessContent>
+			<CompanyId/>
+			<BranchId/>
+			<CompanyInternalId/>
+			<NumberingNullificationProtocol>328160000036540</NumberingNullificationProtocol>
+			<DocumentSerie>1</DocumentSerie>
+			<InitialDocumentNumber>000609</InitialDocumentNumber>
+			<FinalDocumentNumber>000609</FinalDocumentNumber>
+			<NullificationDateTime>2016-07-26T14:59:37-03:00</NullificationDateTime>
+			<TransmissionReturnedCode>102</TransmissionReturnedCode>
+			<IsTransmitted>true</IsTransmitted>
+		</BusinessContent>
+	</BusinessMessage>
+</TOTVSMessage>

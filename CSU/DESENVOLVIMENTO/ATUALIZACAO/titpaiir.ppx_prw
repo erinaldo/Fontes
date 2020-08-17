@@ -1,0 +1,268 @@
+#line 1 "C:\INCLUDE\protheus.ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "protheus.ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "protheus.ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "protheus.ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "protheus.ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "protheus.ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "protheus.ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "protheus.ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "protheus.ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "protheus.ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "protheus.ch"
+#line 15 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\titpaiir.prw"
+Function U_TitPaiIR
+
+Local cMens 	:= ""
+
+
+
+	If TcSrvType() == "AS/400"
+		HELP("GrvTitPai",1,"HELP","Atualizacao Financeiro","Esta rotina somente está disponível para uso com TOPCONNECT",1,0)
+		Return .F. 
+	Endif
+
+
+
+
+
+
+cMens := "Atencao !" + Chr(13)+Chr(10) + "Esta rotina ira verificar o preenchimento do campo E2_TITPAI para titulos de IR gerados na Emissao."
+
+If Aviso("Atualizacao de Dados", cMens,{"Ok","Cancela"},3) <> 1
+	Aviso("Atualizacao de Dados","Atencao !" + Chr(13)+Chr(10) +"A operação foi abortada pelo operador.",{"Ok"})
+	Break
+Else
+	Processa({|| GrvTitPai()},,"Avaliando Títulos ")
+
+	Aviso("Atualizacao de Dados","Atencao !" + Chr(13)+Chr(10) + "Após a correção da base tire essa rotina do menu de operações.",{"Ok"})
+
+EndIf
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function GrvTitPai
+Local nRecTitP := 0
+Local cPrefixo
+Local cNumero
+Local cFornece
+Local cValorTot
+Local nRecFound := 0
+Local nMoeda
+Local cTitPai
+Local lGeraIR := .T. 
+Local nHdlArqIR
+Local cParcIR := ""
+
+
+Local lExistIR := .F. 
+Local cMVIRNAT := Alltrim(GetMv("MV_IRF", .F. ,"IRF"))
+Local nCount	:= 0
+
+PRIVATE nIR := 0
+
+PRIVATE nDescont := 0
+PRIVATE aDadosRef := Array(7)
+PRIVATE aDadosRet := Array(7)
+PRIVATE aRecnosSE2 := ()
+PRIVATE nOldValPgto := 0
+PRIVATE dBxDt_Venc
+PRIVATE dOldData := CTOD("")
+PRIVATE nOldDescont := 0
+PRIVATE nOldMulta := 0
+PRIVATE nOldJuros := 0
+PRIVATE nOldIRRF := 0
+PRIVATE nOldPIS := 0
+PRIVATE nOldCofins := 0
+PRIVATE nOldCSLL := 0
+PRIVATE ABAIXASE5 := {}
+PRIVATE nValPgto  := 0
+
+DbSelectArea("SE2")
+DbSetOrder(1)
+DbGoTop()
+
+If !File("RegIR.TXT")
+	nHdlArqIR := MSFCREATE( "RegIR.TXT" )
+Else
+    nHdlArqIR := fOpen("RegIR.TXT",2)
+    fSeek(nHdlArqIR,0,2)
+EndIf
+
+fWrite(nHdlArqIR, Chr(13)+Chr(10) + DToC(Date()) +" "+ Time() + Chr(13)+Chr(10))
+fWrite(nHdlArqIR, "PREFIXO  NUM  PARCELA  TIPO  FORNECEDOR  LOJA" + Chr(13)+Chr(10))
+
+ProcRegua(SE2->(RecCount()))
+While !SE2->(Eof())
+	IncProc("Processando...")
+
+
+	If !(SE2->E2_TIPO $ MVISS+"/"+MVTAXA+"/"+MVTXA+"/"+MVINSS+"/"+"SES"+"/"+"AB-") .AND.  SE2->E2_EMISSAO > CToD("01/01/2008")
+
+
+		If NatCalcIR(SE2->E2_NATUREZ, SE2->E2_FORNECE, @lGeraIR)
+
+
+		 	nCount++
+		 	lExistIR 	:= .F. 
+		 	nRecTitP 	:= SE2->(Recno())
+		 	cPrefixo 	:= SE2->E2_PREFIXO
+		 	cNumero  	:= SE2->E2_NUM
+		 	cFornece 	:= SE2->E2_FORNECE
+		 	nMoeda	 	:= SE2->E2_MOEDA
+		 	cValorTot	:= SE2->E2_VALOR
+		 	cTitPai  	:= SE2->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECEDOR+E2_LOJA)
+		 	cParcIR 	:= SE2->E2_PARCIR
+			nIR 		:= SE2->E2_IRRF
+
+
+
+	 		lGeraIR 	:= IIF(nIR == 0	, .F. , lGeraIR)
+
+
+			GeraTRB(cPrefixo, cNumero, cParcIR)
+
+			While !TRB->(Eof())
+
+				If (TRB->E2_TIPO $ MVTAXA)
+
+
+
+
+	    		    If 	( TRB->E2_PARCELA == cParcIR .AND.  (ROUND(TRB->E2_VALOR,2) == ROUND(nIR,2)) .AND.  (Trim(TRB->E2_NATUREZ) == cMVIRNAT .OR.  '"'+Trim(TRB->E2_NATUREZ)+'"' == cMVIRNAT))
+
+						nRecFound := TRB->RECN
+
+						SE2->(DbGoTo(nRecFound))
+
+
+
+	       				IF SE2->(FieldPos("E2_TITPAI")) > 0 .AND.  !Empty(SE2->E2_TITPAI)
+		       				IF !(SE2->(FieldPos("E2_TITPAI")) > 0)
+								cLinha := SE2->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECEDOR+E2_LOJA)+"| Titulo desconsiderado por nao ter campo E2_TITPAI na tabela SE2."
+							ElseIf !Empty(SE2->E2_TITPAI)
+								cLinha := SE2->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECEDOR+E2_LOJA)+"| Titulo desconsiderado por estar com o campo E2_TITPAI preenchido: "+SE2->E2_TITPAI
+							EndIf
+							fWrite(nHdlArqIR, cLinha + Chr(13)+Chr(10))
+	       					TRB->(DbSkip())
+	       					Loop
+	       				ENDIF
+
+
+						If SE2->(FieldPos("E2_TITPAI")) > 0 .AND.  Empty(SE2->E2_TITPAI)
+							RecLock("SE2", .F. )
+							SE2->E2_TITPAI := cTitPai
+							SE2->(MsUnLock())
+							cLinha := SE2->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECEDOR+E2_LOJA) + "| cTitPai gravado corretamente : "+SE2->E2_TITPAI
+							fWrite(nHdlArqIR, cLinha + Chr(13)+Chr(10))
+						EndIf
+
+                       	SE2->(DbGoto(nRecFound))
+					EndIf
+				EndIf
+				TRB->(DbSkip())
+			EndDo
+			TRB->(dbCloseArea())
+
+			DbSelectArea("SE2")
+
+       		SE2->(DbGoTo(nRecTitP))
+   		EndIf
+	EndIf
+    SE2->(DbSkip())
+EndDo
+fClose(nHdlArqIR)
+
+SE2->(dbCloseArea())
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STATIC Function NatCalcIR(cNat, cFornece,lGeraIR)
+cRet := .F. 
+lGeraIR := .F. 
+
+SED->(DbSetOrder(1))
+SA2->(DbSetOrder(1))
+If SED->(DbSeek(xFilial("SED")+cNat)) .and.  SA2->(DbSeek(xFilial("SA2")+cFornece))
+	If (SED->ED_CALCIRF == "S")
+		cRet := .T. 
+		lGeraIR := .T. 
+	EndIf
+EndIf
+
+Return cRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function GeraTRB(cPrefixo, cNumero, cParcIR)
+
+Local cQuery 	:= ""
+Local aFields 	:= {}
+Local nX		:= 0
+
+cQuery := "SELECT E2_PREFIXO, E2_NUM, E2_PARCELA, E2_TIPO, E2_VALOR, E2_NATUREZ, "
+cQuery += " R_E_C_N_O_ RECN  FROM " + RetSQLname("SE2")
+cQuery += " WHERE E2_FILIAL  = '"  + xFilial("SE2") + "'"
+cQuery += " AND E2_PREFIXO = '" + cPrefixo +"'"
+cQuery += " AND E2_NUM = '" + cNumero +"'"
+cQuery += " AND E2_PARCELA = '" + cParcIR +"'"
+cQuery += " AND E2_TIPO IN ('" + MVTAXA + "')"
+cQuery += " AND D_E_L_E_T_ <> '*'"
+cQuery += " ORDER BY E2_PREFIXO, E2_NUM, E2_PARCELA, E2_TIPO, E2_FORNECE, E2_LOJA, D_E_L_E_T_"
+cQuery := ChangeQuery(cQuery)
+
+dbUseArea( .T. , "TOPCONN", TCGenQry(,,cQuery), "TRB", .F. , .T. )
+DbSelectArea("TRB")
+DbGotop()
+
+AADD(aFields,{"E2_VALOR","N",18,2})
+
+For nX := 1 To Len(aFields)
+	TcSetField("TRB",aFields[nX][1],aFields[nX][2],aFields[nX][3],aFields[nX][4])
+next
+
+Return

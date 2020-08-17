@@ -1,0 +1,5 @@
+Function U_VALI_CC()
+
+MsgAlert("C.Custo invalido para a C.Contábil informada !!!")
+
+Return .f. 

@@ -1,0 +1,62 @@
+Geração do pacote de atualização efetuada com sucesso.
+Pacote salvo: [local] C:\Users\fabio.cazarini\Desktop\tttp120.ptm
+Geração de pacote de atualização
+Parâmetros da solicitação
+Servidor    : Local
+Ambiente    : TESTE
+Validando a existência do(s) recurso(s) no RPO
+Processo    : Por fontes selecionados em projetos
+Selecionados: 53 fontes(s)
+            : AVALCOPC-PE.prw
+            : MA120BUT-PE.prw
+            : MT103IPC-PE.prw
+            : MT103PN-PE.prw
+            : MT103VPC-PE.prw
+            : MT120ALT-PE.prw
+            : MT120BRW-PE.prw
+            : MT120COR-PE.PRW
+            : MT120GOK-PE.prw
+            : MT120LEG-PE.prw
+            : MT120OK-PE.prw
+            : MT120TEL-PE.prw
+            : MT150END-PE.PRW
+            : MT150LEG-PE.prw
+            : MTA095MNU-PE.prw
+            : MTA120E-PE.prw
+            : MTA120G2-PE.prw
+            : PMSAFGCPO-PE.prw
+            : PMSAJ7CPO-PE.prw
+            : ASCOMA02.prw
+            : ASCOMA03.prw
+            : ASCOMA04.prw
+            : ASCOMA06.prw
+            : ASCOMA07.prw
+            : ASCOMA26.prw
+            : ASCOMA33.prw
+            : ASCOMA35.prw
+            : ASCOMA36.prw
+            : ASWSDL01.prw
+            : ASWSDL02.prw
+            : ascoma39.prw
+            : ASCOMA01.prw
+            : ASCOMA05.prw
+            : ASCOMA08.prw
+            : ASCOMA09.prw
+            : ASCOMA10.prw
+            : ASCOMA11.prw
+            : ASCOMA12.prw
+            : ASCOMA13.prw
+            : ASCOMA14.prw
+            : ASCOMA15.prw
+            : ASCOMA16.prw
+            : ASCOMA17.prw
+            : ASCOMA19.prw
+            : ASCOMA21.prw
+            : ASCOMA22.prw
+            : ASCOMA23.prw
+            : ASCOMA24.prw
+            : ASCOMA25.prw
+            : ASCOMA27.prw
+            : ASCOMA34.prw
+            : ASCOMA37.prw
+            : ASCOMA38.prw

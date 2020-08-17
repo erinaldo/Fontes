@@ -1,0 +1,202 @@
+#line 1 "C:\INCLUDE\PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "PROTHEUS.CH"
+#line 19 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\csbuscpd.prw"
+Function U_CSBUSCPD()
+
+	Processa({|| ProcArq()},"Processando SRD...")
+	MsgAlert("Arquivo Gerado com Sucesso!","Atenção")
+
+Return()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ProcArq()
+
+Local aLog			:= {}
+Local cType     	:= "Arquivo Texto (*.TXT) |*.txt|"
+Local cBuffer 		:= ""
+Local cItem         := "00"
+Local cErroLog 		:= ""
+Local cFileLog 		:= Criatrab(, .F. )+".LOG"
+Local c_Cpf         := ""
+Local n_Vlr         := 0
+Local c_DtArq	    := ""
+Local nX			:= 0
+Local c_Query       := ""
+Local cArq		 := "C:\MICROSIGA\" +"CORRETOS" +StrTran(Time(),":", "")+".txt"
+Local cArq2		 := "C:\MICROSIGA\" +"DTARQERROR" +StrTran(Time(),":", "")+".txt"
+Local cArq3		 := "C:\MICROSIGA\" +"NAOENCONTRADOS" +StrTran(Time(),":", "")+".txt"
+Local nXLog			:= 0
+Local nLin			:= 0
+Local nHdl
+Local nHdl1
+Private n_Cot     := FCreate( cArq ,1 )
+Private n_CotErr     := FCreate( cArq2 ,1 )
+Private n_CotNA     := FCreate( cArq3 ,1 )
+
+Fclose( n_Cot )
+n_Cot := Fopen( cArq ,2 )
+
+Fclose( n_CotErr )
+n_CotErr := Fopen( cArq2 ,2 )
+
+Fclose( n_CotNA )
+n_CotNA := Fopen( cArq3 ,2 )
+
+If n_Cot < 0
+   Alert("O Path especificado nao existe.","Erro no Arquivo","Info")
+   Fclose( n_Cot )
+   Return
+EndIf
+
+If n_CotErr < 0
+   Alert("O Path especificado nao existe.","Erro no Arquivo","Info")
+   Fclose( n_CotErr )
+   Return
+EndIf
+
+If n_CotNA < 0
+   Alert("O Path especificado nao existe.","Erro no Arquivo","Info")
+   Fclose( n_CotNA )
+   Return
+EndIf
+
+DbSelectArea("SRA")
+DbSetOrder(20)
+
+DbSelectArea("SRD")
+DbSetOrder(1)
+
+cTXTFile := cGetFile( cType, "Selecione o Arquivo Texto para Importação", 0,, .T.  )
+
+if empty(cTXTFile)
+  Return
+Endif
+
+Fclose( nHdl )
+nHdl 	 := fOpen(cTxtFile)
+FT_FUSE(cTxtFile)
+
+
+
+
+
+
+ProcRegua(9000)
+
+While !FT_FEOF()
+
+	cBuffer 	:= FT_FREADLN()
+
+
+
+
+
+	c_Cpf		:= PADL(Alltrim(Substr(cBuffer,01,11)),11,"0")
+	n_Vlr       := Val(Substr(cBuffer,13,10))
+
+	IncProc("Processando o Arquivo " + c_Cpf +"/"+c_DtArq+ "...")
+
+	If SRA->(DbSeek(c_Cpf))
+		While !SRA->(EOF()) .AND.  SRA->RA_CIC == c_Cpf
+			If SRD->(DbSeek(SRA->RA_FILIAL+SRA->RA_MAT))
+				While SRD->RD_MAT == SRA->RA_MAT
+					If SRD->RD_VALOR == n_Vlr
+				    	c_Reg := SRD->RD_FILIAL+";"+SRD->RD_MAT+";"+SRA->RA_CIC+";"+SRD->RD_DATARQ+";"+SRD->RD_PD+";"+Transform(SRD->RD_VALOR, X3PICTURE("RD_VALOR"))+CHR(13)+CHR(10)
+						FWrite( n_Cot, c_Reg )
+					EndIf
+					SRD->(DbSkip())
+				EndDo
+			EndIf
+		SRA->(DbSkip())
+		EndDo
+	EndIf
+	c_Reg := ""
+	FT_FSKIP()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+EndDo
+
+fClose(n_Cot)
+fClose(n_CotErr)
+fClose(n_CotNA)
+fClose(nHdl)
+
+Return

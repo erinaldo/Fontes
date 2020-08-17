@@ -1,0 +1,185 @@
+#line 1 "C:\INCLUDE\Rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "Rwmake.ch"
+#line 17 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\sour001.prw"
+Function U_Sour001()
+
+cTitulo   := "Manutencao dos Rdmakes."
+cCadastro := "Manutencao dos Rdmakes."
+
+
+aCor      := {{"FA5->FA5_STATUS == .F.","BR_VERDE" },			  {"FA5->FA5_STATUS == .T.","BR_VERMELHO"}}
+
+aRotina   := menudef()
+
+
+
+
+
+
+
+
+mBrowse(,,,,"FA5",,,,,,aCor)
+
+Return
+
+Function U_Sour001Leg(cCadastro)
+
+_aLegenda := {}
+aAdd(_aLegenda,{ "BR_VERDE"    , "Rdmake Livre" })
+aAdd(_aLegenda,{ "BR_VERMELHO" , "Rdmake Requisitado" })
+
+BrwLegenda(cCadastro,"Legenda",_aLegenda)
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_SourPesq()
+
+_aOp  	:= {"Convencional","Especial","Cancelar"}
+_cTit 	:= "Tipo de Pesquisa"
+_cMsg   := "Qual o tipo de pesquisa deseja"+Chr(13)
+_cMsg   += "Fazer? Escolha uma das Opcoes abaixo:"
+_nOp    := Aviso(_cTit,_cMsg,_aOp)
+
+If _nOp == 1
+	AxPesqui()
+	Return
+ElseIf _nOp == 3
+	Return
+EndIf
+
+_aStru    := {}
+Aadd( _aStru, {"FA5_RDMAKE","C",20,0} )
+Aadd( _aStru, {"FA5_DESCRI","C",80,0} )
+Aadd( _aStru, {"FA5_RESPON","C",20,0} )
+
+_xTmp     := U_CriaTmp( _aStru, "Work" )
+
+aCampos   := {}
+Aadd( aCampos, {"FA5_RDMAKE","Nome do Rdmake"       ,"@!","20","0"} )
+Aadd( aCampos, {"FA5_DESCRI","Descricao do Rdmake"  ,"@!","80","0"} )
+Aadd( aCampos, {"FA5_RESPON","Nome do Representante","@!","20","0"} )
+
+_cPesq  := Space(80)
+_cCombo := ""
+_aCombo := {}
+Private oObj
+
+mkwdlg := MSDialog():New(187, 108, 611, 916, OemToAnsi(OemToAnsi("Pesquisa Especial")),,,,,,,,, .t. ,,,)
+ TGroup():New(002,003,210,398,OemToAnsi(),, , , .t. )
+ TGroup():New(002,003,210,113,OemToAnsi(),, , , .t. )
+ TGroup():New(007,118,206,394,OemToAnsi(OemToAnsi("Resultados da Pesquisa")),, , , .t. )
+ TGroup():New(177,118,205,394,OemToAnsi(),, , , .t. )
+ TGroup():New(024,006,094,110,OemToAnsi(OemToAnsi("Digite a Pesquisa")),, , , .t. )
+ oObj := IW_Browse(014,120,174,392,"Work",,,aCampos)
+ IW_Edit(047,008,"_cPesq",,100,10,,,,,,{|x| iif(PCount()>0,_cPesq := x,_cPesq) })
+ TButton():New( 068, 038, OemToAnsi(StrTran(OemToAnsi("_Pesquisar"), "_", "&")) , ,{|Self|(_Pesquisar())}, 36, 16,,,, .t. )
+ SButton():New(185, 208, 19,{|| (_Atualiza())},,)
+ SButton():New(185, 279, 02,{|| (mkwdlg:End())},,)
+
+mkwdlg:Activate(,,,.T.,, ,)
+
+Return
+
+Static Function _Pesquisar()
+
+If Empty(_cPesq)
+	Return
+EndIf
+
+DbSelectArea("Work")
+DbGoTop()
+While !Eof()
+	RecLock("Work", .f. )
+	DbDelete()
+	MsUnLock()
+	DbSkip()
+EndDo
+
+_xSelect := "FA5_FILIAL = '  ' .And. ('"+AllTrim(Upper(_cPesq))+"' $ FA5_DESCRI) "
+
+DbSelectArea("FA5")
+if ( Empty(_xSelect) );    dbClearFilter(); else;    dbSetFilter({|| &_xSelect},_xSelect ); end
+DbGoTop()
+While !Eof()
+
+	DbSelectArea("Work")
+	RecLock("Work", .t. )
+	Field->FA5_RDMAKE:= FA5->FA5_RDMAKE
+	Field->FA5_DESCRI:= FA5->FA5_DESCRI
+	Field->FA5_RESPON:= FA5->FA5_RESPON
+	MsUnLock()
+
+	DbSelectArea("FA5")
+	DbSkip()
+EndDo
+
+DbSelectArea("FA5")
+dbClearFilter()
+
+DbSelectArea("Work")
+DbGoTop()
+
+oObj:oBrowse:Refresh()
+
+Return
+
+Static Function _Atualiza()
+
+DbSelectArea("FA5")
+DbSetOrder(1)
+DbSeek(xFilial("FA5")+Work->FA5_RDMAKE)
+
+mkwDlg:End()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function MenuDef()
+
+
+
+
+
+Local aRotina :=	{  { "Pesquisar" ,"U_SourPesq()" , 0 , 1 } , { "Visualizar","AXVISUAL", 0 , 2 } , { "Incluir"   ,"AXINCLUI", 0 , 3 } , { "Alterar"   ,"AXALTERA", 0 , 4 } , { "Excluir"   ,"AXDELETA", 0 , 5 } , { "Legenda"	 ,'U_Sour001Leg("cCadastro")',	0,9}  }
+
+Return aRotina

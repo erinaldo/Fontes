@@ -15,7 +15,7 @@ User Function GPPA10(cAlias, nReg, nOpc)
 Default cAlias   := 'SE1'
 Default nReg     := SE1->(RecNo())
 
-If nOpc == 11
+If nOpc == 1
 	// -------------------------------------------
 	// SELECAO DOS TITULOS PARA O PROCESSO DE FIDC
 	// ------------------------------------------- 

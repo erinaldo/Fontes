@@ -1,0 +1,31 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 15 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\aaj0023.prw"
+Function U_AAJ0023
+
+Processa({|lEnd| AAJ0023Processa(),"(SR3) Processando a alteração dos tipos..."})
+
+STATIC FUNCTION AAJ0023Processa()
+
+ProcRegua( SR3->(RecCount()))
+
+dbSelectArea("SR3")
+dbSetOrder(1)
+dbGoTop()
+
+while !eof()
+
+	IncProc("(SR3) Processando a alteração dos tipos...")
+
+	if r3_tipo == "005"
+		RecLock( "SR3" , .F.  )
+		r3_tipo := "105"
+		MsUnLock()
+	endif
+
+	dbSkip()
+
+enddo
+
+Return

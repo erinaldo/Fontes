@@ -1,0 +1,149 @@
+#include "rwmake.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄ
+±±³Programa³ INFCONTRI³ Autor ³ Wagner Farias de Andrade³ Data ³ 07/08/07 ³±±
+±±³Alterado : Andrea C. Araujo Data 21/09/2007                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ ExecBlock disparado do arquivo cnab para retornar           ³±±
+±±³                 ³  Informações Complementares - Campo 111-230(tributos)³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CNAB:  SISPAG, SANTANDER, BANCO DO BRASIL , HSBC            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+
+User Function INFCONTRI()
+
+local cCodre    := ""
+local cContr    := ""
+local cIdcon    := ""
+local cTribu    := ""
+local dPerio    := ""
+local cRefer    := ""
+local nInsc     := 0
+local nValor    := 0
+local nMultaJ   := 0
+local  dVencr   := ""
+Local _cReturn
+Local cModelo   := ""
+Local cBanco    := ""
+/*
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³  Informações Complementares para o Modelo 16 (DARF -NORMAL) Campo 111-230³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+*/
+cModelo := ALLTRIM(SEA->EA_MODELO)
+cBanco:= SA6->A6_COD
+
+DO CASE
+	
+	CASE cModelo  == "16"  //darf
+		
+		cCodre  :=  PadL(SE2->E2_CODRET,4," ")
+		cContr  := "01"
+		cIdcon  := "01896779000138"
+//		cIdcon  := PadL(SM0->M0_CGC,14," ")
+		cTribu  := SEA->EA_MODELO
+		dPerio  := SE2->E2_APURAC // Criar campo no formato data DD/MM/AAAA
+		cRefer  := SE2->E2_REFER // Criar campo com 17 caracteres
+		nValor  := SE2->E2_VALOR
+		nMultaJ := SE2->E2_CSMULTA
+		dVencr  := SE2->E2_VENCREA
+		cFille  := SPACE(018)
+		
+	CASE  cModelo == "22"   //gare
+		 	   			
+		cCodre  :=  PadL(SE2->E2_CODRET,4," ")
+		cContr  := "01"
+		cIdcon  := "01896779000138"
+		cTribu  := SEA->EA_MODELO
+		dVencr  := SE2->E2_VENCREA
+	//	cInscr  := PadL(SM0->M0_INSC,12," ") 
+		cInscr  := "206240510112" 
+		cDivid  := Space(013)
+		dDtRefe := SE2->E2_APURAC //mes e ano
+		cRefer  := SE2->E2_REFER
+ 	    cParce  := SE2->E2_PARCELA 
+		nValor  := SE2->E2_VALOR
+ 		nMultaJ := SE2->E2_CSMULTA
+		cFille  := SPACE(01) 
+		cNom    := SM0->M0_NOME
+		
+	OTHERWISE        // 17 - gps
+		
+		cCodre  :=  PadL(SE2->E2_CODRET,4," ")
+		cContr  := "01"
+		cIdcon  := "01896779000138"
+		cTribu  := SEA->EA_MODELO
+		dVencr  := SE2->E2_VENCREA
+		cDivid  := Space(013)
+		dDtRefe := SE2->E2_APURAC  //mes e ano
+		cParce  := SE2->E2_PARCELA
+		nValor  := SE2->E2_VALOR
+
+EndCASE
+
+/*
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³  Informações Complementares para o Banco Santander/HSBC/BBrasil ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄ´±±
+*/
+
+IF cBanco == "033"  .and. SEA->EA_MODELO == "16"  //banco 033=Santander 
+	
+	_cReturn :=	StrZero(Val(cCodre),4)+"  "+cContr+cIdcon+cTribu+GravaData(dPerio,.F.,5)+STRZERO(VAL(cRefer),17)+StrZero(Int(Round(nValor*100,2)),15)+StrZero(Int(Round(nMultaJ*100,2)),15)+"000000000000000"+GravaData(dVencr,.F.,5)+cFille
+
+ELSEIF cBanco == "399" .and. SEA->EA_MODELO == "16"  //bco 399 = hsbc C/ DARF NORMAL
+	
+	_cReturn :=	StrZero(Val(cCodre),4)+"  "+cContr+cIdcon+cTribu+GravaData(dPerio,.F.,5)+STRZERO(Val(cRefer),17)+StrZero(Int(Round(nValor*100,2)),15)+StrZero(Int(Round(nMultaJ*100,2)),15)+"000000000000000"+GravaData(dVencr,.F.,5)
+
+ELSEIF cBanco == "001" .and. SEA->EA_MODELO == "16"  //bco 001 = Banco do Brasil C/ DARF NORMAL
+ 
+ 	_cReturn :=	StrZero(Val(cCodre),6)+cContr+cIdcon+cTribu+GravaData(dPerio,.F.,5)+STRZERO(Val(cRefer),17)+StrZero(Int(Round(nValor*100,2)),15)+StrZero(Int(Round(nMultaJ*100,2)),15)+"000000000000000"+GravaData(dVencr,.F.,5)	
+
+ELSEIF cBanco == "033" .and. SEA->EA_MODELO == "22" // bco 033=Santader
+
+ 	_cReturn :=   StrZero(Val(cCodre),4)+"  "+cContr+cIdcon+cTribu+GravaData(dVencr,.F.,5)+cInscr+cDivid+SubStr(Dtos(dDtRefe),5,2)+Left(Dtos(dDtRefe),4)+StrZero(Val(cParce),13)+StrZero(Int(Round(nValor*100,2)),15) 
+
+ELSEIF cBanco == "001" .and. SEA->EA_MODELO == "22"  //bco 001=BBrasil 
+
+	 //If alltrim(cInscr) == "ISENTO" .OR. empty(cInscr)        
+	     
+	 // cInscr :="000000000000"   
+	  
+	  
+	 //END IF
+	 
+	 cDivid  :="0000000000000"
+	 	
+  	_cReturn :=   StrZero(Val(cCodre),6)+cContr+cIdcon+cTribu+GravaData(dVencr,.F.,5)+cInscr+cDivid+SubStr(Dtos(dDtRefe),5,2)+Left(Dtos(dDtRefe),4)+StrZero(Val(cParce),13)+StrZero(Int(Round(nValor*100,2)),15)+StrZero(Int(Round(nMultaJ*100,2)),14)+"00000000000000"+" "
+			
+ELSEIF cBanco == "033" .and. SEA->EA_MODELO == "17"
+  
+	_cReturn :=   StrZero(Val(cCodre),4)+"  "+cContr+cIdcon+cTribu+SubStr(Dtos(dDtRefe),5,2)+Left(Dtos(dDtRefe),4)+StrZero(Int(Round(nValor*100,2)),15)
+
+Endif
+/*
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³  Informações Complementares para o Banco Itaú                                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄ´±±
+*/      
+
+IF cBanco == "341" .and. SEA->EA_MODELO == "16"    //bco 341 = itau
+   _cReturn := "02"+StrZero(Val(cCodre),4)+"2"+cIdcon+GravaData(dPerio,.F.,5)+STRZERO(Val(cRefer),17)+StrZero(Int(Round(nValor*100,2)),14)+StrZero(Int(Round(nMultaJ*100,2)),14)+GravaData(dVencr,.F.,5) 
+
+ELSEIF cBanco == "341" .and. SEA->EA_MODELO == "22"
+    _cReturn := "05"+StrZero(Val(cCodre),4)+"2"+cIdcon+cInscr+cDivid+SubStr(Dtos(dDtRefe),5,2)+Left(Dtos(dDtRefe),4)+StrZero(Val(cParce),13)+StrZero(Int(Round(nValor*100,2)),14)+StrZero(Int(Round(nMultaJ*100,2)),14)+SPACE(14)+StrZero(Int(Round(nValor*100,2)),14)+GravaData(dVencr,.F.,5)+GravaData(dVencr,.F.,5)+REPL("0",11) +cNom
+
+
+ELSEIF cBanco == "341" .and. SEA->EA_MODELO == "17"
+     _cReturn := "01"+StrZero(Val(cCodre),4)+SubStr(Dtos(dDtRefe),5,2)+Left(Dtos(dDtRefe),4)+cIdcon+StrZero(Int(Round(nValor*100,2)),14)+Repl("0",28)+StrZero(Int(Round(nValor*100,2)),14)+GravaData(dPerio,.F.,5)+SPACE(58)+cNom
+
+Endif
+
+Return(_cReturn)

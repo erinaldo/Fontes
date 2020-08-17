@@ -1,0 +1,985 @@
+#line 1 "C:\INCLUDE\CTBR040X.Ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\RELATO~1\ctbr040x.prw"
+#line 1 "C:\INCLUDE\PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "PROTHEUS.Ch"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\RELATO~1\ctbr040x.prw"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_CtbR040X(wnRel)
+
+Local aSetOfBook
+Local aCtbMoeda	:= {}
+LOCAL cDesc1	:= OemToAnsi("Este programa ira imprimir o Balancete de Verificacao Modelo 1 (132 Colunas), a")
+LOCAL cDesc2	:= OemToansi("conta eh impressa limitando-se a 20 caracteres e sua descricao 30 caracteres,")
+LOCAL cDesc3		:= OemToansi("os valores impressos sao saldo anterior, debito, credito e saldo atual do periodo.")
+Local cNomeArq
+LOCAL cString		:= "CT1"
+Local titulo	:= OemToAnsi("Balancete Auxiliar de Verificacao")
+Local lRet			:= .T. 
+Local nDivide		:= 1
+Local lExterno	:= wnRel <> Nil
+
+PRIVATE Tamanho		:="M"
+PRIVATE nLastKey:= 0
+PRIVATE cPerg	:= PADR("CTR040",LEN(SX1->X1_GRUPO))
+PRIVATE aReturn:= { OemToAnsi("Zebrado"), 1,OemToAnsi("Administracao"), 2, 2, 1, "",1 }
+PRIVATE aLinha		:= {}
+PRIVATE nomeProg := "CTBR040X"
+PRIVATE _eol		:= Chr(13)+chr(10)
+
+If ( !AMIIn(34) )
+	Return
+EndIf
+
+li	:= 80
+
+
+CTR040SX1()
+
+Private aQuadro := { "","","","","","","",""}
+
+For nQuadro :=1 To Len(aQuadro)
+	aQuadro[nQuadro] := Space(Len(CriaVar("CT1_CONTA")))
+Next
+
+CtbCarTxt()
+
+Pergunte("CTR040", .F. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+If ! lExterno
+	wnrel	:= "CTBR040x"
+	wnrel := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3, .F. ,"",,Tamanho)
+Endif
+
+If nLastKey == 27
+	dbClearFilter()
+	Return
+Endif
+
+
+
+
+
+If !U_ct040Valid(mv_par06)
+	lRet := .F. 
+Else
+	aSetOfBook := CTBSetOf(mv_par06)
+Endif
+
+If mv_par20 == 2
+	nDivide := 100
+ElseIf mv_par20 == 3
+	nDivide := 1000
+ElseIf mv_par20 == 4
+	nDivide := 1000000
+EndIf
+
+If lRet
+	aCtbMoeda := CtbMoeda(mv_par08,nDivide)
+	If Empty(aCtbMoeda[1])
+		Help(" ",1,"NOMOEDA")
+		lRet := .F. 
+	Endif
+Endif
+
+If !lRet
+	dbClearFilter()
+	Return
+EndIf
+
+If mv_par16 == 1 .And.  ! lExterno
+	tamanho := "G"
+EndIf
+
+If ! lExterno
+	SetDefault(aReturn,cString,,,Tamanho,If(Tamanho="G",2,1))
+Endif
+
+If nLastKey == 27
+	dbClearFilter()
+	Return
+Endif
+
+RptStatus({|lEnd| CTR040Imp(@lEnd,wnRel,cString,aSetOfBook,aCtbMoeda,nDivide,lExterno)})
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CTR040Imp(lEnd,WnRel,cString,aSetOfBook,aCtbMoeda,nDivide,lExterno)
+
+Local aColunas		:= {}
+LOCAL CbTxt			:= Space(10)
+Local CbCont		:= 0
+LOCAL limite		:= 132
+Local cabec1:= ""
+Local cabec2:= ""
+Local cSeparador	:= ""
+Local cPicture
+Local cDescMoeda
+Local cCodMasc
+Local cMascara
+Local cGrupo		:= ""
+Local cArqTmp
+Local dDataIni:= mv_par01
+Local dDataFim:= mv_par02
+Local lFirstPage	:= .T. 
+Local lJaPulou		:= .F. 
+Local lPrintZero	:= Iif(mv_par18==1, .T. , .F. )
+Local lPula			:= Iif(mv_par17==1, .T. , .F. )
+Local lNormal		:= Iif(mv_par19==1, .T. , .F. )
+Local lVlrZerado	:= Iif(mv_par07==1, .T. , .F. )
+Local l132			:= .T. 
+Local nDecimais
+Local nTotDeb		:= 0
+Local nTotCrd		:= 0
+Local nTotMov		:= 0
+Local nGrpDeb		:= 0
+Local nGrpCrd		:= 0
+Local cSegAte:= mv_par21
+Local nDigitAte	:= 0
+Local lImpAntLP	:= Iif(mv_par22 == 1, .T. , .F. )
+Local dDataLP		:= mv_par23
+
+cDescMoeda:= Alltrim(aCtbMoeda[2])
+nDecimais:= DecimalCTB(aSetOfBook,mv_par08)
+
+If Empty(aSetOfBook[2])
+	cMascara := GetMv("MV_MASCARA")
+Else
+	cMascara:= RetMasCtb(aSetOfBook[2],@cSeparador)
+EndIf
+cPicture	:= aSetOfBook[4]
+
+
+
+
+IF mv_par05 == 1
+	Titulo:=	OemToAnsi("BALANCETE DE VERIFICACAO SINTETICO DE ")
+ElseIf mv_par05 == 2
+	Titulo:=	OemToAnsi("BALANCETE DE VERIFICACAO ANALITICO DE ")
+ElseIf mv_par05 == 3
+	Titulo:=	OemToAnsi("BALANCETE DE VERIFICACAO DE ")
+EndIf
+
+
+Titulo +=DTOC(mv_par01) + OemToAnsi(" ATE ") + Dtoc(mv_par02) + OemToAnsi(" EM ") + cDescMoeda + CtbTitSaldo(mv_par10)
+
+If nDivide > 1
+	Titulo += " (" + OemToAnsi("DIV.") + Alltrim(Str(nDivide)) + ")"
+EndIf
+
+If mv_par16 == 1 .And.  ! lExterno
+	cabec1 := OemToAnsi("|  CODIGO                     |      D E S C R I C A O                          |    SALDO ANTERIOR             |     DEBITO       |      CREDITO      |    MOVIMENTO DO PERIODO       |         SALDO ATUAL               |")
+	tamanho := "G"
+	limite	:= 220
+	l132	:= .F. 
+Else
+	cabec1 := OemToAnsi("|  CODIGO               |   D  E  S  C  R  I  C  A  O    |   SALDO ANTERIOR  |      DEBITO    |      CREDITO   |   SALDO ATUAL     |")
+Endif
+
+If l132
+	aColunas := { 000,001, 024, 025, 057,058, 077, 078, 094, 095, 111, , , 112, 131 }
+Else
+	aColunas := { 000,001, 030, 032, 080,082, 112, 114, 131, 133, 151, 153, 183,185,219}
+Endif
+
+If ! lExterno
+	m_pag := mv_par09
+Endif
+
+
+
+
+
+
+
+
+
+
+MsgMeter({|	oMeter, oText, oDlg, lEnd | CTGerPlan(oMeter, oText, oDlg, @lEnd,@cArqTmp, mv_par01,mv_par02,"CT7","",mv_par03,mv_par04,,,,,,,mv_par08, mv_par10,aSetOfBook,mv_par12,mv_par13,mv_par14,mv_par15, l132, .F. ,mv_par11,,lImpAntLP,dDataLP,nDivide,lVlrZerado)}, OemToAnsi(OemToAnsi("Criando Arquivo Temporario...")),OemToAnsi("Balancete Auxiliar de Verificacao"))
+
+
+If !Empty(cSegAte)
+	For n := 1 to Val(cSegAte)
+		nDigitAte += Val(Subs(cMascara,n,1))
+	Next
+EndIf
+
+
+dbSelectArea("cArqTmp")
+
+dbGoTop()
+
+CTBR040G()
+CTBR040W()
+
+cGrupo := GRUPO
+
+SetRegua(RecCount())
+
+While !Eof()
+
+	If lEnd
+		PrintOut(_PROW()+1,0,OemToAnsi("***** CANCELADO PELO OPERADOR *****"),,)
+		Exit
+	EndIF
+
+	IncRegua()
+
+
+
+	If mv_par05 == 1
+		If TIPOCONTA == "2"
+			dbSkip()
+			Loop
+		EndIf
+	ElseIf mv_par05 == 2
+		If TIPOCONTA == "1"
+			dbSkip()
+			Loop
+		EndIf
+	EndIf
+
+
+	If !Empty(cSegAte)
+		If Len(Alltrim(CONTA)) > nDigitAte
+			dbSkip()
+			Loop
+		Endif
+	EndIf
+
+
+
+
+	If mv_par11 == 1
+		If cGrupo <> GRUPO
+			PrintOut(li,00,REPLICATE("-",limite),,)
+			li+=2
+			PrintOut(li,00,REPLICATE("-",limite),,)
+			li++
+			PrintOut(li,aColunas[1],"|",,)
+			PrintOut(li,39,OemToAnsi("T O T A I S  D O  G R U P O (")+cGrupo+") : ",,)
+			PrintOut(li,aColunas[7],"|",,)
+			ValorCTB(nGrpDeb,li,aColunas[8],16,nDecimais, .F. ,cPicture,"1", , , , , ,lPrintZero)
+			PrintOut(li,aColunas[9],"|",,)
+			ValorCTB(nGrpCrd,li,aColunas[10],16,nDecimais, .F. ,cPicture,"2", , , , , ,lPrintZero)
+			PrintOut(li,aColunas[11],"|",,)
+			PrintOut(li,aColunas[15],"|",,)
+			li++
+			li			:= 60
+			cGrupo	:= GRUPO
+			nGrpDeb	:= 0
+			nGrpCrd	:= 0
+		EndIf
+	Else
+		If NIVEL1
+			li:= 60
+		EndIf
+	EndIf
+
+	IF li > 58
+		If !lFirstPage
+			PrintOut(_PROW()+1,00,Replicate("-",limite),,)
+		EndIf
+		CtCGCCabec(,,,Cabec1,Cabec2,dDataFim,Titulo,,"2",Tamanho)
+		lFirstPage := .F. 
+	End
+
+	PrintOut(li,aColunas[1],"|",,)
+	If lNormal
+		If TIPOCONTA == "2"
+			EntidadeCTB(CONTA,li,aColunas[2]+2,21, .F. ,cMascara,cSeparador)
+		Else
+			EntidadeCTB(CONTA,li,aColunas[2],23, .F. ,cMascara,cSeparador)
+		EndIf
+	Else
+		If TIPOCONTA == "2"
+			PrintOut(li,aColunas[2],Alltrim(CTARES),,)
+		Else
+			PrintOut(li,aColunas[2],Alltrim(CTARES),,)
+		EndIf
+	EndIf
+	PrintOut(li,aColunas[3],"|",,)
+	PrintOut(li,aColunas[4],DESCCTA,,)
+	PrintOut(li,aColunas[5],"|",,)
+	ValorCTB(SALDOANT,li,aColunas[6],17,nDecimais, .T. ,cPicture,NORMAL, , , , , ,lPrintZero)
+	PrintOut(li,aColunas[7],"|",,)
+	ValorCTB(SALDODEB,li,aColunas[8],16,nDecimais, .F. ,cPicture,NORMAL, , , , , ,lPrintZero)
+	PrintOut(li,aColunas[9],"|",,)
+	ValorCTB(SALDOCRD,li,aColunas[10],16,nDecimais, .F. ,cPicture,NORMAL, , , , , ,lPrintZero)
+	PrintOut(li,aColunas[11],"|",,)
+	If !l132
+		ValorCTB(MOVIMENTO,li,aColunas[12],17,nDecimais, .T. ,cPicture,NORMAL, , , , , ,lPrintZero)
+		PrintOut(li,aColunas[13],"|",,)
+	Endif
+	ValorCTB(SALDOATU,li,aColunas[14],17,nDecimais, .T. ,cPicture,NORMAL, , , , , ,lPrintZero)
+	PrintOut(li,aColunas[15],"|",,)
+
+	lJaPulou := .F. 
+
+	If lPula .And.  TIPOCONTA == "1"
+		li++
+		PrintOut(li,aColunas[1],"|",,)
+		PrintOut(li,aColunas[3],"|",,)
+		PrintOut(li,aColunas[5],"|",,)
+		PrintOut(li,aColunas[7],"|",,)
+		PrintOut(li,aColunas[9],"|",,)
+		PrintOut(li,aColunas[11],"|",,)
+		If !l132
+			PrintOut(li,aColunas[13],"|",,)
+			PrintOut(li,aColunas[15],"|",,)
+		Else
+			PrintOut(li,aColunas[15],"|",,)
+		EndIf
+		li++
+		lJaPulou := .T. 
+	Else
+		li++
+	EndIf
+
+
+
+	If mv_par05 == 1
+		If TIPOCONTA == "1"
+			If NIVEL1
+				nTotDeb += SALDODEB
+				nTotCrd += SALDOCRD
+				nGrpDeb += SALDODEB
+				nGrpCrd += SALDOCRD
+			EndIf
+		EndIf
+	Else
+		If Empty(cSegAte)
+			If TIPOCONTA == "2"
+				nTotDeb += SALDODEB
+				nTotCrd += SALDOCRD
+				nGrpDeb += SALDODEB
+				nGrpCrd += SALDOCRD
+			EndIf
+		Else
+			If TIPOCONTA == "1"
+				If NIVEL1
+					nTotDeb += SALDODEB
+					nTotCrd += SALDOCRD
+					nGrpDeb += SALDODEB
+					nGrpCrd += SALDOCRD
+				EndIf
+			EndIf
+		Endif
+	EndIf
+
+	dbSkip()
+	If lPula .And.  TIPOCONTA == "1"
+		If !lJaPulou
+			PrintOut(li,aColunas[1],"|",,)
+			PrintOut(li,aColunas[3],"|",,)
+			PrintOut(li,aColunas[5],"|",,)
+			PrintOut(li,aColunas[7],"|",,)
+			PrintOut(li,aColunas[9],"|",,)
+			PrintOut(li,aColunas[11],"|",,)
+			If !l132
+				PrintOut(li,aColunas[13],"|",,)
+				PrintOut(li,aColunas[15],"|",,)
+			Else
+				PrintOut(li,aColunas[15],"|",,)
+			EndIf
+			li++
+		EndIf
+	EndIf
+EndDO
+
+IF li <> 80 .And.  !lEnd
+	IF li > 58
+		PrintOut(_PROW()+1,00,Replicate("-",limite),,)
+		CtCGCCabec(,,,Cabec1,Cabec2,dDataFim,Titulo,,"2",Tamanho)
+		li++
+	End
+	If mv_par11 == 1
+		If cGrupo <> GRUPO
+			PrintOut(li,00,REPLICATE("-",limite),,)
+			li++
+			PrintOut(li,aColunas[1],"|",,)
+			PrintOut(li,39,OemToAnsi("T O T A I S  D O  G R U P O (")+cGrupo+") : ",,)
+			PrintOut(li,aColunas[7],"|",,)
+			ValorCTB(nGrpDeb,li,aColunas[8],16,nDecimais, .F. ,cPicture,"1", , , , , ,lPrintZero)
+			PrintOut(li,aColunas[9],"|",,)
+			ValorCTB(nGrpCrd,li,aColunas[10],16,nDecimais, .F. ,cPicture,"2", , , , , ,lPrintZero)
+			PrintOut(li,aColunas[11],"|",,)
+			If !l132
+				nTotMov := nTotMov + (nGrpCrd - nGrpDeb)
+				If Round(NoRound(nTotMov,3),2) < 0
+					ValorCTB(nTotMov,li,aColunas[12],17,nDecimais, .T. ,cPicture,"1", , , , , ,lPrintZero)
+				ElseIf Round(NoRound(nTotMov,3),2) > 0
+					ValorCTB(nTotMov,li,aColunas[12],17,nDecimais, .T. ,cPicture,"2", , , , , ,lPrintZero)
+				EndIf
+				PrintOut(li,aColunas[13],"|",,)
+			Endif
+			PrintOut(li,aColunas[15],"|",,)
+			li++
+			PrintOut(li,00,REPLICATE("-",limite),,)
+			li+=2
+		EndIf
+	EndIf
+
+	PrintOut(li,00,REPLICATE("-",limite),,)
+	li++
+	PrintOut(li,aColunas[1],"|",,)
+	PrintOut(li,39,OemToAnsi("T O T A I S  D O  P E R I O D O: "),,)
+	PrintOut(li,aColunas[7],"|",,)
+	ValorCTB(nTotDeb,li,aColunas[8],16,nDecimais, .F. ,cPicture,"1", , , , , ,lPrintZero)
+	PrintOut(li,aColunas[9],"|",,)
+	ValorCTB(nTotCrd,li,aColunas[10],16,nDecimais, .F. ,cPicture,"2", , , , , ,lPrintZero)
+	PrintOut(li,aColunas[11],"|",,)
+	If !l132
+		nTotMov := nTotMov + (nTotCrd - nTotDeb)
+		If Round(NoRound(nTotMov,3),2) < 0
+			ValorCTB(nTotMov,li,aColunas[12],17,nDecimais, .T. ,cPicture,"1", , , , , ,lPrintZero)
+		ElseIf Round(NoRound(nTotMov,3),2) > 0
+			ValorCTB(nTotMov,li,aColunas[12],17,nDecimais, .T. ,cPicture,"2", , , , , ,lPrintZero)
+		EndIf
+		PrintOut(li,aColunas[13],"|",,)
+	EndIf
+	PrintOut(li,aColunas[15],"|",,)
+	li++
+	PrintOut(li,00,REPLICATE("-",limite),,)
+	li++
+	PrintOut(li,0," ",,)
+	If ! lExterno
+		roda(cbcont,cbtxt,"M")
+	Endif
+	dbClearFilter()
+EndIF
+
+If mv_par24 ==1
+	ImpQuadro(Tamanho,X3USO("CT2_DCD"),dDataFim,mv_par08,aQuadro,cDescMoeda,nomeprog,(If (lImpAntLP,dDataLP,cTod(""))),cPicture,nDecimais,lPrintZero,mv_par10)
+EndIf
+
+If aReturn[5] = 1 .And.  ! lExterno
+	Set( 24, "" )
+	dbCommitAll()
+	Ourspool(wnrel)
+EndIf
+
+dbSelectArea("cArqTmp")
+dbClearFilter()
+dbCloseArea()
+If Select("cArqTmp") == 0
+	FErase(cArqTmp+GetDBExtension())
+	FErase(cArqTmp+OrdBagExt())
+EndIF
+dbselectArea("CT2")
+
+If ! lExterno
+	MS_FLUSH()
+Endif
+
+Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_Ct040Valid(cSetOfBook)
+
+Local aSaveArea:= GetArea()
+Local lRet		:= .T. 
+
+If !Empty(cSetOfBook)
+	dbSelectArea("CTN")
+	dbSetOrder(1)
+	If !dbSeek(xfilial()+cSetOfBook)
+		aSetOfBook := ("","",0,"","")
+		Help(" ",1,"NOSETOFB")
+		lRet := .F. 
+	EndIf
+EndIf
+
+RestArea(aSaveArea)
+
+Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CTR040SX1()
+
+Local aArea:= GetArea()
+
+
+
+aPergs	:= {}
+
+aHelpPor	:= {}
+aHelpEng	:= {}
+aHelpSpa	:= {}
+
+Aadd(aHelpPor,"Informe se deseja imprimir os")
+Aadd(aHelpPor,"Quadros contábeis, ao final do ")
+Aadd(aHelpPor,"Relatorio")
+
+Aadd(aHelpEng,"Inform if you wish to print")
+Aadd(aHelpEng,"the Statement table at the end of")
+Aadd(aHelpEng,"the report.")
+
+Aadd(aHelpSpa,"Informe se desea imprimir los")
+Aadd(aHelpSpa,"cuadros contabiles, después")
+Aadd(aHelpspa,"del informe.")
+
+Aadd(aPergs,{"Imp Quadros Contabeis?","Imp Cuadros Contabiles?","Print Statement?","mv_chp","N",1,0,0,"C","CTBOpQuad(mv_par24==1)","mv_par24","Sim","Si","Yes","","","Nao","No","No","","","","","","","","","","","","","","","","","",""})
+
+AjustaSx1("CTR040",aPergs)
+
+Return()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static function CTBR040W()
+
+local oDlg , oQry , oOk , oCanc , oDst , oNomSt , oMBrowse
+local cQuery:= ""
+local cDst:= SPACE(255)
+local cNomSt:= SPACE(255)
+local lMBrowse	:= .F. 
+
+oDlg = MsDialog():New( 0, 0, 150, 400, "Gera Balancete em Excel",,,.F.,,,,,,.T.,, ,.F. )
+
+ TSay():New( 005, 005,{||  "Diretorio Destino: "},oDlg,,,.F.,.F.,.F.,.T.,,, 150, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+ oDst := TGet():New( 015, 005, { | u | If( PCount() == 0, cDst, cDst := u ) },oDlg, 150, 7,,,,,,.F.,,.T.,,.F.,{||  .f. },.F.,.F.,,.F.,.F. ,,"cDst",,,, )
+ SButton():New( 014, 160,14,{||  (cDst:=DirAjuste(),oDst:Refresh())}, oDlg,.T.,,)
+
+ TSay():New( 030, 005,{||  "Nome do Arquivo Destino: "},oDlg,,,.F.,.F.,.F.,.T.,,, 100, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+ oNomSt := TGet():New( 040, 005, { | u | If( PCount() == 0, cNomSt, cNomSt := u ) },oDlg, 100, 7,,{||  !Empty(cNomSt)},,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"cNomSt",,,, )
+
+ oOk := SButton():New( 055, 140,1,{||  (Processa({||ctbr040e(cQuery,cDst,cNomSt,lMBrowse)}),oDlg:End())}, oDlg,.T.,,)
+ oCanc := SButton():New( 055, 170,2,{||  oDlg:End()}, oDlg,.T.,,)
+
+oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,, oDlg:bRClicked, )
+
+return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static function ctbr040e(cQuery,cDst,cNomSt,lMBrowse)
+
+Local nCnt		:= 0
+local nHdl		:= 0
+local cChar		:= ";"
+local cEnter:= CHR(13)+CHR(10)
+local cLinha	:= ""
+local uCampo	:= ""
+
+local cExt		:= ".TXT"
+
+cDst:= Alltrim(cDst)
+cNomSt:= Alltrim(cNomSt)
+
+if !empty(cDst)
+
+	if !empty(cNomSt)
+
+		dbSelectArea("PLAN")
+		dbGotop()
+
+		nHdl := Fcreate(cDst+cNomSt+cExt,0)
+
+		if nHdl > 0
+
+
+
+
+
+			cLinha := ""
+			For nCnt := 1 TO FCOUNT()
+
+				cLinha += FieldName(nCnt)+";"
+			next
+
+
+			cLinha += _eol
+			fwrite(nHdl,cLinha)
+
+			dbgotop()
+
+			nLenCta := 0
+
+			while !eof()
+
+				IncProc()
+
+
+				If Len(ALLTRIM(FieldGet(1)))<>nLenCta
+					cLinha := _eol
+					fwrite(nHdl,cLinha)
+				    nLenCta := Len(ALLTRIM(FieldGet(1)))
+				EndIf
+
+				cLinha := ""
+
+				For nCnt := 1 TO FCOUNT()
+
+					uCampo := FieldGet(nCnt)
+
+					If valtype(uCampo) == "C"
+
+						uCampo := strtran(uCampo," ","")
+
+					ElseIf valtype(uCampo) == "D"
+
+						uCampo := DTOC(uCampo)
+
+					Elseif valtype(uCampo)="N"
+						If uCampo > 0 .OR.  uCampo < 0
+							uCampo := Alltrim(Str(uCampo))
+							If At(".",uCampo) > 0
+								uCampo := STUFF(uCampo,AT(".",uCampo),1,",")
+							EndIf
+						Else
+							uCampo := "0"
+						Endif
+
+					Elseif valtype(uCampo)="L"
+						uCampo := IIF(uCampo,"VERDADEIRO","FALSO")
+
+					Endif
+
+
+					cLinha += uCampo+";"
+
+				next
+
+
+				cLinha += _eol
+
+				fwrite(nHdl,cLinha)
+
+				dbskip()
+
+			enddo
+
+
+
+
+			Fclose(nHdl)
+
+			If File(cDst+cNomSt+cExt)
+				MsgAlerT("Arquivo "+cDst+cNomSt+cExt+ " foi gerado! ")
+
+
+			EndIF
+
+		else
+			MsgAlert("Não foi possivel criar o arquivo "+cDst+cNomSt+cExt+" !")
+		endif
+
+	else
+		MsgAlert( "Nao foi especificado o nome do arquivo")
+	endif
+
+else
+	MsgAlert(" Nao foi especificada a pasta de destino do arquivo")
+endif
+
+dbSelectArea("PLAN")
+dbCloseArea()
+
+dbSelectArea("cArqTmp")
+dbGoTop()
+
+Return .t. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static function DirAjuste()
+
+local cFile := Alltrim(cGetFile( "*.*",OemToAnsi("Selecione Diretorio"),,"C:\", .F. ,16))
+
+Return(LEFT(cFile,RAT("\",cFile)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ctbr040g()
+Local aStrExc	:= {}
+Local cArqTrab	:= ""
+Local cDC1		:= ""
+Local cDC2		:= ""
+Local cDC3		:= ""
+Local lAtivo	:= .f. 
+Local nFator	:= 0
+
+aadd(aStrExc,{"CONTA"		,"C",TamSx3("CT1_CONTA")  [1],TamSx3("CT1_CONTA")  [2]})
+aadd(aStrExc,{"DESCCTA"		,"C",TamSx3("CT1_DESC01") [1],TamSx3("CT1_DESC01") [2]})
+aadd(aStrExc,{"SALDOANT"	,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC1"			,"C",1                       ,0                       })
+aadd(aStrExc,{"SALDODEB"	,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"SALDOCRD"	,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"MOVIMENTO"	,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC2"			,"C",1                       ,0                       })
+aadd(aStrExc,{"SALDOATU"	,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC3"			,"C",1                       ,0                       })
+
+cArqTrab := CriaTrab(aStrExc, .T. )
+dbUseArea( .T. ,,cArqTrab,"PLAN", .T. , .F. )
+dbSelectArea("PLAN")
+IndRegua("PLAN",cArqTrab,"CONTA",,,"Gerando Planilha...")
+
+dbSelectArea("cArqTmp")
+dbGoTop()
+
+
+While !cArqTmp->(Eof())
+
+	IncProc("Gerando Planilha")
+
+	cDC1	:= " "
+	cDC2	:= " "
+	cDC3	:= " "
+
+	If cArqTmp->NORMAL == "1"
+
+		If cArqTmp->SALDOANT < 0
+			cDC1	:= "D"
+		ElseIf cArqTmp->SALDOANT > 0
+			cDC1	:= "C"
+		EndIf
+
+		If cArqTmp->MOVIMENTO < 0
+			cDC2	:= "D"
+		ElseIf cArqTmp->MOVIMENTO > 0
+			cDC2	:= "C"
+		EndIf
+
+		If cArqTmp->SALDOATU < 0
+			cDC3	:= "D"
+		ElseIf cArqTmp->SALDOATU > 0
+			cDC3	:= "C"
+		EndIf
+
+	ElseIf cArqTmp->NORMAL=="2"
+
+		If cArqTmp->SALDOANT > 0
+			cDC1	:= "C"
+		ElseIf cArqTmp->SALDOANT < 0
+			cDC1	:= "D"
+		EndIf
+
+		If cArqTmp->MOVIMENTO > 0
+			cDC2	:= "C"
+		ElseIf cArqTmp->MOVIMENTO < 0
+			cDC2	:= "D"
+		EndIf
+
+		If cArqTmp->SALDOATU > 0
+			cDC3	:= "C"
+		ElseIf cArqTmp->SALDOATU < 0
+			cDC3	:= "D"
+		EndIf
+
+	EndIf
+
+	lAtivo := iif(Left(cArqTmp->CONTA,1)=="1", .t. , .f. )
+	nFator := iif(lAtivo,-1,1)
+
+	dbSelectArea("PLAN")
+	RecLock("PLAN", .T. )
+
+	PLAN->CONTA		:= cArqTmp->CONTA
+	PLAN->DESCCTA	:= cArqTmp->DESCCTA
+	PLAN->SALDOANT	:= cArqTmp->SALDOANT*nFator
+	PLAN->DC1		:= cDC1
+	PLAN->SALDODEB	:= cArqTmp->SALDODEB*iif(lAtivo,1,-1)
+	PLAN->SALDOCRD	:= cArqTmp->SALDOCRD*nFator
+	PLAN->MOVIMENTO	:= cArqTmp->MOVIMENTO*nFator
+	PLAN->DC2		:= cDC2
+	PLAN->SALDOATU	:= cArqTmp->SALDOATU*nFator
+	PLAN->DC3		:= cDC3
+
+	MsUnLock()
+
+	dbSelectArea("cArqTmp")
+	dbSkip()
+
+EndDo
+
+dbSelectArea("PLAN")
+dbGotop()
+
+Return()

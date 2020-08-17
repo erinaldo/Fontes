@@ -1,0 +1,678 @@
+#include "FiveWin.ch"
+#INCLUDE "GPEM570.CH"
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ CSUM570  ³ Autor ³ R.H. - J. Ricardo     ³ Data ³ 03.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relatorio da DIRF                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ CSUM570(void)                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Aldo        ³15/01/99³      ³ Alteracao para 1998.                     ³±±
+±±³Emerson RS  ³13/09/00³      ³ Exclusao da parte DOS.                   ³±±
+±±³            ³        ³      ³ opcao listar func. com valores negativos ³±±
+±±³Mauro       ³03/02/01³      ³ Ano Base com 4 digitos, ordem de nome e  ³±±
+±±³            ³        ³      ³ opcao listar func. com valores negativos ³±±
+±±³Emerson     ³05/04/04³      ³ Preservar e restaurar area.              ³±±
+±±³Isamu       ³31/01/05³      ³ Incluir Ordem por CC; incluir matricula  ³±±
+±±³            ³        ³      ³ incluir CC;                              ³±±
+±±³Adalberto   ³31/01/05³      ³ incluir totalizador por CC, filial e     ³±±
+±±³            ³        ³      ³ empresa                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß/*/
+
+User Function CSUM570()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais (Basicas)                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cDesc1  := STR0001 //"Relatorio da D.I.R.F."
+Local cDesc2  := STR0002 //"Ser  impresso de acordo com os parametros solicitados pelo"
+Local cDesc3  := STR0003 //"usuario."
+Local cString := "SRL"           // alias do arquivo principal (Base)
+Local aOrd    := {STR0004,STR0005,STR0028,"C.Custo"} //"Matricula"###"C.G.C"###"Nome"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Private(Basicas)                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aReturn := { STR0006, 1, STR0007, 2, 2, 1, "",1 } //"Zebrado"###"Administra‡„o"
+Private nomeprog:="CSUM570"
+Private aLinha  := {},nLastKey := 0
+Private cPerg   :=PADR("CSM570",LEN(SX1->X1_GRUPO))
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Private(Programa)                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private nOrdem
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis Utilizadas na funcao IMPR                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private Titulo
+Private AT_PRG   := "CSUM570"
+Private wCabec0  := 0
+Private CONTFL   := 1
+Private LI       := 0
+Private COLUNAS  := 80
+Private nTamanho := "M"
+Private cTit     := STR0008 //"RELA€ŽO DA D.I.R.F. ANUAL "
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+pergunte("CSM570",.F.)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                          ³
+//³ mv_par01        //  Filial  De                                ³
+//³ mv_par02        //  Filial  Ate                               ³
+//³ mv_par03        //  C.G.C. De                                 ³
+//³ mv_par04        //  C.G.C. Ate                                ³
+//³ mv_par05        //  Matricula De                              ³
+//³ mv_par06        //  Matricula Ate                             ³
+//³ mv_par07        //  Apenas com I.R.                           ³
+//³ mv_par08        //  Nome De                                   ³
+//³ mv_par09        //  Nome Ate                                  ³
+//³ mv_par11        //  C.Custo De                                ³
+//³ mv_par12        //  C.Custo Ate                               ³
+//³ mv_par13        //  Ano de Competencia                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel:="CSUM570"            //Nome Default do relatorio em Disco
+wnrel:=SetPrint(cString,wnrel,cPerg,cTit,cDesc1,cDesc2,cDesc3,.F.,aOrd)
+
+If nLastKey = 27
+	Return
+Endif
+SetDefault(aReturn,cString)
+If nLastKey = 27
+	Return
+Endif
+
+Titulo := STR0009 //" RELACAO DA D.I.R.F. ANUAL "
+
+RptStatus({|lEnd| GM570Imp(@lEnd,wnRel,cString)},cTit)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ GM570IMP ³ Autor ³ R.H. - Marcos Stiefano³ Data ³ 30.11.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Relatorio da D.I.R.F.                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ GM570IMP(lEnd,WnRel,cString)                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ lEnd        - A‡ao do Codelock                             ³±±
+±±³          ³ wnRel       - T¡tulo do relat¢rio                          ³±±
+±±³Parametros³ cString     - Mensagem			                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function GM570Imp(lEnd,WnRel,cString)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais (Programa)                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local aDirfv[14,3]
+Local aDirfCC[14,3]
+Local aDirfFI[14,3]
+Local aDirfTT[14,3]
+Local aArea := GetArea()
+Local lValorIR
+Local M
+Local n
+Private nTtCC := 0
+Private nTtTT := 0
+Private nTtFI := 0
+Private nFunc := 0
+Private cAno		:= Strzero(MV_PAR13,4)
+Private aMes   := { STR0010,STR0011,STR0012,STR0013,STR0014,STR0015,; //"Janeiro  "###"Fevereiro"###"Marco    "###"Abril    "###"Maio     "###"Junho    "
+STR0016,STR0017,STR0018,STR0019,STR0020,STR0021,; //"Julho    "###"Agosto   "###"Setembro "###"Outubro  "###"Novembro "###"Dezembro "
+STR0022,STR0023}                                  //"13o.Sal. "###"Total    "
+
+nOrdem := aReturn[8]
+
+dbSelectArea( "SRL" )
+If nOrdem == 1
+	dbSetOrder(nOrdem)
+	dbSeek(mv_par01 + mv_par05,.T.)
+	cInicio  := "SRL->RL_FILIAL + SRL->RL_MAT"
+	cFim     := mv_par02 + mv_par06
+ElseIf nOrdem == 2
+	dbSetOrder(nOrdem)
+	dbSeek(mv_par01 + mv_par03,.T.)
+	cInicio := "SRL->RL_FILIAL + SRL->RL_CGCFONT"
+	cFim    := mv_par02 + mv_par04
+ElseIf nOrdem == 3
+	cInicio  := "SRL->RL_FILIAL + SRL->RL_BENEFIC"
+	cFim     := mv_par02 + mv_par09
+	cIndCond:= "RL_FILIAL + RL_BENEFIC"
+	cFor:='(RL_FILIAL+RL_BENEFIC >= "'+mv_par01+mv_par08+'")'
+	cFor+=' .And. (RL_FILIAL+RL_BENEFIC <= "'+mv_par02+mv_par09+'")'
+	cArqNtx  := CriaTrab(NIL,.F.)
+	IndRegua("SRL",cArqNtx,cIndCond,,cFor,STR0031)		//"Selecionando Registros..."
+	DbGoTop()
+ElseIf nOrdem == 4
+	cInicio  := "SRL->RL_FILIAL + SRL->RL_CC"
+	cFim     := mv_par02 + mv_par12
+	cIndCond := "RL_FILIAL + RL_CC"
+	cFor     := '(RL_FILIAL+RL_CC >= "'+mv_par01+mv_par11+'")'
+	cFor     += ' .And. (RL_FILIAL+RL_CC <= "'+mv_par02+mv_par12+'")'
+	cArqNtx  := CriaTrab(NIL,.F.)
+	IndRegua("SRL",cArqNtx,cIndCond,,cFor,STR0031)
+	DbGotop()
+	
+Endif
+
+cFilAnterior := "!!"
+
+dbSelectArea( "SRL" )
+SetRegua(SRL->(RecCount()))
+
+aDirfCC := fZeraArray(aDirfCC)
+aDirfFI := fZeraArray(aDirfFI)
+aDirfTT := fZeraArray(aDirfTT)
+
+While !Eof() .And. &cInicio <= cFim
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Movimenta Regua Processamento                                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IncRegua()
+	
+	If lEnd
+		@Prow()+1,0 PSAY cCancel
+		Exit
+	Endif
+	
+	If SRL->RL_FILIAL # cFilAnterior
+		If cFilAnterior # "!!"
+			imprdrf(" ","F")
+		Endif
+		cFilAnterior := SRL->RL_FILIAL
+	Endif
+	
+	dbSelectArea( "SRL" )
+	cChave := SRL->RL_FILIAL + SRL->RL_MAT
+	While !Eof() .And. SRL->RL_FILIAL + SRL->RL_MAT = cChave
+		
+		aDirfV := fZeraArray(aDirfV)
+		
+		lValorIr 	:= .F.
+		lNegativo   := .F.
+		
+		dbSelectArea( "SR4" )
+		dbSeek( SRL->RL_FILIAL + SRL->RL_MAT + SRL->RL_CPFCGC + SRL->RL_CODRET + cAno )
+		While !Eof() .And. SRL->RL_FILIAL + SRL->RL_MAT + SRL->RL_CPFCGC + SRL->RL_CODRET + cAno == ;
+			SR4->R4_FILIAL + SR4->R4_MAT + SR4->R4_CPFCGC + SR4->R4_CODRET + SR4->R4_ANO 
+			If SR4->R4_TIPOREN $ 'AxBxCxDxJxKxLxTxM'
+				nMes   := Val(SR4->R4_MES)
+				If SR4->R4_TIPOREN $ 'AxJ'
+					nElem  := 1
+					nMes   := If (SR4->R4_TIPOREN = "A",Val(SR4->R4_MES),13)
+				Elseif SR4->R4_TIPOREN $ 'BxCxKxTxM'
+					nElem  := 2
+					nMes   := If (SR4->R4_tiporen # "K",Val(SR4->R4_MES),13)
+				Elseif SR4->R4_TIPOREN $ 'DxL'
+					nElem  := 3
+					nMes   := If (SR4->R4_TIPOREN # "L",Val(SR4->R4_MES),13)
+					
+					//--Seta Variavel que tem IR
+					If SR4->R4_TIPOREN == 'D'
+						lValorIR := .T.
+					Endif
+				Endif
+				
+				nMesUf := Val(SR4->R4_MES)
+				aDirfv[nMes,nElem] +=  SR4->R4_VALOR
+				aDirfv[14,nElem]   +=  SR4->R4_VALOR
+				
+				//--Verifica se Tem Valores Negativos
+				If SR4->R4_VALOR < 0.00
+					lNegativo := .T.
+				Endif
+				
+			Endif
+			dbSkip()
+		Enddo
+		
+		If mv_par10 # 1 .or. (mv_par10==1 .And. lNegativo )
+			
+			If mv_par07 # 1  .Or. (mv_par07 == 1  .And. lValorIr)
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Impressao do Cabecalho do Funcionario                        ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				Det := STR0024+SRL->RL_CODRET + Space(5) + "C.Custo: "+SRL->RL_CC+" - "+POSICIONE("CTT",1,XFILIAL("CTT")+SRL->RL_CC,"CTT_DESC01") //"Codigo de Retencao :"
+				imprdrf(Det,"C")
+				
+				If SRL->RL_TIPOFJ == "1"
+					Det := STR0025+SRL->RL_CPFCGC +"   "+Space(6)+"Fil/Matr.: "+SRL->RL_FILIAL+"/"+SRL->RL_MAT+Space(4)+STR0026+SRL->RL_BENEFIC //"CPF : "###"Nome :"
+				ElseIf  SRL->RL_TipoFJ == "2"
+					Det := STR0027+SRL->RL_CPFCGC +"   "+Space(6)+"Fil/Matr.: "+SRL->RL_FILIAL+"/"+SRL->RL_MAT+Space(4)+STR0026+SRL->RL_BENEFIC //"CGC : "###"Nome :"
+				Endif
+				
+				imprdrf(Det,"C")
+				imprdrf(" ","C")
+				Det := STR0029 //" Mes       Moeda    Rend. Tributavel             Deducoes       Imposto Retido"
+				imprdrf(Det,"C")
+				Det := " --------- -----    ----------------             --------       --------------"
+				imprdrf(Det,"C")
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Impressao dos Valores (ANALITICO)                            ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				
+				For M = 1 to 14
+					Det := aMes[M]
+					Det := Det + STR0030 //"  Real"
+					For n = 1 to 3
+						Det = Det + "      " + Str(aDirfv[M,N],15,2)
+					Next n
+					imprdrf(Det,"C")
+				Next
+				
+				nFunc++
+				
+				if nFunc%3 != 0
+					imprdrf(Repl("-",80),"C")
+				endif	
+				
+				aDirfCC := fSomaArray(aDirfCC,aDirfV)
+				nTtCC   += 1
+				
+				aDirfFI := fSomaArray(aDirfFI,aDirfV)
+				nTtFI   += 1				
+				
+				aDirfTT := fSomaArray(aDirfTT,aDirfV)
+				nTtTT   += 1				
+				
+			Endif
+			
+		Endif
+		
+		dbSelectArea( "SRL" )
+		cFuncPress := RL_FILIAL + RL_CC
+		dbSkip()
+		
+	Enddo
+	
+	
+	if RL_CC != subs(cFuncPress,3) .AND. nOrdem == 4 .and. aDirfCC[14,1] != 0
+		
+		fResumoCC(aDirfCC)
+		aDirfCC := fZeraArray(aDirfCC)
+		imprdrf(" ","P")
+		
+	endif
+	
+	if RL_FILIAL != LEFT(cFuncPress,2) .and. aDirfFI[14,1] != 0
+		
+		fResumoFI(aDirfFI)
+		aDirfFI := fZeraArray(aDirfFI)
+		imprdrf(" ","P")
+		
+	endif
+	
+Enddo
+
+
+fResumoGeral(aDirfTT)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Termino do relatorio                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Set Device To Screen
+If aReturn[5] = 1
+	Set Printer To
+	Commit
+	ourspool(wnrel)
+Endif
+RestArea(aArea)
+MS_FLUSH()
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ fResumoGeral ³ Autor ³ Adalberto Althoff ³ Data ³ 01.02.05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Imprime o resumo de empresa da Dirf                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fResumoGeral(aD)                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ aD          - Array com os valores somados                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CSUM570                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+static function fResumoGeral(aD)
+
+nFunc := 0
+if aD[14,1] != 0
+	imprdrf(" ","P")
+	//imprdrf(Repl("=",80),"C")
+	//imprdrf(" ","C")
+	Det := "Total da Empresa"
+	imprdrf(Det,"C")
+	Det := " (" + alltrim(str(nTtTT)) + " funcionarios)"
+	imprdrf(Det,"C")
+	imprdrf(" ","C")
+	Det := STR0029 //" Mes       Moeda    Rend. Tributavel             Deducoes       Imposto Retido"
+	imprdrf(Det,"C")
+	Det := " --------- -----    ----------------             --------       --------------"
+	imprdrf(Det,"C")
+	
+	For M = 1 to 14
+		Det := aMes[M]
+		Det := Det + STR0030 //"  Real"
+		For n = 1 to 3
+			Det = Det + "      " + Str(aD[M,N],15,2)
+		Next n
+		imprdrf(Det,"C")
+	Next
+	imprdrf(Repl("=",80),"C")
+endif
+
+return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ fResumoFI ³ Autor ³ Adalberto Althoff ³ Data ³ 01.02.05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Imprime o resumo de filial da Dirf                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fResumoFI(aD)                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ aD       - Array com os valores somados                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CSUM570                                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+static function fResumoFI(aD)
+
+nFunc := 0
+imprdrf(" ","P")
+//imprdrf(Repl("=",80),"C")
+//imprdrf(" ","C")
+Det := "Total da Filial " + LEFT(cFuncPress,2)
+imprdrf(Det,"C")
+Det := " (" + alltrim(str(nTtFI)) + " funcionarios)"
+imprdrf(Det,"C")
+nTtFI := 0
+imprdrf(" ","C")
+Det := STR0029 //" Mes       Moeda    Rend. Tributavel             Deducoes       Imposto Retido"
+imprdrf(Det,"C")
+Det := " --------- -----    ----------------             --------       --------------"
+imprdrf(Det,"C")
+
+For M = 1 to 14
+	Det := aMes[M]
+	Det := Det + STR0030 //"  Real"
+	For n = 1 to 3
+		Det = Det + "      " + Str(aD[M,N],15,2)
+	Next n
+	imprdrf(Det,"C")
+Next
+imprdrf(Repl("=",80),"C")
+
+return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ fResumoCC ³ Autor ³ Adalberto Althoff ³ Data ³ 01.02.05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Imprime o resumo de Centro de Custo da Dirf             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fResumoCC(aD)                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ aD       - Array com os valores somados                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CSUM570                                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+static function fResumoCC(aD)
+
+nFunc := 0
+imprdrf(" ","P")
+//imprdrf(Repl("=",80),"C")
+//imprdrf(" ","C")
+Det := "Total do Centro de Custo " + subs(cFuncPress,3)+"  "+ALLTRIM(POSICIONE("CTT",1,XFILIAL("CTT")+subs(cFuncPress,3),"CTT_DESC01"))
+imprdrf(Det,"C")
+Det := " (" + alltrim(str(nTtCC)) + " funcionarios)"
+imprdrf(Det,"C")
+nTtCC := 0
+imprdrf(" ","C")
+Det := STR0029 //" Mes       Moeda    Rend. Tributavel             Deducoes       Imposto Retido"
+imprdrf(Det,"C")
+Det := " --------- -----    ----------------             --------       --------------"
+imprdrf(Det,"C")
+
+For M = 1 to 14
+	Det := aMes[M]
+	Det := Det + STR0030 //"  Real"
+	For n = 1 to 3
+		Det = Det + "      " + Str(aD[M,N],15,2)
+	Next n
+	imprdrf(Det,"C")
+Next
+imprdrf(Repl("=",80),"C")
+
+return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fZeraArray ³ Autor ³ Adalberto Althoff ³ Data ³ 01.02.05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Coloca zero em todas as posicoes do array               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fZeraArray(aD)                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ aD       - Array a ser zerado.                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CSUM570                                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+static function fZeraArray(aD)
+
+For M = 1 to 14
+	For N = 1 TO 3
+		aD[M,N] := 000000000000.00
+	Next M
+Next
+
+Return(aD)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fSomaArray ³ Autor ³ Adalberto Althoff ³ Data ³ 01.02.05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Soma um array no outro.                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fSomaArray(aD,aF)                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ aD       - Array com resultado da soma                  ³±±
+±±³          ³ aF       - Array com valor a ser somado                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CSUM570                                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+static function fSomaArray(aD,aF)
+
+For M = 1 to 14
+	For n = 1 to 3
+		aD[M,N] += aF[M,N]
+	Next n
+Next
+return(aD)				
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³ImprDrf   ºAutor  ³Adalberto Althoff Jrº Data ³  02/02/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ salto de pagina com 65 linhas                              º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ csum570                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+static Function ImprDrf(	cDetalhe	,;	//01 -> Linha Detalhe a ser impressa.
+		   					cFimFolha	,;	//02 -> "F" ou "P" Imprime Rodape e Salta de Pagina. Qualquer outro Ex.: "C" Imprime Detalhe e  Incrementa Li.
+							nReg		,;	//03 -> Numero de Registros a Serem Impressos no Rodape.
+							cRoda		,;	//04 -> Descritivo a Ser Impresso no Rodape apos nReg.
+							nColuna		,;	//05 -> Coluna onde Iniciar Impressao do Detalhe.
+							lSalta		,;	//06 -> Se deve ou nao Incrementar o salto de Linha.
+							lMvImpSX1	,;	//07 -> Se Deve Considerar o Parametro MV_IMPSX1 ao inves do MV_PERGRH
+							bCabec		,;	//08 -> Bloco com a Chamada de Funcao para Cabecalho Especifico
+							bRoda		 ;	//09 -> Bloco com a Chamada de Funcao para Rodape Especifico
+						  )
+
+Local aCabec		:= {}
+Local cDetCab		:= ""
+Local cWCabec		:= ""
+Local lbCabec		:= ( ValType( bCabec ) == "B" )
+Local lbRoda        := ( ValType( bRoda  ) == "B" )
+Local nCb			:= 0.00
+Local nSpace		:= 0.00
+
+Static lPerg
+Static nNormal
+Static nComp
+
+if empty(lMvImpSX1)
+	lMvImpSX1	:= .F.
+endif
+if empty(lPerg)
+	lPerg  		:= ( GetMv( IF( lMvImpSX1 , "MV_IMPSX1" , "MV_PERGRH" ) ) == "S" )
+endif
+if empty(nNormal)	
+	nNormal		:= GetMv("MV_NORM")
+endif
+if empty(nComp)	
+	nComp		:= GetMv("MV_COMP")
+endif
+if empty(cFimFolha)	
+	cFimFolha	:= ""
+endif
+if empty(cDetalhe)	
+	cDetalhe	:= ""
+endif	
+if empty(nReg)
+	nReg		:= 0.00
+endif
+if empty(nColuna)	
+	nColuna 	:= 0.00
+endif
+if empty(lSalta)	
+	lSalta		:= .T.
+endif	
+
+wnRel		:= IF( Type("wnRel")	== "U" , IF( Type("NomeProg") != "U" ,  NomeProg , "" ) , wnRel )
+wCabec0		:= IF( Type("wCabec0")	== "U" , 0	, wCabec0	)
+wCabec1 	:= IF( Type("wCabec1")	== "U" , "" , wCabec1	)
+wCabec2 	:= IF( Type("wCabec2")	== "U" , "" , wCabec2	)
+nChar		:= IF( Type("nChar")	== "U" , NIL , IF( nChar == 15 , nComp , nNormal ) ) // Quando nao for compactado nChar deve ser Nil para tratamento da Cabec.
+ContFl		:= IF( Type("ContFl")   == "U" , 1   , ContFl   )
+nTamanho	:= IF( Type("nTamanho") == "U" , "P" , nTamanho )
+Li			:= IF( Type("Li")		== "U" , 0   , Li		)
+Titulo		:= IF( Type("Titulo")   == "U" , ""  , Titulo   )
+aReturn		:= IF( Type("aReturn")  == "U" , {"",1,"",2,1,"","",1} , aReturn )
+
+m_pag		:= ContFl
+nSpace		:= IF( nTamanho == "P" , 80 , IF( nTamanho == "G" , 220 , 132 ) )
+cFimFolha	:= Upper( AllTrim( cFimFolha ) )
+
+IF ( ( cFimFolha $ "FP" ) .or. ( Li >= 65 ) )
+	IF ( Li != 0.00 )
+		IF ( ( cFimFolha $ "F" ) .or. ( cRoda != NIL ) )
+			IF !( lbRoda )
+				IF ( ( nReg == 0.00 ) .or. ( cRoda == NIL ) )
+					Roda( 0.00 , ""    , nTamanho )
+				Else
+					Roda( nReg , cRoda , nTamanho )
+				EndIF
+			Else
+				Eval( bRoda )
+			EndIF	
+		EndIF
+		Li := 0.00
+	EndIF
+	IF ( ( cFimFolha == "F" ) .or. ( ( cFimFolha == "P" ) .and. Empty( cDetalhe ) ) )
+		Return( NIL )
+	EndIF
+EndIF
+
+IF ( Li == 0.00 )
+	IF !( lbCabec )
+		IF ( wCabec0 <= 2 )
+			Cabec( Titulo , wcabec1 , wcabec2 , wnrel , nTamanho , nChar , NIL , lPerg )
+		Else
+		    aCabec := SendCab(nSpace)
+		    For nCb := 1 To wCabec0
+		    	IF ( Type((cWCabec := "wCabec"+Alltrim(Str(nCb)))) != "U" )
+			    	cDetCab := &(cWCabec)
+			    	cDetCab += Space(nSpace - Len(cDetCab) -1)
+		    		aAdd(aCabec,"__NOTRANSFORM__"+cDetCab)
+		    	EndIF
+		    Next nCb
+		  	Cabec( Titulo , "" , "" , wnrel , nTamanho , nChar , aCabec , lPerg )
+		EndIF
+	Else
+		Eval( bCabec )
+	EndIF
+	ContFl++
+EndIF
+
+IF ( Len( cDetalhe ) == nSpace )
+	IF ( Empty(StrTran(cDetalhe,"-","")) .or. Empty(StrTran(cDetalhe,".","")) )
+		cDetalhe := __PrtThinLine()
+	ElseIF ( Empty(StrTran(cDetalhe,"=","")) .or. Empty(StrTran(cDetalhe,"*","")) )
+		cDetalhe := __PrtFatLine()
+	EndIF
+EndIF
+
+@ Li , nColuna PSAY cDetalhe
+
+IF(lSalta,Li++,NIL)
+
+Return( NIL )

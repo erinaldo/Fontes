@@ -1,0 +1,860 @@
+#line 1 "C:\INCLUDE\Rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "Rwmake.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\RELATO~1\rctbr02.prw"
+#line 1 "C:\INCLUDE\TopConn.ch"
+#line 20 "c:\users\cst1350.br\desktop\PROJET~1\contabil\RELATO~1\rctbr02.prw"
+Function U_Rctbr02()
+
+Private nOpca       := 0
+Private cCadastro   := "Geracao de Planilha com amarracao contabil incorreta"
+Private aRegs := {}, aSays := {}, aButtons := {}
+Private oExcelApp, cLin
+Private cDirDocs	:= MsDocPath()
+Private cArquivo	:= CriaTrab(, .F. )
+Private cTempPath	:= Alltrim(GetTempPath())
+Private cCmd		:= cDirDocs+"\"+cArquivo+".xls"
+Private cPerg       := PADR("RCTBR2",LEN(SX1->X1_GRUPO))
+Private cFuncao     := " Processa( { || Rctbr02a() }, 'Processando o Verificacao....' ) "
+Private cVldExcel   := " IIF( ValType(oExcelApp)$'O', (oExcelApp:Quit(), oExcelApp:Destroy() ), .t. ) "
+Private lSair       := .f. 
+Private oExcelApp
+
+aAdd(aRegs,{cPerg,"01","Filial De.............:","","","mv_ch1","C",02,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","","SM0","","","","",""})
+aAdd(aRegs,{cPerg,"02","Filial Ate............:","","","mv_ch2","C",02,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","","SM0","","","","",""})
+aAdd(aRegs,{cPerg,"03","Quanto a Listagem.....:","","","mv_ch3","N",01,0,0,"C","","mv_par03","Ativos","","","","","Rat. Externos","","","","","","","","","","","","","","","","","","","","","","","",""})
+
+nHdl := fCreate(cDirDocs+"\"+cArquivo+".csv")
+
+U_ValidPerg( cPerg, aRegs )
+
+Pergunte(cPerg, .f. )
+
+If nHdl = -1
+
+
+	Aviso("EXCEL","Nao esta sendo possivel acessar o diretorio de arquivos temporarios de sua estacao.", {"&Fechar"},3,"Geracao de Arquivo Excel",, "PCOLOCK")
+	Return
+Endif
+
+MkwDlg = MsDialog():New( 298, 302, 500, 721, "Listagem das Entidades Erradas",,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+ TGroup():New(002,003,100,165,OemToAnsi(),, , , .t. )
+ TGroup():New(012,170,087,203,OemToAnsi(),, , , .t. )
+ IW_Say(035,015,"Listagem de Ativos ou Rateios Externos cujas entidades estao com-",,,,141,8 )
+ IW_Say(045,015,"binadas de forma incorreta. ",,,,142,8 )
+ TButton():New( 020, 173, OemToAnsi(StrTran("_Parametros", "_", "&")) , ,{|Self|(Pergunte(cPerg, .t. ))}, 28, 16,,,, .t. )
+ TButton():New( 042, 173, OemToAnsi(StrTran("_Gerar", "_", "&")) , ,{|Self|(&(cFuncao))}, 28, 16,,,, .t. )
+ TButton():New( 064, 173, OemToAnsi(StrTran("_Sair", "_", "&")) , ,{|Self|(&(cVldExcel),lSair:= .t. ,MkwDlg:End())}, 28, 16,,,, .t. )
+
+mkwdlg:Activate(,,,.T.,{|Self|lSair}, ,)
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function Rctbr02a()
+
+Local cQuery
+Private nHdl
+Private cEOL := CHR(13)+CHR(10), cLin := ""
+
+If MV_PAR03 == 1
+	cQuery := " SELECT N1_FILIAL, N1_CBASE, N1_DESCRIC, N1_CHAPA, N3_SUBCTA, N3_CLVL, N3_CUSTBEM, N3_CCUSTO "
+	cQuery += " FROM "+RetSqlName("SN1")+" SN1, "+RetSqlName("SN3")+" SN3 "
+	cQuery += " WHERE ( N3_DTBAIXA = ' ' OR (N3_DTBAIXA BETWEEN '"+Substr(Dtos(dDatabase),1,6)+"01"+"' AND '"+Dtos(dDataBase)+"' )) "
+	cQuery += " AND ( N3_BAIXA < '1' OR (N3_BAIXA >= '1' AND N3_NOVO = '1') ) "
+	cQuery += " AND N3_CCONTAB <> '"+Space(Len(SN3->N3_CCONTAB))+"' "
+	cQuery += " AND N3_AQUISIC <= '"+DTOS(dDataBase)+"' "
+	cQuery += " AND SN3.D_E_L_E_T_=' ' "
+	cQuery += " AND N1_FILIAL  BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"' "
+	cQuery += " AND N1_CBASE   = N3_CBASE  "
+	cQuery += " AND N1_ITEM    = N3_ITEM  "
+	cQuery += " AND (N1_DTBLOQ = ' ' OR N1_DTBLOQ < '"+ Dtos(dDataBase) + "') "
+	cQuery += " AND SN1.D_E_L_E_T_ = ' ' "
+Else
+	cQuery := " SELECT CTJ_RATEIO, CTJ_SEQUEN, CTJ_DESC, CTJ_CCD, CTJ_ITEMD, CTJ_CLVLDB "
+	cQuery += " FROM "+RetSqlName("CTJ")
+	cQuery += " WHERE D_E_L_E_T_ = ' ' "
+EndIf
+
+nCntView := U_MontaView( cQuery, "Work" )
+
+Work->( DbGoTop() )
+
+
+
+
+
+
+
+Rctbr02b()
+
+ProcRegua( nCntView )
+
+While !Work->( Eof() )
+
+	IncProc()
+
+	If MV_PAR03 == 1
+
+		If U_VldCTBg( Work->N3_SUBCTA, Work->N3_CUSTBEM, Work->N3_CLVL, Nil,Nil, .f.   ) .And.  U_VldCTBg( Work->N3_SUBCTA, Work->N3_CCUSTO, Work->N3_CLVL, Nil,Nil, .f.   )
+			Work->( DbSkip() )
+			Loop
+		EndIf
+
+		cLin += "<td class=xl3431556 style='border-left:none'>"+Work->N1_FILIAL+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->N1_CBASE+"</td> "
+		cLin += "<td class=xl3431556 style='border-left:none'>"+Work->N1_DESCRIC+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->N3_CUSTBEM+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->N3_CCUSTO+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->N3_SUBCTA+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->N3_CLVL+"</td> "
+	Else
+		If U_VldCTBg( Work->CTJ_CCD, Work->CTJ_ITEMD, Work->CTJ_CLVLDB, Nil,Nil, .f.   )
+			Work->( DbSkip() )
+			Loop
+		EndIf
+
+		cLin += "<td class=xl3431556 style='border-left:none'>"+Work->CTJ_RATEIO+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->CTJ_SEQUEN+"</td> "
+		cLin += "<td class=xl3431556 style='border-left:none'>"+Work->CTJ_DESC+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->CTJ_CCD+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->CTJ_ITEMD+"</td> "
+		cLin += "<td class=xl3331556 style='border-left:none'>"+Work->CTJ_CLVLDB+"</td> "
+	EndIf
+
+
+
+
+	xAddToFile( cLin, cCmd )
+
+	cLin := " 	  <tr height=17 style='height:12.75pt'> "
+	cLin += " 	   <td height=17 class=xl2531556 style='height:12.75pt'></td> "
+
+	Work->( DbSkip() )
+
+EndDo
+
+
+
+
+
+
+
+cLin += " </table> "
+cLin += " </div> "
+cLin += " </body> "
+cLin += " </html> "
+
+xAddToFile( cLin, cCmd )
+
+CpyS2T(cDirDocs+"\"+cArquivo+".xls",cTempPath, .T. )
+
+oExcelApp := MsExcel():New()
+oExcelApp:WorkBooks:Open(cTempPath+cArquivo+".xls")
+oExcelApp:SetVisible( .T. )
+
+Ferase( cDirDocs+"\"+cArquivo+".xls" )
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function xAddToFile( cLog, cToFile )
+
+Local nHdl  := -1
+Local cBuff := cLog
+
+If File( cToFile )
+
+	nHdl := FOpen( cToFile, 1 )
+
+	If nHdl >= 0
+
+		FSeek( nHdl, 0, 2 )
+
+	EndIf
+
+Else
+
+	nHdl := FCreate( cToFile )
+
+EndIf
+
+If nHdl >= 0
+
+	FWrite( nHdl,  cBuff, Len( cBuff ) )
+
+EndIf
+
+FClose( nHdl )
+
+Return
+
+Static Function Rctbr02b()
+
+Local cGrvBuff := ""
+
+cGrvBuff += ' <html xmlns:v="urn:schemas-microsoft-com:vml" '
+cGrvBuff += ' xmlns:o="urn:schemas-microsoft-com:office:office" '
+cGrvBuff += ' xmlns:x="urn:schemas-microsoft-com:office:excel" '
+cGrvBuff += ' xmlns="http://www.w3.org/TR/REC-html40"> '
+cGrvBuff += " <head> "
+cGrvBuff += ' <meta http-equiv=Content-Type content="text/html; charset=windows-1252"> '
+cGrvBuff += " <meta name=ProgId content=Excel.Sheet> "
+cGrvBuff += ' <meta name=Generator content="Microsoft Excel 11"> '
+cGrvBuff += ' <link rel=File-List href="sc356290_arquivos/filelist.xml"> '
+cGrvBuff += " <style> "
+cGrvBuff += " v\:* {behavior:url(#default#VML);} "
+cGrvBuff += " o\:* {behavior:url(#default#VML);} "
+cGrvBuff += " x\:* {behavior:url(#default#VML);} "
+cGrvBuff += " .shape {behavior:url(#default#VML);} "
+cGrvBuff += " </style> "
+cGrvBuff += ' <style id="Pedidos  BackLog1_31556_Styles"> '
+cGrvBuff += " <!--table "
+cGrvBuff += ' 	{mso-displayed-decimal-separator:"\,"; '
+cGrvBuff += ' 	mso-displayed-thousand-separator:"\.";} '
+cGrvBuff += " .xl1531556 "
+cGrvBuff += " 	{padding:0px; "
+cGrvBuff += " 	mso-ignore:padding; "
+cGrvBuff += " 	color:windowtext; "
+cGrvBuff += " 	font-size:10.0pt; "
+cGrvBuff += " 	font-weight:400; "
+cGrvBuff += " 	font-style:normal; "
+cGrvBuff += " 	text-decoration:none; "
+cGrvBuff += " 	font-family:Arial; "
+cGrvBuff += " 	mso-generic-font-family:auto; "
+cGrvBuff += " 	mso-font-charset:0; "
+cGrvBuff += " 	mso-number-format:General; "
+cGrvBuff += " 	text-align:general; "
+cGrvBuff += " 	vertical-align:bottom; "
+cGrvBuff += " 	mso-background-source:auto; "
+cGrvBuff += " 	mso-pattern:auto; "
+cGrvBuff += " 	white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " .xl2231556 "
+cGrvBuff += " 	{padding:0px; "
+cGrvBuff += " 	mso-ignore:padding; "
+cGrvBuff += " 	color:windowtext; "
+cGrvBuff += " 	font-size:10.0pt; "
+cGrvBuff += " 	font-weight:700; "
+cGrvBuff += " 	font-style:normal; "
+cGrvBuff += " 	text-decoration:none; "
+cGrvBuff += " 	font-family:Arial, sans-serif; "
+cGrvBuff += " 	mso-font-charset:0; "
+cGrvBuff += " 	mso-number-format:General; "
+cGrvBuff += " 	text-align:general; "
+cGrvBuff += " 	vertical-align:bottom; "
+cGrvBuff += " 	mso-background-source:auto; "
+cGrvBuff += " 	mso-pattern:auto; "
+cGrvBuff += " 	white-space:nowrap;} "
+cGrvBuff += " .xl2331556 "
+cGrvBuff += " 	{padding:0px; "
+cGrvBuff += " 	mso-ignore:padding; "
+cGrvBuff += " 	color:windowtext; "
+cGrvBuff += " 	font-size:10.0pt; "
+cGrvBuff += " 	font-weight:700; "
+cGrvBuff += " 	font-style:normal; "
+cGrvBuff += " 	text-decoration:none; "
+cGrvBuff += " 	font-family:Arial, sans-serif; "
+cGrvBuff += " 	mso-font-charset:0; "
+cGrvBuff += ' 	mso-number-format:"Short Date"; '
+cGrvBuff += " 	text-align:general; "
+cGrvBuff += " 	vertical-align:bottom; "
+cGrvBuff += " 	mso-background-source:auto; "
+cGrvBuff += " 	mso-pattern:auto; "
+cGrvBuff += " 	white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " .xl2431556 "
+cGrvBuff += " 	{padding:0px; "
+cGrvBuff += " 	mso-ignore:padding; "
+cGrvBuff += " 	color:windowtext; "
+cGrvBuff += " 	font-size:10.0pt; "
+cGrvBuff += " 	font-weight:400; "
+cGrvBuff += " 	font-style:normal; "
+cGrvBuff += " 	text-decoration:none; "
+cGrvBuff += " 	font-family:Arial; "
+cGrvBuff += " 	mso-generic-font-family:auto; "
+cGrvBuff += " 	mso-font-charset:0; "
+cGrvBuff += ' 	mso-number-format:"\0022R$ \0022\#\,\#\#0\.00"; '
+cGrvBuff += " 	text-align:general; "
+cGrvBuff += " 	vertical-align:bottom; "
+cGrvBuff += " 	mso-background-source:auto; "
+cGrvBuff += " 	mso-pattern:auto; "
+cGrvBuff += " 	white-space:nowrap;}  "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	.xl2531556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:400; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial, sans-serif; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += " 		mso-number-format:General; "
+cGrvBuff += " 		text-align:general; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+cGrvBuff += " 	.xl2631556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:400; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial; "
+cGrvBuff += " 		mso-generic-font-family:auto; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"_\(* \#\,\#\#0\.00_\)\;_\(* \\\(\#\,\#\#0\.00\\\)\;_\(* \0022-\0022??_\)\;_\(\@_\)"; '
+cGrvBuff += " 		text-align:general; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	.xl2731556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:400; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial; "
+cGrvBuff += " 		mso-generic-font-family:auto; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += " 		mso-number-format:General; "
+cGrvBuff += " 		text-align:general; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		border:.5pt solid silver; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+cGrvBuff += " 	.xl2831556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:400; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial; "
+cGrvBuff += " 		mso-generic-font-family:auto; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"_\(* \#\,\#\#0\.00_\)\;_\(* \\\(\#\,\#\#0\.00\\\)\;_\(* \0022-\0022??_\)\;_\(\@_\)"; '
+cGrvBuff += " 		text-align:right; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		border:.5pt solid silver; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	.xl2931556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:400; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial; "
+cGrvBuff += " 		mso-generic-font-family:auto; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"_\(* \#\,\#\#0\.00_\)\;_\(* \\\(\#\,\#\#0\.00\\\)\;_\(* \0022-\0022??_\)\;_\(\@_\)"; '
+cGrvBuff += " 		text-align:general; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		border:.5pt solid silver; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+cGrvBuff += " 	.xl3031556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:400; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial; "
+cGrvBuff += " 		mso-generic-font-family:auto; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"_\(* \#\,\#\#0\.00_\)\;_\(* \\\(\#\,\#\#0\.00\\\)\;_\(* \0022-\0022??_\)\;_\(\@_\)"; '
+cGrvBuff += " 		text-align:left; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		border:.5pt solid silver; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	.xl3131556 "
+cGrvBuff += " 			{padding:0px; "
+cGrvBuff += " 			mso-ignore:padding; "
+cGrvBuff += " 			color:windowtext; "
+cGrvBuff += " 			font-size:10.0pt; "
+cGrvBuff += " 			font-weight:400; "
+cGrvBuff += " 			font-style:normal; "
+cGrvBuff += " 			text-decoration:none; "
+cGrvBuff += " 			font-family:Arial; "
+cGrvBuff += " 			mso-generic-font-family:auto; "
+cGrvBuff += " 			mso-font-charset:0; "
+cGrvBuff += " 			mso-number-format:General; "
+cGrvBuff += " 			text-align:center; "
+cGrvBuff += " 			vertical-align:bottom; "
+cGrvBuff += " 			border:.5pt solid silver; "
+cGrvBuff += " 			mso-background-source:auto; "
+cGrvBuff += " 			mso-pattern:auto; "
+cGrvBuff += " 			white-space:nowrap;} "
+cGrvBuff += " 		.xl3231556 "
+cGrvBuff += " 			{padding:0px; "
+cGrvBuff += " 			mso-ignore:padding; "
+cGrvBuff += " 			color:windowtext; "
+cGrvBuff += " 			font-size:10.0pt; "
+cGrvBuff += " 			font-weight:400; "
+cGrvBuff += " 			font-style:normal; "
+cGrvBuff += " 			text-decoration:none; "
+cGrvBuff += " 			font-family:Arial; "
+cGrvBuff += " 			mso-generic-font-family:auto; "
+cGrvBuff += " 			mso-font-charset:0; "
+cGrvBuff += ' 			mso-number-format:"d\/mmm"; '
+cGrvBuff += " 			text-align:center; "
+cGrvBuff += " 			vertical-align:bottom;  "
+cGrvBuff += " 			border:.5pt solid silver; "
+cGrvBuff += " 			mso-background-source:auto; "
+cGrvBuff += " 			mso-pattern:auto; "
+cGrvBuff += " 			white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 		.xl3331556 "
+cGrvBuff += " 			{padding:0px; "
+cGrvBuff += " 			mso-ignore:padding; "
+cGrvBuff += " 			color:windowtext; "
+cGrvBuff += " 			font-size:10.0pt; "
+cGrvBuff += " 			font-weight:400; "
+cGrvBuff += " 			font-style:normal; "
+cGrvBuff += " 			text-decoration:none; "
+cGrvBuff += " 			font-family:Arial; "
+cGrvBuff += " 			mso-generic-font-family:auto; "
+cGrvBuff += " 			mso-font-charset:0; "
+cGrvBuff += ' 			mso-number-format:"d\/mmm"; '
+cGrvBuff += " 			text-align:center; "
+cGrvBuff += " 			vertical-align:bottom; "
+cGrvBuff += " 			border-top:none; "
+cGrvBuff += " 			border-right:.5pt solid silver; "
+cGrvBuff += " 			border-bottom:.5pt solid silver; "
+cGrvBuff += " 			border-left:.5pt solid silver; "
+cGrvBuff += " 			mso-background-source:auto; "
+cGrvBuff += " 			mso-pattern:auto; "
+cGrvBuff += " 			white-space:nowrap;} "
+cGrvBuff += " 		.xl3431556 "
+cGrvBuff += " 			{padding:0px; "
+cGrvBuff += " 			mso-ignore:padding; "
+cGrvBuff += " 			color:windowtext; "
+cGrvBuff += " 			font-size:10.0pt; "
+cGrvBuff += " 			font-weight:400; "
+cGrvBuff += " 			font-style:normal; "
+cGrvBuff += " 			text-decoration:none; "
+cGrvBuff += " 			font-family:Arial; "
+cGrvBuff += " 			mso-generic-font-family:auto; "
+cGrvBuff += " 			mso-font-charset:0; "
+cGrvBuff += " 			mso-number-format:General; "
+cGrvBuff += " 			text-align:center; "
+cGrvBuff += " 			vertical-align:bottom; "
+cGrvBuff += " 			border-top:none; "
+cGrvBuff += " 			border-right:.5pt solid silver; "
+cGrvBuff += " 			border-bottom:.5pt solid silver; "
+cGrvBuff += " 			border-left:.5pt solid silver; "
+cGrvBuff += " 			mso-background-source:auto; "
+cGrvBuff += " 			mso-pattern:auto; "
+cGrvBuff += " 			white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 		.xl3531556 "
+cGrvBuff += " 			{padding:0px; "
+cGrvBuff += " 			mso-ignore:padding; "
+cGrvBuff += " 			color:windowtext; "
+cGrvBuff += " 			font-size:10.0pt; "
+cGrvBuff += " 			font-weight:400; "
+cGrvBuff += " 			font-style:normal; "
+cGrvBuff += " 			text-decoration:none; "
+cGrvBuff += " 			font-family:Arial; "
+cGrvBuff += " 			mso-generic-font-family:auto; "
+cGrvBuff += " 			mso-font-charset:0; "
+cGrvBuff += " 			mso-number-format:General; "
+cGrvBuff += " 			text-align:general; "
+cGrvBuff += " 			vertical-align:bottom; "
+cGrvBuff += " 			border-top:none; "
+cGrvBuff += " 			border-right:.5pt solid silver; "
+cGrvBuff += " 			border-bottom:.5pt solid silver; "
+cGrvBuff += " 			border-left:.5pt solid silver; "
+cGrvBuff += " 			mso-background-source:auto; "
+cGrvBuff += " 			mso-pattern:auto; "
+cGrvBuff += " 			white-space:nowrap;} "
+cGrvBuff += " 		.xl3631556 "
+cGrvBuff += " 			{padding:0px; "
+cGrvBuff += " 			mso-ignore:padding; "
+cGrvBuff += " 			color:windowtext; "
+cGrvBuff += " 			font-size:10.0pt; "
+cGrvBuff += " 			font-weight:400; "
+cGrvBuff += " 			font-style:normal; "
+cGrvBuff += " 			text-decoration:none; "
+cGrvBuff += " 			font-family:Arial; "
+cGrvBuff += " 			mso-generic-font-family:auto; "
+cGrvBuff += " 			mso-font-charset:0; "
+cGrvBuff += ' 			mso-number-format:"_\(* \#\,\#\#0\.00_\)\;_\(* \\\(\#\,\#\#0\.00\\\)\;_\(* \0022-\0022??_\)\;_\(\@_\)"; '
+cGrvBuff += " 			text-align:right; "
+cGrvBuff += " 			vertical-align:bottom; "
+cGrvBuff += " 			border-top:none; "
+cGrvBuff += " 			border-right:.5pt solid silver; "
+cGrvBuff += " 			border-bottom:.5pt solid silver; "
+cGrvBuff += " 			border-left:.5pt solid silver; "
+cGrvBuff += " 			mso-background-source:auto; "
+cGrvBuff += " 			mso-pattern:auto; "
+cGrvBuff += " 			white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 		.xl3731556 "
+cGrvBuff += " 			{padding:0px; "
+cGrvBuff += " 			mso-ignore:padding; "
+cGrvBuff += " 			color:windowtext; "
+cGrvBuff += " 			font-size:10.0pt; "
+cGrvBuff += " 			font-weight:700; "
+cGrvBuff += " 			font-style:normal; "
+cGrvBuff += " 			text-decoration:none; "
+cGrvBuff += " 			font-family:Arial, sans-serif; "
+cGrvBuff += " 			mso-font-charset:0; "
+cGrvBuff += " 			mso-number-format:General; "
+cGrvBuff += " 			text-align:center; "
+cGrvBuff += " 			vertical-align:middle; "
+cGrvBuff += " 			border-top:1.0pt solid windowtext; "
+cGrvBuff += " 			border-right:.5pt solid windowtext; "
+cGrvBuff += " 			border-bottom:1.0pt solid windowtext; "
+cGrvBuff += " 			border-left:1.0pt solid windowtext; "
+cGrvBuff += " 			background:#99CCFF; "
+cGrvBuff += " 			mso-pattern:auto none; "
+cGrvBuff += " 			white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 			.xl3831556 "
+cGrvBuff += " 				{padding:0px; "
+cGrvBuff += " 				mso-ignore:padding; "
+cGrvBuff += " 				color:windowtext; "
+cGrvBuff += " 				font-size:10.0pt; "
+cGrvBuff += " 				font-weight:700; "
+cGrvBuff += " 				font-style:normal; "
+cGrvBuff += " 				text-decoration:none; "
+cGrvBuff += " 				font-family:Arial, sans-serif; "
+cGrvBuff += " 				mso-font-charset:0; "
+cGrvBuff += " 				mso-number-format:General; "
+cGrvBuff += " 				text-align:center; "
+cGrvBuff += " 				vertical-align:middle; "
+cGrvBuff += " 					border-top:1.0pt solid windowtext; "
+cGrvBuff += " 					border-right:.5pt solid windowtext; "
+cGrvBuff += " 					border-bottom:1.0pt solid windowtext; "
+cGrvBuff += " 					border-left:.5pt solid windowtext; "
+cGrvBuff += " 					background:#99CCFF; "
+cGrvBuff += " 					mso-pattern:auto none; "
+cGrvBuff += " 					white-space:nowrap;} "
+cGrvBuff += " 				.xl3931556 "
+cGrvBuff += " 					{padding:0px; "
+cGrvBuff += " 					mso-ignore:padding; "
+cGrvBuff += " 					color:windowtext; "
+cGrvBuff += " 					font-size:10.0pt; "
+cGrvBuff += " 					font-weight:700; "
+cGrvBuff += " 					font-style:normal; "
+cGrvBuff += " 					text-decoration:none; "
+cGrvBuff += " 					font-family:Arial, sans-serif; "
+cGrvBuff += " 					mso-font-charset:0; "
+cGrvBuff += ' 					mso-number-format:"_\(* \#\,\#\#0\.00_\)\;_\(* \\\(\#\,\#\#0\.00\\\)\;_\(* \0022-\0022??_\)\;_\(\@_\)"; '
+cGrvBuff += " 					text-align:center; "
+cGrvBuff += " 					vertical-align:middle; "
+cGrvBuff += " 					border-top:1.0pt solid windowtext; "
+cGrvBuff += " 					border-right:.5pt solid windowtext; "
+cGrvBuff += " 					border-bottom:1.0pt solid windowtext; "
+cGrvBuff += " 					border-left:.5pt solid windowtext; "
+cGrvBuff += " 					background:#99CCFF; "
+cGrvBuff += " 					mso-pattern:auto none; "
+cGrvBuff += " 					white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 				.xl4031556 "
+cGrvBuff += " 					{padding:0px; "
+cGrvBuff += " 					mso-ignore:padding; "
+cGrvBuff += " 					color:windowtext; "
+cGrvBuff += " 					font-size:10.0pt; "
+cGrvBuff += " 					font-weight:700; "
+cGrvBuff += " 					font-style:normal; "
+cGrvBuff += " 					text-decoration:none; "
+cGrvBuff += " 					font-family:Arial, sans-serif; "
+cGrvBuff += " 					mso-font-charset:0; "
+cGrvBuff += ' 					mso-number-format:"\0022R$ \0022\#\,\#\#0\.00"; '
+cGrvBuff += " 					text-align:center; "
+cGrvBuff += " 					vertical-align:middle; "
+cGrvBuff += " 					border-top:1.0pt solid windowtext; "
+cGrvBuff += " 					border-right:.5pt solid windowtext; "
+cGrvBuff += " 					border-bottom:1.0pt solid windowtext; "
+cGrvBuff += " 					border-left:.5pt solid windowtext; "
+cGrvBuff += " 					background:#99CCFF; "
+cGrvBuff += " 					mso-pattern:auto none; "
+cGrvBuff += " 					white-space:nowrap;} "
+cGrvBuff += " 				.xl4131556 "
+cGrvBuff += " 					{padding:0px; "
+cGrvBuff += " 					mso-ignore:padding; "
+cGrvBuff += " 					color:windowtext; "
+cGrvBuff += " 					font-size:10.0pt; "
+cGrvBuff += " 					font-weight:700; "
+cGrvBuff += " 					font-style:normal; "
+cGrvBuff += " 					text-decoration:none; "
+cGrvBuff += " 					font-family:Arial, sans-serif; "
+cGrvBuff += " 					mso-font-charset:0; "
+cGrvBuff += " 					mso-number-format:General; "
+cGrvBuff += " 					text-align:center; "
+cGrvBuff += " 					vertical-align:middle; "
+cGrvBuff += " 					border-top:1.0pt solid windowtext; "
+cGrvBuff += " 					border-right:1.0pt solid windowtext; "
+cGrvBuff += " 					border-bottom:1.0pt solid windowtext; "
+cGrvBuff += " 					border-left:.5pt solid windowtext; "
+cGrvBuff += " 					background:#99CCFF; "
+cGrvBuff += " 					mso-pattern:auto none; "
+cGrvBuff += " 					white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " .xl4231556 "
+cGrvBuff += " 	{padding:0px; "
+cGrvBuff += " 	mso-ignore:padding; "
+cGrvBuff += " 	color:windowtext; "
+cGrvBuff += " 	font-size:10.0pt; "
+cGrvBuff += " 		font-weight:700; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial, sans-serif; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"\0022R$ \0022\#\,\#\#0\.00"; '
+cGrvBuff += " 		text-align:center; "
+cGrvBuff += " 		vertical-align:middle; "
+cGrvBuff += " 		border-top:1.0pt solid windowtext; "
+cGrvBuff += " 		border-right:.5pt solid windowtext; "
+cGrvBuff += " 		border-bottom:1.0pt solid windowtext; "
+cGrvBuff += " 		border-left:.5pt solid windowtext; "
+cGrvBuff += " 		background:#99CCFF; "
+cGrvBuff += " 		mso-pattern:auto none; "
+cGrvBuff += " 		white-space:normal;} "
+cGrvBuff += " 	.xl4331556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:400; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial; "
+cGrvBuff += " 		mso-generic-font-family:auto; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"\0022R$ \0022\#\,\#\#0\.00"; '
+cGrvBuff += " 		text-align:left; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		border-top:none; "
+cGrvBuff += " 		border-right:.5pt solid silver; "
+cGrvBuff += " 		border-bottom:.5pt solid silver; "
+cGrvBuff += " 		border-left:.5pt solid silver; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	.xl4431556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:18.0pt; "
+cGrvBuff += " 		font-weight:700; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial, sans-serif; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += " 		mso-number-format:General; "
+cGrvBuff += " 		text-align:left; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+cGrvBuff += " 	.xl4531556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:700; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial, sans-serif; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"_\(* \#\,\#\#0_\)\;_\(* \\\(\#\,\#\#0\\\)\;_\(* \0022-\0022??_\)\;_\(\@_\)"; '
+cGrvBuff += " 		text-align:left; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	.xl4631556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:400; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial; "
+cGrvBuff += " 		mso-generic-font-family:auto; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"_\(* \#\,\#\#0\.00_\)\;_\(* \\\(\#\,\#\#0\.00\\\)\;_\(* \0022-\0022??_\)\;_\(\@_\)"; '
+cGrvBuff += " 		text-align:general; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		border:.5pt solid silver; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	.xl4731556 "
+cGrvBuff += " 		{padding:0px; "
+cGrvBuff += " 		mso-ignore:padding; "
+cGrvBuff += " 		color:windowtext; "
+cGrvBuff += " 		font-size:10.0pt; "
+cGrvBuff += " 		font-weight:700; "
+cGrvBuff += " 		font-style:normal; "
+cGrvBuff += " 		text-decoration:none; "
+cGrvBuff += " 		font-family:Arial, sans-serif; "
+cGrvBuff += " 		mso-font-charset:0; "
+cGrvBuff += ' 		mso-number-format:"0\.0%"; '
+cGrvBuff += " 		text-align:right; "
+cGrvBuff += " 		vertical-align:bottom; "
+cGrvBuff += " 		mso-background-source:auto; "
+cGrvBuff += " 		mso-pattern:auto; "
+cGrvBuff += " 		white-space:nowrap;} "
+cGrvBuff += " 	--> "
+cGrvBuff += " 	</style> "
+cGrvBuff += " 	</head> "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	<body> "
+cGrvBuff += " 	<table x:str border=0 cellpadding=0 cellspacing=0 width=1171 style='border-collapse: "
+cGrvBuff += " 	 collapse;table-layout:fixed;width:880pt'> "
+cGrvBuff += " 	 <col class=xl2531556 width=26 style='mso-width-source:userset;mso-width-alt: "
+cGrvBuff += " 	 950;width:20pt'> "
+cGrvBuff += " 	 <col width=90 span=2 style='mso-width-source:userset;mso-width-alt:3291; "
+cGrvBuff += " 	 width:68pt'> "
+cGrvBuff += " 	 <col width=306 style='mso-width-source:userset;mso-width-alt:11190;width:230pt'> "
+cGrvBuff += " 	 <col width=80 style='mso-width-source:userset;mso-width-alt:2925;width:60pt'> "
+cGrvBuff += " 	 <col width=92 style='mso-width-source:userset;mso-width-alt:3364;width:69pt'> "
+cGrvBuff += " 	 <col class=xl2631556 width=95 style='mso-width-source:userset;mso-width-alt: "
+cGrvBuff += " 	 3474;width:71pt'> "
+cGrvBuff += " 	 <col class=xl2431556 width=95 style='mso-width-source:userset;mso-width-alt: "
+cGrvBuff += " 	 3474;width:71pt'> "
+cGrvBuff += " 	 <col width=89 style='mso-width-source:userset;mso-width-alt:3254;width:67pt'> "
+cGrvBuff += " 	 <col width=18 style='mso-width-source:userset;mso-width-alt:658;width:14pt'> "
+cGrvBuff += " 	 <col class=xl2431556 width=95 span=2 style='mso-width-source:userset; "
+cGrvBuff += " 	 mso-width-alt:3474;width:71pt'> "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	 <tr height=17 style='height:12.75pt'> "
+cGrvBuff += " 	  <td height=17 class=xl2531556 width=26 style='height:12.75pt;width:20pt'></td> "
+cGrvBuff += " 	  <td class=xl1531556 width=90 style='width:68pt'></td> "
+cGrvBuff += " 	  <td class=xl1531556 width=90 style='width:68pt'></td> "
+cGrvBuff += " 	  <td class=xl1531556 width=306 style='width:230pt'></td> "
+cGrvBuff += " 	  <td class=xl1531556 width=80 style='width:60pt'></td> "
+cGrvBuff += " 	  <td class=xl1531556 width=92 style='width:69pt'></td> "
+cGrvBuff += " 	  <td class=xl2631556 width=95 style='width:71pt'></td> "
+cGrvBuff += " 	  <td class=xl2431556 width=95 style='width:71pt'></td> "
+cGrvBuff += " 	  <td class=xl1531556 width=89 style='width:67pt'></td> "
+cGrvBuff += " 	  <td class=xl1531556 width=18 style='width:14pt'></td> "
+cGrvBuff += " 	  <td class=xl2431556 width=95 style='width:71pt'></td> "
+cGrvBuff += " 	  <td class=xl2431556 width=95 style='width:71pt'></td> "
+cGrvBuff += " 	 </tr> "
+cGrvBuff += " 	 <tr height=31 style='height:23.25pt'> "
+cGrvBuff += " 	  <td height=31 class=xl2531556 style='height:23.25pt'></td> "
+
+xAddToFile( cGrvBuff, cCmd )
+
+cGrvBuff += " 	  <td class=xl4431556 colspan=3>"+IIF( MV_PAR03==1, "BENS","R.Externos" )+" c/ Entidades Incorretas</td> "
+cGrvBuff += " 	 </tr> "
+cGrvBuff += " 	 <tr height=20 style='mso-height-source:userset;height:15.0pt'> "
+cGrvBuff += " 	  <td height=20 class=xl2531556 style='height:15.0pt'></td> "
+cGrvBuff += " 	 </tr> "
+cGrvBuff += " 	 <tr height=18 style='height:13.5pt'> "
+cGrvBuff += " 	  <td height=18 class=xl2531556 style='height:13.5pt'></td> "
+cGrvBuff += " 	 </tr> "
+cGrvBuff += " 	 <tr class=xl2231556 height=44 style='mso-height-source:userset;height:33.0pt'> "
+cGrvBuff += " 	  <td height=44 class=xl2531556 style='height:33.0pt'></td> "
+If MV_PAR03 == 1
+	cGrvBuff += " 	  <td class=xl3731556 style='border-left:none'>Filial</td> "
+	cGrvBuff += " 	  <td class=xl3831556 style='border-left:none'>Codigo</td> "
+	cGrvBuff += " 	  <td class=xl3831556 style='border-left:none'>Descricao</td> "
+	cGrvBuff += " 	  <td class=xl3731556 style='border-left:none'>C.Custo do Bem</td> "
+Else
+	cGrvBuff += " 	  <td class=xl3731556 style='border-left:none'>Codigo</td> "
+	cGrvBuff += " 	  <td class=xl3831556 style='border-left:none'>Sequencia</td> "
+	cGrvBuff += " 	  <td class=xl3831556 style='border-left:none'>Descricao</td> "
+EndIf
+cGrvBuff += " 	  <td class=xl3831556 style='border-left:none'>C.Custo</td> "
+cGrvBuff += " 	  <td class=xl3831556 style='border-left:none'>Unidade</td> "
+cGrvBuff += " 	  <td class=xl3831556 style='border-left:none'>Operacao</td> "
+cGrvBuff += " 	 </tr> "
+cGrvBuff += " 	  <tr height=17 style='height:12.75pt'> "
+cGrvBuff += " 	   <td height=17 class=xl2531556 style='height:12.75pt'></td> "
+
+xAddToFile( cGrvBuff, cCmd )
+
+Return

@@ -1,0 +1,16 @@
+
+
+
+
+
+
+Function U_filModCC()
+
+local _lReturn:= .f. 
+
+if cModulo=="GPE"
+   _lReturn:=(CTT->CTT_FIL == SM0->M0_CODFIL .AND.  ctt->ctt_usocc=="2" .AND.  CTT->CTT_CLASSE <> "1")
+else
+   _lReturn:=(ctt->ctt_usocc<>"2" .AND.  CTT->CTT_CLASSE <> "1")
+endif
+return _lReturn

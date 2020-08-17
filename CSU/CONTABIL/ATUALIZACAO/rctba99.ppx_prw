@@ -1,0 +1,2123 @@
+#line 1 "C:\INCLUDE\Protheus.ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "Protheus.ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "Protheus.ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "Protheus.ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "Protheus.ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "Protheus.ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "Protheus.ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "Protheus.ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "Protheus.ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "Protheus.ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "Protheus.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctba99.prw"
+#line 1 "C:\INCLUDE\TopConn.ch"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctba99.prw"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBA99()
+
+
+
+Local cAliaZB7		:= GetNextAlias()
+Local cUsrLog		:= __cUserID
+Local cCodRat		:= ""
+Local cCodIN		:= ""
+Local cUserfull		:= ALLTRIM(SuperGetMV("MV_XUSRRAT",,""))
+
+
+
+
+
+
+
+Local aCores    := {	{'ZB7_COMPON=="1"'						,"BR_AMARELO"	}, {'ZB7_PROCESS=="S"'						,"BR_VERMELHO"	},					 	{'ZB7_PROCESS=="N" .and. !U_RCTB99Y()'	,"BR_VERDE"		},					 	{'ZB7_PROCESS=="N" .and. U_RCTB99Y()'	,"BR_AZUL"		}}
+
+
+
+
+Local cPerg			:= "CTBA99"
+Local aRegs			:= {}
+
+Private cAnoMesD	:= ""
+Private cAnoMesA	:= ""
+
+
+
+
+
+
+Private lDefTop		:= .F. 
+Private cAlias 		:= "ZB7"
+
+Private cFilterZB7	:= ""
+Private cCadastro 	:= "Cadastro de Tabelas de Rateio"
+Private aRotina 	:= MenuDef()
+Private aIndexZB7	:= {}
+Private bFiltraBrw	:= {|| FilBrowse(cAlias,@aIndexZB7,@cFilterZB7, .T. ) }
+
+
+
+
+
+
+
+aAdd(aRegs,{cPerg,"01","Competência De"			,"","","mv_ch1","D",08,0,0,"G",""			,"MV_PAR01","","","","", "","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{cPerg,"02","Competência Até"		,"","","mv_ch2","D",08,0,0,"G",""			,"MV_PAR02","","","","", "","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{cPerg,"03","Tabela Rateio De"		,"","","mv_ch3","C",06,0,0,"G",""			,"MV_PAR03","","","","", "","","","","","","","","","","","","","","","","","","","","ZB7COD","","","","" })
+aAdd(aRegs,{cPerg,"04","Tabela Rateio Até"		,"","","mv_ch4","C",06,0,0,"G",""			,"MV_PAR04","","","","", "","","","","","","","","","","","","","","","","","","","","ZB7COD","","","","" })
+
+CriaSx1(aRegs)
+If !Pergunte(cPerg, .T. )
+	Return .F. 
+Endif
+
+cAnoMesD	:= SubStr(DTOS(MV_PAR01),1,6)
+cAnoMesA	:= SubStr(DTOS(MV_PAR02),1,6)
+
+
+
+
+
+If !(cUsrLog$Alltrim(cUserfull))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+__execSql(cAliaZB7," Select ZB6_CODRAT,ZB7_ANOMES from  "+RetSqlName('ZB6')+" ZB6 (NOLOCK),  "+RetSqlName('ZB7')+" ZB7 (NOLOCK) WHERE ZB6_FILIAL =  '" +xFilial('ZB6')+"'  AND ZB6_USUARI =  "+___SQLGetValue(CUSRLOG)+" AND ZB6.D_E_L_E_T_= ' ' AND ZB6_CODRAT = ZB7_CODRAT AND ZB6_CODRAT BETWEEN  "+___SQLGetValue(MV_PAR03)+" AND  "+___SQLGetValue(MV_PAR04)+" AND ZB7_ANOMES BETWEEN  "+___SQLGetValue(CANOMESD)+" AND  "+___SQLGetValue(CANOMESA)+" AND ZB7.D_E_L_E_T_= ' '",{},.F.)
+
+	(cAliaZB7)->(DbGoTop())
+ 	While !(cAliaZB7)->(EOF())
+    	cCodRat += ALLTRIM((cAliaZB7)->ZB6_CODRAT)
+		(cAliaZB7)->(DbSkip())
+		If !(cAliaZB7)->(EOF())
+			cCodRat += ";"
+		Endif
+	EndDo
+
+
+
+
+
+	(cAliaZB7)->(dbCloseArea())
+
+	cCodIN := FormatIn(ALLTRIM(cCodRat), ";")
+
+
+		lDefTop := !(TcSrvType() == "AS/400" .Or.  TcSrvType() == "iSeries")
+
+
+	lDefTop	:= .F. 
+
+	chkFile(cAlias)
+	If !lDefTop
+
+		cFilterZB7	:= "ZB7_CODRAT $'"+STRTRAN(STRTRAN(STRTRAN(cCodIN,")",""),"(",""),"'","")+"'"
+
+		If Len(cFilterZB7) > 1950
+			Aviso("Aviso","O filtro gerado é muito abrangente e os resultados não podem ser exibidos. Por favor, revise os parâmetros de exibição.",{"OK"},,"Atenção",,"BMPPERG")
+			Return .F. 
+		Endif
+
+		DbSelectArea(cAlias)
+		dbSetOrder(1)
+		Eval(bFiltraBrw)
+	Else
+		DbSelectArea(cAlias)
+		dbSetOrder(1)
+		cFilterZB7	:= "ZB7_CODRAT IN"+cCodIN
+	EndIf
+
+ElseIf (cUsrLog $Alltrim(cUserfull))
+	cFilterZB7	:= "ZB7_CODRAT <> ' '"
+	Eval(bFiltraBrw)
+	DbSelectArea(cAlias)
+	dbSetOrder(1)
+Else
+	DbSelectArea(cAlias)
+	dbSetOrder(1)
+Endif
+
+
+mBrowse( 6,1,22,75,cAlias,,,,,,aCores,,,,,,,,Iif(lDefTop,cFilterZB7,Nil))
+
+
+If !lDefTop
+	EndFilBrw(cAlias,aIndexZB7)
+Endif
+
+dbSelectArea(cAlias)
+dbSetOrder(1)
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTB99A(cAlias,nRecn,nOpcx)
+
+
+
+Local aAreaZB7		:= ZB7->(GetArea())
+Local nCpo,nCnt
+Local nLoop			:= 0
+Local nOpcA 		:= 0
+Local lSeek
+Local aObjects  	:= {}
+Local aSize     	:= MsAdvSize()
+Local nI			:= 0
+Local nStyle 		:= IIF(nOpcX == 2 .Or.  nOpcX == 5,0,1+2+4)
+
+
+
+
+
+
+Local oGrpRod		:= Nil
+Local oSayTot		:= Nil
+Local oSayRest		:= Nil
+
+Local bOk      		:= {|| If( Obrigatorio( oEncMain:aGets, oEncMain:aTela) .And.  U_ZB8TudOk(), ( nOpcA := 1, oDlgMain:End() ), nOpcA := 0 ) }
+Local bCancel  		:= {|| nOpcA := 0, oDlgMain:End() }
+Local aAlias		:= {}
+
+Local cUltRev		:= ""
+
+Private aHeaderZB8 	:= {}
+Private aColsZB8 	:= {}
+Private oDlgMain
+Private oEncMain
+Private oFolder
+Private oGetZB8
+
+
+
+
+
+
+Private nTotPerc	:= 0
+Private oGetValTot	:= Nil
+
+Private nRestPerc	:= 0
+Private oGetValRest	:= Nil
+
+Private aCampos		:= {}
+Private aVisual		:= {}
+Private aGets		:= {}
+Private aTela		:= {}
+Private bCampo		:= { |nCPO| Field( nCPO ) }
+Private aBotao		:= {}
+Private nOpc		:= nOpcx
+
+
+
+
+
+oBoldIV := TFont():New( "Arial", 07, -13,.F.,.T.,,,,,,,,,,, )
+
+
+
+
+
+
+If nOpcX == 5
+	If !VerifDel(ZB7->ZB7_CODRAT)
+
+		Aviso("Aviso","O código de rateio já foi utilizado anteriormente e portanto não pode ser removido.",{"OK"},,"Atenção",,"BMPPERG")
+		Return .F. 
+	Endif
+Endif
+
+
+
+
+AADD(aBotao, {"DBG06" 		, { || RCTB99I()}, "Importar cadastro", "Importar" })
+AADD(aBotao, {"PMSEXCEL" 	, { || RCTB99E()}, "Exportar cadastro", "Exportar" })
+AADD(aBotao, {"EXCLUIR"		, { || RCTB99K()}, "Excluir Todos", "Exc. Todos" })
+
+
+
+
+aAdd( aCampos, "ZB7_CODRAT" )
+aAdd( aCampos, "ZB7_DESCRI" )
+
+aAdd( aCampos, "ZB7_MESANO" )
+aAdd( aCampos, "ZB7_REVISA" )
+aAdd( aCampos, "ZB7_ATIVO" )
+aAdd( aCampos, "ZB7_CCTRAN" )
+
+
+
+
+
+aAdd( aCampos, "ZB7_ITTRAN" )
+aAdd( aCampos, "ZB7_CLTRAN" )
+aAdd( aCampos, "ZB7_PROCES" )
+
+
+
+
+
+
+aAdd( aCampos, "ZB7_USRNAM" )
+aAdd( aCampos, "ZB7_USRFNA" )
+aAdd( aCampos, "NOUSER" )
+
+
+
+
+aObjects := {}
+AAdd( aObjects,{100,060, .t. , .f.  })
+AAdd( aObjects,{100,100, .t. , .t.  })
+
+aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+aPosObj := MsObjSize( aInfo, aObjects )
+
+RegToMemory("ZB7",nOpcx == 3)
+
+
+
+
+If nOpcX <> 3
+	M->ZB7_MESANO	:= Substr(M->ZB7_ANOMES,5,2)+Substr(M->ZB7_ANOMES,1,4)
+Endif
+
+
+
+
+dbSelectArea("SX3")
+SX3->( dbSetOrder(1) )
+SX3->( dbSeek("ZB8") )
+aHeaderZB8 := {}
+While SX3->( !Eof()) .And.  SX3->X3_ARQUIVO $ "ZB8"
+
+	If X3USO(X3_USADO) .And.  cNivel >= X3_NIVEL .and.  ( !Alltrim(SX3->X3_CAMPO) $ "ZB8_FILIAL/ZB8_CODRAT/ZB8_ANOMES/ZB8_REVISA/ZB8_CDEBIT")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		Aadd(aHeaderZB8,{	AllTrim(X3Titulo()), SX3->X3_CAMPO, SX3->X3_PICTURE, SX3->X3_TAMANHO, SX3->X3_DECIMAL, SX3->X3_VALID, SX3->X3_USADO, SX3->X3_TIPO, SX3->X3_F3, SX3->X3_CONTEXT, SX3->X3_CBOX, SX3->X3_RELACAO, SX3->X3_WHEN, SX3->X3_VISUAL, SX3->X3_VLDUSER, SX3->X3_PICTVAR, SX3->X3_OBRIGAT})
+	Endif
+	SX3->(dbSkip())
+EndDo
+
+MontaAcols(aHeaderZB8,"ZB8",1,"ZB7",M->ZB7_CODRAT+M->ZB7_ANOMES+M->ZB7_REVISA,"ZB8_CODRAT+ZB8_ANOMES+ZB8_REVISA",aColsZB8,nOpcX)
+
+aSort(aColsZB8,,,{|x,y| val(x[1]) < val(y[1])})
+
+
+
+
+If nOpcX == 4
+
+	cUltRev	:= U_RZB7ULTR(M->ZB7_CODRAT,M->ZB7_ANOMES, .F. )
+
+	dbSelectArea("ZB7")
+	dbSetOrder(1)
+	If dbSeek(xFilial("ZB7")+M->ZB7_CODRAT+M->ZB7_ANOMES+cUltRev, .F. )
+
+		If ZB7->ZB7_PROCESS == "S"
+
+			Aviso("Aviso","Será gerada uma nova revisão para a tabela de rateio. Por favor, comunique o administrador das tabelas para ativa-la.",{"OK"},,"Atenção",,"BMPPERG")
+
+			M->ZB7_REVISA	:= SOMA1(cUltRev)
+
+
+
+
+			M->ZB7_ATIVO	:= "I"
+			M->ZB7_PROCESS	:= "N"
+
+		ElseIf ZB7->ZB7_PROCESS <> "S" .and.  ZB7->ZB7_REVISA <> Replicate("0", TAMSX3("ZB7_REVISA")[1] )
+
+			Aviso("Aviso","Existe uma revisão gerada para essa tabela de rateio no período que ainda não foi processada. Por favor, entre em contato com o administrador das tabelas para maiores informações.",{"OK"},,"Atenção",,"BMPPERG")
+			Return .F. 
+
+		Endif
+	Endif
+
+Endif
+
+
+
+
+oDlgMain := MSDIALOG():New(aSize[7],00,aSize[6],aSize[5],cCadastro,,,,,,,,, .T. )
+
+
+
+
+
+
+
+
+
+oEncMain := MSMGet():New("ZB7", ZB7->(RecNo()),nOpcX,,,,aCampos,{15,5,97,620},If(nOpcX==4,If(M->ZB7_REVISA <> "000",{"NOUSER"},{"ZB7_ATIVO","NOUSER"}),aCampos),1,,,,oDlgMain,,,,,, .T. ,,,)
+
+
+
+
+
+
+oGrpRod		:= TGroup():New(253,05,270,620,"",oDlgMain,,, .T. )
+oSayTot		:= TSay():New(258,370,{||"Perc. Distribuído:"},oDlgMain,,oBoldIV,,,, .T. ,8388608,16777215,60,20)
+oGetValTot	:= TGet():New(255,433,{|u| if(PCount()>0,nTotPerc:=u,nTotPerc)}, oDlgMain,55,10,PesqPict("ZB8","ZB8_PERCEN"),,,,oBoldIV,,, .T. ,,,{|| .F. },,,,,,,"nTotPerc")
+
+oSayRest	:= TSay():New(258,520,{||"Falta %:"},oDlgMain,,,,,, .T. ,128,16777215,30,20)
+oGetValRest	:= TGet():New(255,553,{|u| if(PCount()>0,nRestPerc:=u,nRestPerc)}, oDlgMain,55,10,PesqPict("ZB8","ZB8_PERCEN"),,,,,,, .T. ,,,{|| .F. },,,,,,,"nRestPerc")
+
+
+
+
+oGetZB8 := MsNewGetDados():New(100,05,250,620,nStyle,"U_ZB8LinOk()","U_ZB8TudOk()","+ZB8_SEQUEN",,,9999,,,,oDlgMain,aHeaderZB8,@aColsZB8)
+
+
+
+
+
+oGetZB8:bChange	:= {||RCTB99Z()}
+
+oDlgMain:Activate( oDlgMain:bLClicked, oDlgMain:bMoved, oDlgMain:bPainted,,,,{|Self|EnchoiceBar(oDlgMain,bOk,bCancel,,aBotao)}, oDlgMain:bRClicked, )
+
+If nOpcA == 1 .And.  ( nOpcx == 5 .or.  nOpcx == 4 .or.  nOpcx == 3 )
+
+	Begin Sequence; BeginTran()
+
+		If nOpcX == 5 .or.  nOpcX == 4
+
+			If nOpcX == 5
+
+				dbSelectArea("ZB7")
+				ZB7->( dbSetOrder(1) )
+				If dbSeek(xFilial("ZB7")+M->ZB7_CODRAT+M->ZB7_ANOMES+M->ZB7_REVISA+M->ZB7_ATIVO, .F. )
+					RecLock("ZB7", .F. )
+					ZB7->( dbDelete() )
+					MsUnLock()
+
+				Endif
+
+
+
+
+
+
+
+
+
+				dbSelectArea("ZB7")
+				ZB7->( dbSetOrder(1) )
+				If !dbSeek(xFilial("ZB7")+M->ZB7_CODRAT, .F. )
+					dbSelectArea("ZBA")
+					dbSetOrder(1)
+					If dbSeek(xFilial("ZBA")+M->ZB7_CODRAT, .F. )
+						while !EOF() .and. xFilial("ZBA")+M->ZB7_CODRAT==ZBA->(ZBA_FILIAL+ZBA_CODRAT)
+							RecLock("ZBA", .F. )
+								ZBA->(dbDelete())
+							MsUnlock()
+							dbSelectArea("ZBA")
+							ZBA->(dbSkip())
+						EndDo
+					Endif
+				Endif
+
+			Endif
+
+			dbSelectArea("ZB8")
+			ZB8->( dbSetOrder(1) )
+			If dbSeek(xFilial("ZB8")+M->ZB7_CODRAT+M->ZB7_ANOMES+M->ZB7_REVISA, .F. )
+
+				while !EOF() .and. xFilial("ZB8")==ZB8->ZB8_FILIAL .and. M->ZB7_CODRAT==ZB8->ZB8_CODRAT .and. M->ZB7_ANOMES==ZB8->ZB8_ANOMES .and. M->ZB7_REVISA==ZB8->ZB8_REVISA
+
+					RecLock("ZB8", .F. )
+					ZB8->( dbDelete() )
+					MsUnlock()
+
+					dbSelectArea("ZB8")
+					dbSkip()
+				EndDo
+			Endif
+
+		Endif
+
+		If nOpcX == 3 .or.  nOpcX ==4
+
+			dbSelectArea("ZB7")
+
+			If M->ZB7_REVISA <> ZB7->ZB7_REVISA
+				RecLock("ZB7", .T. )
+			Else
+				RecLock("ZB7",nOpcX==3)
+			Endif
+
+			ZB7->ZB7_FILIAL := 	xFilial("ZB7")
+			ZB7->ZB7_CODRAT	:= 	M->ZB7_CODRAT
+			ZB7->ZB7_DESCRI	:=	M->ZB7_DESCRI
+
+			ZB7->ZB7_ANOMES	:=	U_RZB7AnoMes(M->ZB7_MESANO)
+			ZB7->ZB7_REVISA	:=	M->ZB7_REVISA
+			ZB7->ZB7_ATIVO	:=	M->ZB7_ATIVO
+			ZB7->ZB7_CCTRAN	:= 	M->ZB7_CCTRAN
+
+			ZB7->ZB7_ITTRAN	:= 	M->ZB7_ITTRAN
+			ZB7->ZB7_CLTRAN	:= 	M->ZB7_CLTRAN
+			ZB7->ZB7_PROCES	:= 	M->ZB7_PROCES
+
+
+
+
+
+
+			ZB7->ZB7_USRNAM	:= M->ZB7_USRNAM
+
+
+
+
+			If nOpcX	== 3
+				ZB7->ZB7_DTDIGI	:= dDataBase
+			Endif
+			ZB7->ZB7_USRFNA	:= M->ZB7_USRFNA
+
+			MsUnlock()
+
+
+
+
+
+
+			If !Empty(Alltrim(oGetZB8:aCols[1,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")]+ oGetZB8:aCols[1,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")]+ oGetZB8:aCols[1,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")]))
+
+				For nLoop	:= 1 to Len(oGetZB8:aCols)
+
+					If oGetZB8:aCols[nLoop,Len(oGetZB8:aHeader)+1]
+						Loop
+					Endif
+
+					dbSelectArea("ZB8")
+					RecLock("ZB8", .T. )
+					ZB8->ZB8_FILIAL 	:= 	xFilial("ZB8")
+					ZB8->ZB8_CODRAT		:= 	M->ZB7_CODRAT
+
+					ZB8->ZB8_ANOMES		:=	U_RZB7AnoMes(M->ZB7_MESANO)
+					ZB8->ZB8_REVISA		:=	M->ZB7_REVISA
+					ZB8->ZB8_SEQUEN    	:=	oGetZB8:aCols[nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_SEQUEN")]
+					ZB8->ZB8_PERCEN    	:=	oGetZB8:aCols[nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_PERCEN")]
+					ZB8->ZB8_CCDBTO    	:=	oGetZB8:aCols[nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")]
+					ZB8->ZB8_ITDBTO    	:=	oGetZB8:aCols[nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")]
+					ZB8->ZB8_CLVLDB    	:=	oGetZB8:aCols[nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")]
+					MsUnlock()
+
+				next
+			Endif
+
+			If nOpcX==3
+
+
+
+
+
+
+
+				dbSelectArea("ZB6")
+				RecLock(Alias(), .T. )
+
+				ZB6->ZB6_FILIAL	:= xFilial("ZB6")
+				ZB6->ZB6_CODRAT	:= M->ZB7_CODRAT
+				ZB6->ZB6_USUARI	:= __cUserId
+
+				ZB6->(MsUnlock())
+
+
+
+
+
+
+
+				dbSelectArea("ZBA")
+				RecLock(Alias(), .T. )
+
+				ZBA->ZBA_FILIAL	:= xFilial("ZBA")
+				ZBA->ZBA_CODRAT	:= M->ZB7_CODRAT
+				ZBA->ZBA_DESCRI	:= M->ZB7_DESCRI
+				ZBA->ZBA_USUARI	:= __cUserId
+
+				ZBA->(MsUnlock())
+
+
+
+
+
+
+
+				dbSelectArea("ZB9")
+				DbSetOrder(1)
+				If !DbSeek(xFilial("ZB9")+M->ZB7_CODRAT)
+					RecLock("ZB9", .T. )
+
+					ZB9->ZB9_FILIAL	:= xFilial("ZB9")
+					ZB9->ZB9_CODRAT	:= M->ZB7_CODRAT
+					ZB9->ZB9_DESCRI	:= M->ZB7_DESCRI
+
+					ZB9->(MsUnlock())
+				Endif
+
+			Endif
+
+		Endif
+
+	EndTran(); end
+
+
+
+
+
+	EditFiltro()
+
+EndIf
+
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_ZB8LinOk()
+
+
+
+Local x             := 1
+Local lRet			:= .T. 
+Local aArea         := ZB7->(GetArea())
+Local nLinha		:= oGetZB8:nAt
+Local nPercentual	:= 0
+
+If oGetZB8:aCols[nLinha,Len(aHeaderZB8)+1]
+	Return lRet
+EndIf
+
+
+
+
+
+
+
+If oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_PERCEN")]==0 .or.  Empty(Alltrim(oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")])) .or.  Empty(Alltrim(oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")])) .or.  Empty(Alltrim(oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")])) .and.  nOpc <> 5
+
+
+
+
+	Aviso("Aviso","Os seguintes campos são obrigatórios: "+RetTitle("ZB8_PERCEN")+", "+ RetTitle("ZB8_CCDBTO")+", "+ RetTitle("ZB8_ITDBTO")+" e "+ RetTitle("ZB8_CLVLDB")+". Por favor, verifique o preenchimento. ",{"OK"},,"Atenção",,"BMPPERG")
+	lRet	:= .F. 
+	Return lRet
+
+Endif
+
+
+
+
+If oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_PERCEN")]<0
+
+	Aviso("Aviso","O percentual do rateio não pode ser menor que zero. Por favor, verifique o preenchimento. ",{"OK"},,"Atenção",,"BMPPERG")
+	lRet	:= .F. 
+	Return lRet
+
+Endif
+
+
+
+
+For x := 1 To Len(oGetZB8:aCols)
+
+	If !oGetZB8:aCols[x][Len(oGetZB8:aHeader)+1]
+		nPercentual	+= oGetZB8:aCols[x,BuscaHeader(oGetZB8:aHeader,"ZB8_PERCEN")]
+	Endif
+
+	If x <> nLinha
+
+
+
+
+
+
+
+
+
+		If oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")]+ oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")]+ oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")] == oGetZB8:aCols[x,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")]+ oGetZB8:aCols[x,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")]+ oGetZB8:aCols[x,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")] .and.  !oGetZB8:aCols[nLinha,Len(oGetZB8:aHeader)+1] .and.  !oGetZB8:aCols[x,Len(oGetZB8:aHeader)+1]
+
+
+
+
+
+
+			Aviso("Aviso","A combinação "+ "C. de Custo: "+Alltrim(oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")])+","+Chr(13)+Chr(10)+ "Un. Negócio: "+Alltrim(oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")])+" e "+ "Operação: "+Alltrim(oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")])+Chr(13)+Chr(10)+ "está duplicado na lista.", {"OK"},,"Atenção",,"BMPPERG")
+
+			lRet := .F. 
+			Return lRet
+
+		Endif
+	Endif
+
+next
+
+
+
+
+
+
+
+
+
+
+
+
+
+If !U_VldCTBg( oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")], oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")], oGetZB8:aCols[nLinha,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")], Nil )
+	lRet	:= .F. 
+	Return lRet
+EndIf
+
+RestArea(aArea)
+Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_ZB8TudOk()
+
+
+
+Local aArea			:= GetArea()
+Local aAreaZB7		:= ZB7->( GetArea())
+Local lReturn		:= .T. 
+Local nLoop			:= 0
+Local nOri			:= 0
+Local nPercTot		:= 0
+
+If nOpc == 5 .or.  nOpc==2
+	Return(lReturn)
+Endif
+
+
+
+
+
+
+
+If !U_VldCTBg( M->ZB7_ITTRAN, M->ZB7_CCTRAN, M->ZB7_CLTRAN, Nil )
+
+
+
+	lReturn	:= .F. 
+EndIf
+
+
+
+
+If lReturn
+
+
+	If ZB7->(DbSeek(xFilial("ZB7")+M->ZB7_CODRAT+U_RZB7AnoMes(M->ZB7_MESANO)+M->ZB7_REVISA)) .and.  nOpc==3
+
+		Aviso("Aviso","Já existe um cadastro com o Codigo: "+Alltrim(ZB7_CODRAT)+" -Ano/Mes: "+Alltrim(ZB7_ANOMES)+" e Revisão: "+ALLTRIM(ZB7_REVISA)+ ". Por favor, utilize outro.",{"OK"},,"Atenção",,"BMPPERG")
+		lReturn := .F. 
+    Endif
+
+Endif
+
+
+
+
+
+
+
+If lReturn
+
+
+	If nOpc==3 .and.  (Empty(Alltrim(oGetZB8:aCols[1,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")]+ oGetZB8:aCols[1,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")]+ oGetZB8:aCols[1,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")])))
+
+
+		Aviso("Aviso","A tabela de rateios será criada sem a definição de seus itens. Ela só poderá ser "+Chr(13)+Chr(10)+ "utilizada para contabilização depois que as regras de rateio forem definidas.",{"OK"},,"Atenção",,"BMPPERG")
+
+	Else
+
+
+
+		For nLoop := 1 to Len(oGetZB8:aCols)
+			nOri 			:= oGetZB8:nAt
+			oGetZB8:nAt 	:= nLoop
+			lReturn			:= U_ZB8LinOk()
+			If !lReturn
+				Exit
+			Endif
+		next
+
+		For nLoop := 1 to Len(oGetZB8:aCols)
+			If !oGetZB8:aCols[nLoop][Len(oGetZB8:aHeader)+1]
+				nPercTot		+= oGetZB8:aCols[nLoop][BuscaHeader(oGetZB8:aHeader,"ZB8_PERCEN")]
+			Endif
+		next
+
+
+
+
+
+		If nPercTot <> 100
+
+			Aviso("Aviso","A somatória dos percentuais nos itens é diferente de 100%. Por favor, verifique os valores novamente. Somatória Atual: "+Alltrim(STR(nPercTot)), {"OK"},,"Atenção",,"NOCHECKED")
+			lReturn := .F. 
+		Endif
+
+	Endif
+Endif
+
+RestArea(aAreaZB7)
+RestArea(aArea)
+Return(lReturn)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function MontaAcols(aHeader,cAliasCol,nOrder,cAliasCab,cChave,cCondicao,aColsRet,nOpcX)
+Local nX
+Local nDec     := 0
+Local nUsado   := Len(aHeader)
+Local aArea    := ZB7->( GetArea())
+
+aColsRet := If( aColsRet == nil, {}, aColsRet ) ;
+
+
+
+
+If nOpcX <> 3
+
+	dbSelectArea(cAliasCol)
+	dbSetorder(nOrder)
+	MsSeek(xFilial(cAliasCol)+cChave)
+
+	While !Eof() .And.  xFilial(cAliasCol)==&(cAliasCol+"_FILIAL") .And.  &(cCondicao)==cChave
+
+	    Aadd(aColsRet,Array(nUsado+1))
+
+	    For nX := 1 to Len(aHeader)
+
+			If aHeader[nX,10] <> "V"
+		        aColsRet[Len(aColsRet),nX] := &(FieldName(FieldPos(cAliasCol+SubStr(AllTrim(aHeader[nX,2]),4))))
+			Else
+				If Empty(aHeader[nX,18])
+					aColsRet[Len(aColsRet),nX] := CriaVar(AllTrim(aHeader[nX,2]), .T. )
+				Else
+					aColsRet[Len(aColsRet),nX] := &(aHeader[nX,18])
+				Endif
+		   EndIf
+
+	    next
+
+		aColsRet[Len(aColsRet),nUsado+1] := .F. 
+
+		(cAliasCol)->(dbSkip())
+
+	EndDo
+
+EndIf
+
+
+
+
+If Len(aColsRet)==0
+	Aadd(aColsRet,Array(nUsado+1))
+	Aeval(aHeader,{|x,y|aColsRet[Len(aColsRet),y]:=If(AllTrim(aHeader[y,2])=="ZB8_SEQUEN","01",CriaVar(AllTrim(aHeader[y,2])))})
+
+	aColsRet[Len(aColsRet),nUsado+1] := .F. 
+EndIf
+
+RestArea(aArea)
+Return(aColsRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function MenuDef()
+
+
+
+
+
+
+
+
+
+Private aRotina   := {	{ "Pesquisar"		,"PesqBrw"   			 	 	,  	0, 1}, { "Visualizar"		,"U_RCTB99A('ZB7',Recno(),2)"	,	0, 2}, { "Incluir"			,"U_RCTB99A('ZB7',Recno(),3)"	,	0, 3}, { "Alterar"			,"U_RCTB99A('ZB7',Recno(),4)"	,	0, 4}, { "Excluir"			,"U_RCTB99A('ZB7',Recno(),5)"	,	0, 5}, { "Copiar"			,"U_RCTB99C"				 	,	0, 2}, { "Cp. Mult."		,"U_RCTBAA2"				 	,	0, 2}, { "Hab.Revis."		,"U_RCTB99R"					, 	0, 2}, { "Legenda"			,"U_RCTB99L"					, 	0, 2}}
+
+Return(aRotina)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function BuscaHeader(aArrayHeader,cCampo)
+
+Return(AScan(aArrayHeader,{|aDados| AllTrim(Upper(aDados[2])) == Alltrim(Upper(cCampo))}))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTB99VA(cAnoRef)
+
+
+
+Local aArea		:= GetArea()
+Local lRetorno	:= .T. 
+Local cAno		:= ""
+Local cMes		:= ""
+
+If Len(Alltrim(cAnoRef)) <> 6
+
+	Aviso("Aviso","A data de referência deve ser completamente preenchida (Ex.: 12/2010)",{"OK"},,"Atenção",,"BMPPERG")
+	lRetorno	:= .F. 
+	Return lRetorno
+Endif
+
+
+
+
+
+cAno	:= Substr(cAnoRef,3,4)
+
+If Empty(cAno)
+	Aviso("Aviso","O ano deve ser informado.",{"OK"},,"Atenção",,"BMPPERG")
+	lRetorno	:= .F. 
+	Return lRetorno
+Endif
+
+
+
+
+
+cMes	:= Substr(cAnoRef,1,2)
+
+If Empty(cAno)
+	Aviso("Aviso","O mês deve ser informado.",{"OK"},,"Atenção",,"BMPPERG")
+	lRetorno	:= .F. 
+	Return lRetorno
+ElseIf Val(cMes) < 0 .or.  Val(cMes) > 12
+	Aviso("Aviso","Mês informado inválido.",{"OK"},,"Atenção",,"BMPPERG")
+	lRetorno	:= .F. 
+	Return lRetorno
+Endif
+
+RestArea(aArea)
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTB99C()
+
+
+
+Local aRet 		:= {}
+Local aPar 		:= {}
+Local cCpyZB7	:= GetNextAlias()
+Local cCpyZB8	:= GetNextAlias()
+Local cCodRat	:= ""
+Local cAnoMes	:= ""
+Local cRevisa	:= ""
+Local cStatus	:= ""
+
+
+aAdd(aPar,{1,"Qual o novo período"	,Space(06),"@R 99/9999","","","",0, .F. })
+
+
+If !ParamBox(aPar,"Parametros do processamento",@aRet, ,, , , , ,"RCTB99C", .F. , .F. )
+	Return
+Endif
+
+
+
+
+If !U_RCTB99VA(aRet[1])
+	Return
+Endif
+
+cCodRat := ZB7_CODRAT
+cAnoMes	:= ZB7_ANOMES
+cRevisa := ZB7_REVISA
+cStatus := ZB7_ATIVO
+
+
+
+
+If ZB7->(DbSeek(xFilial("ZB7")+ZB7_CODRAT+U_RZB7AnoMes(aRet[1])+ZB7_REVISA+"A"))
+
+	Aviso("Atenção","A data "+substr(aRet[1],1,2)+"/"+substr(aRet[1],3,4)+" não pode ser a mesma da linha copiada, escolha outra por favor.",{"OK"},,"Atenção",,"BMPPERG")
+	Return
+Endif
+
+
+
+
+
+
+
+
+
+__execSql(cCpyZB7," Select * from  "+RetSqlName('ZB7')+" ZB7 WHERE ZB7.ZB7_FILIAL =  '" +xFilial('ZB7')+"'  AND ZB7.ZB7_CODRAT =  "+___SQLGetValue(CCODRAT)+" AND ZB7.ZB7_ANOMES =  "+___SQLGetValue(CANOMES)+" AND ZB7.ZB7_REVISA =  "+___SQLGetValue(CREVISA)+" AND ZB7.ZB7_ATIVO =  "+___SQLGetValue(CSTATUS)+" AND ZB7.D_E_L_E_T_= ' '",{},.F.)
+
+	(cCpyZB7)->(DbGoTop())
+
+	ZB7->(RecLock("ZB7", .T. ))
+
+		ZB7->ZB7_FILIAL 	:= xFilial("ZB7")
+		ZB7->ZB7_CODRAT 	:= (cCpyZB7)->ZB7_CODRAT
+		ZB7->ZB7_DESCRI 	:= (cCpyZB7)->ZB7_DESCRI
+
+		ZB7->ZB7_ANOMES 	:= U_RZB7AnoMes(aRet[1])
+		ZB7->ZB7_REVISA 	:= (cCpyZB7)->ZB7_REVISA
+		ZB7->ZB7_ATIVO  	:= "A"
+		ZB7->ZB7_CCTRAN  	:= (cCpyZB7)->ZB7_CCTRAN
+		ZB7->ZB7_ITTRAN  	:= (cCpyZB7)->ZB7_ITTRAN
+		ZB7->ZB7_CLTRAN  	:= (cCpyZB7)->ZB7_CLTRAN
+		ZB7->ZB7_PROCES  	:= "N"
+
+
+
+
+		ZB7->ZB7_USRNAM  	:= UsrRetName(__cUserId)
+		ZB7->ZB7_USRNAM  	:= UsrFullName(__cUserId)
+
+	ZB7->(MsUnlock())
+
+
+
+
+
+
+
+
+__execSql(cCpyZB8," Select * from  "+RetSqlName('ZB8')+" ZB8 WHERE ZB8.ZB8_FILIAL =  '" +xFilial('ZB8')+"'  AND ZB8.ZB8_CODRAT =  "+___SQLGetValue(CCODRAT)+" AND ZB8.ZB8_ANOMES =  "+___SQLGetValue(CANOMES)+" AND ZB8.ZB8_REVISA =  "+___SQLGetValue(CREVISA)+" AND ZB8.D_E_L_E_T_= ' '",{},.F.)
+
+	(cCpyZB8)->(DbGoTop())
+
+	While !(cCpyZB8)->(Eof())
+		ZB8->(RecLock("ZB8", .T. ))
+
+	    	ZB8->ZB8_FILIAL := xFilial("ZB8")
+	    	ZB8->ZB8_CODRAT := (cCpyZB8)->ZB8_CODRAT
+
+	    	ZB8->ZB8_ANOMES := U_RZB7AnoMes(aRet[1])
+	    	ZB8->ZB8_REVISA := (cCpyZB8)->ZB8_REVISA
+	    	ZB8->ZB8_SEQUEN := (cCpyZB8)->ZB8_SEQUEN
+	    	ZB8->ZB8_CDEBIT := (cCpyZB8)->ZB8_CDEBIT
+	    	ZB8->ZB8_PERCEN := (cCpyZB8)->ZB8_PERCEN
+	    	ZB8->ZB8_CCDBTO := (cCpyZB8)->ZB8_CCDBTO
+	    	ZB8->ZB8_ITDBTO := (cCpyZB8)->ZB8_ITDBTO
+	    	ZB8->ZB8_CLVLDB	:= (cCpyZB8)->ZB8_CLVLDB
+
+		ZB8->(MsUnlock())
+		(cCpyZB8)->(DbSkip())
+	EndDo
+
+
+
+
+
+	EditFiltro()
+
+
+Aviso("Atenção","Tabela de Rateios copiada com sucesso!",{"OK"},,"Atenção",,"BMPPERG")
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RCTB99I()
+
+Local aImport	:= {}
+Local nI		:= 0
+Local nJ		:= 0
+Local nK		:= 0
+
+aImport := U_RCTBMA0()
+
+If Empty(aImport)
+	Return
+Endif
+
+If Empty(oGetZB8:aCols[1][3])
+
+
+
+	oGetZB8:aCols := {}
+   	For nI := 1 to Len(aImport)
+   		Aadd(oGetZB8:aCols,Array(Len(aHeaderZB8)+1))
+		For nK := 1 To Len(aHeaderZB8)
+			oGetZB8:aCols[nI][nK]	:= CriaVar(aHeaderZB8[nK,2], .F. )
+		next
+
+		For nJ := 1 to Len(oGetZB8:aCols[nI])
+	    	oGetZB8:aCols[nI][nJ] := If(VALTYPE(aImport[nI][nJ])=="C",STRTRAN(aImport[nI][nJ],CHR(160),""),aImport[nI][nJ])
+		next
+	next
+Else
+
+
+
+	For nI := 1 to Len(aImport)
+		Aadd(oGetZB8:aCols,Array(Len(aHeaderZB8)+1))
+		For nK := 1 To Len(aHeaderZB8)
+			oGetZB8:aCols[Len(oGetZB8:aCols)][nK]	:= CriaVar(aHeaderZB8[nK,2], .F. )
+		next
+
+		For nJ := 1 to Len(oGetZB8:aCols[nI])
+			If nJ == 1
+				oGetZB8:aCols[Len(oGetZB8:aCols)][nJ] := SOMA1(oGetZB8:aCols[Len(oGetZB8:aCols)-1][nJ])
+			Else
+		   		oGetZB8:aCols[Len(oGetZB8:aCols)][nJ] := If(VALTYPE(aImport[nI][nJ])=="C",STRTRAN(aImport[nI][nJ],CHR(160),""),aImport[nI][nJ])
+		   	Endif
+	    next
+	next
+Endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RCTB99E()
+
+Local aItensEx 	:= {}
+Local nI		:= 0
+Local nJ		:= 0
+
+aItensEx := aClone(oGetZB8:aCols)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MsgRun("Favor Aguardar.....", "Exportando os Registros para o Excel",{||GeraExcel({{"GETDADOS","CONTAS DE RATEIO",oGetZB8:aHeader,aItensEx}})})
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function GeraExcel(aExport)
+
+Local aArea		:= GetArea()
+Local cDirDocs	:= MsDocPath()
+Local cPath		:= AllTrim(GetTempPath())
+Local aCampos	:= {}
+Local ny		:= 0
+Local nX        := 0
+Local nz		:= 0
+Local cBuffer   := ""
+Local oExcelApp := Nil
+Local nHandle   := 0
+Local cArquivo  := SuperGetMV("MV_XNOMPLN",,"tabela_de_rateio")
+Local _cArquivo	:= ""
+Local aHeader	:= {}
+Local aCols		:= {}
+Local cAuxTxt
+Local aParamBox	:= {}
+Local aRet		:= {}
+Local lArqLocal := ExistBlock("DIRDOCLOC")
+Local cType			:=	"Arquivos XLS|*.XLS|Todos os Arquivos|*.*"
+
+aTamSX3 := TAMSX3("ZB8_SEQUEN")
+Aadd(aCampos, { "SEQUENC"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("ZB8_PERCEN")
+Aadd(aCampos, { "PERCENT"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("ZB8_CCDBTO")
+Aadd(aCampos, { "CCUSTO"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("ZB8_ITDBTO")
+Aadd(aCampos, { "UNNEGOC"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("ZB8_CLVLDB")
+Aadd(aCampos, { "OPERACA"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+cArq := CriaTrab(aCampos, .T. )
+dbUseArea( .T. ,"DBFCDX",cArq,"TMPTRB", .f. )
+DbSelectArea("TMPTRB")
+
+
+
+
+aInd	:= {}
+Aadd(aInd,{CriaTrab(Nil, .F. ),"SEQUENC","Sequencia"})
+
+For nA := 1 to Len(aInd)
+	IndRegua("TMPTRB",aInd[nA,1],aInd[nA,2],,,OemToAnsi("Criando Índice Temporário...") )
+next
+DbClearIndex()
+
+For nA := 1 to Len(aInd)
+	dbSetIndex(aInd[nA,1]+OrdBagExt())
+next
+
+For nLoop := 1 to Len(aExport[1,4])
+	RecLock("TMPTRB", .T. )
+	TMPTRB->SEQUENC	:= aExport[1,4,nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_SEQUEN")]
+	TMPTRB->PERCENT	:= aExport[1,4,nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_PERCEN")]
+	TMPTRB->CCUSTO	:= aExport[1,4,nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_CCDBTO")]
+	TMPTRB->UNNEGOC	:= aExport[1,4,nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_ITDBTO")]
+	TMPTRB->OPERACA	:= aExport[1,4,nLoop,BuscaHeader(oGetZB8:aHeader,"ZB8_CLVLDB")]
+	MsUnlock()
+next
+
+
+_cArquivo := cDirDocs+ "\" +cArquivo+".xls"
+
+__dbCopy(_cArquivo , { },,,,,.F., )
+dbCloseArea("TMPTRB")
+
+
+
+
+
+
+
+
+
+
+
+CpyS2T( _cArquivo , cPath, .T.  )
+If ! ApOleClient( "MsExcel" )
+	MsgStop( "MsExcel nao instalado" )
+	Return
+EndIf
+oExcelApp := MsExcel():New()
+oExcelApp:WorkBooks:Open( cPath+cArquivo+".xls" )
+oExcelApp:SetVisible( .T. )
+
+RestArea(aArea)
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function VerifDel(cCodRat)
+
+
+
+Local lRetorno	:= .T. 
+Local cQry		:= ""
+
+
+
+
+cQry	:= "SELECT count(*) CONTADOR FROM "+RetSQLName("SEV")+" "+Chr(13)+Chr(10)
+cQry	+= "WHERE EV_FILIAL = '"+xFilial("SEV")+"' "+Chr(13)+Chr(10)
+cQry	+= "AND EV_XCODRAT = '"+cCodRat+"' "+Chr(13)+Chr(10)
+cQry	+= "AND D_E_L_E_T_ <> '*' "+Chr(13)+Chr(10)
+
+If Select("TMPDEL") > 0
+	DbSelectArea("TMPDEL")
+	DbCloseArea()
+Endif
+MsAguarde({|| DbUseArea( .T. , "TOPCONN", TCGenQry(,,cQry),"TMPDEL", .F. , .T. )}, "Verificando se não foi utilizado anteriormente...")
+
+If TMPDEL->CONTADOR > 0
+	lRetorno	:= .F. 
+Endif
+
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBMA2()
+
+Local lRet 		:= .T. 
+Local cAliasZB7	:= GetNextAlias()
+
+
+	If Select(cAliasZB7) > 0
+		DbSelectArea(cAliasZB7)
+		DbCloseArea()
+	Endif
+
+
+
+
+
+
+__execSql(cAliasZB7," Select Distinct ZB7_CODRAT, ZB7_DESCRI from  "+RetSqlName('ZB7')+" (NOLOCK) Where ZB7_FILIAL =  '" +xFilial('ZB7')+"'  AND ZB7_CODRAT =  "+___SQLGetValue(M->ZB7_CODRAT)+" AND D_E_L_E_T_= ' '",{},.F.)
+
+    If !(cAliasZB7)->(Eof())
+		If ALLTRIM(M->ZB7_DESCRI) <> ALLTRIM((cAliasZB7)->ZB7_DESCRI)
+			Aviso("Aviso","A descrição não pode ser diferente do Rateio "+ALLTRIM(M->ZB7_CODRAT)+".!",{"OK"},,"Atenção",,"BMPPERG")
+		    lRet := .F. 
+		Endif
+	Endif
+
+	DbSelectArea(cAliasZB7)
+	DbCloseArea()
+
+Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBMA3()
+
+Local lRet 			:= .T. 
+Local cUserfull		:= ALLTRIM(SuperGetMV("MV_XUSRRAT",,""))
+
+If cUserfull <> __cUserID
+	ZB6->(Dbsetorder(1))
+	If ZB6->(DbSeek(xFilial("ZB6")+M->ZB7_CODRAT))
+		If !ZB6->(DbSeek(xFilial("ZB6")+M->ZB7_CODRAT+__cUserID,))
+			Aviso("Aviso","Código utilizado anteriormente e o usuáro não tem permissão para inclusão do codigo "+ALLTRIM(M->ZB7_CODRAT)+".",{"OK"},,"Atenção",,"BMPPERG")
+			lRet := .F. 
+		Endif
+	Endif
+Endif
+
+Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RZB7ANOMES(cMesAno)
+
+
+
+Local aArea		:= GetArea()
+Local cRetorno	:= ""
+
+cRetorno	:= Substr(cMesAno,3,4)+Substr(cMesAno,1,2)
+
+RestArea(aArea)
+Return cRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTB99L()
+
+
+
+Local aLegenda := {}
+
+aAdd(aLegenda, {"BR_VERDE"  	,"Tabela pendente de atualização"})
+aAdd(aLegenda, {"BR_VERMELHO"	,"Tabela processada"})
+aAdd(aLegenda, {"BR_AZUL"		,"Tabela atualizada"})
+aAdd(aLegenda, {"BR_AMARELO"	,"Tabela componente"})
+
+BrwLegenda("Tabelas de Rateio","Legenda" ,aLegenda)
+Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTB99Y()
+
+
+
+Local aArea		:= GetArea()
+Local lRetorno	:= .F. 
+
+dbSelectArea("ZB8")
+dbSetOrder(1)
+If dbSeek(ZB7->ZB7_FILIAL+ZB7->ZB7_CODRAT+ZB7->ZB7_ANOMES+ZB7->ZB7_REVISA, .F. )
+	lRetorno	:= .T. 
+Endif
+
+dbSelectArea("ZB7")
+
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RCTB99Z()
+
+
+
+Local aArea		:= GetArea()
+Local nLoop		:= 0
+Local nPercTot	:= 0
+
+For nLoop := 1 to Len(oGetZB8:aCols)
+	If !oGetZB8:aCols[nLoop][Len(oGetZB8:aHeader)+1]
+		nPercTot		+= oGetZB8:aCols[nLoop][BuscaHeader(oGetZB8:aHeader,"ZB8_PERCEN")]
+	Endif
+next
+
+
+
+
+
+
+nTotPerc	:=	nPercTot
+nRestPerc	:= 100-nPercTot
+If oGetValTot <> Nil .and.  oGetValRest <> Nil
+	oGetValTot:Refresh()
+	oGetValRest:Refresh()
+Endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RCTB99K()
+
+
+
+Local nLoop	:= 0
+
+
+
+
+For nLoop := 1 to Len(oGetZB8:aCols)
+	oGetZB8:aCols[nLoop][Len(aHeaderZB8)+1]	:= .T. 
+next
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTB99R()
+
+
+
+Local aArea		:= GetArea()
+Local cUserAdm	:= ALLTRIM(SuperGetMV("MV_XRATBLQ",,""))
+
+
+
+
+If __cUserId <> cUserAdm
+	Aviso("Aviso","Usuário sem permissões para essa operação.",{"OK"},,"Atenção",,"BMPPERG")
+	Return .F. 
+Endif
+
+
+
+
+If ZB7->ZB7_REVISA == "000"
+	Aviso("Aviso","O registro selecionado não é uma revisão de tabela de rateio.",{"OK"},,"Atenção",,"BMPPERG")
+	Return .F. 
+Endif
+
+
+
+
+If ZB7->ZB7_ATIVO <> "I"
+	Aviso("Aviso","A revisão já está ativa.",{"OK"},,"Atenção",,"BMPPERG")
+	Return .F. 
+Endif
+
+
+
+
+dbSelectArea("ZB7")
+RecLock("ZB7", .F. )
+	ZB7->ZB7_ATIVO := "A"
+MsUnlock()
+
+
+
+
+
+
+
+If Aviso("Estorno","Deseja estornar todos os documentos de entradas com rateio já processado para essa tabela no período?", {"Sim","Não"},,"Atenção",,"BMPPERG")==1
+
+
+
+	ProcEst()
+Endif
+
+RestArea(aArea)
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ProcEst()
+
+
+
+Local nTotRegs		:= 0
+Local cQry			:= ""
+Local nX			:= 0
+Local nCountReg		:= 1
+
+Local cDataDe 	:=	"01/"+Substr(ZB7->ZB7_ANOMES,5,2)+"/"+Substr(ZB7->ZB7_ANOMES,1,4)
+Local cDataAte	:= 	LastDay(CTOD("01/"+Substr(ZB7->ZB7_ANOMES,5,2)+"/"+Substr(ZB7->ZB7_ANOMES,1,4)))
+Local cRatDe	:= 	ZB7->ZB7_CODRAT
+Local cBranco	:= ""
+
+Local aIndisp	:= {}
+
+Local cUltRev	:= ""
+Local cAnoMes	:= ""
+
+Local nA 			:= 0
+Local aCampos 		:= {}
+Local aDescCpo		:= {}
+Local aTamSX3		:= {}
+Local cArq 			:= ""
+Private aInd  		:= {}
+Private Qry 		:= GetNextAlias()
+
+
+
+
+Aadd(aCampos, { "TMP_OK"    	,"C",02,0 })
+
+aTamSX3 := TAMSX3("F1_FILIAL")
+Aadd(aCampos, { "TMP_FILIAL"	,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("F1_DOC")
+Aadd(aCampos, { "TMP_DOC"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("F1_SERIE")
+Aadd(aCampos, { "TMP_SERIE"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("F1_FORNECE")
+Aadd(aCampos, { "TMP_FORNEC"	,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("F1_LOJA")
+Aadd(aCampos, { "TMP_LOJA"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("A2_NREDUZ")
+Aadd(aCampos, { "TMP_NREDUZ"	,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("ZB7_CODRAT")
+Aadd(aCampos, { "TMP_CODRAT"	,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("ZB7_DESCRI")
+Aadd(aCampos, { "TMP_DESCRI"	,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("F1_DUPL")
+Aadd(aCampos, { "TMP_DUPL"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("F1_EMISSAO ")
+Aadd(aCampos, { "TMP_EMISSA "	,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("ED_CODIGO")
+Aadd(aCampos, { "TMP_NATURE"	,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("ED_DESCRIC")
+Aadd(aCampos, { "TMP_NATDES"	,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+Aadd(aCampos, { "TMP_MARCA"    	,"C",01,0 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+aCpos := { {"TMP_OK"		,,""},	  	   {"TMP_FILIAL"	,,"Filial"},	  	   {"TMP_DOC"		,,"Documento"},	  	   {"TMP_SERIE"		,,"Serie"},   		   {"TMP_DUPL"		,,"Duplicata"},   	  	   {"TMP_FORNEC"	,,"Fornecedor"},		   {"TMP_LOJA"		,,"Loja"},   		   {"TMP_NREDUZ"	,,"Nome"},   		   {"TMP_NATURE"	,,"Cod Natureza"},   		   {"TMP_NATDES"	,,"Nome Natureza"},   		   {"TMP_CODRAT"	,,"Cod. Rateio"},   		   {"TMP_DESCRI"	,,"Descr. Rateio"},   		   {"TMP_EMISSA"	,,"Emissao"} }
+
+
+
+
+cArq := CriaTrab(aCampos, .T. )
+dbUseArea( .T. ,"DBFCDX",cArq,"TRB", .f. )
+DbSelectArea("TRB")
+
+
+
+
+aInd	:= {}
+Aadd(aInd,{CriaTrab(Nil, .F. ),"TMP_FILIAL+TMP_DOC+TMP_SERIE+TMP_FORNEC+TMP_LOJA","Filial+Doc+Serie+Fornece+Loja"})
+
+For nA := 1 to Len(aInd)
+	IndRegua("TRB",aInd[nA,1],aInd[nA,2],,,OemToAnsi("Criando Índice Temporário...") )
+next
+DbClearIndex()
+
+For nA := 1 to Len(aInd)
+	dbSetIndex(aInd[nA,1]+OrdBagExt())
+next
+
+
+
+
+cMarca := GetMark(,"TRB","TMP_OK")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+__execSql(Qry," SELECT F1_FILIAL, F1_DOC,F1_SERIE,F1_FORNECE,F1_LOJA,F1_DUPL,F1_EMISSAO, EV_XCODRAT ZB7_CODRAT, ED_CODIGO, ED_DESCRIC FROM  "+RetSqlName('SF1')+" SF1(NOLOCK), "+RetSqlName('SEV')+" SEV(NOLOCK),  "+RetSqlName('SED')+" SED(NOLOCK) WHERE F1_XPRORAT = '1' AND F1_EMISSAO BETWEEN  "+___SQLGetValue(CDATADE)+" AND  "+___SQLGetValue(CDATAATE)+" AND F1_DTLANC <> '        ' AND SF1.D_E_L_E_T_= ' ' AND EV_FILIAL =  '" +xFilial('SEV')+"'  AND EV_NUM = F1_DOC AND EV_PREFIXO = F1_PREFIXO AND EV_CLIFOR = F1_FORNECE AND EV_LOJA = F1_LOJA AND EV_XCODRAT =  "+___SQLGetValue(CRATDE)+" AND SEV.D_E_L_E_T_= ' ' AND ED_FILIAL =  '" +xFilial('SED')+"'  AND ED_CODIGO = EV_NATUREZ AND SED.D_E_L_E_T_= ' '",{},.F.)
+
+
+
+
+(Qry)->( DbEval( {|| nTotRegs++},,{ || !Eof()} ))
+
+
+
+
+DbSelectArea(Qry)
+DbGoTop()
+ProcRegua(nTotRegs)
+While !Eof()
+
+
+
+
+	IncProc("Processando registro "+Alltrim(Str(nCountReg))+" de "+Alltrim(Str(nTotRegs))+".")
+
+
+
+
+	DbSelectArea("TRB")
+	DbSetOrder(1)
+	RecLock("TRB", .T. )
+
+	TRB->TMP_FILIAL	:= (QRY)->F1_FILIAL
+	TRB->TMP_OK		:= cMarca
+	TRB->TMP_DOC	:= (QRY)->F1_DOC
+	TRB->TMP_SERIE	:= (QRY)->F1_SERIE
+	TRB->TMP_FORNEC	:= (QRY)->F1_FORNECE
+	TRB->TMP_LOJA 	:= (QRY)->F1_LOJA
+	TRB->TMP_NREDUZ	:= Posicione("SA2",1,xFilial("SA2")+(QRY)->F1_FORNECE+(QRY)->F1_LOJA,"A2_NREDUZ")
+	TRB->TMP_CODRAT	:= (QRY)->ZB7_CODRAT
+	TRB->TMP_DESCRI	:= Posicione("ZB7",1,xFilial("ZB7")+(QRY)->ZB7_CODRAT,"ZB7_DESCRI")
+	TRB->TMP_DUPL	:= (QRY)->F1_DUPL
+	TRB->TMP_EMISSA	:= Stod((QRY)->F1_EMISSAO)
+	TRB->TMP_NATURE	:= (QRY)->ED_CODIGO
+	TRB->TMP_NATDES	:= (QRY)->ED_DESCRIC
+	TRB->TMP_MARCA	:= Space(01)
+
+	MsUnlock()
+
+	nCountReg++
+
+	DbSelectArea(QRY)
+	DbSkip()
+
+Enddo
+
+
+
+
+If Select(QRY) > 0
+	DbSelectArea(QRY)
+	DbCloseArea()
+Endif
+
+
+
+
+dbSelectArea("TRB")
+dbSetOrder(1)
+dbGoTop()
+
+
+
+
+U_CTBMA4PR( .T. )
+
+
+
+
+If Select("TRB") > 0
+	DbSelectArea("TRB")
+	DbCloseArea()
+	FErase(cArq+GetDbExtension())
+	For nA := 1 to Len(aInd)
+		FErase(aInd[nA,1]+OrdBagExt())
+	next
+Endif
+
+Return(Nil)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function EditFiltro()
+
+
+
+Local cAliaZB7		:= GetNextAlias()
+Local cUsrLog		:= __cUserID
+Local cCodRat		:= ""
+Local cCodIN		:= ""
+Local cUserfull		:= ALLTRIM(SuperGetMV("MV_XUSRRAT",,""))
+
+If !lDefTop
+
+
+
+
+	EndFilBrw(cAlias,aIndexZB7)
+
+
+
+
+	If !(cUsrLog$Alltrim(cUserfull))
+
+
+
+
+
+
+__execSql(cAliaZB7," Select ZB6_CODRAT from  "+RetSqlName('ZB6')+" ZB6 (NOLOCK),  "+RetSqlName('ZB7')+" ZB7 (NOLOCK) WHERE ZB6_FILIAL =  '" +xFilial('ZB6')+"'  AND ZB6_USUARI =  "+___SQLGetValue(CUSRLOG)+" AND ZB6.D_E_L_E_T_= ' ' AND ZB6_CODRAT = ZB7_CODRAT AND ZB6_CODRAT BETWEEN  "+___SQLGetValue(MV_PAR03)+" AND  "+___SQLGetValue(MV_PAR04)+" AND ZB7_ANOMES BETWEEN  "+___SQLGetValue(CANOMESD)+" AND  "+___SQLGetValue(CANOMESA)+" AND ZB7.D_E_L_E_T_= ' '",{},.F.)
+
+		(cAliaZB7)->(DbGoTop())
+
+		While !(cAliaZB7)->(EOF())
+    		cCodRat += ALLTRIM((cAliaZB7)->ZB6_CODRAT)
+			(cAliaZB7)->(DbSkip())
+			If !(cAliaZB7)->(EOF())
+				cCodRat += ";"
+			Endif
+		EndDo
+
+		(cAliaZB7)->(dbCloseArea())
+
+		cCodIN := FormatIn(ALLTRIM(cCodRat), ";")
+
+
+		cFilterZB7	:= "ZB7_CODRAT $'"+STRTRAN(STRTRAN(STRTRAN(cCodIN,")",""),"(",""),"'","")+"'"
+
+		If Len(cFilterZB7) > 2000
+			Aviso("Aviso","O filtro gerado é muito abrangente e os resultados não podem ser exibidos. Por favor, revise os parâmetros de exibição.",{"OK"},,"Atenção",,"BMPPERG")
+			Return .F. 
+		Endif
+
+		DbSelectArea(cAlias)
+		dbSetOrder(1)
+		Eval(bFiltraBrw)
+
+	ElseIf (cUsrLog $Alltrim(cUserfull))
+		cFilterZB7	:= "ZB7_CODRAT <> ' '"
+		Eval(bFiltraBrw)
+		DbSelectArea(cAlias)
+		dbSetOrder(1)
+
+	Endif
+
+Endif
+
+Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CriaSx1(aRegs)
+
+Local aAreaAtu	:= GetArea()
+Local aAreaSX1	:= SX1->(GetArea())
+Local nJ		:= 0
+Local nY		:= 0
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+
+For nY := 1 To Len(aRegs)
+	If !MsSeek(Padr(aRegs[nY,1],Len(SX1->X1_GRUPO))+aRegs[nY,2])
+		RecLock("SX1", .T. )
+		For nJ := 1 To FCount()
+			If nJ <= Len(aRegs[nY])
+				FieldPut(nJ,aRegs[nY,nJ])
+			EndIf
+		next
+		MsUnlock()
+	EndIf
+next
+
+RestArea(aAreaSX1)
+RestArea(aAreaAtu)
+Return(Nil)

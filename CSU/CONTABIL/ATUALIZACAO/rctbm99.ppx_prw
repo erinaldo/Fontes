@@ -1,0 +1,457 @@
+#line 1 "C:\INCLUDE\Protheus.ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "Protheus.ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "Protheus.ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "Protheus.ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "Protheus.ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "Protheus.ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "Protheus.ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "Protheus.ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "Protheus.ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "Protheus.ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "Protheus.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbm99.prw"
+#line 1 "C:\INCLUDE\TopConn.ch"
+#line 3 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbm99.prw"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBCTTT(_cCodCTT)
+
+
+
+Local aArea		:= GetArea()
+Local cAnoMesN	:= ""
+Local lRetorno	:= .T. 
+
+
+
+
+dbSelectArea("CTT")
+dbSetOrder(1)
+If dbSeek(xFilial("CTT")+_cCodCTT, .F. )
+	If Alltrim(CTT->CTT_XTRANS) == "N" .or.  Empty(CTT->CTT_XTRANS)
+		lRetorno := .F. 
+
+		Aviso("Aviso","O centro de custo selecionado não é transitório. Por favor, selecione um centro de custo transitório.",{"OK"},,"Atenção",,"BMPPERG")
+
+	Endif
+Endif
+
+RestArea(aArea)
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBCTTV(_cCodCTT)
+
+
+
+Local aArea		:= GetArea()
+Local cAnoMesN	:= ""
+Local lRetorno	:= .T. 
+
+
+
+
+dbSelectArea("CTT")
+dbSetOrder(1)
+If dbSeek(xFilial("CTT")+_cCodCTT, .F. )
+	If Alltrim(CTT->CTT_XTRANS) == "S"
+		lRetorno := .F. 
+
+		Aviso("Aviso","O centro de custo selecionado é transitório e não pode ser utilizado para essa operação. Por favor, selecione outro centro de custo.",{"OK"},,"Atenção",,"BMPPERG")
+
+	Endif
+Endif
+
+RestArea(aArea)
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RZB7ULTR(cCodRat,cAnoMes,lAtiva)
+
+
+
+Local aArea		:= GetArea()
+Local cRetorno	:= ""
+
+Local cQry		:= ""
+
+
+
+
+cQry	:= "SELECT TOP 1 (ZB7_REVISA) TOP_REVISAO FROM "+RetSqlName("ZB7")+" "+Chr(13)+Chr(10)
+
+cQry	+= "WHERE ZB7_FILIAL = '"+xFilial("ZB7")+"' "+Chr(13)+Chr(10)
+cQry	+= "AND ZB7_CODRAT = '"+cCodRat+"' "+Chr(13)+Chr(10)
+cQry	+= "AND ZB7_ANOMES = '"+cAnoMes+"' "+Chr(13)+Chr(10)
+If lAtiva
+	cQry	+= "AND ZB7_ATIVO = 'A' "+Chr(13)+Chr(10)
+Endif
+cQry	+= "AND D_E_L_E_T_ <> '*' "+Chr(13)+Chr(10)
+
+cQry	+= "ORDER  BY ZB7_FILIAL, ZB7_CODRAT, ZB7_ANOMES, ZB7_REVISA DESC "+Chr(13)+Chr(10)
+
+
+If Select("TMPTOP") > 0
+	DbSelectArea("TMPTOP")
+	DbCloseArea()
+Endif
+
+MsAguarde({|| DbUseArea( .T. , "TOPCONN", TCGenQry(,,cQry),"TMPTOP", .F. , .T. )}, "Verificando a última revisão da tabela de rateio...")
+
+
+
+
+cRetorno	:=  TMPTOP->TOP_REVISAO
+
+RestArea(aArea)
+Return cRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RZB7REVA(cCodRat,cAnoMes)
+
+
+
+Local aArea		:= GetArea()
+Local lRetorno	:= .F. 
+Local cQry		:= ""
+
+
+
+
+If IsInCallStack("MATA103")
+
+	cAnoMes		:= U_GetCompetencia(SF1->F1_FILIAL+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)
+Endif
+
+
+
+
+cQry	:= "SELECT COUNT(*) CONTAGEM FROM "+RetSqlName("ZB7")+" "+Chr(13)+Chr(10)
+cQry	+= "WHERE ZB7_FILIAL = '"+xFilial("ZB7")+"' "+Chr(13)+Chr(10)
+cQry	+= "AND ZB7_CODRAT = '"+cCodRat+"' "+Chr(13)+Chr(10)
+cQry	+= "AND ZB7_ANOMES = '"+cAnoMes+"' "+Chr(13)+Chr(10)
+cQry	+= "AND ZB7_ATIVO = 'A' "+Chr(13)+Chr(10)
+cQry	+= "AND D_E_L_E_T_ <> '*' "
+
+If Select("TMPCON") > 0
+	DbSelectArea("TMPCON")
+	DbCloseArea()
+Endif
+
+MsAguarde({|| DbUseArea( .T. , "TOPCONN", TCGenQry(,,cQry),"TMPCON", .F. , .T. )}, "Verificando a última revisão da tabela de rateio...")
+
+If TMPCON->CONTAGEM > 0
+	lRetorno	:= .T. 
+Else
+	Aviso("Aviso","Não existe revisão ativa para a tabela de rateio selecionada nesse período. Por favor, verifique o cadastro de tabelas de rateio.",{"OK"},,"Atenção",,"BMPPERG")
+Endif
+
+RestArea(aArea)
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RZB7CTRA(cCodRat)
+
+
+
+Local aArea		:= GetArea()
+Local cRetorno	:= ""
+Local cAnoMes	:= ""
+Local cUltRev	:= ""
+
+If IsInCallStack("MATA103")
+
+
+
+
+
+	cAnoMes	:= U_GetCompetencia(SF1->F1_FILIAL+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)
+	cUltRev	:= U_RZB7ULTR(cCodRat,cAnoMes, .T. )
+
+	dbSelectArea("ZB7")
+	dbSetOrder(1)
+	If dbSeek(xFilial("ZB7")+cCodRat+cAnoMes+cUltRev, .F. )
+		cRetorno	:= ZB7->ZB7_CCTRAN
+	Endif
+
+Endif
+
+RestArea(aArea)
+Return cRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RZB7ITRA(cCodRat)
+
+
+
+Local aArea		:= GetArea()
+Local cRetorno	:= ""
+Local cAnoMes	:= ""
+Local cUltRev	:= ""
+
+If IsInCallStack("MATA103")
+
+
+
+
+
+	cAnoMes	:= U_GetCompetencia(SF1->F1_FILIAL+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)
+	cUltRev	:= U_RZB7ULTR(cCodRat,cAnoMes, .T. )
+
+	dbSelectArea("ZB7")
+	dbSetOrder(1)
+	If dbSeek(xFilial("ZB7")+cCodRat+cAnoMes+cUltRev, .F. )
+		cRetorno	:= ZB7->ZB7_ITTRAN
+	Endif
+
+Endif
+
+RestArea(aArea)
+Return cRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RZB7CLRA(cCodRat)
+
+
+
+Local aArea		:= GetArea()
+Local cRetorno	:= ""
+Local cAnoMes	:= ""
+Local cUltRev	:= ""
+
+If IsInCallStack("MATA103")
+
+
+
+
+
+	cAnoMes	:= U_GetCompetencia(SF1->F1_FILIAL+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)
+	cUltRev	:= U_RZB7ULTR(cCodRat,cAnoMes, .T. )
+
+	dbSelectArea("ZB7")
+	dbSetOrder(1)
+	If dbSeek(xFilial("ZB7")+cCodRat+cAnoMes+cUltRev, .F. )
+		cRetorno	:= ZB7->ZB7_CLTRAN
+	Endif
+
+Endif
+
+RestArea(aArea)
+Return cRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RZB7LCUS(cCodRat)
+
+
+
+Local aArea		:= GetArea()
+Local cRetorno	:= cCodRat
+
+If IsInCallStack("MATA103") .and.  IsInCallStack("U_RFINA06")
+
+
+
+	dbSelectArea("CUS")
+	dbGoTop()
+	If DbSeek ( aCols[n][nPosNaturez] )
+		while CUS->(!Eof()) .And. CUS->NATUREZ==aCols[n][nPosNaturez]
+			RecLock("CUS", .F. )
+			CUS->(dbDelete())
+			MsUnlock()
+			CUS->(dbSkip())
+		EndDo
+	Endif
+
+Endif
+
+RestArea(aArea)
+Return cRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_GetCompetencia(cChave)
+
+
+
+Local aArea		:= GetArea()
+Local cRetorno	:= ""
+
+
+
+
+dbSelectArea("SD1")
+dbSetOrder(1)
+If dbSeek(cChave, .F. )
+	cRetorno	:= STRTRAN(SD1->D1_XDTAQUI,"/","")
+	cRetorno	:= Substr(cRetorno,3,4)+Substr(cRetorno,1,2)
+Endif
+
+RestArea(aArea)
+Return cRetorno

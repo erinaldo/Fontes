@@ -1,0 +1,2553 @@
+#include "fivewin.ch"
+#INCLUDE "GPEM550.CH"
+
+Static lGPE550ICD := ExistBlock( "GPE550ICD" )
+
+/* 
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ GPEM550  ³ Autor  ³ J. Ricardo              ³ Data ³ 12/06/95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ GERA ARQUIVO DA DIRF (SR4)                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS    ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Andreia     ³12/01/07³117282   ³Ajuste na chave de pesquisa da tabela SR4,³±±
+±±³            ³        ³         ³no momento da gravacao. GravaSR4().       ³±±
+±±³Ricardo D.  ³23/01/07³117476   ³Ajuste no tratamento dos id.062 e 169 para³±±
+±±³            ³        ³         ³que nao fiquem duplicados quando ocorrer  ³±±
+±±³            ³        ³         ³rescisao de contrato apos o pagamento da  ³±±
+±±³            ³        ³         ³2a parcela do 13o salario.                ³±±
+±±³Ricardo D.  ³24/01/07³117533   ³Ajuste no tratamento do complemento do 13o³±±
+±±³            ³        ³         ³salario na folha de dezembro de forma que ³±±
+±±³            ³        ³         ³ate 2005 o complemento seja considerado   ³±±
+±±³            ³        ³         ³no movimento da sua competencia e a partir³±±
+±±³            ³        ³         ³de 2006 pelo mes da data de pagamento.    ³±±
+±±³Ricardo D.  ³24/01/07³117817   ³Ajuste na variavel lRedutor13 para que nao³±±
+±±³            ³        ³         ³ocorra error.log durante a geracao da dirf³±±
+±±³Ricardo D.  ³26/01/07³118099   ³Ajuste no tratamento dos id.062 e 169 para³±±
+±±³            ³        ³         ³que nao fiquem duplicados quando ocorrer  ³±±
+±±³            ³        ³         ³complemento de 13o ano anterior.          ³±±
+±±³Andreia     ³01/02/07³118339   ³Tratamento da deducao de dependentes quan-³±±
+±±³            ³        ³         ³do o funcionario tiver multiplos vinculos.³±±
+±±³            ³        ³         ³Garantir que a deducao sera usada somente ³±±
+±±³            ³        ³         ³uma vez.                                  ³±±
+±±³Emerson     ³02/02/07³118339   ³Ajustes no tratamento da deducao IRMULTV. ³±±
+±±³            ³        ³         ³Deprezar id.060 quando houver ferias no   ³±±
+±±³            ³        ³         ³mes seguinte.                             ³±±
+±±³Ricardo D.  ³13/02/07³118909   ³Ajuste no tratamento do id.169 para consi-³±±
+±±³            ³        ³         ³derar o complemento do 13o salario pago em³±±
+±±³            ³        ³         ³dezembro.                                 ³±±
+±±³Ricardo D.  ³15/02/07³118909   ³Ajuste no tratamento do id.169 para consi-³±±
+±±³            ³        ³         ³derar o complemento do 13o salario pago em³±±
+±±³            ³        ³         ³dezembro mesmo que o complemento tenha    ³±±
+±±³            ³        ³         ³sido informado pelo usuario.              ³±±
+±±³Andreia     ³25/10/07³122631   ³Ajuste para utilizar a data de pagto da  -³±±
+±±³            ³        ³         ³rescisão quando o fechamento ainda nao foi³±±
+±±³            ³        ³         ³executado.                                ³±±
+±±³Andreia     ³11/01/08³136901   ³Atualizacao para dirf 2008.               ³±±
+±±³Andreia     ³18/01/08³120001   ³Ajuste para considerar o primeiro valor   ³±±
+±±³            ³        ³         ³da deducao de 13o de dependente, quando   ³±±
+±±³            ³        ³         ³tem rescisao complementar no mesmo ano e  ³±±
+±±³            ³        ³         ³ocorreu em mes diferente ao da rescisao   ³±±
+±±³            ³        ³         ³original.                                 ³±±
+±±³Andreia     ³22/01/08³139648   ³Não despreza a verba do identificador 060-³±±
+±±³            ³        ³         ³Deducao de dependente ferias quando for   ³±±
+±±³            ³        ³         ³calculada na rescisao.                    ³±±
+±±³Andreia     ³28/01/08³139897   ³Ajuste para nao acumular os valores em    ³±±
+±±³            ³        ³         ³uma mesma verba. Por exemplo, a verba com ³±±
+±±³            ³        ³         ³incidencia "C1" tem o codigo menor do que ³±±
+±±³            ³        ³         ³a verba com incidencia "C".               ³±±
+±±³Andreia     ³08/02/08³140599   ³Não despreza a verba do identificador 060-³±±
+±±³            ³        ³         ³Deducao de dependente ferias quando for   ³±±
+±±³            ³        ³         ³informada.                                ³±±
+±±³Andreia     ³29/12/08³83942008 ³Chamada da nova regua de processamento    ³±±
+±±³            ³        ³         ³ para versoes posteriores a "R1.1".       ³±±
+±±³Renata E.   ³19/01/09³1374/2009³Inclusao do botao Filtro nos parametros da³±±
+±±³            ³        ³         ³rotina.                                   ³±±
+±±³Renata E.   ³19/01/09³140846   ³Incluido campo Origem nas tabelas SRL, SR4³±±
+±±³            ³        ³         ³para na exclusao dos dados, excluir       ³±±
+±±³            ³        ³         ³os dados que possuirem este campo como "1"³±±
+±±³            ³        ³         ³(1 indica FOLHA e 2 Financeiro.           ³±±
+±±³            ³        ³         ³Ajuste na chave em FGravaInf().           ³±±
+±±³            ³        ³         ³Ajuste no valor total do cod "I" (Isentos)³±±
+±±³            ³        ³         ³para vlr do abono mes seg. nao entrar     ³±±
+±±³            ³        ³         ³duplicidade.							     ³±±
+±±³            ³        ³         ³Somar vlr do abono mes seg. no total dos  ³±±
+±±³            ³        ³         ³rendimentos.								 ³±±
+±±³Renata E.   ³05/02/09³2918/2009³Ajuste em f550MontaDados, no abono        ³±±
+±±³Renata E.   ³17/02/09³3891/2009³Ajuste em fBuscaFer_Res() qdo e utilizado ³±±
+±±³            ³        ³         ³campo SRH->RH_DTITENS			         ³±±
+±±³Renata E.   ³18/02/09³4296/2009³Ajuste em GPM550Processa() na exclusao dos³±±
+±±³            ³        ³         ³dados qdo for AS400						 ³±±
+±±³Renata E.   ³19/02/09³4447/2009³Ajuste em f550MontaDados() no vlr da dedu-³±±
+±±³            ³        ³         ³cao dos dependentes, qdo verba e rateada. ³±±
+±±³Renata E.   ³02/04/09³4974/2009³- Ajuste em f550MontaDados() p/considerar ³±±
+±±³            ³        ³3336/2009³como data de pagto das ferias, conteudo do³±±
+±±³            ³        ³         ³campo SRH->RH_DTRECIB; 					 ³±±
+±±³            ³        ³         ³- Ajuste p/gravar descricao do campo dos  ³±±
+±±³            ³        ³         ³dados complementares nos casos de abono de³±±
+±±³            ³        ³         ³ferias e com folha de jan aberta.         ³±±
+±±³Andreia     ³03/06/09³103702009|Tratamento do rendimento tributavel do fre³±±
+±±³            ³        ³         ³teiro( 60% do Transp. de Passageiro).     ³±±
+±±³Alex        ³18/08/09³020257/  ³Ajuste no Grupo de Campos filial          ³±±
+±±³            ³        ³2009     ³tratamento para não considerar 2 posições ³±±
+±±³            ³        ³         ³fixas.                                    ³±±
+±±³Andreia     ³05/10/09³023907/09³Ajuste para buscar as informacoes de resci³±±
+±±³            ³        ³         ³são quando o mes ainda nao foi fechado.   ³±±
+±±³Andreia     ³14/01/09³030575/09³Atualizacao para dirf 2010.               ³±±
+±±³Luis Ricardo³17/01/11³018489/10³Criacao e Tratamento dos campos relacio-  ³±±
+±±³Cinalli     ³        ³         ³nados ao funcionario residente exterior na|±±
+±±³            ³        ³         ³DIRF/2011.								 |±±
+±±³Alessandro  ³28/01/11|002148/11|Ponto de entrada para Informacoes Comple- ³±±
+±±³Santos      |	    |         |mentares DIRF.                            ³±±
+±±³Renata      ³17/02/11|003795/11|Ajuste na funcao fGravaInf, para qdo tipo ³±±
+±±³            |	    |         |retencao "R" gravar valor zero		     ³±±
+±±³            ³        |		  |Auste na funcao f550MontaDados(), para    ³±±
+±±³            |	    |         |gerar no aBenef, os dados da assist.      ³±±
+±±³            |	    |         |odontol. para titular com vlr zero, qdo   ³±±
+±±³            |	    |         |apenas o dep possui ass. odontol. 		 ³±±
+±±³Renata      ³21/02/11|003795/11|Na funcao f550MontaDados declarada        ³±±
+±±³            |	    |         |variavel cCNPJFAss                		 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function GbGPEM550()
+Local nOpca 	:= 0
+Local aSays		:= {}
+Local aButtons	:= {} //<== arrays locais de preferencia
+Local bProcesso	:= {|oSelf| GPM550Processa()(oSelf)}
+
+Private lVersao101 	:= .F. //(GetRpoRelease("R1.1"))
+
+Private cCadastro := OemToAnsi(STR0001) //"Gera‡„o do Arquivo da D. I. R. F."
+Private cSraFilter	:= ""
+Private aRetFiltro	:= {}
+Private aFilterExp	:= {} 
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica a existencia do campo "ANO" na tabela SR4 e verifica se³
+//³ele esta preenchido. Se nao estiver preenchido significa que    ³
+//³nao foi gerada nenhuma DIRF desde as alteracoes para 2006.      ³
+//³Desta forma e necessario limpar as tabelas SRL e SRL antes da   ³
+//³primeira geracao. Para as proximas geracoes nao sera mais neces-³
+//³sario fazer a limpeza, pois as mesmas guardaram os historicos.  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SR4")  
+If SR4->( fieldpos("R4_ANO"))== 0 
+	Aviso(STR0015,STR0020,{"OK"})// "Atencao"#"Tabelas desatualizadas. Execute o atualizador"
+	Return
+EndIf    
+
+aRegs := {}
+
+aHelp := {	"Informe o ano-calendario da ",;
+			"declaracao     "} 
+Aadd(aRegs,{"GPM550","06","Ano-calendario?"     ,"¨Ano-calendario?"      ,"Ano-calendario?"        ,"mv_ch6","N",04,0,0,"G" ,"","mv_par06","","","","","","","","","","","","","","","","","","",""	,""	,"","","","","","","",aHelp})   
+
+aHelp := {	"Informe se deve gerar o CPMF ",;
+			"em outros rendimentos não    ",;
+			"tributáveis."                 } 
+
+Aadd(aRegs,{"GPM550","07","Gerar CPMF O. Rend.?","¨Genrar CPMF O.Rend. ?","Generate CPMF O.Rend. ?","mv_ch7","N",01,0,0,"C" ,"","mv_par07","Sim","Si","Yes","","","Nao","No","No","","","","","","","","","","",""	,""	,"","","","","","","",aHelp})
+
+ValidPerg(aRegs,"GPM550",.T.)
+
+Pergunte("GPM550",.F.)
+
+A550AjtASX2()
+If lVersao101
+	tNewProcess():New( "GPEM550" , cCadastro , bProcesso , STR0002 , "GPM550",,,,,.T.,.T.  ) 	
+Else
+	AADD(aSays,OemToAnsi(STR0002) ) 									 //"Este programa gera o arquivo da D.I.R.F."
+                   
+	AAdd( aFilterExp , { "FILTRO_ALS" , "SRA"     	, .T. } )			 /* Retorne os Filtros que contenham os Alias Abaixo */
+	AAdd( aFilterExp , { "FILTRO_PRG" , FunName() 	, NIL , NIL    } )  /* Que Estejam Definidos para a Função */
+
+	AAdd( aButtons, { 17,.T., { || aRetFiltro := FilterBuildExpr( aFilterExp ) } } )
+	AADD(aButtons, { 5,.T.,{|| Pergunte("GPM550",.T. ) } } )
+	AADD(aButtons, { 1,.T.,{|o| nOpca := 1,IF(gpm550OK(),FechaBatch(),nOpca:=0) }} )
+	AADD(aButtons, { 2,.T.,{|o| FechaBatch() }} )
+		
+	FormBatch( cCadastro, aSays, aButtons )
+
+	IF nOpca == 1
+		ProcGpe({|lEnd| GPM550Processa()})  // Chamada do Processamento
+	Endif
+
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ mv_par01 - Filial de                                         ³
+//³ mv_par02 - Filial Ate                                        ³
+//³ mv_par03 - Matricula de                                      ³
+//³ mv_par04 - Matricula Ate                                     ³
+//³ mv_par05 - Centralizar na Filial                             ³
+//³ mv_par06 - Ano Base                                          ³
+//³ mv_par07 - Gerar CPMF em outros rend. nao tributaveis        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³GPM550ProcessaºAutor  ³Andreia Santos    º Data ³  09/01/06  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                             º±±
+±±º          ³                                                             º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                          º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GPM550Processa(oSelf)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis LOCAIS DO PROGRAMA                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cFilAnterior
+Local cMesPag
+Local cVerifAdt 
+Local dDtpgRes 	:= Ctod("")
+Local aAdt		:= {}
+Local nX
+Local nA
+Local nI
+Local nAb		
+Local nPercCpmf	:= 0
+
+Local aDedDpSem := {}
+Local aDedDp13o := {}
+Local aDedDepend13 := {}
+Local cVerba
+Local nPos 		:= 0
+
+Local cQuery        
+Local cChave        
+Local nMax 		:= 0     
+Local nMin 		:= 0     
+Local nPont 	:= 0    
+Local cMat
+Local cFil
+Local cPutFilAnt:= cFilAnt          
+Local lLimpaTudo:= .F.
+
+Local lTemCpoDFE:= ""
+Local cVbPensao	:= ""
+Local cVbPFol   := ""
+Local cMesAb 	:= ""
+Local cCodAb 	:= ""
+Local dDtBusFer	:= Ctod("")
+
+Private aInfo		:= {}
+Private aCodFol		:= {}   // Matriz com Codigo da folha
+
+Private aBenef	:= {}
+Private aDependentes:= {}
+
+Private aLog	:= {}
+Private aTitle	:= {}
+Private aTotRegs:= array(10)         
+Private aVerba	:= {}
+
+Private cAliasSRD := "SRD"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis PRIVADAS BASICAS                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aCRA 	:= { STR0008,STR0009,STR0010 } //"Confirma"###"Redigita"###"Abandona"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis PRIVADAS DO PROGRAMA                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private cInfOut := ""
+Private cDescri := ""
+Private cCodRet := ""
+Private aFunc 	:= {}     
+Private aInssFol:= {}
+Private aInssFer:= {}
+Private cFilDe	:=	mv_par01
+Private cFilAte	:=	mv_par02
+Private cMatDe	:=	mv_par03
+Private cMatAte	:= 	mv_par04
+Private cCentra	:=	mv_par05
+Private cAno	:= 	strzero(MV_PAR06,4)
+Private lCPMF	:= 	If( mv_par07== 1,.T.,.F.)
+Private nTamCpf	:= TamSX3("RA_CIC")[1]
+Private lRedutor13
+Private cAliasRAS := "GPRATAM"+cEmpAnt	// Variavel para armazenar o nome do arquivo de Rateio de Assistencia Medica
+Private lRatAssMed:= .F. 				// Variavel para identificar se existe o arquivo de Rateio de Assistencia Medica
+
+Private aAbono	:= {}
+SetMnemonicos("cTranspAp",NIL,.T.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Eliminar na proxima versao.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private cArqCompl	:= "GPCMPL"+cEmpAnt
+                          
+aFill(aTotRegs,0)     
+
+// Verifica se existe o arquivo de Rateio de Assistencia Medica
+lRatAssMed:= RateioAssM(.T.)
+
+dbSelectArea( "SRA" )
+dbSetOrder(1)
+dbSeek( cFilDe + cMatDe , .T. )
+While SRA->(!eof())
+	cCodRet := If (SRA->RA_CODRET # Space(4) , SRA->RA_CODRET , "0561")
+	cChave	:= If( nTamCpf == 11, SRA->RA_FILIAL + SRA->RA_MAT + SRA->RA_CIC + Space(3) + cCodRet,;
+									SRA->RA_FILIAL + SRA->RA_MAT + SRA->RA_CIC  + cCodRet )
+
+	dbSelectArea("SR4")
+	If dbSeek( cChave )
+		If empty( SR4->R4_ANO )
+			lLimpaTudo := .T.
+		EndIf
+		Exit
+	Endif	
+	SRA->( dbskip() )
+EndDo			
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Limpar o arquivo da DIRF                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lLimpaTudo
+	dbSelectArea( "SRL" )
+	If RecCount() > 0 
+	
+		Aviso(STR0015,STR0021,{"OK"}) //"Atencao"#"As tabelas SRL e SR4 serao limpas para que a partir de agora o historico possa ser armazenado."
+	
+		#IFDEF TOP 
+			If ( TcSrvType()!="AS/400" )
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Verifica qual eh o maior e o menor³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cQuery := "SELECT MIN(R_E_C_N_O_) MINRECNO,"
+				cQuery +=	 "MAX(R_E_C_N_O_) MAXRECNO "
+				cQuery += "FROM "+RetSqlName("SRL")+" SRL "
+		
+				cQuery := ChangeQuery(cQuery)
+		
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),"SRL550DELE")
+				
+				nMax := SRL550DELE->MAXRECNO
+				nMin := SRL550DELE->MINRECNO
+				dbCloseArea()
+				dbSelectArea("SRL")
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Monta a string de execucao no banco³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cQuery := "DELETE FROM "+RetSqlName("SRL")+" "
+				cQuery += "WHERE "
+				If Type("SRL->RL_ORIGEM") # "U" 
+			    	cQuery +=  "RL_ORIGEM = '1'"
+				EndIf 
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Executa a string de execucao no banco para os proximos 1024 registro³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				For nPont := nMin To nMax STEP 1024
+					cChave := "R_E_C_N_O_>="+Str(nPont,10,0)+" AND R_E_C_N_O_<="+Str(nPont+1023,10,0)+""
+					TcSqlExec(cQuery+cChave)
+				Next nPont
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³A tabela eh fechada para restaurar o buffer da aplicacao³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				dbSelectArea("SRL")
+				dbCloseArea()
+				ChkFile("SRL",.F.)
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Verifica qual eh o maior e o menor³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cQuery := "SELECT MIN(R_E_C_N_O_) MINRECNO,"
+				cQuery +=	 "MAX(R_E_C_N_O_) MAXRECNO "
+				cQuery += "FROM "+RetSqlName("SR4")+" SR4 "
+		
+				cQuery := ChangeQuery(cQuery)
+		
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),"SR4550DELE")
+				
+				nMax := SR4550DELE->MAXRECNO
+				nMin := SR4550DELE->MINRECNO
+				dbCloseArea()
+				dbSelectArea("SR4")
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Monta a string de execucao no banco³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cQuery := "DELETE FROM "+RetSqlName("SR4")+" "
+				cQuery += "WHERE "
+				If Type("SR4->R4_ORIGEM") # "U" 
+			    	cQuery +=  "R4_ORIGEM = '1'"
+				EndIf 
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Executa a string de execucao no banco para os proximos 1024 registro³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				For nPont := nMin To nMax STEP 1024
+					cChave := "R_E_C_N_O_>="+Str(nPont,10,0)+" AND R_E_C_N_O_<="+Str(nPont+1023,10,0)+""
+					TcSqlExec(cQuery+cChave)
+				Next nPont
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³A tabela eh fechada para restaurar o buffer da aplicacao³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				dbSelectArea("SR4")
+				dbCloseArea()
+				ChkFile("SR4",.F.)
+			Else //- Opcao para AS400  	
+		#ELSE 
+				If Ma280Flock("SRL")           // Abre Arquivo SRL Exclusivo
+					OpenIndX("SRL",.F.)
+					Zap                        // Limpa Arquivo
+					dbCloseArea()
+					ChkFile("SRL",.F.)
+				    If Ma280Flock("SR4")       // Abre Arquivo SR4 Exclusivo
+						OpenIndX("SR4",.F.)
+					    Zap                    // Limpa Arquivo
+					    dbCloseArea()
+					    ChkFile("SR4",.F.)
+					Else
+						Help(" ",1,"GP550NOPEN")
+						Return Nil
+				    EndIF
+				Else
+					Help(" ",1,"GP550NOPEN")
+					Return Nil
+				Endif
+		#ENDIF
+		
+		#IFDEF TOP
+			EndIf
+		#ENDIF
+		
+		If File(cArqCompl+getDbExtension())
+			fErase(cArqCompl+getDbExtension())
+		EndIf
+		If File(cArqCompl+retIndExt())
+			fErase(cArqCompl+retIndExt())
+		EndIf	
+	Endif
+Else
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Limpar SR4 e RCS se forem encontrados no SR4 informacoes dos funcionarios solicitados.³
+//³Apenas serao limpos os dados dos funcionario selecionados para geracao.               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+#IFDEF TOP          
+ 	If !ExeInAs400() 
+	cQuery := "DELETE FROM "+RetSqlName("SR4")+" "
+	cQuery += "WHERE "
+    cQuery += " R4_FILIAL 		>=	'"	+ cFilDe 	+ "'" 
+    cQuery += " AND R4_FILIAL 	<= 	'"	+ cFilAte 	+ "'" 
+ 	cQuery += " AND R4_MAT 		>= 	'" 	+ cMatDe 	+ "'"
+ 	cQuery += " AND R4_MAT 		<= 	'" 	+ cMatAte 	+ "'"                                       
+    cQuery += " AND R4_ANO 		=  	'" 	+ cAno 		+ "'"
+	If Type("SR4->R4_ORIGEM") # "U" 
+    	cQuery +=  "AND R4_ORIGEM = '1'"
+	EndIf 
+	cQuery += " AND EXISTS(" 
+	cQuery += " SELECT R_E_C_N_O_ FROM " + RetSqlName("SRA") +""
+	cQuery += " WHERE "         
+	cQuery += " RA_FILIAL = R4_FILIAL " 
+	cQuery += " AND RA_MAT = R4_MAT "                 
+	cQuery += " AND D_E_L_E_T_ = ' ')"
+	TcSqlExec(cQuery)
+	dbSelectArea("SR4")
+	dbCloseArea()
+	ChkFile("SR4",.F.)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Limpa dados do RCS³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cQuery := "DELETE FROM "+RetSqlName("RCS")+" "
+	cQuery += "WHERE "
+    cQuery += "RCS_FILIAL 		>=	'"	+ cFilDe 	+ "'" 
+    cQuery += "AND RCS_FILIAL 	<= 	'"	+ cFilAte 	+ "'" 
+ 	cQuery += "AND RCS_MAT 		>= 	'" 	+ cMatDe 	+ "'"
+ 	cQuery += "AND RCS_MAT 		<= 	'" 	+ cMatAte 	+ "'"                                       
+    cQuery += "AND RCS_ANO 		=  	'" 	+ cAno 		+ "'"
+	If Type("RCS->RCS_ORIGEM") # "U" 
+    	cQuery +=  "AND RCS_ORIGEM = '1'"
+	EndIf 
+	cQuery += "AND EXISTS(" 
+	cQuery += "SELECT R_E_C_N_O_ FROM " + RetSqlName("SRA") +""
+	cQuery += " WHERE "         
+	cQuery += "RA_FILIAL = RCS_FILIAL " 
+	cQuery += "AND RA_MAT = RCS_MAT " 
+	cQuery += "AND D_E_L_E_T_ = ' ')"
+	TcSqlExec(cQuery)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³A tabela eh fechada para restaurar o buffer da aplicacao³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("RCS")
+	dbCloseArea()
+		ChkFile("RCS",.F.)
+	Else
+		dbSelectArea("SRA")
+		SRA->( dbSeek(cFilDe+cMatDe,.T.))
+		While SRA->( !EOF()) 
+	
+	
+			If SRA->RA_FILIAL < cFilDe .or. SRA->RA_FILIAL > cFilAte
+				SRA->( dbSkip() )
+				loop
+			Endif                
+			If SRA->RA_MAT < cMatDe .or. SRA->RA_MAT > cMatAte
+				SRA->( dbskip() )
+				loop             
+			EndIf
+				
+			cCodRet	:= If (SRA->RA_CODRET # Space(4) , SRA->RA_CODRET , "0561")
+			cChave	:= If( nTamCpf == 11, SRA->RA_FILIAL+ SRA->RA_MAT+ SRA->RA_CIC+ space(3) +cCodRet + cAno ,;
+										   SRA->RA_FILIAL+ SRA->RA_MAT+ SRA->RA_CIC+ cCodRet + cAno )
+
+			dbSelectArea("SR4")
+			SR4->(dbSeek( cChave ) )
+			While SR4->( !eof()) .and. SR4->R4_FILIAL+SR4->R4_MAT+SR4->R4_CPFCGC+SR4->R4_CODRET+SR4->R4_ANO == cChave
+				RecLock("SR4",.F.,.T.)
+				dbDelete()
+				MsUnlock()
+				SR4->(dbSkip())
+			EndDo 
+	        
+			dbSelectArea("RCS")                              
+			cTipoFJ := If( Len(AllTrim(SRA->RA_CIC)) > 11, "2","1")
+			cChave	:= If( nTamCpf == 11, SRA->RA_FILIAL+SRA->RA_MAT+cTipoFJ+SRA->RA_CIC+space(03)+cCODRET+cANO ,;
+										   SRA->RA_FILIAL+SRA->RA_MAT+cTipoFJ+SRA->RA_CIC+cCODRET+cANO )
+	
+			RCS->(dbSeek( cChave ))
+			While RCS->(!Eof()) .And. RCS->RCS_FILIAL+RCS->RCS_MAT+RCS->RCS_TIPOFJ+RCS->RCS_CPFBEN+RCS->RCS_CODRET+RCS->RCS_ANO ==;
+										cChave
+				RecLock("RCS",.F.,.T.)
+				dbDelete()
+				MsUnlock()			
+	      		RCS->( dbSkip() )
+			EndDo
+			SRA->( dbSkip() )
+		EndDo
+	EndIf
+#ELSE    
+	dbSelectArea("SRA")
+	SRA->( dbSeek(cFilDe+cMatDe,.T.))
+	While SRA->( !EOF()) 
+		If SRA->RA_FILIAL < cFilDe .or. SRA->RA_FILIAL > cFilAte
+			SRA->( dbSkip() )
+			loop
+		Endif                
+		If SRA->RA_MAT < cMatDe .or. SRA->RA_MAT > cMatAte
+			SRA->( dbskip() )
+			loop             
+		EndIf
+			
+		cCodRet	:= If (SRA->RA_CODRET # Space(4) , SRA->RA_CODRET , "0561")
+		cChave	:= If( nTamCpf == 11, SRA->RA_FILIAL+ SRA->RA_MAT+ SRA->RA_CIC+ space(3) +cCodRet + cAno ,;
+									   SRA->RA_FILIAL+ SRA->RA_MAT+ SRA->RA_CIC+ cCodRet + cAno )
+
+		dbSelectArea("SR4")
+		SR4->(dbSeek( cChave ) )
+		While SR4->( !eof()) .and. SR4->R4_FILIAL+SR4->R4_MAT+SR4->R4_CPFCGC+SR4->R4_CODRET+SR4->R4_ANO == cChave
+			RecLock("SR4",.F.,.T.)
+			dbDelete()
+			MsUnlock()
+			SR4->(dbSkip())
+		EndDo 
+        
+		dbSelectArea("RCS")                              
+		cTipoFJ := If( Len(AllTrim(SRA->RA_CIC)) > 11, "2","1")
+		cChave	:= If( nTamCpf == 11, SRA->RA_FILIAL+SRA->RA_MAT+cTipoFJ+SRA->RA_CIC+space(03)+cCODRET+cANO ,;
+									   SRA->RA_FILIAL+SRA->RA_MAT+cTipoFJ+SRA->RA_CIC+cCODRET+cANO )
+
+		RCS->(dbSeek( cChave ))
+		While RCS->(!Eof()) .And. RCS->RCS_FILIAL+RCS->RCS_MAT+RCS->RCS_TIPOFJ+RCS->RCS_CPFBEN+RCS->RCS_CODRET+RCS->RCS_ANO ==;
+									cChave
+			RecLock("RCS",.F.,.T.)
+			dbDelete()
+			MsUnlock()			
+      		RCS->( dbSkip() )
+		EndDo
+		SRA->( dbSkip() )
+	EndDo
+#ENDIF
+
+EndIf
+
+If cCentra # Space(2)  // Filiais devem ser centralizadas na filial
+	If !fInfo(@aInfo,cCentra)
+		Return
+	Endif
+	cCgc := aInfo[8]
+Endif
+                                              
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Montagem das Datas para a Query³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cDtPesqI := StrZero(MV_PAR06 - 1 , 4 )+ "1201"
+cDtPesqF := Strzero(MV_PAR06 + 1 , 4 )+ "0131"
+
+dbSelectArea( "SRQ" )
+lTemCpoDFE := ( FieldPos( "RQ_VERBDFE" ) # 0 )
+
+//Cria indice para pesquisar férias
+dbSelectArea( "SRH" )
+cIndCond	:=	"RH_FILIAL + RH_MAT + dTos(RH_DTRECIB)"
+cArqNtx  	:= CriaTrab(NIL,.f.)
+IndRegua("SRH",cArqNtx,cIndCond,,,"Selecionando Registros")  
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posiciona Ponteiro "DE" Informado                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SRA" )
+dbSetOrder(1)
+dbSeek( cFilDe + cMatDe , .T. )
+
+If lVersao101
+	oSelf:SaveLog( cCadastro+" - "+STR0036) //#"Início do processamento"
+	oSelf:SetRegua1(SRA->(RecCount()))
+Else
+	GPProcRegua(SRA->(RecCount()))
+EndIf	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega os Filtros                                 	 	     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cSraFilter	:= GpFltAlsGet( aRetFiltro , "SRA" )
+
+cFilAnterior  := Replicate("!", FWGETTAMFILIAL)
+
+While SRA->(!Eof()) .And. SRA->RA_FILIAL + SRA->RA_MAT <= cFilAte + cMatAte
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Aplicação do filtro na tabela SRA.       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !Empty( cSraFilter )
+ 		If !( &( cSraFilter ) )
+			dbSkip()
+			Loop
+ 		EndIf
+ 	EndIf	    
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Movimenta cursor para movimentacao da barra                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lVersao101
+		oSelf:IncRegua1(STR0035+" : "+SRA->RA_FILIAL+" - "+SRA->RA_MAT+" - "+SRA->RA_NOME) //"Funcionário"
+	Else	
+		GPIncProc(SRA->RA_FILIAL+" - "+SRA->RA_MAT+" - "+SRA->RA_NOME)
+	EndIf	
+	
+	If SRA->RA_FILIAL < cFilDe .or. SRA->RA_FILIAL > cFilAte
+		SRA->( dbSkip() )
+		loop
+	Endif                
+	If SRA->RA_MAT < cMatDe .or. SRA->RA_MAT > cMatAte
+		SRA->( dbskip() )
+		loop             
+	EndIf
+	
+	If SRA->RA_FILIAL # cFilAnterior
+		cFilAnterior := SRA->RA_FILIAL
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Carrega Variaveis CODIGOS DA FOLHA                           ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !FP_CODFOL(@aCodFol,cFilAnterior)
+			Exit
+		Endif
+		cVerifAdt := ""
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Tratamento do Adto. Para Quem Paga Fora do Mes               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If POSSRV(aCodFol[006,1],SRA->RA_FILIAL,"RV_DIRF") == "A " .Or.;
+			POSSRV(aCodFol[007,1],SRA->RA_FILIAL,"RV_DIRF") == "A " 	
+			cVerifAdt := "S"			
+		ENDIF
+		
+		If cCentra == Space(2)
+			If ! fInfo(@aInfo,cFilAnterior)
+				Exit
+			Endif
+			cCgc := aInfo[8]
+		Endif
+	Endif
+	
+	nDel 		:= 0
+	cInfOut 	:= ""
+	cCodRet 	:= If (SRA->RA_CODRET # Space(4) , SRA->RA_CODRET , "0561")
+	aFunc   	:= {}
+	aInssFol	:= {}
+	aInssFer	:= {}
+	aDedDpSem 	:= {}
+	aDedDp13o	:= {}
+	aDedDepend13:= {}
+	aAbono  	:= {}
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Delecao caso exista                                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lLimpaTudo
+		dbSelectArea("SR4")  
+		cChave	:= If( nTamCpf == 11, SRA->RA_FILIAL + SRA->RA_MAT + SRA->RA_CIC + Space(3) + cCodRet ,;
+									   SRA->RA_FILIAL + SRA->RA_MAT + SRA->RA_CIC + cCodRet )
+		dbSeek( cChave )
+		While SR4->( !Eof()) .AND.  SR4->R4_FILIAL + SR4->R4_MAT + SR4->R4_CPFCGC + SR4->R4_CODRET == cChave
+			RecLock("SR4",.F.,.T.)
+			dbDelete()
+			MsUnlock()
+			nDel ++
+			dbSkip ()
+		Enddo       
+	EndIf
+	
+	cInfOut      := ""
+	lGravouAlgum := .F.
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Busca os beneficiarios do funcionario no SRQ     ³
+	//³para montar o array de Informacoes Complementares³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aBenef := {}                                                                                                                 
+	SRQ->(dbSeek(SRA->RA_FILIAL+SRA->RA_MAT))
+	While SRQ->(!EOF()) .AND. SRQ->RQ_FILIAL+SRQ->RQ_MAT == SRA->RA_FILIAL+SRA->RA_MAT	
+		cVbPensao:= ""
+		If !empty(SRQ->RQ_VERBPLR)
+			cVbPensao := PosSrv(SRQ->RQ_VERBPLR,SRQ->RQ_FILIAL,"RV_CODCOM_")  
+		EndIf
+		cVbPFol := ""		
+		If !empty(SRQ->RQ_VERBFOL)
+			cVbPFol := PosSrv(SRQ->RQ_VERBFOL,SRQ->RQ_FILIAL,"RV_CODCOM_")
+		EndIf		
+		aadd(aBenef,{	SRQ->RQ_NOME	,; 	//1)
+						SRQ->RQ_CIC		,;	//2)
+						SRQ->RQ_VERBADT	,;	//3)
+						SRQ->RQ_VERBFOL	,;	//4)
+						SRQ->RQ_VERBFER	,;	//5)
+						SRQ->RQ_VERB131	,;	//6)
+						SRQ->RQ_VERB132	,;	//7)
+						SRQ->RQ_VERBPLR	,;	//8)
+						0				,;	//9)
+						""				,; //10) VERBA
+						""				,; //11)TIPO RENDIMENTO
+						If(lTemCpoDFE,SRQ->RQ_VERBDFE,""),; //12)
+						.F.				,;	//13)referente a 13o
+						cVbPensao   	,; // 14)Verba de dif. de dissidio para PLR
+						cVbPFol         ,; //15
+						""    		    }) //16)Grau Parentesco
+		SRQ->(dbSkip())
+	EndDo	
+	 
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Buscar Valores no Acumulado "SRD"                            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cMat := SRA->RA_MAT		
+	cFil := SRA->RA_FILIAL
+
+	dbSelectArea("SRD")
+	#IFDEF TOP
+		If TcSrvType()<>"AS/400"
+			lQuery 		:= .T.
+			cAliasSRD 	:= "m550MontSRD"
+			aStru  		:= SRD->(dbStruct())
+			cQuery 		:= "SELECT * "		
+			cQuery 		+= " FROM "+	RetSqlName("SRD")
+			cQuery 		+= " WHERE RD_FILIAL  ='" + cFil + "'"
+			cQuery 		+= " AND RD_MAT     = '" + cMat+ "'"
+			cQuery 		+= " AND RD_DATPGT BETWEEN '"+cDtPesqI+"' AND '"+cDtPesqF+"'"
+			cQuery 		+= " AND D_E_L_E_T_ = ' ' "
+			cQuery 		+= "ORDER BY "+SqlOrder(SRD->(IndexKey()))
+
+			cQuery := ChangeQuery(cQuery)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSRD,.T.,.T.)
+
+			For nX := 1 To len(aStru)
+				If aStru[nX][2] <> "C" .And. FieldPos(aStru[nX][1])<>0
+					TcSetField(cAliasSRD,aStru[nX][1],aStru[nX][2],aStru[nX][3],aStru[nX][4])
+				EndIf
+			Next nX
+			dbSelectArea(cAliasSRD)	
+		Else
+	#ENDIF
+		(cAliasSRD)->(MsSeek(SRA->RA_FILIAL+SRA->RA_MAT+StrZero(MV_PAR06-1,4)+"12",.T.))
+	#IFDEF TOP
+		EndIf
+	#ENDIF
+
+    aVerbaDupl := {}
+	lRedutor13 := .F. //Controle para que seja utilizado apenas um redutor de 13o. no ano.
+	While (cAliasSRD)->(!Eof()) .And. SRA->RA_FILIAL+SRA->RA_MAT == (cAliasSRD)->RD_FILIAL+(cAliasSRD)->RD_MAT
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Despreza os lanctos de transferencias de outras empresas³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+     	If (cAliasSRD)->RD_EMPRESA # cEmpAnt .And. !Empty((cAliasSRD)->RD_EMPRESA)
+			(cAliasSRD)->( dbSkip() )
+			Loop
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Desprezar a deducao do INSS IR ferias gerada na folha, pois nas³
+		//³ferias este valor ja foi gerado sobre a base total.			  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If (cAliasSRD)->RD_PD == aCodFol[168,1] .Or. (cAliasSRD)->RD_PD == aCodFol[060,1]
+			If (cAliasSRD)->RD_TIPO2 # "K" .and. (cAliasSRD)->RD_TIPO2 # "R" .and. ;
+			   (cAliasSRD)->RD_TIPO2 # "I" .and. (cAliasSRD)->RD_TIPO2 # "G"
+				(cAliasSRD)->( dbSkip() )
+				Loop
+			EndIf
+		EndIf
+
+		If empty((cAliasSRD)->RD_PD)
+			If aTotRegs[4] == 0
+				cLog := STR0022 //"Lancamento com verba em branco no acumulado.    Filial/Matricula  Competencia            Valor "
+				Aadd(aTitle,cLog)  
+				Aadd(aLog,{})
+				aTotRegs[4] := len(aLog)
+			EndIf	      
+ 			       
+			Aadd(aLog[aTotRegs[4]],space(49)+(cAliasSRD)->RD_FILIAL+"-"+(cAliasSRD)->RD_MAT+space(08)+substr((cAliasSRD)->RD_DATARQ,5,2)+"/"+substr((cAliasSRD)->RD_DATARQ,1,4) +space(04)+transform((cAliasSRD)->RD_VALOR,"@E 99,999,999,999.99") )
+			(cAliasSRD)->( dbSkip() )
+			Loop
+		EndIf                      
+        
+		If empty((cAliasSRD)->RD_DATARQ)
+			If aTotRegs[5] == 0
+				cLog := STR0023 //"Lancamento com competencia em branco no acumulado.   Filial/Matricula  Verba             Valor"
+				Aadd(aTitle,cLog)  
+				Aadd(aLog,{})
+				aTotRegs[5] := len(aLog)
+			EndIf	     
+			Aadd(aLog[aTotRegs[5]],space(54)+(cAliasSRD)->RD_FILIAL+"-"+(cAliasSRD)->RD_MAT+space(09)+(cAliasSRD)->RD_PD+space(03)+transform((cAliasSRD)->RD_VALOR,"@E 99,999,999,999.99") )
+			(cAliasSRD)->( dbSkip() )
+			Loop
+		EndIf
+
+		If empty((cAliasSRD)->RD_DATPGT)
+			If aTotRegs[6] == 0
+				cLog := STR0024 //"Lancamento com data de pagamento em branco no acumulado."
+				Aadd(aTitle,cLog)  
+				Aadd(aLog,{})
+				aTotRegs[6] := len(aLog)
+			EndIf	             
+			Aadd(aLog[aTotRegs[6]],(cAliasSRD)->RD_FILIAL+"-"+(cAliasSRD)->RD_MAT+"-"+(cAliasSRD)->RD_PD+"-" +transform((cAliasSRD)->RD_VALOR,"@E 99,999,999,999.99") )
+			(cAliasSRD)->( dbSkip() )
+			Loop
+		EndIf
+		
+		If Ascan( aVerbaDupl,(cAliasSRD)->(RD_FILIAL+RD_MAT+RD_DATARQ+RD_PD+RD_SEMANA+RD_SEQ+RD_CC)) == 0
+			Aadd(aVerbaDupl,(cAliasSRD)->(RD_FILIAL+RD_MAT+RD_DATARQ+RD_PD+RD_SEMANA+RD_SEQ+RD_CC))
+		Else 
+			If aTotRegs[8] == 0
+				cLog := STR0025 //"Verba duplicada nos acumulados.    Filial/Matricula   Verba   Competencia             Valor"
+				Aadd(aTitle,cLog)  
+				Aadd(aLog,{})
+				aTotRegs[8] := len(aLog)
+			EndIf	             
+			Aadd(aLog[aTotRegs[8]],SPACE(35)+(cAliasSRD)->RD_FILIAL+"-"+(cAliasSRD)->RD_MAT+SPACE(10)+(cAliasSRD)->RD_PD+SPACE(05)+substr((cAliasSRD)->RD_DATARQ,5,2)+"/"+substr((cAliasSRD)->RD_DATARQ,1,4)+SPACE(5)+ transform((cAliasSRD)->RD_VALOR,"@E 99,999,999,999.99") )
+		EndIf		
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Armazena valores de Inss Para Achar valor da CPMF ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lCPMF .and. YEAR((cAliasSRD)->RD_DATPGT) == MV_PAR06
+			If (cAliasSRD)->RD_PD$ aCodFol[064,1]+"/"+aCodFol[065,1]
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Calcula a CPMF utilizando o percentual de desconto do inss³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If (cAliasSRD)->RD_PD == aCodFol[064,1]
+					nPos := Ascan(aInssFol, { |x| x[1] == MesAno((cAliasSRD)->RD_DATPGT) })
+					If ( nPercCpmf := 1 - (cAliasSRD)->RD_HORAS % Int((cAliasSRD)->RD_HORAS) ) <> 0 .And. nPercCpmf <> 1
+						If nPos == 0
+				        	Aadd(aInssFol,{ MesAno((cAliasSRD)->RD_DATPGT), 0.00 ,Round((cAliasSRD)->RD_VALOR/(cAliasSRD)->RD_HORAS*nPercCpmf,2), (cAliasSRD)->RD_DATPGT})
+	    				Else
+		        			aInssFol[nPos,3] += Round((cAliasSRD)->RD_VALOR/(cAliasSRD)->RD_HORAS*nPercCpmf,2)
+						Endif
+					Endif
+				Else
+					If ( nPercCpmf := 1 - (cAliasSRD)->RD_HORAS % Int((cAliasSRD)->RD_HORAS) ) <> 0 .And. nPercCpmf <> 1
+						nPos := Ascan(aInssFer, { |x| x[1] == MesAno((cAliasSRD)->RD_DATPGT) })
+						If nPos == 0
+				        	Aadd(aInssFer,{ MesAno((cAliasSRD)->RD_DATPGT), 0.00, Round((cAliasSRD)->RD_VALOR/(cAliasSRD)->RD_HORAS*nPercCpmf,2), (cAliasSRD)->RD_DATPGT })
+	    				Else
+		        			aInssFer[nPos,3] += Round((cAliasSRD)->RD_VALOR/(cAliasSRD)->RD_HORAS*nPercCpmf,2)
+						Endif
+					Endif
+				EndIf
+			Endif		    
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica se deve tratar adiantamento e grava no array para ³
+		//³tratamento posterior                                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If cVerifAdt == "S" .And. (cAliasSRD)->RD_PD == aCodFol[007,1]
+        	Aadd( aAdt, { (cAliasSRD)->RD_PD, (cAliasSRD)->RD_DATPGT, (cAliasSRD)->RD_VALOR, (cAliasSRD)->RD_DATPGT } )
+        Endif				
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica para que seja utilizada apenas uma verba ³
+		//³de Deducao de Dependentes no Mes/Ano              ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//-- Semanalistas ou Pagamento Semanal
+		If ( SRA->RA_CATFUNC == "S" .Or. SRA->RA_TIPOPGT == "S" ) .And. (cAliasSRD)->RD_PD == aCodFol[059,1]
+			If Ascan(aDedDpSem,{ |x| x[1] == (cAliasSRD)->RD_PD .And.;
+			 		 MesAno(x[2]) == MesAno((cAliasSRD)->RD_DATPGT) }) > 0
+				(cAliasSRD)->( dbSkip() )
+				Loop
+			EndIf
+        	Aadd(aDedDpSem, { (cAliasSRD)->RD_PD, (cAliasSRD)->RD_DATPGT,;
+	 	        			   (cAliasSRD)->RD_VALOR, (cAliasSRD)->RD_SEMANA })
+		EndIf
+		//-- Deducao de dependentes e Inss para 13o salario
+		//-- Pode ocorrer uma rescisao de contrato apos o pagamento da 2a parcela do 13o salario
+		//-- Neste caso nao devo considerar a mesma verba duas vezes, logo considero somente a ultima ocorrencia
+		//-- da verba, que neste caso esta na folha do mes em que ocorreu a rescisao de trabalho.
+		If !( SRA->RA_CATFUNC == "S" .Or. SRA->RA_TIPOPGT == "S" ) .And. ;
+			( (cAliasSRD)->RD_PD == aCodFol[062,1] .Or. (cAliasSRD)->RD_PD == aCodFol[169,1] )
+			If !( (cAliasSRD)->RD_PD == aCodFol[169,1] .And. (cAliasSRD)->RD_TIPO2 $"C*I" )
+				If Ascan(aDedDp13o,{ |x| x[1] == (cAliasSRD)->RD_PD .And.;
+				 		 x[2] == MesAno((cAliasSRD)->RD_DATPGT) }) > 0
+					(cAliasSRD)->( dbSkip() )
+					Loop
+				Endif
+	        	Aadd(aDedDp13o, { (cAliasSRD)->RD_PD, MesAno((cAliasSRD)->RD_DATPGT) })
+			EndIf                                                                        
+			
+		//-- Deducao de dependente quando teve uma rescisao em um mes e a rescisao complementar foi em outro mes, 
+		//-- do mesmo ano. Considera somente uma deducao.
+			If (cAliasSRD)->RD_PD == aCodFol[062,1]  .and. !( (cAliasSRD)->RD_TIPO2 $"C*I" )                                   
+				If Ascan(aDedDepend13,{ |x| x[1] == (cAliasSRD)->RD_PD  .And.;
+				 		 x[2] == Year((cAliasSRD)->RD_DATPGT) }) > 0
+					(cAliasSRD)->( dbSkip() )
+					Loop
+				Endif
+	        	Aadd(aDedDepend13, { (cAliasSRD)->RD_PD, Year((cAliasSRD)->RD_DATPGT) })
+			
+			EndIf
+		EndIf
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Verifica se recebeu saldo de salario e gerada a data de pagamento³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If (cAliasSRD)->RD_PD == aCodFol[048,1] 
+			dDtPgRes := (cAliasSRD)->RD_DATPGT
+		Endif	         
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Esta função buscará os valores das verbas no acumulado,      ³
+		//³e suas incidências, e as guardará no array afun, para gravar ³
+		//³posteriormente nas tabelas SR4 e SRL.                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		f550MontaDados((cAliasSRD)->RD_PD,(cAliasSRD)->RD_FILIAL,"N", cAliasSRD)
+
+		(cAliasSRD)->( dbSkip())
+	Enddo
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se tem algum funcionario de ferias em dezembro,    ³
+	//³cujas férias serão pagas na folha de janeiro,  e a folha de ³
+	//³janeiro ainda esta em aberto.                               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SRH")
+	SRH->(dbSeek ( SRA->RA_FILIAL + SRA->RA_MAT))
+	While SRH->(!eof()) .And. SRH->RH_FILIAL+SRH->RH_MAT == SRA->RA_FILIAL+SRA->RA_MAT
+		If Year(SRH->RH_DTRECIB) == MV_PAR06
+			fBuscaFer_Res("F")                              
+		EndIf			
+		SRH->( dbSkip() )
+	EndDo	
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Se o mês/Ano da demissão for igual a competência em aberto,     ³
+	//³buscar nas tabelas de rescisão os valores para a DIRF.          ³
+	//³Desta forma será possível gerar o informe de rendimentos para   ³
+	//³funcionário demitido no mês, antes de fazer o fechamento mensal.³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If MesAno(SRA->RA_DEMISSA) >= GetMv("MV_FOLMES")
+		fBuscaFer_Res("R")
+	EndIf	
+
+	#IFDEF TOP
+		dbSelectArea(cAliasSRD)
+		dbCloseArea()
+	#ENDIF    
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ABONO MES\MES SEGUINTE - TOTAL ISENTO (cod "0").	  		    ³
+	//³Qdo funcionario tiver abono mes seguinte (id 074/079),  e  no³
+	//³mesmo mes possuir a verba id 164 (ferias pagas), indica que  ³
+	//³seu vlr foi considerado atraves das verbas id 205 e 206.     ³
+	//³Sendo assim, deduzir seu vlr do total de isentos para nao    ³
+	//³entrar em duplicidade e acresentar este valor no total de    ³
+	//³rendimentos.												    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nAb:=1 To Len(aAbono)
+		cMesAb := aAbono[nAb,1]
+		cCodAb := aAbono[nAb,2]
+
+		If cCodAb $ "074$079"  .and. Ascan(aAbono,{ |x| x[1] = cMesAb .And. x[2] == "164"}) > 0
+			nVal := aAbono[nAb,4]
+			GravaFun( cMesAb, "0", nVal*(-1), aAbono[nAb,6] )
+			GravaFun( cMesAb, "A", nVal		 , aAbono[nAb,6] )
+		EndIf     
+	Next nAb
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Tratamento do Adiantamento gravando no mes de pagamento e deduzindo no mes          ³
+	//³posterior quando a verba de adiantamento incide para IR, significando que a empresa ³
+	//³paga a folha no mes seguinte ao mes de processamento.                               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nA:=1 To Len(aAdt)
+		If Year(aAdt[nA,2]) == MV_PAR06 .And. MesAno(dDtpgRes) # MesAno(aAdt[nA,2])
+			cMes  := StrZero(Month(aAdt[Na,2]),2)      // Mes do  pagto
+			cMes1 := StrZero(Month(aAdt[Na,2])+1,2)   //  Mes de abtatimento da base
+			If cMes1 <= "12"
+				cMAAdt := StrZero(Year(aAdt[Na,2]),4) + cMes1
+			Else
+				cMAAdt := StrZero(Year(aAdt[Na,2])+1,4) + cMes1					
+			Endif	
+			nVal  := aAdt[Na,3]
+
+			GravaFun( cMes, "A", nVal, aAdt[Na,4] )	// Soma na Data do Mes do Pagto.
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Nao Abater o Adiantamento no Mes seguinte quando data demissao    ³
+			//³for igual a dt. rescisao porque no mes seguinte nao tera base.    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If cMes1 <= "12" 
+				If Empty(SRA->RA_DEMISSA) .Or. cMAAdt < MesAno(SRA->RA_DEMISSA) .Or. MesAno(dDtpgRes) >= MesAno(SRA->RA_DEMISSA) ;
+					.OR. ( !Empty(SRA->RA_DEMISSA) .AND. empty(dDtpgRes) ) // Transferido tem data de demissao mas nao tem data de pgto. de rescisao.
+				   	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Data Para Desconto Mes Seguinte                              ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					nVal := aAdt[Na,3]
+					GravaFun( cMes1, "A", nVal*(-1), aAdt[Na,4] )   // Subtrai da Base do Mes Seguinte
+				Endif
+			Endif	
+		Elseif Year(aAdt[Na,2]) == MV_PAR06-1 .And. Month(aAdt[Na,2]) = 12 .And. MesAno(dDtpgRes) # MesAno(aAdt[Na,2])
+			nVal := aAdt[Na,3]
+			GravaFun( "01", "A", nVal*(-1), aAdt[Na,4] )  // subtrai da base do mes seguinte
+		Endif
+	Next Na	
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³GRAVACAO DA CPMF NA LETRA "I", OUTROS³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lCPMF
+		nVal := 0
+		For nI := 1 to Len(aInssFol)
+			If ( aInssFol[nI,3] - aInssFol[nI,2] ) > 0
+				cMes := Subs(aInssFol[nI,1],5,2)
+				GravaFun( cMes, "I", aInssFol[nI,3] - aInssFol[nI,2], aInssFol[nI,4] )  //CPMF DO MES
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Gravar Descrição de Outros rend. nao trib.³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				nVal += (aInssFol[nI,3] - aInssFol[nI,2])
+	
+				cDescri   := "CPMF"
+				If AT(cDescri,cInfOut) = 0
+					cInfOut += cDescri
+				Endif   
+			Endif	
+		Next nI
+
+		For nI := 1 to Len(aInssFer)
+			If ( aInssFer[nI,3] - aInssFer[nI,2] ) > 0
+				cMes := Subs(aInssFer[nI,1],5,2)
+				GravaFun( cMes, "I", aInssFer[nI,3] - aInssFer[nI,2], aInssFer[nI,4] )  //CPMF DO MES
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Gravar Descrição de Outros rend. nao trib.³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				nVal += (aInssFer[nI,3] - aInssFer[nI,2])
+		
+				cDescri   := "CPMF"
+				If AT(cDescri,cInfOut) = 0
+					cInfOut += cDescri
+				Endif
+			Endif	
+		Next nI
+        
+		If nVal > 0 .or. !empty(cInfOut)
+			cDescri := If(nVal == 0,cInfOut,cDescri)
+			aadd(aBenef,{cDescri,aInfo[8],"","","","","","",nVal,"","I","",.F.,"","",""})
+    	EndIf
+    Else
+		If !empty(cInfOut)
+			aadd(aBenef,{cInfOut,aInfo[8],"","","","","","",0,"","I","",.F.,"","",""})
+    	EndIf
+	Endif	 
+    
+	//Ponto de Entrada Informacoes Complementares DIRF
+ 	IF ( lGPE550ICD )
+		/*/
+		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		³O Ponto de Entrada GPE550ICD recebera como parametro o ParamIxb que eh um  ³
+		³Array com um elemento,sendo um Clone do Array aBenef.                      ³
+		³													  						³
+		³Para Visualiza-lo no Ponto de Entrada proceder da seguinte forma:			³
+		³															  				³
+		³User Function GPE550ICD()									  				³
+		³															  				³
+		³Local __aBenef := aClone( ParamIxb[1] )				  			        ³
+		³...															  			³
+		³Return( aClone( __aBenef ) )				  				  	     		³
+		ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ/*/
+		uRetBlock := ExecBlock( "GPE550ICD", .F., .F., { aClone(aBenef) } )
+    	IF ( ValType( uRetBlock ) == "A" )
+			aBenef := aClone( uRetBlock )
+		EndIF
+	EndIF
+    
+    aAdt	:= {}          
+    dDtpgRes:= ctod("")
+    
+	If lGravouAlgum
+		cFilAnt	:= SRA->RA_FILIAL
+		If !empty( SRA->RA_CIC )
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Gravar Cabe‡alho da Dirf/informe³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			FGravaSRL(aInfo) 
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Gravar Valores por mes de pagamento³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			GravaSR4(SRA->RA_FILIAL,SRA->RA_MAT,SRA->RA_CIC,cCodRet,aFunc,cAno) 
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Gravar Beneficiarios e informacoes complementares³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			FGravaInf(SRA->RA_FILIAL,SRA->RA_MAT,SRA->RA_CIC,cCodRet,cAno,aBenef,cInfOut)
+
+			cInfOut 	:= ""
+	    Else
+			If aTotRegs[1] == 0
+				cLog := STR0026 //"Funcionário sem CPF cadastrado."
+				Aadd(aTitle,cLog)  
+				Aadd(aLog,{})
+				aTotRegs[1] := len(aLog)
+			EndIf	
+			Aadd(aLog[aTotRegs[1]], SRA->RA_FILIAL+"-"+SRA->RA_MAT+ space(02)+SRA->RA_NOME ) 
+		Endif
+		cFilAnt := cPutFilAnt
+	Endif
+
+	dbSelectArea("SRA")
+	dbSkip()
+Enddo
+
+If aTotRegs[1] == 0 .and. aTotRegs[2] == 0 .and. aTotRegs[4] == 0 .and. aTotRegs[5]==0 .and. ;
+   aTotRegs[6] == 0 .and. aTotRegs[7] == 0 .and. aTotRegs[8] == 0 .and. aTotRegs[10]==0
+	
+	If aTotRegs[9] == 0
+		cLog := STR0027 //"Arquivo gerado com sucesso!"
+		Aadd(aTitle,cLog)  
+		Aadd(aLog,{})
+		aTotRegs[9] := len(aLog)
+	EndIf	
+	Aadd(aLog[aTotRegs[9]], STR0028 ) //"Não foi encontrada nenhuma inconsistência durante a geração."
+EndIf   
+
+If aTotRegs[3] == 0
+	cLog := STR0029 //"Informações para gerar a DIRF."
+	Aadd(aTitle,cLog)  
+	Aadd(aLog,{})
+	aTotRegs[3] := len(aLog)
+EndIf	
+
+Aadd(aLog[aTotRegs[3]], STR0030 )//"Para obter informações detalhadas de como proceder para configurar a DIRF, consulte"
+Aadd(aLog[aTotRegs[3]], STR0031 )//"o Boletim Técnico que se encontra no FTP da Microsiga: ftp.microsiga.com.br"
+fMakeLog(aLog,aTitle,,,"DIRF"+cAno,STR0032,"M","P",,.F.) //"Log de ocorrências da DIRF"
+
+If File(cArqNtx+OrdBagExt())
+   fErase(cArqNtx+OrdBagExt())
+Endif
+
+SRH->( retIndex() )                   
+
+If lVersao101
+	oSelf:SaveLog( STR0001+" - "+STR0037)// #"Termino do processamento"
+EndIf
+
+//Se existe arquivo de Rateio de Assistencia Medica e o mesmo foi aberto, entao fecha o arquivo e apaga seu indice criado
+if lRatAssMed
+	RateioAssM(.F.)	// Fecha o Arquivo e Apaga o Indice criado
+endif
+
+Return Nil
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³GravaSR4  ºAutor  ³Microsiga           º Data ³  01/19/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GravaSR4( cFil, cMat, cCic, cRet, aFunc, cAno ) 
+Local aArea		:= GetArea()
+Local nf		:= 1     
+Local cChave	:= ""
+Local cChaveAux	:= "" 
+Local nOrdRGE	:= RetOrdem( "RGE" , "RGE_FILIAL+RGE_MAT+DTOS(RGE_DATAIN)+RGE_TIPOCO" )
+Local cCodRetRes:= ""
+Local cAteMes	:= ""
+Local cMesAnt	:= ""
+Local cPais		:= ""
+Local cNif		:= ""
+
+cChaveAux := cFil + cMat + cCic + If(nTamCpf == 11,Space(3)+ cRet + cAno, cRet + cAno )
+
+If Len(aFunc) > 0
+	For nf	:= 1 To Len(aFunc)      
+		If !empty(aFunc[nf,2])                          
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Antes de gravar verifica a existencia do contrato.			 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If Type("SRL->RL_NEMPR") # 'U' .and. cMesAnt # aFunc[nf,1]
+
+				cMesAnt := aFunc[nf,1]				// Atualiza mes anterior para evitar pesquisas do mesmo mes varias vezes
+				RGE->( DbSetOrder( nOrdRGE ) )		// RGE_FILIAL+RGE_MAT+DTOS(RGE_DATAIN)+RGE_TIPOCO
+				If RGE->( DbSeek( xFilial( "RGE" ) + SRA->RA_MAT ) )	// Verifica se ha algum contrato para o funcionario
+					If Empty( cCodRetRes ) .or. aFunc[nf,1] > cAteMes
+						cCodRetRes	:= ""
+						cPais		:= ""
+						cNif		:= ""
+						While RGE->(!Eof()) .and. (RGE->(RGE_FILIAL+RGE_MAT) == SRA->(RA_FILIAL+RA_MAT))
+
+							// Verifica Data do Contrato em relacao ao mes de pagamento
+							If ( AnoMes( RGE->RGE_DATAIN ) > cAno + aFunc[nf,1] )										.or.;
+							   ( ! Empty( RGE->RGE_DATAFI ) .and. AnoMes( RGE->RGE_DATAFI ) < cAno + aFunc[nf,1] )
+								RGE->( DbSkip() )
+								Loop
+							EndIf
+
+							cCodRetRes	:= RGE->RGE_CODRET
+							cAteMes		:= If(Empty(RGE->RGE_DATAFI),"12",StrZero(Month(RGE->RGE_DATAFI),2))
+							cPais		:= RGE->RGE_CODPAI
+							cNif		:= RGE->RGE_CODNIF
+							RGE->( dbSkip() )
+						EndDo
+					EndIf
+				Else
+					cCodRetRes	:= ""
+					cAteMes		:= ""
+					cPais		:= ""
+					cNif		:= ""
+				EndIf
+			EndIf
+
+			cChaveAux	:= cFil + cMat + cCic + If(nTamCpf == 11,Space(3) + If(Empty(cCodRetRes),cRet,cCodRetRes) + cAno,;
+								If(Empty(cCodRetRes),cRet,cCodRetRes) + cAno)			
+			cChave		:= cChaveAux + aFunc[nf,1] + aFunc[nf,2] + cPais + cNif
+
+			dbSelectArea("SR4") 
+			SR4->( DbSetOrder( 1 ) )		// R4_FILIAL+R4_MAT+R4_CPFCGC+R4_CODRET+R4_ANO+R4_MES+R4_TIPOREN+R4_PAIS+R4_NIFEX
+			If SR4->( dbSeek( cChave ) )
+				RecLock("SR4",.F.)
+			Else
+				RecLock("SR4",.T.)
+			Endif
+	
+			SR4->R4_FILIAL  := cFil
+			SR4->R4_MAT     := cMat
+			SR4->R4_CPFCGC  := cCic
+			SR4->R4_MES     := aFunc[nf,1]
+			SR4->R4_TIPOREN := aFunc[nf,2]
+			SR4->R4_CODRET  := If( Empty( cCodRetRes ), cRet, cCodRetRes )
+			SR4->R4_VALOR   := Max( aFunc[nf,3], 0 )
+			SR4->R4_ANO		:= cAno
+
+			If SR4->(FieldPos("R4_ORIGEM")) # 0
+				SR4->R4_ORIGEM := "1"
+			Endif		               
+
+			If SR4->(FieldPos("R4_PAIS")) # 0
+				SR4->R4_PAIS := cPais
+			Endif		               
+
+			If SR4->(FieldPos("R4_NIFEX")) # 0
+				SR4->R4_NIFEX := cNif
+			Endif		                   
+			
+			If SR4->(FieldPos("R4_DTPGT")) # 0
+				SR4->R4_DTPGT := aFunc[nf,4]
+			Endif		                   
+
+			SR4->( MsUnLock() )
+		EndIf
+	Next nf
+Endif		
+
+RestArea( aArea )
+Return(Nil)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³FGravaSRL ºAutor  ³Microsiga           º Data ³  01/19/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Grava no Arquivo de Cabecalho da DIRF/INFORME			  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function FGravaSRL(aInfo)            
+Local cTipoFJ	:= ""
+Local cChave	:= ""
+Local aArea		:= GetArea()
+Local nOrdRGE	:= RetOrdem( "RGE", "RGE_FILIAL+RGE_MAT+DTOS(RGE_DATAIN)+RGE_TIPOCO" )
+
+cTipoFJ	:= If( Len(AllTrim(SRA->RA_CIC)) > 11, "2","1")
+cChave	:= SRA->RA_FILIAL + SRA->RA_MAT + cTipoFJ + SRA->RA_CIC + If( nTamCPF == 11, space(03) + cCodRet, cCodRet ) 
+
+Begin Transaction
+	// Grava Cabecalho da DIRF/INFORME
+	dbSelectArea("SRL")
+	SRL->( DbSetOrder( 1 ) )	// RL_FILIAL+RL_MAT+RL_TIPOFJ+RL_CPFCGC+RL_CODRET+RL_PAIS+RL_NIFEX
+
+	If SRL->( dbSeek( cChave ) )
+		RecLock("SRL",.F.)
+	Else
+		RecLock("SRL",.T.)
+	Endif
+		
+	SRL->RL_FILIAL	:= SRA->RA_FILIAL
+	SRL->RL_MAT		:= SRA->RA_MAT
+	SRL->RL_TIPOFJ	:= cTipoFJ
+	SRL->RL_CGCFONT	:= aInfo[8]
+	SRL->RL_CODRET	:= cCodRet
+	SRL->RL_CPFCGC	:= SRA->RA_CIC
+	SRL->RL_BENEFIC	:= SRA->RA_NOME
+	SRL->RL_NOMFONT	:= aInfo[3]
+	SRL->RL_ENDBENE	:= SRA->RA_ENDERECO
+	SRL->RL_UFBENEF	:= SRA->RA_ESTADO
+		
+	If SRL->(FieldPos("RL_CC"))# 0
+		SRL->RL_CC	:= SRA->RA_CC
+	Endif
+		
+	If SRL->(FieldPos("RL_ORIGEM"))# 0
+		SRL->RL_ORIGEM := "1"
+	Endif
+
+	SRL->( MsUnlock() )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica a existencia do primeiro campo de Residente Exterior ³
+	//³ Caso exista, pesquisar se ha contrato para o funcionario e ve-³
+	//³ rificar data inicio e fim do contrato para definir a gravacao.³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Type("SRL->RL_NEMPR") # 'U'
+		DbSelectArea( "RGE" )
+		RGE->( DbSetOrder( nOrdRGE ) )						// RGE_FILIAL+RGE_MAT+DTOS(RGE_DATAIN)+RGE_TIPOCO
+		RGE->( DbSeek( xFilial( "RGE" ) + SRA->RA_MAT ) )	// Verifica se ha algum contrato para o funcionario
+		While RGE->( ! Eof() ) .and. ( RGE->(RGE_FILIAL + RGE_MAT) == SRA->(RA_FILIAL + RA_MAT) )
+
+			// Despreza se o Contrato for anterior ao Ano da Dirf
+			If ! Empty( RGE->RGE_DATAFI ) .and. StrZero( Year( RGE->RGE_DATAFI ), 4 ) < cAno
+				RGE->( DbSkip() )
+				Loop
+			EndIf
+
+			// Se o funcionario estiver fora o ano todo APAGA o registro gravado acima e cria um novo com os dados do contrato
+			If AnoMes( RGE->RGE_DATAIN ) <= cAno + "01" .and. ( Empty( RGE->RGE_DATAFI ) .or. ;
+															   ( ! Empty( RGE->RGE_DATAFI ) .and. AnoMes( RGE->RGE_DATAFI ) >= cAno+"12") )
+				SRL->( RecLock( "SRL", .F., .T. ) )
+				SRL->( dbDelete() )
+				SRL->( MsUnlock() )
+			EndIf
+
+			cChave := SRA->(RA_FILIAL+RA_MAT) + cTipoFJ + SRA->RA_CIC + If(nTamCPF==11,space(03) + RGE->(RGE_CODRET+RGE_CODPAI+RGE_CODNIF),;
+						RGE->(RGE_CODRET+RGE_CODPAI+RGE_CODNIF))
+
+			dbSelectArea("SRL")
+			SRL->( DbSetOrder( 1 ) )		// RL_FILIAL+RL_MAT+RL_TIPOFJ+RL_CPFCGC+RL_CODRET+RL_PAIS+RL_NIFEX
+
+			If SRL->( dbSeek( cChave ) )
+				RecLock( "SRL", .F. )		// Caso as informacoes sejam compativeis apenas completa o registro
+			Else
+				RecLock( "SRL", .T. )		// Se nao forem compativeis deve ser gravado um novo registro completo
+
+				SRL->RL_FILIAL	:= SRA->RA_FILIAL
+				SRL->RL_MAT		:= SRA->RA_MAT
+				SRL->RL_TIPOFJ	:= cTipoFJ
+				SRL->RL_CGCFONT	:= aInfo[8]
+				SRL->RL_CODRET	:= RGE->RGE_CODRET
+				SRL->RL_CPFCGC	:= SRA->RA_CIC
+				SRL->RL_BENEFIC	:= SRA->RA_NOME
+				SRL->RL_NOMFONT	:= aInfo[3]
+				SRL->RL_ENDBENE	:= SRA->RA_ENDERECO
+				SRL->RL_UFBENEF	:= SRA->RA_ESTADO
+
+				If SRL->(FieldPos("RL_CC"))# 0
+					SRL->RL_CC	:= SRA->RA_CC
+				Endif
+
+				If SRL->(FieldPos("RL_ORIGEM"))# 0
+					SRL->RL_ORIGEM := "1"
+				Endif
+			Endif
+
+			SRL->RL_CGCEX := RGE->RGE_CNPJ
+			SRL->RL_NEMPR := RGE->RGE_NOMEMP
+			SRL->RL_TPCON := RGE->RGE_TIPOCO
+			SRL->RL_DTINI := RGE->RGE_DATAIN
+			SRL->RL_DTFIM := RGE->RGE_DATAFI
+			SRL->RL_PAIS  := RGE->RGE_CODPAI
+			SRL->RL_NIFEX := RGE->RGE_CODNIF
+			SRL->RL_LOGEX := RGE->RGE_LOGRAD
+			SRL->RL_NUMEX := RGE->RGE_NUMERO
+			SRL->RL_COMPL := RGE->RGE_COMPL
+			SRL->RL_BAIEX := RGE->RGE_BAIRRO
+			SRL->RL_POSEX := RGE->RGE_CODPOS
+			SRL->RL_CIDEX := RGE->RGE_CIDADE
+			SRL->RL_ESTEX := RGE->RGE_ESTPRO
+			SRL->RL_TELEX := RGE->RGE_TELEFO
+			SRL->RL_BREEX := RGE->RGE_BENREN
+			SRL->RL_TPREX := RGE->RGE_TIPREN
+			SRL->RL_TRBEX := RGE->RGE_FRMTRB
+
+			SRL->( MsUnLock() )
+	
+			DbSelectArea( "RGE" )
+			RGE->( DbSkip() )
+		EndDo
+	Endif
+End Transaction
+	
+RestArea( aArea )
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³GPM550Ok  ºAutor  ³Microsiga           º Data ³  01/19/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GPM550Ok()
+Return (MsgYesNo(OemToAnsi(STR0014),OemToAnsi(STR0015))) //"Confirma configura‡„o dos parƒmetros?"###"Aten‡„o"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³GravaFun  ºAutor  ³Microsiga           º Data ³  01/19/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Guarda os valores dos funcionarios, com suas incidencias,  º±±
+±±º          ³ no array afunc, para posterior gravação no SR4.            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GravaFun( cMesPag, cTipDirf, nVal, dDtPagto )
+Local nPos		:= 0
+
+nPos := Ascan(aFunc,{ |x| x[1] = cMespag .And. x[2] == PADR(cTipDirf,2)})
+
+If nPos > 0
+	aFunc[nPos,3] += nVal
+Else
+	Aadd( aFunc, { cMesPag, PADR( cTipDirf, 2 ), nVal, dDtPagto } )
+Endif
+
+Return	
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³FGravaInf ºAutor  ³Andreia dos Santos  º Data ³  01/23/02   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Grava as informacoes complementares e os beneficiarios no   º±±
+±±º          ³arquivo GPECOMPL                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function FGravaInf(cFil,cMatricula,cCPF,cCodRet,cAno,aBenef,cInfOut)
+Local nX 		:= 1
+Local aOldArea 	:= GetArea()
+Local cTipoFj	:= ""   
+Local lGrvOutr	:= .F.
+Local cChave	:= ""
+Local cVerba	:= ""
+Local cTipDirf 	:= ""
+
+cTipoFJ := If( Len(AllTrim(SRA->RA_CIC)) > 11, "2","1")
+
+dbSelectArea("RCS")
+For nX  := 1 to len(aBenef)	
+	If (aBenef[nX,09] <> 0  .OR. aBenef[nX,11] =="I" )  .or. ;
+		( aBenef[nX,09] == 0  .AND. aBenef[nX,11] =="R")  
+
+		If empty(aBenef[nX,3])	.and. empty(aBenef[nX,4]) .and. 	;
+			empty(aBenef[nX,5])	.and. empty(aBenef[nX,6]) .and.	; 
+			empty(aBenef[nX,7])	.and. empty(aBenef[nX,8]) .and. 	;
+			empty(aBenef[nX,10]).and. empty(aBenef[nX,12])
+			lGrvOutr := .T.
+		EndIf	
+
+		cVerba := aBenef[nX,10]
+
+		If empty( cVerba )
+			If !empty(aBenef[nX,3])
+				cVerba := aBenef[nX,3]
+			ElseIf !empty(aBenef[nX,4])
+				cVerba := aBenef[nX,4]
+			ElseIf !empty(aBenef[nX,5])	
+				cVerba := aBenef[nX,5]
+			ElseIf !empty(aBenef[nX,6]) 
+				cVerba := aBenef[nX,6]
+			ElseIf !empty(aBenef[nX,7])	
+				cVerba := aBenef[nX,7]
+			ElseIf !empty(aBenef[nX,8])
+				cVerba := aBenef[nX,8]
+			ElseIf !empty(aBenef[nX,12])
+				cVerba := aBenef[nX,12]
+			EndIf
+		EndIf        
+
+		If Empty( aBenef[nX,11] )
+			PosSrv( cVerba,cFIL )
+			cTipDirf := SRV->RV_DIRF
+		Else
+			cTipDirf := aBenef[nX,11]
+		EndIf
+
+		cChave := cFil+cMATRICULA+cTipoFJ+cCPF+ If(nTamCPF==11,Space(3) +cCodRet+cAno+ If(Empty(cVerba),Space(3),cVerba) +cTipDirf,;
+					cCodRet+cAno+ If(Empty(cVerba),Space(3),cVerba) +cTipDirf)		
+
+		If dbSeek( cChave )
+			RecLock("RCS",.F.)
+	    Else
+			RecLock("RCS",.T.)
+			RCS->RCS_FILIAL		:= cFIL
+			RCS->RCS_MAT 		:= cMATRICULA
+			RCS->RCS_TIPOFJ		:= cTipoFJ             
+			RCS->RCS_CPFBEN		:= cCPF
+			RCS->RCS_CODRET		:= cCodRet
+			RCS->RCS_ANO		:= cAno
+			RCS->RCS_VERBA		:= cVerba
+			RCS->RCS_TIPORE		:= cTipDirf
+		EndIf	          
+
+		RCS->RCS_NOME		:= aBenef[nX,01]
+		RCS->RCS_CPFCGC		:= If( lGrvOutr,"", aBenef[nX,02] )
+		RCS->RCS_VALOR		+= If( lGrvOutr,0 , aBenef[nX,09] )
+		RCS->RCS_DESCRI		:= If( lGrvOutr,"", aBenef[nX,01] )
+		RCS->RCS_OUTROS		:= If( lGrvOutr,cInfOut,If(aBenef[nX,11] == "R", aBenef[nX,16],""))  
+
+		If RCS->(FieldPos("RCS_ORIGEM"))# 0
+			RCS->RCS_ORIGEM:= "1"
+		Endif	   
+
+	   	MsUnlock()
+	EndIf	   	
+	
+	lGrvOutr := .F.
+	
+Next                    
+ 
+RestArea(aOldArea)	
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³GPEM550   ºAutor  ³Microsiga           º Data ³  02/02/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static function A550AjtASX2()
+Local aArea := GetArea()
+
+dbSelectArea("SX2")
+
+dbSeek("RCS")
+If X2_UNICO # "RCS_FILIAL+RCS_MAT+RCS_TIPOFJ+RCS_CPFBEN+RCS_CODRET+RCS_ANO+RCS_VERBA+RCS_TIPORE+RCS_CPFCGC"
+	RecLock("SX2",.F.)
+	X2_UNICO := "RCS_FILIAL+RCS_MAT+RCS_TIPOFJ+RCS_CPFBEN+RCS_CODRET+RCS_ANO+RCS_VERBA+RCS_TIPORE+RCS_CPFCGC"
+	MsUnlock()	
+EndIf	
+
+RestArea( aArea )
+Return( .T. )                                                            
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao ³fBuscaFer_ResºAutor  ³Andreia dos Santos  º Data ³  11/11/06   º±±
+±±ÌÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.  ³-Verifica se tem algum funcionario de ferias em dezembro, cujasº±±
+±±º       ³férias serão pagas na folha de janeiro,  e a folha de janeiro  º±±
+±±º       ³ainda esta em aberto.                               			  º±±
+±±º       ³- Se o mês/Ano da demissão for igual a competência em aberto,  º±±
+±±º       ³buscar nas tabelas de rescisão os valores para a DIRF.         º±±
+±±º       ³Desta forma será possível gerar o informe de rendimentos para  º±±
+±±º       ³funcionário demitido no mês, antes de fazer o fechamento mensalº±±
+±±ÌÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso    ³ GPEM550                                                       º±±
+±±ÈÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function fBuscaFer_Res(cTipoBusca)
+Local cPerBusca :=	""
+Local aArea		:= GetArea()                            
+Local cFolMes	:= cPeriodo //GetMv("MV_FOLMES")
+Local lExistDtItens := If (Type("SRH->RH_DTITENS") # "U", .T.,.F.)   
+
+If cTipoBusca=="F" //Ferias                                         
+	If Type("SRH->RH_DTITENS") # "U"
+		cPerBusca := DTOS(SRH->RH_DTITENS) 
+	Else
+		cPerBusca := DTOS(SRH->RH_DTRECIB)
+	EndIF
+ElseIf cTipoBusca=="R" //Rescisao
+	cPerBusca := cFolMes+"01"
+EndIf	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Se a busca for de rescisoes e o ano pedido for diferente do ano   ³
+//³em aberto, significa que o mes em que foi feita a rescisao ja esta³
+//³fechado, entao nao ha necessidade de pesquisar no SRR pois        ³
+//³as verbas ja estao no SRD.                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cAno # substr(cFolmes,1,4) .and. cTipoBusca=="R" 
+	Return
+EndIf	
+
+dbSelectArea("SRR")
+SRR->(dbSeek ( SRA->RA_FILIAL + SRA->RA_MAT + cTipoBusca + cPerBusca,If(cTipoBusca=="R",.T.,.F. )))
+If SRR->(Eof())
+	Return
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Para a busca por "Férias" só será valido se as férias tiverem data de ³
+//³recebimento em dezembro e gozo em janeiro. Se a folha de janeiro      ³
+//³já estiver fechada os dados já foram transferidos para o SRD,         ³
+//³não havendo mais necessidade de buscar nos registros de férias.       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cTipoBusca == "F" .and. StrZero(MV_PAR06+1,4)+"01" # GetMv("MV_FOLMES")
+	Return
+EndIf
+
+If cTipoBusca == "F"   
+	If !lExistDtItens .or. (lExistDtItens .and. Empty(SRH->RH_DTITENS) )
+		SRH->(dbSeek ( SRA->RA_FILIAL + SRA->RA_MAT  + dTos(SRR->RR_DATA) ))
+		If  ( MesAno(SRH->RH_DATAINI) # STRZERO(MV_PAR06+1,4)+"01" )
+			Return
+		EndIf
+	Else
+		If (SRH->RH_FILIAL + SRH->RH_MAT  + dTos(SRH->RH_DTITENS )) == ( SRR->RR_FILIAL + SRR->RR_MAT  + dTos(SRR->RR_DATA))
+			If  ( MesAno(SRH->RH_DATAINI) # STRZERO(MV_PAR06+1,4)+"01" )
+				Return
+			EndIf
+		EndIf
+	EndIf	
+EndIf	
+
+If cTipoBusca=="R" 
+	SRI->( dbSeek( SRA->RA_FILIAL + SRA->RA_MAT ) )
+	While SRI->( !EOF()) .and. SRI->RI_FILIAL+SRI->RI_MAT == SRA->RA_FILIAL + SRA->RA_MAT
+
+		f550MontaDados(SRI->RI_PD,SRI->RI_FILIAL,"13" , "SRI")
+
+		SRI->( dbSkip() )	
+	EndDo
+EndIf
+	
+While SRR->(!eof()) .And. SRR->RR_FILIAL + SRR->RR_MAT+SRR->RR_TIPO3 == SRA->RA_FILIAL+SRA->RA_MAT+cTipoBusca .And. MesAno(SRR->RR_DATA) == substr(cPerBusca,1,6)
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Se encontrar a verba no SRD signfica que o fechamento ja ³
+	//³ foi feito nao havendo necessidade de ler a verda no SRR.³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cTipoBusca == "F"
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Férias pagas em dezembro e gozadas em janeiro. O IR só entrara na folha    ³
+		//³de janeiro com data de pagamento em dezembro.                              ³
+		//³Como a folha ainda está aberta os valores de ferias não estão no acumulado.³
+		//³Esta busca so sera usada se a DIRF tiver que ser entregue em janeiro, pois ³
+		//³os dados das ferias estarao na folha de janeiro( que ainda estara aberta), ³
+		//³mas a data de pagamento sera em dezembro, tendo que ser informada neste ano³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	    If SRD->( dbSeek(SRA->RA_FILIAL+SRA->RA_MAT+STRZERO(MV_PAR06+1,4)+"01"+SRR->RR_PD ) )
+			SRR->( dbSkip() )
+			Loop
+		EndIf
+	ElseIf cTipoBusca == "R"
+	    If SRD->( dbSeek(SRA->RA_FILIAL+SRA->RA_MAT+MesAno(SRR->RR_DATA)+SRR->RR_PD ) )
+			SRR->( dbSkip() )
+			Loop
+		EndIf
+	Endif 
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Busca os valores das verbas no acumulado e suas incidências, ³
+	//³e as guardará no array afun, para gravar posteriormente nas  ³
+	//³tabelas SR4 e SRL.                                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	f550MontaDados(SRR->RR_PD,SRR->RR_FILIAL,cTipoBusca, "SRR")
+
+	SRR->( dbSkip() )
+EndDo	
+
+RestArea( aArea )
+Return      
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³f550MontaDadosºAutor  ³Microsiga       º Data ³  28/11/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Busca os valores das verbas no acumulado e suas incidências,º±±
+±±º          ³e as guardará no array afun, para gravar posteriormente nas º±±
+±±º          ³tabelas SR4 e SRL.                                          º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³ cPd       = Codigo da verba                                º±±
+±±º          ³ cCodFil   = Codigo da Filial                               º±±
+±±º          ³ cTipoCalc = "Normal","Rescisao", "Ferias"                  º±±
+±±º          ³ cAliasDirf= Alias que esta sendo usado no momento          º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function f550MontaDados( cPD, cCodFil, cTipoCalc, cAliasDirf )
+Local cTipDirf		:= ""
+Local cDescri		:= ""
+Local aArea			:= GetArea()                            
+Local lCondicao		:= .F.
+Local cMesPag
+Local nPos			:= 0   
+Local nVerbaAb		:= 0
+Local nValorAb		:= 0
+Local dDtPgtAb		:= ctod( "  /  /  " )
+Local cIdCalVb		:= ""
+Local lSeekRatAM	:= .F.							// Variavel para controlar se encontrou informacoes de Rateio no arquivo
+Local cCNPJCompl	:= ""
+Local cGraupar      := ""
+Local lOdoSodp		:= .F.
+Local cTabPlano 	:= ""
+Local cTabForn  	:= ""
+Local cCodAsSau 	:= ""
+Local cCodFAss		:= ""
+Local cNomeForn 	:= "" 
+Local cVbOdoT	    := "" 
+Local cCNPJFAss		:= ""
+
+
+Private lCalcNovo := If( SuperGetMv("MV_ASSIMED",,"2") == "2", .T. , .F. )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Posiciona a Verba no SRV³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PosSrv(cPd,cCodFil)
+cTipDirf := AllTrim(SRV->RV_DIRF)
+cDescri  := SRV->RV_DESC                  
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Se o funcionário tiver multiplos vinculos, garante que o valor³
+//³da dedução de dependentes foi utilizado somente em uma        ³
+//³das matriculas.                                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cPd $ aCodFol[059,1] + "*" + aCodFol[060,1] + "*" + aCodFol[061,1] + "*" + aCodFol[062,1]
+	cAnoMesDep := If( cTipoCalc $ "R#F", MesAno(SRR->RR_DATA), MesAno((cAliasSRD)->RD_DATPGT) )
+	If Ascan(aDependentes,{|x|X[1]==SRA->RA_CIC .And. X[2]==cAnoMesDep .And. X[3]==cPd .and. X[4] # SRA->RA_FILIAL+SRA->RA_MAT} ) # 0 
+		RestArea( aArea )
+		Return
+	Else
+		AaDd(aDependentes,{SRA->RA_CIC,cAnoMesDep,cPd, SRA->RA_FILIAL+SRA->RA_MAT } )
+	EndIf
+EndIf 
+
+If cTipoCalc $ "N"             
+	If SRV->( eof() ) .and. !empty( cPd )
+		If aTotRegs[7] == 0
+			cLog := STR0033 //"Verba consta nos acumulados, mas nao consta no cadastro de verbas.   Verba    Competencia             Valor"
+			Aadd(aTitle,cLog)  
+			Aadd(aLog,{})
+			aTotRegs[7] := len(aLog)
+		EndIf	     
+		Aadd(aLog[aTotRegs[7]],space(70)+cPd+space(06)+substr((cAliasSRD)->RD_DATARQ,5,2)+"/"+substr((cAliasSRD)->RD_DATARQ,1,4) +space(04)+transform((cAliasSRD)->RD_VALOR,"@E 99,999,999,999.99") )
+		RestArea( aArea )
+		Return
+	EndIf
+EndIf
+
+If SRV->RV_IR =="S" .and. empty(SRV->RV_DIRF)
+	If aTotRegs[2] == 0
+		cLog := STR0034 //"Verba com incidência para IR, mas sem configuração para DIRF."
+		Aadd(aTitle,cLog)  
+		Aadd(aLog,{})
+		aTotRegs[2] := len(aLog)
+	EndIf	             
+			
+	If ascan(aVerba,SRV->RV_COD)== 0
+		Aadd(aLog[aTotRegs[2]], SRV->RV_COD+"-"+SRV->RV_DESC ) 
+		Aadd(aVerba,SRV->RV_COD)
+	EndIf	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Quando for codigo de Desc. de Adiantamento e estiver Incid. p/ ³
+//³Rend. Tributavel ja considerado no tratamento de adiantamento. ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cPd == aCodFol[007,1] .And. AllTrim(SRV->RV_DIRF) == "A"
+	RestArea( aArea )
+	return
+Endif			
+      
+If cTipoCalc == "N"                                                                                        
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³COMPARA ANO DE PAGAMENTO COM ANO DE PROCESSAMENTO E PARA COMPLEMENTO DE 13o.³
+	//³PAGO NO ANO SEGUINTE DEVE CONSIDERAR COMO DEZEMBRO DO ANO DE PROCESSAMENTO. ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If MV_PAR06 >= 2007
+		lCondicao := YEAR((cAliasSRD)->RD_DATPGT) == MV_PAR06 	.Or. ;
+					 ( ( If(Len(cTipDirf)==1,cTipDirf $ "JxKxL",cTipDirf$ "B1xT1xC1xM1") .Or.;
+						 SRV->RV_CODFOL == "183") .And. Year((cAliasSRD)->RD_DATPGT) > MV_PAR06 .And.;
+						 Month((cAliasSRD)->RD_DATPGT)== 1 )
+	Else
+		lCondicao := YEAR((cAliasSRD)->RD_DATPGT) == MV_PAR06 	.Or. ;
+					 ( ( cTipDirf$ "JxKxL" .Or. SRV->RV_CODFOL == "183") .And. Year((cAliasSRD)->RD_DATPGT) > MV_PAR06 .And.;
+						Month((cAliasSRD)->RD_DATPGT)== 1 )
+	EndIf							
+ElseIf cTipoCalc $ "F"             
+   	lCondicao	:= YEAR(SRH->RH_DTRECIB) == MV_PAR06
+ElseIf cTipoCalc $ "R"            
+	lCondicao	:= YEAR(SRR->RR_DATA) == MV_PAR06
+ElseIf cTipoCalc $ "13"             
+	lCondicao	:= YEAR(SRI->RI_DATA) == MV_PAR06
+EndIf	   
+	
+If lCondicao		
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Mes de Pagamento para gravacao SR4³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cTipoCalc $ "N"             
+		cMesPag := STRZERO(MONTH((cAliasSRD)->RD_DATPGT),2)
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Antecipacao no mes 12 indica que e uma rescisao e deve entrar na DIRF³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Para rescisao antes da 2a parcela, esta gerando verba com id. 183, ³
+		//³e nao pode ser abatido na DIRF.                                    ³
+		//³So podera ter abatimento apos calculo da 2a parcela.               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SRV->RV_CODFOL == "183" .And. Right((cAliasSRD)->RD_DATARQ,2) = "12" .And.;
+		   cMesPag $ "12/01" .And. cTipDirf == "N" 
+		   	#IFDEF TOP   
+		   		If TcSrvType()<>"AS/400"
+			   		nOldRec :=	(cAliasSRD)->R_E_C_N_O_
+			   	Else                                 
+			   		nOldRec :=	(cAliasSRD)->( Recno() )
+			   	EndIf	
+		   	#ELSE
+		    	nOldRec :=	(cAliasSRD)->( Recno() )
+			#ENDIF			    	
+		    cChave	:= (cAliasSRD)->RD_FILIAL+(cAliasSRD)->RD_MAT+(cAliasSRD)->RD_DATARQ+aCodfol[247,1]
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Por nao poder utilizar o comando DbSeek quando utiliza-se uma query³
+			//³estamos fazendo a busca diretamente na tabela.                     ³
+			//³POR FAVOR NAO ALTERAR ESTE ALIAS.                                  ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		    SRD->( dbSetOrder(1) )
+		    If SRD->( dbSeek(cChave))
+				cTipDirf := "J"
+			EndIf
+			(cAliasSRD)->( dbGoTo( nOldRec ) )	
+		EndIf
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Quando o parâmetro MV_DINSSFM estiver com "Sim", o sistema  gera o                 ³
+		//³valor do desconto do INSS ferias mes seguinte( Id. 232), quando as férias          ³
+		//³são gozadas em mais de um mês.                                                     ³
+		//³O tratamento abaixo foi feito para deduzir o valor do Inss férias no mês seguinte, ³
+		//³para que os rendimento tributável fique correto.                                   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If (cAliasSRD)->RD_PD == aCodFol[164,1]    
+		   	#IFDEF TOP   
+		   		If TcSrvType()<>"AS/400"
+			   		nOldRec :=	(cAliasSRD)->R_E_C_N_O_
+			   	Else                                 
+			   		nOldRec :=	(cAliasSRD)->( Recno() )
+			   	EndIf	
+		   	#ELSE
+		    	nOldRec :=	(cAliasSRD)->( Recno() )
+			#ENDIF			    	
+
+			nMes := val(substr( (cAliasSRD)->RD_DATARQ, 5,2)) -1
+
+			If nMes < 1 
+				cMesAno := strzero(val(substr( (cAliasSRD)->RD_DATARQ, 1,4))-1,4)+"12"
+			Else                                                                        
+				cMesAno := substr( (cAliasSRD)->RD_DATARQ, 1,4)+strzero(nMes,2)
+			EndIf	 
+			
+			cChave	:= (cAliasSRD)->RD_FILIAL+(cAliasSRD)->RD_MAT+cMesAno+aCodfol[232,1]
+			SRD->( dbSetOrder(1) )
+		    If SRD->( dbSeek(cChave))   
+		    	If Year(SRD->RD_DATPGT) == MV_PAR06  .or. ((Month(SRD->RD_DATPGT)==11 .or. Month(SRD->RD_DATPGT)==12) ;
+		    										  .and. Year(SRD->RD_DATPGT)==(MV_PAR06-1) )                 
+					GravaFun( cMesPag, "A", SRD->RD_VALOR*(-1), (cAliasSRD)->RD_DATPGT )
+				EndIf	
+			EndIf	
+	
+			(cAliasSRD)->( dbGoTo( nOldRec ) )	
+		EndIf	
+  	
+  	ElseIf cTipoCalc $ "R#F"             
+		cMesPag := STRZERO(MONTH(If(cTipoCalc $ "R",SRR->RR_DATAPAG,SRH->RH_DTRECIB) ),2)
+
+		If cTipoCalc $ "R" .AND. SRV->RV_CODFOL == "183" .And. STRZERO(MONTH(SRR->RR_DATAPAG),2)=="12" .And.;
+		   cMesPag $ "12/01" .And. cTipDirf == "N" 
+
+	    	nOldRec :=	SRR->( Recno() )
+
+		    cChave	:= SRR->RR_FILIAL+SRR->RR_MAT+"R"+dTos(SRR->RR_DATAPAG)+aCodfol[247,1]
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Por nao poder utilizar o comando DbSeek quando utiliza-se uma query³
+			//³estamos fazendo a busca diretamente na tabela.                     ³
+			//³POR FAVOR NAO ALTERAR ESTE ALIAS.                                  ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		    SRR->( dbSetOrder(1) )
+		    If SRR->( dbSeek(cChave))
+				cTipDirf := "J"
+			EndIf
+			SRR->( dbGoTo( nOldRec ) )	
+		EndIf
+
+  	ElseIf cTipoCalc $ "13"             
+		cMesPag := STRZERO(MONTH(SRI->RI_DATA),2)
+	EndIf	
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Armazenar valor do Abono mes seguinte (id 074 e 079), qdo a verba  ³
+	//³estiver com codigo dirf = a "I", para podermos deduzir seu valor   ³
+	//³do vlr dos isentos, qdo elas estiverem  mesmo mes que a verba 164  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (SRV->RV_CODFOL == "164") .or.( ( SRV->RV_CODFOL == "074" .or. SRV->RV_CODFOL == "079") .and. cTipDirf == "0" )  	
+        nVerbaAb := If( cTipoCalc $ "R#F", SRR->RR_PD		, If(cTipoCalc $ "13", SRI->RI_PD		,(cAliasSRD)->RD_PD		)	)
+        nValorAb := If( cTipoCalc $ "R#F", SRR->RR_VALOR	, If(cTipoCalc $ "13", SRI->RI_VALOR	,(cAliasSRD)->RD_VALOR	)	)
+		dDtPgtAb := If( cTipoCalc $ "R#F", SRR->RR_DATAPAG	, If(cTipoCalc $ "13", SRI->RI_DATA		,(cAliasSRD)->RD_DATPGT	)	)
+		Aadd(aAbono, { cMesPag, SRV->RV_CODFOL, nVerbaAb, nValorAb, cTipDirf, dDtPgtAb } )
+   	EndIf
+
+	If !cTipDirf$ "Nx "
+		If cTipoCalc $ "N"
+			nVal		:= (cAliasSRD)->RD_VALOR
+			dDtPagto	:= (cAliasSRD)->RD_DATPGT
+		ElseIf cTipoCalc $ "R#F"             			
+			nVal		:= SRR->RR_VALOR
+			dDtPagto	:= SRR->RR_DATAPAG
+	  	ElseIf cTipoCalc $ "13"             
+			nVal		:= SRI->RI_VALOR
+			dDtPagto	:= SRI->RI_DATA
+		EndIf                     
+		
+		If cTipoCalc $ "N"
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Verifica Mes Para Saber Se e 13o  Muda a Letra               ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If Right((cAliasSRD)->RD_DATARQ,2) == "13" .And. cTipDirf == "A"
+				cTipDirf := "J"
+			ElseIf Right((cAliasSRD)->RD_DATARQ,2) == "13" .And. cTipDirf$ "B"
+				cTipDirf := "B1"
+			ElseIf Right((cAliasSRD)->RD_DATARQ,2) == "13" .And. cTipDirf$ "C"
+				cTipDirf := "C1"
+			ElseIf Right((cAliasSRD)->RD_DATARQ,2) == "13" .And. cTipDirf$ "T"
+				cTipDirf := "T1"
+			ElseIf Right((cAliasSRD)->RD_DATARQ,2) == "13" .And. cTipDirf$ "D"
+				cTipDirf := "L"
+			Endif
+
+		    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Desprezar verbas do complemento do 13o ano base anterior³
+			//³ ou posterior ao ano de processamento                   ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ( If(Len(cTipDirf)==1,cTipDirf$ "JxKxL",cTipDirf$ "B1xT1xC1xM1" )) .And. ;
+				(;
+				(Val(Subs((cAliasSRD)->RD_DATARQ,1,4)) < MV_PAR06 .And. Val(Subs((cAliasSRD)->RD_DATARQ,1,4)) <= 2005) .Or. ;
+				(Year((cAliasSRD)->RD_DATPGT) > MV_PAR06 .And. Val(Subs((cAliasSRD)->RD_DATARQ,1,4)) # MV_PAR06);
+				)
+				RestArea( aArea )
+				Return
+			Endif	
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Despreza Complemento 13o. pago em janeiro do ano seguinte³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ( If(Len(cTipDirf)==1,cTipDirf$ "JxKxL",cTipDirf$ "B1xT1xC1xM1") ) .And. Year((cAliasSRD)->RD_DATPGT) > MV_PAR06 
+				RestArea( aArea )
+				Return
+			Endif	
+		EndIf		
+        	
+		If cTipDirf $ 'AxExFxGxHxIxJxOxPxTxU'
+        	If SRV->RV_TIPOCOD == "2" //Desconto
+				nVal *= -1                                  
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Rendimento Tributavel sera 60 % decorrene do transporte de Passageiro.³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			ElseIf SRV->RV_TIPOCOD == "1" .and. cTipDirf$ "A" .and. SRV->RV_COD $ cTranspAp
+				nVal := nVal * 0.60
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Rendimento Tributavel para freteiro sera 40 % decorrene do transporte de carga.³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			ElseIf SRV->RV_TIPOCOD == "1" .and. cTipDirf$ "A" .and. SRA->RA_CATEG== "15"
+				nVal := nVal * 0.40
+			Endif
+   		Elseif cTipDirf$ 'D'
+	    	If SRV->RV_TIPOCOD == "1" //Provento
+            	nVal *= -1
+			Endif
+		Elseif cTipDirf$ 'BxCxKxLxQ'
+	    	If SRV->RV_TIPOCOD $ "1*3" //Provento ou Base
+				If !cTipDirf$ "KxBxC" 
+					nVal *= -1
+				Endif
+				If cTipDirf == "C" .And. SRV->RV_TIPOCOD == "1" //Provento
+					nVal *= -1
+				Endif
+			Endif
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Implementa informacoes referente aos Beneficiarios³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Informacoes referentes a 13o³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If cTipDirf $ "K"
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Pesquisa as verbas de 13 e acrescenta uma linha se elas existirem. ³
+				//³Se encontrar mais alguma de 13 acumula os valores ( cTipDirf = K)  ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			 	cVerba := cPD
+			 	nPos := Ascan(aBenef,{|x| (x[6]=cVerba	.or. x[7] = cVerba)})
+				If nPos > 0 
+					If ! aBenef[nPos,13]
+						aadd(aBenef,{	aBenef[nPos,01]+" Ref. a 13o"	,;  //1
+										aBenef[nPos,02]					,;	//2
+										aBenef[nPos,03]					,;	//3
+										aBenef[nPos,04]					,;	//4
+										aBenef[nPos,05]					,;	//5
+										aBenef[nPos,06]					,;	//6
+										aBenef[nPos,07]					,;	//7
+										aBenef[nPos,08]					,;	//8
+										nVal							,;	//9
+										""								,; 	//10 VERBA
+										cTipDirf						,; 	//11 TIPO RENDIMENTO
+										aBenef[nPos,12]					,;	//12
+										.T.  							,;	//13
+										""                              ,;  //14
+										""                              ,;  //15
+										""								}) 	//16 Grau Parentesco
+					Else 
+						aBenef[nPos,09]	+= nVal
+						aBenef[nPos,11] := cTipDirf
+					EndIF
+				EndIF					 	                           
+			EndIF            
+				
+			If cTipDirf $ "C
+			 	cVerba := cPd
+			 	nPos := Ascan(aBenef,{|x| x[3]=cVerba 	.or. x[4] 	=cVerba .or.;
+			 	                           x[5]=cVerba 	.or. x[6]	=cVerba .or.;
+			 	                           x[7]=cVerba 	.or. x[8]	=cVerba .or.;
+			 	                           x[12]=cVerba .or. x[14]	=cVerba	 .or.;
+			 	                           x[15]=cVerba 	})
+				If nPos > 0
+					aBenef[nPos,09]	+= nVal
+					aBenef[nPos,11] := cTipDirf
+					aBenef[nPos,01] += If("Pensão" $ aBenef[nPos,01],""," Pensão")
+				EndIF					 	                           
+			EndIF
+		
+		ElseIf cTipDirf$ 'B1xC1xT1xM1'
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Implementa informacoes referente aos Beneficiarios³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Informacoes referentes a 13o³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Pesquisa as verbas de 13 e acrescenta uma linha se elas existirem. ³
+			//³Se encontrar mais alguma de 13 acumula os valores ( cTipDirf = K)  ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		 	cVerba := cPD
+		 	nPos := Ascan(aBenef,{|x| (x[6]=cVerba	.or. x[7] = cVerba)})
+			If nPos > 0 
+				If ! aBenef[nPos,13]
+					aadd(aBenef,{	aBenef[nPos,01]+" Ref. a 13o"	,;  //1 Descricao
+									aBenef[nPos,02]					,;	//2 CPF
+									aBenef[nPos,03]					,;	//3 Vb Adiantamento
+									aBenef[nPos,04]					,;	//4 Vb Folha
+									aBenef[nPos,05]					,;	//5 Vb Ferias
+									aBenef[nPos,06]					,;	//6 Vb 13 1a parc
+									aBenef[nPos,07]					,;	//7 vb 13 2a Parc
+									aBenef[nPos,08]					,;	//8 Vb PLR
+									nVal							,;	//9 Valor
+									""								,; 	//10 VERBA
+									cTipDirf						,; 	//11 TIPO RENDIMENTO
+									aBenef[nPos,12]					,;	//12
+									.T.  							,;	//13 
+									""                              ,;  //14
+									""                              ,;  //15
+									""								}) 	//16 Grau Parentesco
+				Else 
+					aBenef[nPos,09]	+= nVal
+					aBenef[nPos,11] := cTipDirf
+				EndIF
+			EndIF					 	                           
+		Endif
+		
+		If cTipDirf $"R#W#2#Z#5" //Informacoes complementares( Ex.assist. Medica, etc)
+			If cTipDirf = "R" .and. (SRV->RV_COD $ "506-601-503-591-592" )
+				If lRatAssMed .and. (cAliasRAS)->(DbSeek(SRA->RA_FILIAL+ SRA->RA_MAT+ cAno+ cMesPag))
+					While (cAliasRAS)->(FILIAL + MATFUNC + ANO + MES) == SRA->(RA_FILIAL+RA_MAT)+cAno+cMesPag
+						f550DescrAss(@cDescri,@cCNPJCompl,.T.,cAliasRAS,@cPd,@cGraupar)
+						aadd(aBenef,{cDescri,cCNPJCompl,"","","","","","",(cAliasRAS)->VALOR,cPD,cTipDirf,"",.F.,"","",cGraupar})										
+						(cAliasRAS)->(DBSkip())
+					EndDo
+					lSeekRatAM := .T.
+				else
+					lSeekRatAM := .F.
+					
+					If aTotRegs[10] == 0
+						cLog := STR0038		// "Rateio de Assistência Médica"
+						Aadd( aTitle, cLog )
+						Aadd( aLog, {} )
+						aTotRegs[10] := len( aLog )
+					EndIf
+					
+					Aadd( aLog[ aTotRegs[10] ], STR0039 + " - " + SRA->RA_FILIAL + "-" + SRA->RA_MAT + space(08) + cMesPag + "/" + cAno )		// "Rateio Assist. Médica não encontrado p/ este Funcionario"
+				EndIf
+			Else               
+				lSeekRatAM := .F.
+			EndIf 
+		
+			If !lSeekRatAM
+				//altera a descricao em caso de ass med/odont
+				f550DescrAss(@cDescri,@cCNPJCompl,,,,@cGraupar,@lOdoSoDp)
+
+				nPos := Ascan(aBenef,{|x| x[10]=cPD })                    
+				
+				If nPos == 0
+					aadd(aBenef,{cDescri,cCNPJCompl,"","","","","","",nVal,cPD,cTipDirf,"",.F.,"","",cGraupar})
+				Else                                                     
+					aBenef[nPos,09] += nVal
+				EndIf	     
+
+
+                cVbOdoT := (aCodfol[714,1])
+
+				If lOdoSoDp .and. !Empty(cVbOdoT) .and. cTipDirf = "R" 
+					cGraupar := "TODO"
+					cTabForn := "S017"				// Tabela do Fornecedor de Assistencia Odontologica
+
+					If SRA->RA_TPASODO = '1' //1=Faixa Salarial
+						cTabPlano:= "S013" //Tabela de Assistencia Odontologica por Faixa Salarial
+					ElseIf SRA->RA_TPASODO = '2' //2=Faixa Etaria
+						cTabPlano:= "S014" //Tabela de Assistencia Odontologica por Faixa Etaria
+					EndIf
+				
+					cCodAsSau := SRA->RA_ASODONT
+				
+					If !Empty(cTabPlano) .and. !Empty(cTabForn) .and. !Empty(cCodAsSau)
+						cCodFAss 	:= fPosTab(cTabPlano,cCodAsSau,"=",4,,,,13)
+						cCNPJFAss 	:= fPosTab(cTabForn,cCodFAss,"=",4,,,,6)
+						cNomeForn 	:= AllTrim( fPosTab( cTabForn,cCodFAss,"=",4,,,,5 ) )
+
+						cDescri := "ASS.ODONTOLOGICA"
+						cDescri +=Space( 30 - Len( cDescri ) ) + " - TITULAR - "
+						cDescri += cNomeForn + " - CNPJ: " + Transform(cCNPJFAss, "@R ##.###.###/####-##")
+					EndIf
+
+			    	aadd(aBenef,{cDescri,cCNPJFAss,"","","","","","",0,cVbOdoT,cTipDirf,"",.F.,"","",cGraupar})										
+			        lOdoSoDp := .F.
+
+				EndIf    
+			EndIf
+		Endif
+		
+		If cTipDirf $"I#0" //Informacoes complementares( Ex.assist. Medica, Abonoetc)
+			If at( cDescri, cInfOut ) == 0
+				cInfOut += cDescri + ","
+			Endif   
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Deduz redutor da Base de IR.							³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SRV->RV_CODFOL $ "408/410/411"
+			GravaFun( cMesPag, "A", nVal*(-1), dDtPagto )
+		ElseIf SRV->RV_CODFOL == "409"
+			If !lRedutor13
+				GravaFun( cMesPag, "J", nVal*(-1), dDtPagto )
+				lRedutor13 := .T.
+			Else
+				dbSelectArea( cAliasDirf )
+				RestArea( aArea )
+				Return
+			EndIf
+		EndIf
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Grava no Arquivo de Movimento da DIRF SR4                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		GravaFun( cMesPag, cTipDirf, nVal, dDtPagto )
+		lGravouAlgum := .T.
+	Endif
+Endif
+
+RestArea( aArea )
+Return		
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³f550DescrAss  ºAutor  ³Adrianne Furtadoº Data ³  16/12/10   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Monta a descricao da informação complementar de cada depen- º±±
+±±º          ³dente de Assistencia Médica.                                º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³ cDescri   = Descrição passada por referencia.              º±±
+±±º          ³ cCNPJFAss = CNPJ Complementar passado por referencia para  º±±
+±±º          ³             pegar o CNPJ do fornecedor de Assist. de Saude.º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function f550DescrAss(cDescri,cCNPJFAss,lTemRateio,cAliasRAS,cVbaRAS,cGraupar,lOdoSodp)
+Local cTabPlano := ""
+Local cTabForn  := ""
+Local lAchou 	:= .F.            
+Local lAltDescr := .F.
+Local cCodAsSau := ""
+Local cCodFAss	:= ""
+Local cNomeForn := "" 
+
+Default lTemRateio	:= .F.
+
+If lCalcNovo
+	If AllTrim(SRV->RV_DIRF) == "R" 
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Se a verba tem ID de Calculo = 049, é um funcionário ou tem rateio     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//		If SRV->RV_CODFOL $ "049#714"
+//			If SRV->RV_CODFOL == "049"		// 049 = Identificador de Desconto de Assistencia Medica do Titular
+		If SRV->RV_COD $ "506#601#503#591#592" .or. SRV->RV_CODFOL $ "049#714"
+			If SRV->RV_COD $ "601-506-503-591-592"		// 049 = Identificador de Desconto de Assistencia Medica do Titular
+				
+				cGraupar := "TMED"				
+				cTabForn := "S016"			// Tabela do Fornecedor de Assistencia Medica
+				
+				If lTemRateio
+					If Empty((cAliasRAS)->CODDEP)		// Eh o funcionario								
+						If SRA->RA_TIPAMED = '1'		// 1 = por Faixa Salarial
+							cTabPlano := "S008"			// Tabela de Assistencia Medica por Faixa Salarial
+						ElseIf SRA->RA_TIPAMED = '2'	// 2 = por Faixa Etaria
+							cTabPlano := "S009"			// Tabela de Assistencia Medica por Faixa Etaria
+						EndIf
+						cCodAsSau := SRA->RA_ASMEDIC
+					Else // Eh o dependente
+						DbSelectArea("SRB")
+						SRB->(DBSetOrder(1)) 
+						SRB->(DBSeek((cAliasRAS)->(FILIAL+MATFUNC)))
+						
+						// posiciona no primeiro dependente desse funcionario
+						While SRB->(RB_FILIAL+RB_MAT) == (cAliasRAS)->(FILIAL+MATFUNC) .and. !lAchou
+							If SRB->RB_COD == (cAliasRAS)->(CODDEP)
+								lAchou 		:= .T.
+								lAltDescr	:= .T.
+								cVbaRAS		:= SRB->RB_VBDESAM 
+								cCodAsSau 	:= SRB->RB_CODAMED
+								cGraupar    := AllTrim(SRB->RB_GRAUPAR) + "MED" 
+								cGraupar    += SRB->RB_COD
+								If SRB->RB_TIPAMED = '1'		// 1 = por Faixa Salarial
+									cTabPlano:= "S008"			// Tabela de Assistencia Medica por Faixa Salarial
+								ElseIf SRB->RB_TIPAMED = '2'	// 2 = por faixa etaria
+									cTabPlano:= "S009"			// Tabela de Assistencia Medica por Faixa Etaria
+								EndIf
+							Else
+								SRB->(DbSkip())								
+							EndIf
+						EndDo
+						lAchou := .F. 
+					EndIf
+					
+				Else
+					cGraupar := "TMED"
+					If SRA->RA_TIPAMED = '1'		// 1 = Faixa Salarial
+						cTabPlano := "S008"			// Tabela de Assistencia Medica por Faixa Salarial
+					ElseIf SRA->RA_TIPAMED = '2'	// 2 = por faixa etaria
+						cTabPlano := "S009"			// Tabela de Assistencia Medica por Faixa Etaria
+					EndIf
+					cCodAsSau := SRA->RA_ASMEDIC
+				EndIf
+				
+				If !Empty(cTabPlano) .and. !Empty(cTabForn) .and. !Empty(cCodAsSau)
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Busca os dados do Fornecedor de Assistencia Medica³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cCodFAss 	:= fPosTab(cTabPlano,cCodAsSau,"=",4,,,,13)
+					cCNPJFAss 	:= fPosTab(cTabForn,cCodFAss,"=",4,,,,6)
+					cNomeForn 	:= AllTrim( fPosTab( cTabForn,cCodFAss,"=",4,,,,5 ) )
+
+					If lAltDescr	// Se verdadeiro indica assis.medica de DEPENDENTE
+						cDescri := SRB->RB_NOME + " / CPF: " + Transform(SRB->RB_CIC, "@R ###.###.###-##")
+						cDescri += " - Ass.Medica - "
+					Else			// Caso contrario indica assis.medica do TITULAR
+						cDescri += Space( 30 - Len( cDescri ) ) + " - TITULAR - "
+					EndIf
+
+					// Completa a informacao da assistencia medica
+					cDescri += cNomeForn + " - CNPJ: " + Transform(cCNPJFAss, "@R ##.###.###/####-##")
+				EndIf
+				
+			ElseIf SRV->RV_CODFOL == "714"		// 714 = Identificador de Desconto de Assistencia Odontologica do Titulat
+				
+				cGraupar := "TODO"
+				cTabForn := "S017"				// Tabela do Fornecedor de Assistencia Odontologica
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Pegar o cnpj do fornecedor de ass. odontol - ³
+				//³ver se utiliza Faixa Salarial ou Faixa Etária³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If SRA->RA_TPASODO = '1' //1=Faixa Salarial
+					cTabPlano:= "S013" //Tabela de Assistencia Odontologica por Faixa Salarial
+				ElseIf SRA->RA_TPASODO = '2' //2=Faixa Etaria
+					cTabPlano:= "S014" //Tabela de Assistencia Odontologica por Faixa Etaria
+				EndIf
+				cCodAsSau := SRA->RA_ASODONT
+				
+				If !Empty(cTabPlano) .and. !Empty(cTabForn) .and. !Empty(cCodAsSau)
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Busca os dados do Fornecedor de Assistencia Odontologica ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					cCodFAss 	:= fPosTab(cTabPlano,cCodAsSau,"=",4,,,,13)
+					cCNPJFAss 	:= fPosTab(cTabForn,cCodFAss,"=",4,,,,6)
+					cNomeForn 	:= AllTrim( fPosTab( cTabForn,cCodFAss,"=",4,,,,5 ) )
+					
+					If lAltDescr	// Se verdadeiro indica assis.odontologica de DEPENDENTE
+						cDescri := SRB->RB_NOME + " / CPF: " + Transform(SRB->RB_CIC, "@R ###.###.###-##")
+						cDescri += " - Ass.Odontol. - "
+					Else			// Caso contrario indica assis.medica do TITULAR
+						cDescri += Space( 30 - Len( cDescri ) ) + " - TITULAR - "
+					EndIf
+
+					// Completa a informacao da assistencia odontologica
+					cDescri += cNomeForn + " - CNPJ: " + Transform(cCNPJFAss, "@R ##.###.###/####-##")
+				
+				EndIf
+			EndIf
+		Else
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Se a verba nao tem ID de Calculo, eh um dependente, e Nao um funcionario³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+			DbSelectArea("SRB")
+			SRB->(DBSetOrder(1)) 
+			If SRB->(DBSeek(SRA->RA_FILIAL+SRA->RA_MAT))
+				While SRB->(RB_FILIAL + RB_MAT) == SRA->RA_FILIAL+SRA->RA_MAT .and. !lAchou
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Eh dependente de Assistencia Medica?³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If SRB->RB_VBDESAM == SRV->RV_COD .and. (SRB->RB_TPDEPAM = "1" .or. SRB->RB_TPDEPAM = "2") 
+						cDescri := SRB->RB_NOME + " / CPF: " + Transform(SRB->RB_CIC, "@R ###.###.###-##")
+						cDescri += " - Ass.Medica - "
+						
+						lAchou      := .T.
+	 					lAltDescr	:= .T.
+
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³Pegar o cnpj do fornecedor de ass. medica -  ³
+						//³ver se utiliza Faixa Salarial ou Faixa Etária³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						If SRB->RB_TIPAMED = '1' //1=Faixa Salarial
+							cTabPlano:= "S008" //Tabela de Assistencia Medica por Faixa Salarial
+						ElseIf SRB->RB_TIPAMED = '2' //2=Faixa Etaria
+							cTabPlano:= "S009" //Tabela de Assistencia Medica por Faixa Etaria
+						EndIf
+						cTabForn	:="S016"  //Tabela do Fornecedor de Assistencia Medica
+						cCodAsSau 	:= SRB->RB_CODAMED						
+						cGraupar := AllTrim(SRB->RB_GRAUPAR) + "MED"
+						cGraupar += SRB->RB_COD
+						
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Eh dependente de Assistencia Odontologica?³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					ElseIf SRB->RB_VBDESAO == SRV->RV_COD .and. (SRB->RB_TPDPODO = "1" .or. SRB->RB_TPDPODO = "2") 
+						cDescri := SRB->RB_NOME + " / CPF: " + Transform(SRB->RB_CIC, "@R ###.###.###-##")
+						cDescri += " - Ass.Odontol. - "
+						
+						cGraupar := AllTrim(SRB->RB_GRAUPAR) + "ODO"
+						cGraupar += SRB->RB_COD
+						
+						lAchou   := .T.  
+						lOdoSoDp := .T.  
+
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³Pegar o cnpj do fornecedor de ass. medica -  ³
+						//³ver se utiliza Faixa Salarial ou Faixa Etária³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						If SRB->RB_TPASODO = '1' //1=Faixa Salarial
+							cTabPlano:= "S013" //Tabela de Assistencia Odontologica por Faixa Salarial
+						ElseIf SRB->RB_TPASODO = '2'  //2=Faixa Salarial
+							cTabPlano:= "S014" //Tabela de Assistencia Odontologica por Faixa Etaria
+						EndIf
+						cTabForn	:="S017" //Tabela do Fornecedor de Assistencia Odontologica
+						cCodAsSau 	:= SRB->RB_ASODONT
+					EndIf
+	   
+					If !Empty(cTabPlano) .and. !Empty(cTabForn) .and. !Empty(cCodAsSau)
+						cCodFAss  := fPosTab(cTabPlano,cCodAsSau,"=",4,,,,13)
+						cCNPJFAss := fPosTab(cTabForn,cCodFAss,"=",4,,,,6)
+						cNomeForn := AllTrim( fPosTab( cTabForn,cCodFAss,"=",4,,,,5 ) )
+
+						If !lAChou     	// Se verdadeiro indica assis.odontologica de DEPENDENTE
+							cDescri := "ASS.ODONTOLOGICA"
+							cDescri +=Space( 30 - Len( cDescri ) ) + " - TITULAR - "
+						EndIf
+
+						// Completa a informacao da assistencia odontologica
+						cDescri += cNomeForn + " - CNPJ: " + Transform(cCNPJFAss, "@R ##.###.###/####-##")
+					EndIf       
+					
+					SRB->(DbSkip())
+				
+				EndDo
+				lAchou := .F.
+			EndIf
+			SRB->(DBCloseArea())
+			
+		EndIf
+	EndIf
+Else
+	cCNPJFAss := aInfo[8]
+EndIf
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFuncao    ³RateioAssM    ºAutor  ³Adrianne Furtadoº Data ³  16/12/10   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Verifica se existe o Arquivo de Rateio de Assistencia Medicaº±±
+±±º          ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function RateioAssM(lAbre)
+Local cAliasArq 	:= cAliasRAS
+Local cNomArq 		:= ""
+Local lRet 			:= .F.
+Local cNomeInd 
+Local cIndChave 	:= "FILIAL + MATFUNC + ANO + MES + CODDEP" //Indice do arquivo
+Local cLog 			:= ""
+
+if cAno <> "2010" //Considera o arquivo de Rateio de Assitencia Medica somente no ano de 2010
+	Return .F.
+endif
+
+cNomArq := cAliasArq+GetDBExtension()
+cNomArq := RetArq(__LocalDriver,cNomArq,.T.)
+cNomeInd:= FileNoExt(cNomArq)+"I" // Indice
+
+if lAbre // Abre arquivo
+	
+	If ! MSFile(cNomArq,,__LocalDriver)
+		If aTotRegs[10] == 0
+			cLog := STR0038		// "Rateio de Assistência Médica"
+			Aadd( aTitle, cLog )
+			Aadd( aLog, {} )
+			aTotRegs[10] := len( aLog )
+		EndIf	      
+		cLog := STR0040 + cAliasArq + STR0041 // "Arquivo de rateio de Assist. Médica não encontrado -> "###". Efetue o Rateio."
+		Aadd( aLog[ aTotRegs[10] ], cLog )
+	Else
+		If ! MsOpenDbf( .T. , __LocalDriver , cNomArq , cAliasArq , .T. , .T. )
+			If aTotRegs[10] == 0
+				cLog := STR0038		// "Rateio de Assistência Médica"
+				Aadd( aTitle, cLog )
+				Aadd( aLog, {} )
+				aTotRegs[10] := len( aLog )
+			EndIf	      
+			cLog := STR0042 + cAliasArq + STR0043	//"Não foi possével abrir o arquivo de rateio -> "###". Verifique o rateio de assist. médica."
+			Aadd( aLog[ aTotRegs[10] ], cLog )
+		Else
+			
+			//Cria Indice do Arquivo
+			IndRegua(cAliasArq,cNomeInd,cIndChave,,,"Indexando Arquivo de Trabalho...")
+			
+			lRet := .T.
+		EndIf
+		
+	EndIf
+	
+else  	// Fecha Arquivo
+	
+	//Fecha Arquivo de Trabalho 
+	if Select(cAliasArq) > 0
+		dbSelectArea(cAliasArq)
+		(cAliasArq)->( dbCloseArea() )
+		
+		//Apaga Indice
+		if File(cNomeInd+OrdBagExt())
+			FErase(cNomeInd+OrdBagExt())
+		endif
+	endif
+	
+endif
+
+Return lRet

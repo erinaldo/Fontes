@@ -39,6 +39,8 @@ aAliasOri := GETAREA()
 _nPosSolic	:= aScan(aHeader,{|x|AllTrim(x[2]) == "C7_NUMSC"})
 _nPosItem	:= aScan(aHeader,{|x|AllTRim(x[2]) == "C7_ITEMSC"})
 _nPosDtDot 	:= aScan(aHeader,{|x|AllTrim(x[2]) == "C7_XDTDOT"})
+_nPosDesCo 	:= aScan(aHeader,{|x|AllTrim(x[2]) == "C1_XDESCCO"})
+_nPosDesCC 	:= aScan(aHeader,{|x|AllTrim(x[2]) == "C1_XDESCCC"})
 _nOrderSC1	:= SC1->( RetIndex() )
 
 SC1->( dbSetOrder(1) )	/// Ordem "FILIAL+PEDIDO"
@@ -46,7 +48,15 @@ SC1->( dbSetOrder(1) )	/// Ordem "FILIAL+PEDIDO"
 For nPos := 1 to Len(aCols)
 	SC1->( dbSeek(xFilial("SC1")+aCols[nPos][_nPosSolic]+aCols[nPos][_nPosItem]))
 	If SC1->( Found() )
+		If _nPosDtDot > 0
 		aCols[nPos][_nPosDtDot] 	:= SC1->C1_XDTDOT
+		EndIf
+		If _nPosDesCO > 0
+		aCols[nPos][_nPosDesCO] 	:= SC1->C1_XDESCCO
+		EndIf
+		If _nPosDesCC > 0
+		aCols[nPos][_nPosDesCC] 	:= SC1->C1_XDESCCC
+		EndIf
 	EndIf
 Next nPos
 

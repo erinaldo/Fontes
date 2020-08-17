@@ -1,0 +1,506 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rcsua004.prw"
+#line 1 "C:\INCLUDE\TOPCONN.ch"
+#line 17 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rcsua004.prw"
+Function U_RCSUA004()
+
+Private oLeTxt
+
+SetPrvt("CCOL,aItems2,cBANC0")
+cPerg   := PADR("RCSUA4",LEN(SX1->X1_GRUPO))
+ValidPerg()
+
+
+
+
+
+
+
+
+PERGUNTE(cPerg, .f. )
+oLeTxt := MSDialog():New(200, 1, 380, 380, OemToAnsi(OemToAnsi("Importar Movimentcao Contabil")),,,,,,,,, .t. ,,,)
+ TGroup():New(02,10,080,175,OemToAnsi(),, , , .t. )
+ IW_Say(10,018," Este programa ira fazer Importacao da Movimentacao    ",,,,, )
+ IW_Say(18,018," Contabil da MarketSystem para CSU                     ",,,,, )
+ SButton():New(60, 080, 05,{|| PERGUNTE(cPerg)},,)
+ SButton():New(60, 110, 01,{|| OkLeTxt()},,)
+ SButton():New(60, 138, 02,{|| oLeTxt:End()},,)
+
+oLeTxt:Activate(,,,.T.,, ,)
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OkLeTxt
+
+
+
+
+
+Private _cString  := "CT2"
+
+oLeTxt:End()
+Processa({|| IMPORTRA() },"Aguarde Selecionando Registros...")
+
+Return(Nil)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ImporTRA()
+
+LOCAL   cQuery   := ""
+LOCAL   cQuegr   := ""
+LOCAL   nREG     := 0
+LOCAL   _nR      := 0
+Private aOrd 		:= {}
+Private cDesc1      := "Este programa lista as possiveis inconsistencia na importacao dos lancamentos contabeis ou de/para"
+Private cDesc2      := ""
+Private cDesc3      := ""
+Private lEnd        := .F. 
+Private lAbortPrint := .F. 
+Private limite      := 80
+Private tamanho     := "M"
+Private nomeprog    := "RCSUR04"
+Private aReturn     := { "Zebrado", 1, "Administracao", 2, 2, 1, "", 1}
+Private nLastKey    := 0
+Private titulo      := " Rel. de inconsistencia dos lancamentos contabeis"
+Private nLin        := 80
+Private Cabec1      := "Conta Contabil            Descricao                                             Data+Lote+Sublote+Documento+Linha"
+Private Cabec2      := ""
+Private cbtxt       := Space(10)
+Private cbcont      := 00
+Private CONTFL      := 01
+Private m_pag       := 01
+Private imprime     := .T. 
+Private wnrel       := "IMPCT2"
+Private cPerg       := ""
+Private _cString    := "CT2"
+
+Private _aVeterr := {}
+aDepara := {}
+aDepar1 := {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cQuect1 := "Select SZD.ZD_CTATE,SZD.ZD_CTADE"
+cQuect1 := cQuect1 + " FROM "+retsqlname("SZD")+"  SZD "
+cQuect1 := cQuect1 + " WHERE SZD.D_E_L_E_T_ = ' '"
+cQuect1 := cQuect1 + " ORDER BY SZD.ZD_CTATE"
+
+If Select("TM1") > 0
+     DbSelectArea("TM1")
+     DbCloseArea()
+Endif
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,cQuect1), "TM1" , .F. , .T. )
+DbSelectArea("TM1")
+DBGOTOP()
+while TM1->(!Eof())
+
+     aAdd(aDepara ,{ALLTRIM(TM1->ZD_CTADE),ALLTRIM(TM1->ZD_CTATE)})
+     DBSELECTAREA("TM1")
+     DBSKIP()
+
+ENDDO
+DbSelectArea("TM1")
+DbCloseArea()
+
+cQuery := "SELECT  * "
+
+cQuery := cQuery + " FROM DADOSMP8MRL..CT2300 CT2"
+cQuery := cQuery + " WHERE CT2.CT2_DATA BETWEEN '" +DTOS(MV_PAR01)+ "' And '"+DTOS(MV_PAR02)+ "' AND "
+cQuery := cQuery + " CT2.CT2_IMP = ' ' AND CT2.D_E_L_E_T_ = ' ' "
+cQuery := cQuery + "ORDER BY CT2_FILIAL+CT2_DATA,CT2_LOTE,CT2_SBLOTE,CT2_DOC,CT2_SEQLAN,CT2_EMPORI,CT2_FILORI+CT2_MOEDLC"
+
+If Select("TMP") > 0
+     DbSelectArea("TMP")
+     DbCloseArea()
+Endif
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,cQuery), "TMP" , .F. , .T. )
+DbSelectArea("TMP")
+DBGOTOP()
+while TMP->(!Eof())
+
+    Incproc("Proc.Import.Lancto: "+TMP->CT2_LOTE+TMP->CT2_SBLOTE+TMP->CT2_DOC)
+
+
+
+
+    IF !EMPTY(TMP->CT2_DEBITO)
+
+         _nPosdeb  := Ascan(aDepara,{|x| x[1] == ALLTRIM(TMP->CT2_DEBITO)})
+        IF _nPosdeb <> 0
+	       cDeb  := ALLTRIM(aDepara[_nPosdeb,2])
+        ELSE
+           cDeb  := TMP->CT2_DEBITO
+        ENDIF
+
+    ELSE
+         cDeb  := TMP->CT2_DEBITO
+    Endif
+
+
+
+
+    IF !EMPTY(TMP->CT2_CREDITO)
+
+        _nPoscred := Ascan(aDepara,{|x| x[1] == ALLTRIM(TMP->CT2_CREDITO)})
+        IF _nPoscred <> 0
+	       cCred  := ALLTRIM(aDepara[_nPoscred,2])
+        ELSE
+           cCred := TMP->CT2_CREDITO
+        ENDIF
+
+    ELSE
+         cCred := TMP->CT2_CREDITO
+    ENDIF
+
+    IF !EMPTY(cDeb)
+
+       DBSELECTAREA("CT1")
+       DBSETORDER(1)
+       IF DBSEEK(XFILIAL("CT1")+alltrim(cDeb))
+       ELSE
+           aAdd(_aVeterr,{cDeb,"Conta contabil nao cadastrada,lcto nao importado",(SUBSTR(TMP->CT2_DATA,7,2)+"/"+SUBSTR(TMP->CT2_DATA,5,2)+"/"+SUBSTR(TMP->CT2_DATA,1,4))+" - "+TMP->CT2_LOTE+" "+TMP->CT2_SBLOTE+" "+TMP->CT2_DOC+" "+TMP->CT2_LINHA,TMP->R_E_C_N_O_})
+           IF _nPosdeb == 0
+              aAdd(_aVeterr,{cDeb,"Conta contabil nao existe no De/Para","",TMP->R_E_C_N_O_})
+           ENDIF
+           DBSELECTAREA("TMP")
+           DBSKIP()
+           LOOP
+       ENDIF
+
+    ENDIF
+
+    IF !EMPTY(cCred)
+       DBSELECTAREA("CT1")
+       DBSETORDER(1)
+       IF DBSEEK(XFILIAL("CT1")+alltrim(cCred))
+       ELSE
+           aAdd(_aVeterr,{cCred,"Conta contabil nao cadastrada,lcto nao importado",(SUBSTR(TMP->CT2_DATA,7,2)+"/"+SUBSTR(TMP->CT2_DATA,5,2)+"/"+SUBSTR(TMP->CT2_DATA,1,4))+" - "+TMP->CT2_LOTE+" "+TMP->CT2_SBLOTE+" "+TMP->CT2_DOC+" "+TMP->CT2_LINHA,TMP->R_E_C_N_O_})
+           IF _nPoscred == 0
+              aAdd(_aVeterr,{cCred,"Conta contabil nao existe no De/Para","",TMP->R_E_C_N_O_})
+           ENDIF
+           DBSELECTAREA("TMP")
+           DBSKIP()
+           LOOP
+       ENDIF
+
+    ENDIF
+    Dbselectarea("CT2")
+	Reclock("CT2", .T. )
+		CT2_FILIAL := XFILIAL("CT2")
+		CT2_DATA   := CTOD(SUBSTR(TMP->CT2_DATA,7,2)+"/"+SUBSTR(TMP->CT2_DATA,5,2)+"/"+SUBSTR(TMP->CT2_DATA,1,4))
+    	CT2_LOTE   := "M"+SUBSTR(TMP->CT2_LOTE,2,5)
+    	CT2_SBLOTE := TMP->CT2_SBLOTE
+    	CT2_DOC    := TMP->CT2_DOC
+    	CT2_LINHA  := TMP->CT2_LINHA
+        CT2_DC     := TMP->CT2_DC
+        CT2_DEBITO := IIF(EMPTY(TMP->CT2_DEBITO),"",cDeb)
+        CT2_CREDIT := IIF(EMPTY(TMP->CT2_CREDIT),"",cCred)
+        CT2_CCD    := IIF(EMPTY(TMP->CT2_DEBITO),"","51300")
+        CT2_CCC    := IIF(EMPTY(TMP->CT2_CREDIT),"","51300")
+		CT2_DCD    := TMP->CT2_DCD
+		CT2_DCC    := TMP->CT2_DCC
+		CT2_VALOR  := TMP->CT2_VALOR
+        CT2_HP     := TMP->CT2_HP
+        CT2_HIST   := TMP->CT2_HIST
+		CT2_MOEDLC := TMP->CT2_MOEDLC
+		CT2_MOEDAS := TMP->CT2_MOEDAS
+		CT2_ATIVDE := TMP->CT2_ATIVDE
+		CT2_EMPORI := "09"
+		CT2_FILORI := TMP->CT2_FILORI
+		CT2_TPSALD := TMP->CT2_TPSALD
+		CT2_MANUAL := TMP->CT2_MANUAL
+		CT2_ORIGEM := "09"
+		CT2_ATIVCR := TMP->CT2_ATIVCR
+		CT2_FILORI := TMP->CT2_FILORI
+		CT2_INTERC := TMP->CT2_INTERC
+		CT2_IDENTC := TMP->CT2_IDENTC
+        CT2_SEQUEN := TMP->CT2_SEQUEN
+        CT2_MANUAL := TMP->CT2_MANUAL
+        CT2_TPSALD := TMP->CT2_TPSALD
+        CT2_ROTINA := TMP->CT2_ROTINA
+        CT2_AGLUT  := TMP->CT2_AGLUT
+        CT2_LP     := TMP->CT2_LP
+        CT2_SLBASE := TMP->CT2_SLBASE
+        CT2_SEQHIS := TMP->CT2_SEQHIS
+        CT2_DTLP   := CTOD(SUBSTR(TMP->CT2_DTLP,7,2)+"/"+SUBSTR(TMP->CT2_DTLP,5,2)+"/"+SUBSTR(TMP->CT2_DTLP,1,4))
+        CT2_SEQLAN := TMP->CT2_SEQLAN
+        CT2_DTVENC := CTOD(SUBSTR(TMP->CT2_DTVENC,7,2)+"/"+SUBSTR(TMP->CT2_DTVENC,5,2)+"/"+SUBSTR(TMP->CT2_DTVENC,1,4))
+        CT2_MES    := TMP->CT2_MES
+        CT2_VLR01  := TMP->CT2_VLR01
+        CT2_VLR02  := TMP->CT2_VLR02
+        CT2_VLR03  := TMP->CT2_VLR03
+        CT2_VLR04  := TMP->CT2_VLR04
+        CT2_VLR05  := TMP->CT2_VLR05
+        CT2_CRITER := TMP->CT2_CRITER
+        CT2_DATATX := CTOD(SUBSTR(TMP->CT2_DATATX,7,2)+"/"+SUBSTR(TMP->CT2_DATATX,5,2)+"/"+SUBSTR(TMP->CT2_DATATX,1,4))
+        CT2_TAXA   := TMP->CT2_TAXA
+        CT2_CRCONV := TMP->CT2_CRCONV
+
+    MsUnlock()
+    nREG := nREG + 1
+    dbselectarea("TMP")
+    dbskip()
+
+ENDDO
+IF nREG = 0
+   MsgInfo("Nao existe registro para o periodo"+CHR(13),"Importacao Contabil")
+ELSE
+   cQuegr := " BEGIN TRAN "
+   cQuegr := cQuegr + " UPDATE DADOSMP8MRL..CT2300 "
+   cQuegr := cQuegr + " SET "
+   cQuegr := cQuegr + " CT2_IMP = 'S'"
+   cQuegr := cQuegr + " WHERE CT2_DATA BETWEEN '" +DTOS(MV_PAR01)+ "' And '"+DTOS(MV_PAR02)+"'"
+   cQuegr := cQuegr + " AND CT2_IMP = ' '"
+   cQuegr := cQuegr + " COMMIT TRAN"
+   TCSQLExec(cQuegr)
+
+   _cNum := ""
+   FOR _nR:=1 TO LEN(_aVeterr)
+
+        _cNum := str(_aVeterr[_nR][4])
+        cQuegr := " BEGIN TRAN "
+        cQuegr := cQuegr + " UPDATE DADOSMP8MRL..CT2300 "
+        cQuegr := cQuegr + " SET "
+        cQuegr := cQuegr + " CT2_IMP = ' '"
+        cQuegr := cQuegr + " WHERE R_E_C_N_O_ = '"+alltrim(_cNum)+ "'"
+        cQuegr := cQuegr + " COMMIT TRAN"
+        TCSQLExec(cQuegr)
+
+   next
+
+   IF LEN(_aVeterr) > 0
+      wnrel := SetPrint(_cString,NomeProg,cPerg,@titulo,cDesc1,cDesc2,cDesc3, .T. ,aOrd, .T. ,Tamanho,, .T. )
+	  If nLastKey == 27
+		Return
+	  Endif
+	  SetDefault(aReturn,_cString)
+	  If nLastKey == 27
+		Return
+	  Endif
+      RptStatus({|| RunReport(Cabec1,Cabec2,Titulo,nLin) },Titulo)
+
+   ENDIF
+ENDIF
+DbSelectArea("TMP")
+DbCloseArea()
+
+Return(Nil)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RunReport(Cabec1,Cabec2,Titulo,nLin)
+
+Local _nLin    := 66
+Local _nCont   := 0
+Local cbtxt    := SPACE(10)
+Local cbcont   := 0
+Local _cCtavel := ""
+local _nTotcta := 0
+
+aSort(_aVeterr,,,{|x,y| x[1] < y[1] })
+
+FOR _nI:= 1 TO LEN(_aVeterr)
+
+    If _nLin > 60
+		Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho)
+		_nLin := 08
+    Endif
+    PrintOut(_nLin,001,_aVeterr[_nI][1],)
+    PrintOut(_nLin,025,_aVeterr[_nI][2],)
+    PrintOut(_nLin,080,_aVeterr[_nI][3],)
+      _nLin := _nLin+1
+
+next
+
+roda(cbcont,cbtxt,"M")
+
+
+
+
+Set( 20, "SCREEN" )
+
+
+
+
+
+If aReturn[5]==1
+	dbCommitAll()
+	Set( 24, "" )
+	OurSpool(wnrel)
+Endif
+
+MS_FLUSH()
+
+Return()
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ValidPerg()
+
+   ssAlias      := Alias()
+   cPerg        := PADR(cPerg,len(sx1->x1_grupo))
+   aRegs        := {}
+   dbSelectArea("SX1")
+   dbSetOrder(1)
+   AADD(aRegs,{cPerg,"01","Data  de    ?","Data  de  ?","Data de ?","mv_ch1","D",8,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+   AADD(aRegs,{cPerg,"02","Data  Ate   ?","Data  Ate ?","Data    ?","mv_ch2","D",8,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+   For i := 1 to Len(aRegs)
+     If !DbSeek(cPerg+aRegs[i,2])
+       RecLock("SX1", .T. )
+       For j := 1 to FCount()
+         FieldPut(j,aRegs[i,j])
+       Next
+       MsUnlock()
+     Endif
+   Next
+   DbSelectArea(ssAlias)
+Return

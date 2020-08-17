@@ -1,0 +1,143 @@
+#line 1 "C:\INCLUDE\Rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "Rwmake.ch"
+#line 18 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\csajtran.prw"
+Function U_CSAJTRAN()
+
+	Processa( { || ProcTran() }, "Efetuando ajuste das Transferências....." )
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ProcTran()
+
+Local a_AreaAnt := GetArea()
+Local c_Query   := ""
+Local c_FilPaRE := ""
+Local c_MatPaRE := ""
+Local d_DatSRE  := ""
+Local l_Found   := .F. 
+Local n_Cont    := 0
+
+
+DbSelectArea("SRE")
+SRE->( DbSetOrder(1))
+SRE->(DbGoTop())
+
+DbSelectArea("SRA")
+SRA->( DbSetOrder(1))
+SRA->(DbGoTop())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+c_Query += " SELECT RA_FILIAL AS FILIAL, RA_MAT AS MAT FROM SRA050                   "
+c_Query += " WHERE D_E_L_E_T_ = ''  "
+
+c_Query += " ORDER BY RA_FILIAL, RA_MAT   "
+
+
+U_MontaView( c_Query, "TMP" )
+
+TMP->( DbGoTop() )
+ProcRegua(TMP->(LastRec()))
+
+
+While TMP->(!Eof())
+
+
+	IncProc()
+
+	If n_Cont == 0
+
+		If SRE->(DbSeek("05"+TMP->FILIAL+TMP->MAT ))
+			If SRE->RE_FILIALD <> SRE->RE_FILIALP
+				c_FilPaRE := SRE->RE_FILIALP
+				c_MatPaRE := SRE->RE_MATP
+		     	d_DatSRE  := SRE->RE_DATA
+				l_Found   := .T. 
+				n_Cont    := 0
+			EndIf
+		EndIf
+	Else
+		If SRE->RE_FILIALD <> SRE->RE_FILIALP
+				c_FilPaRE := SRE->RE_FILIALP
+				c_MatPaRE := SRE->RE_MATP
+		     	d_DatSRE  := SRE->RE_DATA
+				l_Found   := .T. 
+				n_Cont    := 0
+		EndIf
+	EndIf
+
+    If l_Found
+		If SRA->(DbSeek(c_FilPaRE+c_MatPaRE))
+			RecLock("SRA", .F. )
+				SRA->RA_DTTRANS := d_DatSRE
+			SRA->(MsUnLock())
+		EndIf
+    EndIf
+
+    l_Found   := .F. 
+    d_DatSRE  := ""
+    c_FilPaRE := ""
+    c_MatPaRE := ""
+    n_Cont    := 0
+    SRE->(DbSkip())
+
+    If SRE->RE_FILIALD == TMP->FILIAL .And.  SRE->RE_MATD == TMP->MAT
+    	n_Cont++
+    EndIf
+
+    If n_Cont == 0
+    	TMP->(DbSkip())
+    EndIf
+
+EndDo
+
+TMP->(DbCloseArea())
+RestArea(a_AreaAnt)
+Alert("Processo Finalizado!")
+Return()

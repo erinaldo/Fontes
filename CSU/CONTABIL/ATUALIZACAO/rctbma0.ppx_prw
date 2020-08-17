@@ -1,0 +1,950 @@
+#line 1 "C:\INCLUDE\protheus.ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "protheus.ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "protheus.ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "protheus.ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "protheus.ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "protheus.ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "protheus.ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "protheus.ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "protheus.ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "protheus.ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "protheus.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbma0.prw"
+#line 1 "C:\INCLUDE\topconn.ch"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbma0.prw"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBMA0()
+
+Local cType			:=	"Arquivos XLS|*.XLS|Todos os Arquivos|*.*"
+
+Private aColsVar 	:= {}
+Private aHeaderVar	:= {}
+Private cArq		:= ""
+Private oProcess  	:= MsNewProcess():New({|lEnd| CarrXLS(lEnd)},"Carregando dados","Carregando...", .T. )
+Private lProcess 	:= .F. 
+
+
+
+
+cArq := cGetFile(cType, OemToAnsi("Selecione a planilha excel com as informações dos rateios."),0,"", .F. ,8 + 16 + 32)
+If Empty(cArq)
+	Aviso("Inconsistência","Selecione a planilha excel com as informações dos rateios.",{"Ok"},,"Atenção:")
+	Return()
+Endif
+
+
+
+
+While !lProcess
+	oProcess:Activate()
+end
+
+Return(aColsVar)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CarrXLS()
+
+
+
+Local nLoopDad		:= 0
+Local aDados		:= {}
+Local nValor		:= 0
+Local aPosObj    	:= {}
+Local oDlgMain		:= Nil
+Local nOpcA			:= 0
+Local aObjects		:= {}
+Local aCampos		:= {}
+
+Local cErro			:= ""
+
+
+
+
+Local nNumCol		:= 5
+
+
+
+
+
+
+
+
+
+
+Local cTmpDesc		:= 0
+Local nQuant		:= 0
+Local nX			:= 0
+Local i				:= 0
+Local cNomPlan		:= SuperGetMV("MV_XNOMPLN",,"tabela_de_rateio")
+
+
+
+
+
+Local cValCCDebito	:= ""
+Local cValItDebito	:= ""
+Local cValClasValor	:= ""
+
+
+
+
+Local lErros		:= .T. 
+
+Private nColsSequen		:= 0
+
+Private nColsPercent	:= 0
+Private nColsCCDebito	:= 0
+Private nColsItDebito	:= 0
+Private nColsClasVal	:= 0
+
+
+
+
+lProcess	:= .T. 
+
+If IsInCallStack("U_RCTBA99")
+	nNumCol := 5
+Else
+	nNumCol := 4
+EndIf
+
+
+
+If IsInCallStack("U_RCTBA99")
+	aDados := GetExcel(cArq,Alltrim(cNomPlan),Padr("A",2)+Alltrim("2"),Padr("E",2)+Alltrim("1000"))
+Else
+	aDados := GetExcel(cArq,Alltrim(cNomPlan),Padr("A",2)+Alltrim("2"),Padr("D",2)+Alltrim("1000"))
+EndIf
+If Len(aDados) == 0
+	Aviso("Inconsistência","Não foi localizado um retorno para a planilha informada.",{"Ok"},,"Atenção:")
+	Return()
+Endif
+
+
+
+
+If IsInCallStack("U_RCTBA99")
+	Aadd(aCampos,{"ZB8_SEQUEN"	,"V",OemToAnsi("Sequencia")})
+
+	Aadd(aCampos,{"ZB8_PERCEN"	,"V",OemToAnsi("Percentual")})
+	Aadd(aCampos,{"ZB8_CCDBTO"	,"V",OemToAnsi("CCusto Debto")})
+	Aadd(aCampos,{"ZB8_ITDBTO"	,"V",OemToAnsi("Un. Negocio")})
+	Aadd(aCampos,{"ZB8_CLVLDB"	,"V",OemToAnsi("Operacao")})
+
+Else
+	Aadd(aCampos,{"EZ_CCUSTO"	,"V",OemToAnsi("C. Custo")})
+	Aadd(aCampos,{"EZ_PERC" 	,"V",OemToAnsi("Percentual")})
+	Aadd(aCampos,{"EZ_ITEMCTA"	,"V",OemToAnsi("Un. Negocio")})
+	Aadd(aCampos,{"EZ_CLVL" 	,"V",OemToAnsi("Operacao")})
+EndIf
+
+
+
+
+
+aHeadVar := {}
+For nX := 1 to Len(aCampos)
+	DbSelectArea("SX3")
+	SX3->(dbSetOrder(2))
+	If SX3->(DbSeek(aCampos[nX,1], .F. ))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		Aadd(aHeaderVar,{	aCampos[nX,3], aCampos[nX,1], SX3->X3_PICTURE, SX3->X3_TAMANHO, SX3->X3_DECIMAL, SX3->X3_VALID, SX3->X3_USADO, SX3->X3_TIPO, SX3->X3_F3, SX3->X3_CONTEXT, SX3->X3_CBOX, "", SX3->X3_WHEN, aCampos[nX,2], SX3->X3_VLDUSER, SX3->X3_PICTVAR, SX3->X3_OBRIGAT})
+	Endif
+next
+
+
+
+
+If IsInCallStack("U_RCTBA99")
+	nColsSequen		:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "ZB8_SEQUEN"	})
+
+	nColsPercent	:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "ZB8_PERCEN"	})
+	nColsCCDebito	:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "ZB8_CCDBTO"	})
+	nColsItDebito	:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "ZB8_ITDBTO"	})
+	nColsClasVal	:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "ZB8_CLVLDB"	})
+
+Else
+	nColsPercent	:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "EZ_PERC"	    })
+	nColsCCDebito	:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "EZ_CCUSTO"	})
+	nColsItDebito	:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "EZ_ITEMCTA"	})
+	nColsClasVal	:= aScan( aHeaderVar, { |x| AllTrim(x[2]) == "EZ_CLVL"	    })
+EndIf
+
+If Aviso("Aviso","Deseja visualizar os erros durante a importação?",{"Sim","Não"},,"Atenção",,"BMPPERG") == 2
+	lErros	:= .F. 
+Endif
+
+
+
+
+oProcess:SetRegua1(len(aDados))
+For nX	:= 1 to len(aDados)
+
+	oProcess:IncRegua1("Processando linha: "+Alltrim(STR(nX))+" ...")
+
+	cErro		:= ""
+	cTmpDesc	:= ""
+	nValor		:= 0
+	nQuant		:= 0
+
+
+
+
+
+	If Len(aDados[nX]) <> nNumCol
+		Loop
+	Endif
+
+	Aadd(aColsVar,Array(Len(aHeaderVar)+1))
+	For i := 1 To Len(aHeaderVar)
+		aColsVar[Len(aColsVar)][i]	:= CriaVar(aHeaderVar[i,2], .F. )
+	next
+
+
+	aColsVar[Len(aColsVar)][Len(aHeaderVar)+1] 	:= .F. 
+
+
+
+
+
+	For nLoopDad := 1 to Len(aDados[nX])
+
+
+
+
+
+
+
+
+
+
+
+
+		If nLoopDad==nColsSequen
+
+			aColsVar[nX][nColsSequen]	:= Alltrim(aDados[nX][nColsSequen])
+			Loop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		ElseIf  nLoopDad==nColsPercent
+
+
+			aColsVar[nX][nColsPercent]	:= Val(STRTRAN(STRTRAN(aDados[nX][nColsPercent],".",""),",","."))
+
+
+
+
+			If	aColsVar[nX][nColsPercent] < 0
+				cErro += OemToAnsi("Percentual da linha menor que zero. "	)+CHR(13)+CHR(10)
+			EndIf
+
+			Loop
+
+		ElseIf  nLoopDad==nColsCCDebito
+
+
+			aColsVar[nX][nColsCCDebito]	:= STRZERO(Val(Alltrim(aDados[nX][nColsCCDebito])),10)
+
+			If Empty(Alltrim(aDados[nX][nColsCCDebito]))
+				cErro += OemToAnsi("Código do centro de custo de Debito não preenchido. "	)+CHR(13)+CHR(10)
+			Endif
+
+			If Len(Alltrim(aDados[nX][nColsCCDebito])) > TAMSX3("ZB8_CCDBTO")[1]
+				cErro += OemToAnsi("Código do centro de custo excede "+Alltrim(STR(TAMSX3("ZB8_CCDBTO")[1]))+" caracteres. "	)+CHR(13)+CHR(10)
+			Endif
+
+
+
+
+			If !ValCCusto(Alltrim(aColsVar[nX][nColsCCDebito]))
+				cErro += OemToAnsi("Código do centro de custo inexistente. "	)+CHR(13)+CHR(10)
+			Endif
+			Loop
+
+		ElseIf  nLoopDad==nColsItDebito
+
+
+			aColsVar[nX][nColsItDebito]	:= STRZERO(Val(Alltrim(aDados[nX][nColsItDebito])),4)
+
+			If Empty(Alltrim(aDados[nX][nColsItDebito]))
+				cErro += OemToAnsi("Código do Unidade de Negócio não preenchido. "	)+CHR(13)+CHR(10)
+			Endif
+
+			If Len(Alltrim(aDados[nX][nColsItDebito])) > TAMSX3("ZB8_ITDBTO")[1]
+				cErro += OemToAnsi("Código do Unidade de Negócio excede "+Alltrim(STR(TAMSX3("ZB8_ITDBTO")[1]))+" caracteres. "	)+CHR(13)+CHR(10)
+			Endif
+
+
+
+			If !ValItCont(Alltrim(aColsVar[nX][nColsItDebito]))
+				cErro += OemToAnsi("Código do Unidade de Negócio inexistente. "	)+CHR(13)+CHR(10)
+			Endif
+			Loop
+
+		ElseIf  nLoopDad==nColsClasVal
+
+
+			aColsVar[nX][nColsClasVal]	:= STRZERO(Val(Alltrim(aDados[nX][nColsClasVal])),9)
+
+			If Empty(Alltrim(aDados[nX][nColsClasVal]))
+				cErro += OemToAnsi("Código da Operação não preenchido. "	)+CHR(13)+CHR(10)
+			Endif
+
+
+			If Len(Alltrim(aDados[nX][nColsClasVal]))-1 > TAMSX3("ZB8_CLVLDB")[1]
+				cErro += OemToAnsi("Código da Operação excede "+Alltrim(STR(TAMSX3("ZB8_CLVLDB")[1]))+" caracteres. "	)+CHR(13)+CHR(10)
+			Endif
+
+
+
+
+			If !ValClasVal(Alltrim(aColsVar[nX][nColsClasVal]))
+				cErro += OemToAnsi("Código da Operação inexistente. "	)+CHR(13)+CHR(10)
+			Endif
+
+			Loop
+		Endif
+
+	next
+
+
+
+
+
+
+
+
+
+
+
+
+
+	cValCCDebito	:= aColsVar[nX][nColsCCDebito]
+	cValItDebito	:= aColsVar[nX][nColsItDebito]
+	cValClasValor	:= aColsVar[nX][nColsClasVal]
+
+
+	If !U_VldCTBg( cValItDebito, cValCCDebito, cValClasValor,,,lErros )
+
+		aDados[nX][nColsCCDebito]	:= cValCCDebito
+		aDados[nX][nColsItDebito]	:= cValItDebito
+		aDados[nX][nColsClasVal]	:= cValClasValor
+
+		aColsVar[Len(aColsVar)][Len(aHeaderVar)+1] 	:= .T. 
+
+	EndIf
+
+
+
+
+
+	If !Empty(Alltrim(cErro))
+
+		aColsVar[Len(aColsVar)][Len(aHeaderVar)+1] 	:= .T. 
+		If lErros
+			Aviso("Aviso",cErro,{"OK"},,"Atenção",,"BMPPERG")
+		Endif
+
+	Endif
+
+next
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function GetExcel(cArqPlan,cPlan,cCelIni,cCelFim)
+
+
+
+Local aReturn		:= {}
+
+
+
+
+Processa({|| aReturn := LeExcel(cArqPlan,cPlan,cCelIni,cCelFim)} ,"Planilha Excel")
+Return(aReturn)
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function LeExcel(cArqPlan,cPlan,cCelIni,cCelFim)
+
+
+
+
+Local aReturn		:= {}
+Local nLin			:= 0
+Local nCol			:= 0
+Local nLinIni		:= 0
+Local nLinFim		:= 0
+Local nColIni		:= 0
+Local nColFim		:= 0
+Local nMaxLin		:= 0
+Local nMaxCol		:= 0
+Local cDigCol1		:= ""
+Local cDigCol2		:= ""
+Local nHdl 			:= 0
+Local cBuffer		:= "'"
+Local cCell 		:= ""
+Local cFile			:= ""
+Local nPosIni		:= 0
+Local aNumbers		:= {"0","1","2","3","4","5","6","7","8","9"}
+Local nX			:= 0
+Local nColArr		:= 0
+Local nCont			:= 0
+cArqPlan := If( cArqPlan == nil, "", cArqPlan ) ;
+cPlan := If( cPlan == nil, "", cPlan ) ;
+cCelIni := If( cCelIni == nil, "", cCelIni ) ;
+cCelFim := If( cCelFim == nil, "", cCelFim ) ;
+
+
+
+
+If Empty(cArqPlan)
+	Aviso("Inconsistência","Informe o diretório e o nome da planilha a ser processada.",{"Sair"},,"Atenção:")
+	Return(aReturn)
+Endif
+If Empty(cPlan)
+	Aviso("Inconsistência","Informe nome do Folder da planilha a ser processada.",{"Sair"},,"Atenção:")
+	Return(aReturn)
+Endif
+If Empty(cCelIni)
+	Aviso("Inconsistência","Informe a referência da célula inicial a ser processada.",{"Sair"},,"Atenção:")
+	Return(aReturn)
+Endif
+If Empty(cCelFim)
+	Aviso("Inconsistência","Informe a referência da célula final a ser processada.",{"Sair"},,"Atenção:")
+	Return(aReturn)
+Endif
+If !File(cArqPlan)
+	Aviso("Inconsistência","Não foi possível localizar a planilha "+Alltrim(cArqPlan)+" especificada.",{"Sair"},,"Atenção:")
+	Return(aReturn)
+Else
+	cFile := Alltrim(cArqPlan)
+Endif
+
+
+
+
+If !CpDllXls()
+	Return(aReturn)
+Endif
+
+
+
+nPosIni	:= 0
+For nX := 1 to Len(Alltrim(cCelIni))
+	If aScan(aNumbers, Substr(cCelIni,nX,1)) > 0
+		nPosIni	:= nX
+		Exit
+	Endif
+next
+If nPosIni == 0
+	Aviso("Inconsistência","Não foi possivel determinar a referência numérica da linha inicial a ser processada. Verifique a referência da célula inicial informada.",{"Sair"},,"Atenção:")
+	Return(aReturn)
+Endif
+nLinIni := Val(Substr(cCelIni,nPosIni,(Len(cCelIni)-nPosIni)+1))
+
+cDigCol1 := Alltrim(Substr(cCelIni,1,nPosIni-1))
+If Len(cDigCol1) == 2
+	cDigCol1 	:= Substr(cCelIni,1,1)
+	cDigCol2 	:= Substr(cCelIni,2,1)
+	nColIni		:= ((Asc(cDigCol1)-64)*26) + (Asc(cDigCol2)-64)
+Else
+	cDigCol1 	:= Substr(cCelIni,1,1)
+	cDigCol2 	:= ""
+	nColIni		:= Asc(cDigCol1)-64
+Endif
+
+
+
+
+nPosIni	:= 0
+For nX := 1 to Len(Alltrim(cCelFim))
+	If aScan(aNumbers, Substr(cCelFim,nX,1)) > 0
+		nPosIni	:= nX
+		Exit
+	Endif
+next
+If nPosIni == 0
+	Aviso("Inconsistência","Não foi possivel determinar a referência numérica da linha final a ser processada. Verifique a referência da célula final informada.",{"Sair"},,"Atenção:")
+	Return(aReturn)
+Endif
+nLinFim := Val(Substr(cCelFim,nPosIni,(Len(cCelFim)-nPosIni)+1))
+
+cDigCol1 := Alltrim(Substr(cCelFim,1,nPosIni-1))
+If Len(cDigCol1) == 2
+	cDigCol1 	:= Substr(cCelFim,1,1)
+	cDigCol2 	:= Substr(cCelFim,2,1)
+	nColFim		:= ((Asc(cDigCol1)-64)*26) + (Asc(cDigCol2)-64)
+Else
+	cDigCol1 	:= Substr(cCelFim,1,1)
+	cDigCol2 	:= ""
+	nColFim		:= Asc(cDigCol1)-64
+Endif
+
+
+
+
+nMaxLin := nLinFim - nLinIni + 1
+nMaxCol := nColFim - nColIni + 1
+
+
+
+
+nHdl := ExecInDLLOpen(Alltrim(GetMv("MV_DRDLLXLS",,"c:\apexcel"))+"\readexcel.dll")
+
+If nHdl < 0
+	Aviso("Inconsistência","Não foi possível carregar a DLL de interface com o Excel (readexcel.dll).",{"Sair"},,"Atenção:")
+	Return(aReturn)
+Endif
+
+
+
+
+cBuffer := cFile+Space(512)
+nBytes  := ExeDLLRun2(nHdl, 1, @cBuffer)
+
+
+
+
+If nBytes < 0
+	Aviso("Inconsistência","Não foi possível abrir a planilha Excel solicitada ("+Alltrim(cFile)+").",{"Sair"},,"Atenção:")
+	Return(aReturn)
+ElseIf nBytes > 0
+
+
+
+	Aviso("Inconsistência","Não foi possível abrir a planilha Excel solicitada ("+Alltrim(cFile)+"). "+Chr(13)+Chr(10)+"Erro interno: "+Subs(cBuffer, 1, nBytes),{"Sair"},,"Atenção:")
+	Return(aReturn)
+EndIf
+
+
+
+
+cBuffer := Alltrim(cPlan)+Space(512)
+nBytes 	:= ExeDLLRun2(nHdl,3,@cBuffer)
+
+
+
+
+If nBytes < 0
+	Aviso("Inconsistência","Não foi possível selecionar a WorkSheet solicitada ("+Alltrim(cPlan)+") na planilha Excel ("+Alltrim(cFile)+").",{"Sair"},,"Atenção:")
+	cBuffer := Space(512)
+	ExeDLLRun2(nHdl, 2, @cBuffer)
+	ExecInDLLClose(nHdl)
+	Return(aReturn)
+ElseIf nBytes > 0
+
+
+
+	Aviso("Inconsistência","Não foi possível selecionar a WorkSheet solicitada ("+Alltrim(cPlan)+") na planilha Excel ("+Alltrim(cFile)+")."+Chr(13)+Chr(10)+"Erro interno: "+Subs(cBuffer, 1, nBytes),{"Sair"},,"Atenção:")
+	cBuffer := Space(512)
+	ExeDLLRun2(nHdl, 2, @cBuffer)
+	ExecInDLLClose(nHdl)
+	Return(aReturn)
+EndIf
+
+
+
+
+ProcRegua(nMaxLin*nMaxCol)
+
+
+
+
+For nLin := nLinIni to nLinFim
+
+
+
+	if nLin > 1
+   		Aadd(aReturn, Array(nMaxCol))
+   		nCont++
+   	Endif
+
+
+
+
+	nColArr := 0
+	For nCol := nColIni to nColFim
+		nColArr++
+		If Int((nCol/26)-0.01) > 0
+			cDigCol1 := Chr(Int((nCol/26)-0.01)+64)
+		Else
+			cDigCol1 := " "
+		Endif
+		If nCol - (Int((nCol/26)-0.01)*26) > 0
+			cDigCol2 := Chr((nCol - (Int((nCol/26)-0.01)*26))+64)
+		Else
+			cDigCol2 := " "
+		Endif
+
+
+
+		IncProc("Importando planilha...")
+
+
+
+
+		cCell := Alltrim(cDigCol1)+Alltrim(cDigCol2)+Alltrim(Str(nLin))
+
+
+
+
+		cBuffer := cCell+Space(1024)
+		nBytes 	:= ExeDLLRun2(nHdl, 4, @cBuffer)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		If nBytes == 0
+			nCont--
+			ASIZE(aReturn,nCont)
+			exit
+		Endif
+
+		aReturn[Len(aReturn),nColArr] := Subs(cBuffer, 1, nBytes)
+	next
+
+	If nBytes == 0
+		exit
+	Endif
+next
+
+
+
+
+cBuffer := Space(512)
+ExeDLLRun2(nHdl, 2, @cBuffer)
+ExecInDLLClose(nHdl)
+
+Return(aReturn)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CpDllXls()
+
+
+
+
+Local cDirDest	:= Alltrim(GetMv("MV_DRDLLXLS",,"c:\apexcel"))
+Local nResult	:= 0
+Local lReturn	:= .T. 
+
+
+
+
+If !lIsDir(cDirDest)
+	nResult := MakeDir(cDirDest)
+Endif
+If nResult <> 0
+	Aviso("Inconistência","Não foi possível criar o diretório "+cDirDest+" para a DLL de leitura da planilha Excel.",{"Sair"},,"Atenção:")
+	lReturn := .F. 
+Else
+
+
+
+	If !File("ReadExcel.dll")
+		Aviso("Inconistência","Não foi possível localizar a DLL de leitura da planilha excel (ReadExcel.dll) no diretório SYSTEM ou SIGAADV.",{"Sair"},,"Atenção:")
+		lReturn := .F. 
+	Else
+		If !File(cDirDest+"\ReadExcel.dll")
+			__CopyFile( ("ReadExcel.dll") , (cDirDest+"\ReadExcel.dll") )
+			If !File(cDirDest+"\ReadExcel.dll")
+				Aviso("Inconistência","Não foi possível copiar a DLL de leitura da planilha excel para o diretório "+cDirDest+".",{"Sair"},,"Atenção:")
+				lReturn := .F. 
+			Endif
+		Endif
+	Endif
+Endif
+
+Return(lReturn)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ValCContab(cVar)
+
+LOCAL cSavAlias := Alias(), lRet := .T. 
+
+If Substr(cVar,1,1) == CHR(160)
+	cVar := padr(substr(cvar,2,len(cvar)-1),TAMSX3("CT1_CONTA")[1])
+Else
+	cVar := padr(ALLTRIM(cvar),TAMSX3("CT1_CONTA")[1])
+Endif
+
+dbSelectArea("CT1")
+dbSetOrder(1)
+dbSeek(xFilial("CT1")+cVar, .F. )
+
+If !Found()
+	lRet := .F. 
+EndIf
+
+dbSelectArea(cSavAlias)
+Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ValCCusto(cVar)
+
+LOCAL cSavAlias := Alias(), lRet := .T. 
+
+If Substr(cVar,1,1) == CHR(160)
+	cVar := padr(substr(cVar,2,len(cvar)-1),TAMSX3("CTT_CUSTO")[1])
+Else
+	cVar := padr(ALLTRIM(cVar),TAMSX3("CTT_CUSTO")[1])
+Endif
+
+dbSelectArea("CTT")
+dbSetOrder(1)
+dbSeek(xFilial("CTT")+cVar, .F. )
+
+If !Found()
+	lRet := .F. 
+EndIf
+
+dbSelectArea(cSavAlias)
+Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ValItCont(cVar)
+
+LOCAL cSavAlias := Alias(), lRet := .T. 
+
+If Substr(cVar,1,1) == CHR(160)
+	cVar := padr(substr(cvar,2,len(cvar)-1),TAMSX3("CTD_ITEM")[1])
+Else
+	cVar := padr(ALLTRIM(cvar),TAMSX3("CTD_ITEM")[1])
+Endif
+
+dbSelectArea("CTD")
+dbSetOrder(1)
+dbSeek(xFilial("CTD")+cVar, .F. )
+
+If !Found()
+	lRet := .F. 
+EndIf
+
+dbSelectArea(cSavAlias)
+Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ValClasVal(cVar)
+
+LOCAL cSavAlias := Alias(), lRet := .T. 
+
+If Substr(cVar,1,1) == CHR(160)
+	cVar := padr(substr(cvar,2,len(cvar)-1),TAMSX3("CTH_CLVL")[1])
+Else
+	cVar := padr(ALLTRIM(cvar),TAMSX3("CTH_CLVL")[1])
+Endif
+
+dbSelectArea("CTH")
+dbSetOrder(1)
+dbSeek(xFilial("CTH")+cVar, .F. )
+
+If !Found()
+	lRet := .F. 
+EndIf
+
+dbSelectArea(cSavAlias)
+Return(lRet)

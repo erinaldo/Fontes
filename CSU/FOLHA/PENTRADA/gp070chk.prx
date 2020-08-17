@@ -1,0 +1,57 @@
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡ao	 ³GP070CHK()³ Autor ³ Equipe RH             ³ Data ³ 11.08.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡ao ³ Deleta os registros perdidos no SRT.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ GP070CHK()					                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso	 	 ³ Generico 												  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function GP070CHK()
+Local cAnoMesRef := MesAno(dDataRef)
+Local aArea      := GetArea()
+Local aAreaSRT   := SRT->( GetArea() )
+Local aTrfAux    := {}
+Local cBuscaSRE  := cEmpAnt + TPR->PR_FILIAL + TPR->PR_MAT
+
+If Len( aTransf ) > 0
+	dbSelectArea( "SRE" )
+	dbSetOrder( 2 )
+	dbSeek( cBuscaSRE )
+	While !Eof() .And. SRE->RE_EMPP + SRE->RE_FILIALP + SRE->RE_MATP == cBuscaSRE
+		If MesAno( SRE->RE_DATA ) == cAnoMesRef
+			Aadd( aTrfAux, { SRE->RE_EMPP, SRE->RE_FILIALP, SRE->RE_CCP, SRE->RE_MATP } )
+		EndIf
+		dbSkip()
+	EndDo
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Caso existam C.Custo diferente do C.Custo atual, deleta-os.	 |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If Len( aTrfAux ) > 1
+		dbSelectArea( "SRT" )
+		dbSetOrder( 2 )
+		For nCnt := 1 To Len( aTrfAux )
+			If aTrfAux[nCnt,3] # TPR->PR_CC
+				cBuscaSRT := aTrfAux[nCnt,2] + aTrfAux[nCnt,3] + aTrfAux[nCnt,4] + cAnoMesRef
+				dbSeek( cBuscaSRT )
+				While !Eof() .And. SRT->RT_FILIAL + SRT->RT_CC + SRT->RT_MAT + MesAno( SRT->RT_DATACAL ) == cBuscaSRT
+	        		RecLock( "SRT", .F. )
+					dbDelete()
+					MsUnlock()
+					dbSkip()
+				EndDo
+			EndIf
+		Next nCnt
+	EndIf
+
+	RestArea( aArea )
+	RestArea( aAreaSRT )
+EndIf
+
+Return Nil

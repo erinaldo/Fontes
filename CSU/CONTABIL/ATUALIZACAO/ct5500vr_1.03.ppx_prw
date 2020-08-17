@@ -1,0 +1,40 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_CT5500VR()
+_nVal	:=0.0
+
+IF SM0->M0_CODIGO==SUBSTR(SE1->E1_PREFIXO,1,2) .and. ALLTRIM(SE1->E1_TIPO)<>"NF"
+	IF ALLTRIM(SE1->E1_TIPO)=="AB-"
+	  _nVal	:=0.0
+	ELSEIF ALLTRIM(SE1->E1_TIPO)=="CF-"
+	  _nVal	:=0.0
+	ELSEIF ALLTRIM(SE1->E1_TIPO)=="PI-"
+	  _nVal	:=0.0
+	ELSEIF ALLTRIM(SE1->E1_TIPO)=="IN-"
+	  _nVal	:=0.0
+	ELSEIF ALLTRIM(SE1->E1_TIPO)=="IR-"
+	  _nVal	:=0.0
+	ELSEIF ALLTRIM(SE1->E1_TIPO)=="TX-"
+	  _nVal	:=0.0
+	ELSEIF ALLTRIM(SE1->E1_TIPO)=="NDC"
+		_nVal :=SE1->E1_VALOR
+	ELSE
+		_nVal :=SE1->E1_VALOR
+	ENDIF
+ELSE
+	_nVal	:=0.0
+ENDIF
+Return nVal

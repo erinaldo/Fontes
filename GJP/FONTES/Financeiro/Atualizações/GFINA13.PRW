@@ -1,0 +1,24 @@
+#include "rwmake.ch"       
+
+User Function GFINA13()     //PAGFOR
+
+
+SetPrvt("_VALOR,")
+
+/// VALOR DO DOCUMENTO  DO CODIGO DE BARRA DA POSICAO 06 - 19, NO ARQUIVO E
+/// DA POSICAO 190 - 204, QUANDO NAO FOR CODIGO DE BARRA VAI O VALOR DO SE2
+
+_VALOR :=Replicate("0",15)
+
+IF SUBSTR(SE2->E2_CODBAR,1,3) == "   "
+
+    _VALOR   :=  STRZERO((SE2->E2_SALDO*100),15,0)
+
+Else
+
+    _VALOR  :=  "0" + SUBSTR(SE2->E2_CODBAR,6,14)
+
+Endif
+
+
+Return(_VALOR)

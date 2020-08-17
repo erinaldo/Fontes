@@ -1,0 +1,4 @@
+Release deste PTM: P12107
+Programas contidos neste PTM (20160527):
+FWLSCLIENT.PRX 08/04/2016 11:43:26
+MATA095.PRX  25/05/2016 10:44:59 07

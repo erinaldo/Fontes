@@ -1,0 +1,254 @@
+#line 1 "C:\INCLUDE\PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "PROTHEUS.CH"
+#line 16 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csuratex.prw"
+Function U_FinA06aImp()
+
+Local aImport	:= {}
+Local nI		:= 0
+Local nJ		:= 0
+Local nK		:= 0
+Local aNCols    := {}
+
+aImport := U_RCTBMA0()
+
+If Empty(aImport)
+	Return
+Endif
+
+If Empty(aCols[1][1])
+	aCols := {}
+	For nI := 1 to Len(aImport)
+		Aadd(aCols,Array(Len(aHeader)+1))
+		For nK := 1 To Len(aHeader)
+			aCols[nI][nK]	:= CriaVar(aHeader[nK,2], .F. )
+		next
+
+		For nJ := 1 to Len(aCols[nI]) - 2
+	    	If nJ == 1
+	    		aCols[nI][nJ] := If(VALTYPE(aImport[nI][nJ])=="C",STRTRAN(aImport[nI][nJ],CHR(160),""),aImport[nI][nJ])
+	    	ElseIf nJ == 2
+	    		aCols[nI][nJ] := Posicione("CTT",1,xFilial("CTT")+aCols[nI,1],"CTT_DESC01")
+	    		aCols[nI][nJ+1] := If(VALTYPE(aImport[nI][nJ])=="C",STRTRAN(aImport[nI][nJ],CHR(160),""),aImport[nI][nJ])
+	    		aCols[nI][nJ+2] := (aCols[nI][nJ+1] * nValRat) / 100
+	    	Else
+	    		aCols[nI][nJ+2] := If(VALTYPE(aImport[nI][nJ])=="C",STRTRAN(aImport[nI][nJ],CHR(160),""),aImport[nI][nJ])
+	    	EndIf
+		next
+	next
+Else
+	For nI := 1 to Len(aImport)
+		Aadd(aCols,Array(Len(aHeader)+1))
+		For nK := 1 To Len(aHeader)
+			aCols[Len(aCols)][nK]	:= CriaVar(aHeader[nK,2], .F. )
+		next
+
+		For nJ := 1 to Len(aCols[nI]) - 2
+	    	If nJ == 1
+	    		aCols[Len(aCols)][nJ] := If(VALTYPE(aImport[nI][nJ])=="C",STRTRAN(aImport[nI][nJ],CHR(160),""),aImport[nI][nJ])
+	    	ElseIf nJ == 2
+	    		aCols[Len(aCols)][nJ] := Posicione("CTT",1,xFilial("CTT")+aCols[Len(aCols)][1],"CTT_DESC01")
+	    		aCols[Len(aCols)][nJ+1] := If(VALTYPE(aImport[nI][nJ])=="C",STRTRAN(aImport[nI][nJ],CHR(160),""),aImport[nI][nJ])
+	    		aCols[Len(aCols)][nJ+2] := (aCols[Len(aCols)][nJ+1] * nValRat) / 100
+	    	Else
+	    		aCols[Len(aCols)][nJ+2] := If(VALTYPE(aImport[nI][nJ])=="C",STRTRAN(aImport[nI][nJ],CHR(160),""),aImport[nI][nJ])
+	    	EndIf
+		next
+	next
+EndIf
+
+nValDRat := 0
+nPerDRat := 0
+For nW := 1 to Len(aCols)
+	If aCols[nW][Len(aHeader)+1]
+		nValDRat += aCols[nW][4]
+		nPerDRat += aCols[nW][3]
+	EndIf
+next
+
+nPerDRat := Round(nPerDRat,2)
+
+
+
+
+
+oValDRat:Refresh()
+oPerDRat:Refresh()
+
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_FinA06aExp()
+
+Local aItensEx 	:= {}
+Local nI		:= 0
+Local nJ		:= 0
+
+aItensEx := aClone(aCols)
+
+MsgRun("Favor Aguardar.....", "Exportando os Registros para o Excel",{||GeraExcel({{"GETDADOS","CONTAS DE RATEIO",aHeader,aItensEx}})})
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function GeraExcel(aExport)
+
+Local aArea		:= GetArea()
+Local cDirDocs	:= MsDocPath()
+Local cPath		:= AllTrim(GetTempPath())
+Local aCampos	:= {}
+Local oExcelApp := Nil
+Local cArquivo  := "Rateio"+DtoS(dDataBase)
+Local _cArquivo	:= ""
+
+aTamSX3 := TAMSX3("EZ_CCUSTO")
+Aadd(aCampos, { "CCUSTO"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("EZ_PERC")
+Aadd(aCampos, { "PERCENT"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("EZ_VALOR")
+Aadd(aCampos, { "VALOR"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("EZ_ITEMCTA")
+Aadd(aCampos, { "UNNEGOC"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+aTamSX3 := TAMSX3("EZ_CLVL")
+Aadd(aCampos, { "OPERACA"		,aTamSX3[3],aTamSX3[1],aTamSX3[2]})
+
+cArq := CriaTrab(aCampos, .T. )
+dbUseArea( .T. ,"DBFCDX",cArq,"TMPTRB", .f. )
+DbSelectArea("TMPTRB")
+
+
+
+
+aInd	:= {}
+Aadd(aInd,{CriaTrab(Nil, .F. ),"CCUSTO","C.Custo"})
+
+For nA := 1 to Len(aInd)
+	IndRegua("TMPTRB",aInd[nA,1],aInd[nA,2],,,OemToAnsi("Criando Índice Temporário...") )
+next
+DbClearIndex()
+
+For nA := 1 to Len(aInd)
+	dbSetIndex(aInd[nA,1]+OrdBagExt())
+next
+
+For nLoop := 1 to Len(aExport[1,4])
+	RecLock("TMPTRB", .T. )
+		TMPTRB->CCUSTO	:= aExport[1,4,nLoop,BuscaHeader(aHeader,"EZ_CCUSTO")]
+		TMPTRB->PERCENT	:= aExport[1,4,nLoop,BuscaHeader(aHeader,"EZ_PERC")]
+		TMPTRB->VALOR	:= aExport[1,4,nLoop,BuscaHeader(aHeader,"EZ_VALOR")]
+		TMPTRB->UNNEGOC	:= aExport[1,4,nLoop,BuscaHeader(aHeader,"EZ_ITEMCTA")]
+		TMPTRB->OPERACA	:= aExport[1,4,nLoop,BuscaHeader(aHeader,"EZ_CLVL")]
+	MsUnlock()
+next
+
+_cArquivo := cDirDocs+ "\" +cArquivo+".xls"
+
+__dbCopy(_cArquivo , { },,,,,.F., )
+dbCloseArea("TMPTRB")
+
+CpyS2T( _cArquivo , cPath, .T.  )
+If ! ApOleClient( "MsExcel" )
+	MsgStop( "MsExcel nao instalado" )
+	Return
+EndIf
+oExcelApp := MsExcel():New()
+oExcelApp:WorkBooks:Open( cPath+cArquivo+".xls" )
+oExcelApp:SetVisible( .T. )
+
+RestArea(aArea)
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function BuscaHeader(aArrayHeader,cCampo)
+
+Return(AScan(aArrayHeader,{|aDados| AllTrim(Upper(aDados[2])) == Alltrim(Upper(cCampo))}))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_FinA06aDel()
+
+
+
+Local nLoop	:= 0
+
+
+
+
+For nLoop := 1 to Len(aCols)
+	aCols[nLoop][Len(aHeader)+1] := .T. 
+next
+
+Return

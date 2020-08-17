@@ -1,0 +1,2080 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 2 "c:\users\csu.ikawakami\desktop\protheus 12 desenv\projeto_csu\contabil\atualizacao\csuctb05_1.08.prw"
+#line 1 "C:\INCLUDE\topconn.ch"
+#line 30 "c:\users\csu.ikawakami\desktop\protheus 12 desenv\projeto_csu\contabil\atualizacao\csuctb05_1.08.prw"
+Function U_CSUCTB05(_bCBxp,_cProgp)
+
+_bcbx:=_bcbxp
+_cprog:=_cprogp
+
+Private _bCbx  := If(_bCbx == Nil, .F. , .T. )
+Private _cProg := If(_cProg == Nil, "", _cProg)
+
+Private cArquivo	:= ""
+Private _nVTotal 	:= 0
+Private nHdlPrv	:= 0
+Private cLoteEst := ""
+_cEmp := ""
+_cperg := PADR("CSUCT5",LEN(SX1->X1_GRUPO))
+_cFEmp := cEmpAnt
+_cFFil := cFilAnt
+_cNuEmp := cNumemp
+_cArq := ""
+_cInd := ""
+_cKind  := "TMP_EMP + DTOS(TMP_DATAC) + TMP_OPER + TMP_KEY + TMP_TIPO + TMP_CCD + TMP_CCC + TMP_CONTAD + TMP_CONTAC "
+_VcTit :=""
+
+PRIVATE aRotina := menudef()
+
+
+
+
+
+
+
+cPerg := PADR("CSUCT3",LEN(SX1->X1_GRUPO))
+
+private _vFilhos:={}
+
+ValidPerg()
+
+If _bCbx
+
+	If _cProg == "B"
+
+		MV_PAR01  := "008850"
+		MV_PAR02  := SE5->E5_DATA
+		MV_PAR03  := SE5->E5_DATA
+		MV_PAR04  := SE5->E5_DATA
+		MV_PAR05  := SE5->E5_DATA
+		MV_PAR06  := 1
+		MV_PAR07  := 2
+
+	ElseIf _cProg == "P"
+
+		MV_PAR01  := "008850"
+		MV_PAR02  := SE2->E2_EMIS1
+		MV_PAR03  := SE2->E2_EMIS1
+		MV_PAR04  := SE2->E2_EMIS1
+		MV_PAR05  := SE2->E2_EMIS1
+		MV_PAR06  := 1
+		MV_PAR07  := 2
+
+	EndIf
+	_Processa()
+
+Else
+
+	If !Pergunte(_cPerg, .T. )
+
+		Return
+
+	EndIf
+
+	_oDlg1 := MSDialog():New(200, 1, 500, 400, OemToAnsi("Contabilizacao CSU "),,,,,,,,, .t. ,,,)
+	 IW_Say(010,016,"   Esta rotina tem o objetivo  de possibilitar  a Contabilizacao ",,,,, )
+	 IW_Say(020,016,"dos movimentos financeiros com reteio entre diferentes empresas.",,,,, )
+	 IW_Say(030,016,"   Utilize os parametros a seguir para determinar o periodo da ",,,,, )
+	 IW_Say(040,016,"contabilizacao. ",,,,, )
+	 IW_Say(050,016,"",,,,, )
+	 IW_Say(060,016,"",,,,, )
+	 IW_Say(070,016,"",,,,, )
+	 IW_Say(080,016,"   OBS: Essa rotina tem a finalidade de complementar a contab.",,,,, )
+	 IW_Say(090,016," off line padrao do sistema ambas devem ser executadas. ",,,,, )
+	 IW_Say(100,016,"",,,,, )
+	 IW_Say(110,016,"",,,,, )
+	 TGroup():New(5,08,119,200,OemToAnsi(),, , , .t. )
+	 SButton():New(120, 050, 05,{|| Pergunte(_cperg, .T. )},,)
+	 SButton():New(120, 140, 01,{|| (_Processa(),_oDlg1:End())},,)
+	 SButton():New(120, 170, 02,{|| _oDlg1:End()},,)
+	_oDlg1:Activate(,,,.T.,, ,)
+
+EndIf
+
+Return
+
+Static Function _Processa()
+
+If !(_bCbx) .and. _oDlg1<>nil
+
+
+EndIf
+
+_cLote      :=  MV_PAR01
+_lDigita	:= IIF(mv_par06==1, .T. , .F. )
+_lAglut 	:= IIF(mv_par07==1, .T. , .F. )
+
+
+
+_Prep2Temp()
+
+If !_bCbx
+	Processa({|| _CPRVRAT() })
+	Processa({|| _CPRVNRAT() })
+	Processa({|| _ContaBX() })
+	Processa({|| _ContaEst() })
+	Processa({|| _CEstcp()  })
+	Processa({|| _GeraCTK() })
+
+Else
+
+	If _cProg == "P"
+		Processa({|| _CPRVRAT() })
+		Processa({|| _CPRVNRAT() })
+
+	ElseIf _cProg == "B"
+		Processa({|| _ContaBX() })
+
+	EndIf
+
+	Processa({|| _GeraCTK() })
+
+EndIf
+
+DBSelectArea("CSUTMP")
+DBCloseArea()
+
+cEmpAnt := _cFEmp
+cFilAnt := _cFFil
+cNumemp := _cNuEmp
+
+_AbreEmpresa(cEmpAnt,cFilAnt)
+
+
+If File(_cArq+".DBF")
+	Ferase(_cArq+".DBF")
+EndIf
+If File(_cArq+".FPT")
+	Ferase(_cArq+".FPT")
+EndIf
+If File(_cInd+".CDX")
+	Ferase(_cInd+".CDX")
+EndIf
+
+IF TCCanOpen(_cArq)
+	TCDELFILE(_cArq)
+ENDIF
+
+
+Return
+
+Static Function _ProcIni()
+
+ProcRegua(2)
+
+IncProc("Inicializando Contab. Empresa: "+_cEmp+" - "+Tabela("Z2",_cEmp))
+
+nHdlPrv := HeadProva(_cLote,"CSUCTB03",Substr(cUsuario,7,6),@cArquivo, .F. )
+
+IncProc("Inicializando Contab. Empresa: "+_cEmp+" - "+Tabela("Z2",_cEmp))
+
+Return
+
+Static Function _ProcFim(_dDtCont)
+
+Procregua(3)
+
+Incproc("Finalizando Processo Empresa: "+_cEmp+" - "+Tabela("Z2",_cEmp))
+
+RodaProva(nHdlPrv,_nVTotal)
+
+Incproc("Finalizando Processo Empresa: "+_cEmp+" - "+Tabela("Z2",_cEmp))
+
+Ca100Incl(cArquivo,nHdlPrv,3,_cLote,_lDigita,_lAglut,,_dDtCont)
+
+Incproc("Finalizando Processo Empresa: "+_cEmp+" - "+Tabela("Z2",_cEmp))
+
+Return
+
+Static Function _CPRVRAT()
+
+Private _bInss := .F. 
+Private _bIrrf := .F. 
+Private _bIss  := .F. 
+Private _bPis  := .F. 
+Private _bCof  := .F. 
+Private _bCS   := .F. 
+
+
+
+
+
+
+
+
+_cQuery := " SELECT (SZ6010.R_E_C_N_O_) AS RECZ6,(SE2010.R_E_C_N_O_) AS RECE2 FROM SZ6010, SE2010 "
+_cQuery += " WHERE Z6_FILIAL = E2_FILIAL AND Z6_PREFIXO = E2_PREFIXO "
+_cQuery += " AND E2_NUM = Z6_NUMERO AND E2_PARCELA = Z6_PARCELA AND E2_TIPO = Z6_TIPO "
+_cQuery += " AND E2_FORNECE = Z6_FORNECE AND E2_LOJA = Z6_LOJA AND E2_RATCSU = 'S' "
+_cQuery += " AND E2_EMIS1 BETWEEN '"+DTOS(MV_PAR02)+"'  AND '"+DTOS(MV_PAR03)+"' "
+_cQuery += " AND SE2010.D_E_L_E_T_ <> '*' AND SZ6010.D_E_L_E_T_ <> '*' "
+_cQuery += " AND E2_FILIAL = '"+xFilial("SE2")+"' AND Z6_EMPRESA <> '' "
+
+If !_bCbx
+	_cQuery += " AND E2_LA <> 'S' "
+Else
+	_cQuery += " AND E2_NUM = '"+SE2->E2_NUM+"' AND E2_FILIAL = '"+SE2->E2_FILIAL+"' "
+	_cQuery += " AND E2_PREFIXO = '"+SE2->E2_PREFIXO+"' AND E2_PARCELA = '"+SE2->E2_PARCELA+"' "
+	_cQuery += " AND E2_TIPO = '"+SE2->E2_TIPO+"' AND E2_FORNECE = '"+SE2->E2_FORNECE+"' "
+	_cQuery += " AND E2_LOJA = '"+SE2->E2_LOJA+"'  "
+EndIf
+_cQuery += " ORDER BY SZ6010.R_E_C_N_O_ "
+
+If Select("_CTB03A") > 0
+	DBSelectArea("_CTB03A")
+	DBCloseArea()
+EndIf
+
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "_CTB03A" , .F. , .T. )
+
+DBSelectArea("_CTB03A")
+DBGotop()
+PROCREGUA(RECCOUNT())
+
+_cChave := ""
+_bFirst := .T. 
+
+While !EOF()
+
+	DBSelectArea("SE2")
+	DBGoto(_CTB03A->RECE2)
+
+	DBSelectArea("SZ6")
+	DBGoto(_CTB03A->RECZ6)
+
+	IncProc("Processando Reg: "+SZ6->Z6_PREFIXO+"/"+SZ6->Z6_NUMERO)
+
+	If  !_bFirst .AND.  _cChave <> SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA)
+		_bFirst := .T. 
+	EndIf
+
+
+	If _bFirst
+
+		_bInss := IIF(SE2->E2_INSS<>0, .T. , .F. )
+		_bIrrf := IIF(SE2->E2_IRRF<>0, .T. , .F. )
+		_bIss  := IIF(SE2->E2_ISS<>0, .T. , .F. )
+                _bPis  := IIF(SE2->E2_PIS<>0, .T. , .F. )
+                _bCof  := IIF(SE2->E2_Cofins<>0, .T. , .F. )
+                _bCs   := IIF(SE2->E2_CSLL<>0, .T. , .F. )
+
+		If _bInss
+			_RatImp("INSS")
+		EndIf
+
+		If _bIrrf
+			_RatImp("IRRF")
+		EndIf
+
+		If _bIss
+			_RatImp("ISS")
+		EndIf
+
+                If _bPis
+                        _RatImp("PIS")
+		EndIf
+                If _bCof
+                        _RatImp("COF")
+		EndIf
+                If _bCS
+                        _RatImp("CS")
+		EndIf
+
+
+
+		_ProvForn()
+
+		_cChave := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA)
+
+		_bFirst := .F. 
+
+		Reclock("SE2", .F. )
+
+		SE2->E2_LA := "S"
+
+		MsUnlock()
+
+	EndIf
+
+	If !_bCbx
+
+		_cDeb  := _FindCDeb(SZ6->Z6_NATUREZ)
+		_cCred := ""
+		_cDep := POSICIONE("SED",1,xFilial("SED")+SZ6->Z6_NATUREZ,"ED_RECDEP")
+		If _cDep == "D"
+			_cCD   := SZ6->Z6_CC
+		Else
+			_cCD   := ""
+		EndIf
+		_cCc   := ""
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+"51A","Z9_HIST"))
+
+	Else
+		_cCred := _FindCDeb(SZ6->Z6_NATUREZ)
+		_cDeb  := ""
+		_cDep := POSICIONE("SED",1,xFilial("SED")+SZ6->Z6_NATUREZ,"ED_RECDEP")
+		If _cDep == "D"
+			_cCc   := SZ6->Z6_CC
+		Else
+			_cCc   := ""
+		EndIf
+		_cCD   := ""
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+"51F","Z9_HIST"))
+
+	EndIf
+
+	_nVal  := SZ6->Z6_VALOR
+	_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_FORNECE+E2_LOJA)
+	_cTipo := "AA"
+
+	_GeraTemp(SZ6->Z6_EMPRESA,_cDeb,_cCred,_cCD,_cCc,_nVal,_cHist,_cKey,_cTipo,SE2->E2_EMIS1,"A")
+
+	DBSelectArea("_CTB03A")
+	DBSkip()
+
+EndDo
+
+_CTB03A->(DBCloseArea())
+
+Return
+
+Static Function ValidPerg()
+
+_sAlias := Alias()
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+_cPerg := PADR(_cPerg,LEN(SX1->X1_GRUPO))
+aRegs:={}
+
+
+aAdd(aRegs,{_cPerg,"01","Numero do Lote ?","","","mv_ch1","C",06,0,0,"G","","mv_par01","","","","","","","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"02","Dt Emissao de  ?","","","mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"03","Dt Emissao Ate ?","","","mv_ch3","D",08,0,0,"G","","mv_par03","","","","","","","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"04","Dt Baixa   de  ?","","","mv_ch4","D",08,0,0,"G","","mv_par04","","","","","","","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"05","Dt Baixa   Ate ?","","","mv_ch5","D",08,0,0,"G","","mv_par05","","","","","","","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"06","Mostra Lanc    ?","","","mv_ch6","N",01,0,1,"C","","mv_par06","Sim","","","","","Nao","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"07","Aglut  Lanc    ?","","","mv_ch7","N",01,0,1,"C","","mv_par07","Sim","","","","","Nao","","","","","","","",""})
+
+
+For i:=1 to Len(aRegs)
+	If !dbSeek(_cPerg+aRegs[i,2])
+		RecLock("SX1", .T. )
+		For j:=1 to FCount()
+			If j <= Len(aRegs[i])
+				FieldPut(j,aRegs[i,j])
+			Endif
+		Next
+		MsUnlock()
+	Endif
+Next
+
+dbSelectArea(_sAlias)
+
+Return
+
+
+Static Function _Prep2Temp()
+
+_aCampos := {}
+
+AADD(_aCampos,{"TMP_EMP"     ,"C", 002 , 0	})
+AADD(_aCampos,{"TMP_DATAC"    ,"D", 008 , 0	})
+AADD(_aCampos,{"TMP_CONTAD"  ,"C", 020 , 0  	})
+AADD(_aCampos,{"TMP_CONTAC"  ,"C", 020 , 0  	})
+AADD(_aCampos,{"TMP_CCD"   	 ,"C", 009 , 0  	})
+AADD(_aCampos,{"TMP_CCC" 	 ,"C", 009 , 0   })
+AADD(_aCampos,{"TMP_VALOR"   ,"N", 017 , 2   })
+AADD(_aCampos,{"TMP_HIST" 	 ,"M", 010 ,0    })
+AADD(_aCampos,{"TMP_KEY" 	 ,"C", 100 ,0    })
+AADD(_aCampos,{"TMP_TIPO" 	 ,"C", 2 ,0    })
+AADD(_aCampos,{"TMP_OPER" 	 ,"C", 1 ,0    })
+
+
+_cInd := CriaTrab(NIL, .F. )
+_cArq := CriaTrab(NIL, .F. )
+
+_cArq := "SU"+Substr(_cArq,3,len(ALLTRIM(_cArq))-2)
+
+IF !TCCanOpen(_cArq)
+	dbCreate(_cArq, _aCampos, "TOPCONN")
+ENDIF
+
+dbUseArea( .T. , "TOPCONN", _cArq, "CSUTMP", .T. )
+
+IndRegua("CSUTMP",_cInd,_cKind,,," Criando Indice    ")
+DBSelectArea("CSUTMP")
+DBGotop()
+
+Return
+
+
+
+Static Function _PrepTemp()
+
+_aCampos := {}
+
+AADD(_aCampos,{"TMP_EMP"     ,"C", 002 , 0	})
+AADD(_aCampos,{"TMP_DATAC"    ,"D", 008 , 0	})
+AADD(_aCampos,{"TMP_CONTAD"  ,"C", 020 , 0  	})
+AADD(_aCampos,{"TMP_CONTAC"  ,"C", 020 , 0  	})
+AADD(_aCampos,{"TMP_CCD"   	 ,"C", 009 , 0  	})
+AADD(_aCampos,{"TMP_CCC" 	 ,"C", 009 , 0   })
+AADD(_aCampos,{"TMP_VALOR"   ,"N", 017 , 2   })
+AADD(_aCampos,{"TMP_HIST" 	 ,"M", 010 ,0    })
+AADD(_aCampos,{"TMP_KEY" 	 ,"C", 100 ,0    })
+AADD(_aCampos,{"TMP_TIPO" 	 ,"C", 2 ,0    })
+
+_cArq := CriaTrab(_aCampos, .t. )
+
+Frename(Alltrim(_cArq)+".DBF","SU"+Substr(_cArq,3,len(ALLTRIM(_cArq))-2)+".DBF")
+
+Frename(Alltrim(_cArq)+".FPT","SU"+Substr(_cArq,3,len(ALLTRIM(_cArq))-2)+".FPT")
+
+_cArq := "SU"+Substr(_cArq,3,len(ALLTRIM(_cArq))-2)
+_cInd := CriaTrab(NIL, .F. )
+DbUseArea( .T. ,,_cArq,"CSUTMP", .T. )
+
+IndRegua("CSUTMP",_cInd,_cKind,,," Criando Indice    ")
+DBSelectArea("CSUTMP")
+DBGotop()
+
+Return
+
+Static Function _GeraTemp(_cEmpresa,_cDeb,_cCred,_cCD,_cCc,_nVal,_cHist,_cKey,_cTipo,_dData,_cOper)
+
+Reclock("CSUTMP", .T. )
+
+TMP_EMP     := _cEmpresa
+TMP_DATAC   := _dData
+TMP_CONTAD  := _cDeb
+TMP_CONTAC  := _cCred
+TMP_CCD     := _cCd
+TMP_CCC     := _cCC
+TMP_VALOR   := _nVal
+TMP_HIST    := _cHist
+TMP_KEY     := _cKey
+TMP_TIPO    := _cTipo
+TMP_OPER    := _cOper
+
+MsUnlock()
+
+Return
+
+Static Function _FindCdeb(_cNaturez)
+
+
+
+
+
+
+
+
+_aArea  := GetArea()
+_cConta := "INF. C.DESP./PATRIM."
+
+
+DbSelectArea("SED")
+DbSetOrder(1)
+If DbSeek( xFilial("SED")+_cNaturez, .F.  )
+
+	IF SED->ED_RECDEP == "D"
+
+
+
+		IF SE2->E2_RATCSU <> "S"
+
+
+
+			DbSelectArea("CTT")
+			DbSetOrder(1)
+			If DbSeek( xFilial("CTT")+SE2->E2_CCUSTO, .F.  )
+
+
+				DbSelectArea("SZ1")
+				DbSetOrder(1)
+				If DbSeek( xFilial("SZ1")+_cNaturez+CTT->CTT_GRUPO, .F.  )
+
+					If SZ1->Z1_NATUREZ==_cNaturez .and.  SZ1->Z1_GRUPOCC==CTT->CTT_GRUPO
+						_cConta := If(!Empty(SZ1->Z1_CCONTAB),SZ1->Z1_CCONTAB,_cConta)
+					EndIf
+
+				EndIf
+
+			EndIf
+
+		Else
+
+			DbSelectArea("CTT")
+			DbSetOrder(1)
+			If DbSeek( xFilial("CTT")+SZ6->Z6_CC, .F.  )
+
+				DbSelectArea("SZ1")
+				DbSetOrder(1)
+				If 	DbSeek( xFilial("SZ1")+_cNaturez+CTT->CTT_GRUPO, .F.  )
+					If SZ1->Z1_NATUREZ==_cNaturez .and.  SZ1->Z1_GRUPOCC==CTT->CTT_GRUPO
+						_cConta := If(!Empty(SZ1->Z1_CCONTAB),SZ1->Z1_CCONTAB,_cConta)
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+	Else
+
+
+
+
+
+		DbSelectArea("SZ1")
+		DbSetOrder(1)
+		If DbSeek( xFilial("SZ1")+_cNaturez, .F.  )
+
+			If SZ1->Z1_NATUREZ==_cNaturez
+				_cConta := If(!Empty(SZ1->Z1_CCONTAB),SZ1->Z1_CCONTAB,_cConta)
+			EndIf
+
+		EndIf
+
+	EndIf
+EndIf
+
+RestArea(_aArea)
+
+Return(_cConta)
+
+
+
+Static Function _FindCCred()
+
+_aArea := GetArea()
+_cConta := "INF. C. FORNECEDOR"
+
+DBSelectArea("SA2")
+DBSetOrder(1)
+
+If DBSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA, .F. )
+
+	_cConta := SA2->A2_CONTA
+
+EndIf
+
+RestArea(_aArea)
+Return(_cConta)
+
+
+
+Function U_CSUCTB06()
+
+dbSelectArea("SZ9")
+dbSetOrder(1)
+
+AxCadastro("SZ9","Cadastro de Historicos Contab CSU ",".T.",".T.")
+
+Return()
+
+
+Static Function _GeraCTK()
+
+DBSelectArea("CSUTMP")
+ProcRegua(Reccount())
+DBGotop()
+
+
+
+
+
+_cEmp  := CSUTMP->TMP_EMP
+
+While !EOF()
+
+	_dData := CSUTMP->TMP_DATAC
+
+	If _cEmp <> CSUTMP->TMP_EMP .OR.  _cEmp <> cEmpAnt
+
+		_cEmp := CSUTMP->TMP_EMP
+
+		_AbreEmpresa(_cEmp,cFilAnt)
+
+	EndIf
+
+	DBSelectArea("CSUTMP")
+
+
+
+	Processa({|| _ProcIni() })
+
+	While _cEmp == CSUTMP->TMP_EMP .AND.  _dData == CSUTMP->TMP_DATAC
+
+		IncProc(" Contabilizacao Empresa: "+_cEmp+" - "+Tabela("Z2",_cEmp))
+
+		_cDeb  := CSUTMP->TMP_CONTAD
+		_cCred := CSUTMP->TMP_CONTAC
+		_cCc   := CSUTMP->TMP_CCC
+		_cCd   := CSUTMP->TMP_CCD
+		_nVal  := CSUTMP->TMP_VALOR
+		_cHist := CSUTMP->TMP_HIST
+
+		DBSelectArea("CT5")
+		DBSetOrder(1)
+		If DBSeek(xFilial("CT5")+"999", .F. )
+			If !Empty(_cDeb) .AND.  !Empty(_cCred)
+				RecLock("CT5", .F. )
+				CT5->CT5_DC := "3"
+				MsUnlock()
+			ElseIf !Empty(_cDeb) .AND.  Empty(_cCred)
+				RecLock("CT5", .F. )
+				CT5->CT5_DC := "1"
+				MsUnlock()
+			ElseIf Empty(_cDeb) .AND.  !Empty(_cCred)
+				RecLock("CT5", .F. )
+				CT5->CT5_DC := "2"
+				MsUnlock()
+			EndIf
+			DBSelectArea("CSUTMP")
+
+			DBCOMMITALL()
+
+			_nVTotal := DetProva(nHdlPrv,"999","CSUCTB05",_cLote)
+		EndIf
+
+		DBSelectArea("CSUTMP")
+		DBSkip()
+
+	EndDo
+
+	Processa({|| _ProcFim(_dData) })
+
+
+EndDo
+
+
+Return
+
+
+
+Static Function _RatIMP(_cImp)
+
+_cCred := ""
+_cDeb  := ""
+
+
+If _cImp == "IRRF"
+
+	If !_bCbx
+		_cCod := "51B"
+		_cCampo := "SE2->E2_IRRF"
+		_cCred := "2010402"
+	Else
+		_cCod := "51G"
+		_cCampo := "SE2->E2_IRRF"
+		_cDeb := "2010402"
+	EndIf
+
+
+ElseIf _cImp == "INSS"
+
+	If !_bCbx
+		_cCod := "51D"
+		_cCampo := "SE2->E2_INSS"
+		_cCred := "2010408"
+
+	Else
+		_cCod := "51I"
+		_cCampo := "SE2->E2_INSS"
+
+		_cDeb := "2010408"
+	EndIf
+
+ElseIf _cImp == "ISS"
+
+	If !_bCbx
+		_cCod := "51C"
+		_cCampo := "SE2->E2_ISS"
+
+		_cCred := "2010406"
+	Else
+		_cCod := "51H"
+		_cCampo := "SE2->E2_ISS"
+		_cDeb := "2010406"
+	EndIf
+
+ElseIf _cImp == "PIS"
+
+	If !_bCbx
+                _cCod := "51J"
+                _cCampo := "SE2->E2_PIS"
+                _cCred := "2010409"
+	Else
+                _cCod := "51K"
+                _cCampo := "SE2->E2_PIS"
+                _cDeb := "2010409"
+	EndIf
+
+ElseIf _cImp == "COF"
+
+	If !_bCbx
+                _cCod := "51L"
+                _cCampo := "SE2->E2_COFINS"
+                _cCred := "2010409"
+	Else
+                _cCod := "51M"
+                _cCampo := "SE2->E2_COFINS"
+                _cDeb := "2010409"
+	EndIf
+
+ElseIf _cImp == "CS"
+
+	If !_bCbx
+                _cCod := "51N"
+                _cCampo := "SE2->E2_CSLL"
+                _cCred := "2010409"
+	Else
+                _cCod := "51O"
+                _cCampo := "SE2->E2_CSLL"
+                _cDeb := "2010409"
+	EndIf
+EndIf
+
+
+
+_cQuery := " SELECT Z6_EMPRESA,SUM(Z6_PERC) AS PERC FROM SZ6010 WHERE "
+_cQuery += " Z6_FILIAL = '"+xFilial("SZ6")+"' AND Z6_PREFIXO = '"+SE2->E2_PREFIXO+"' "
+_cQuery += " AND Z6_NUMERO = '"+SE2->E2_NUM+"' AND Z6_PARCELA = '"+SE2->E2_PARCELA+"' "
+_cQuery += " AND Z6_TIPO = '"+SE2->E2_TIPO+"' "
+_cQuery += " AND Z6_FORNECE = '"+SE2->E2_FORNECE+"' AND Z6_LOJA = '"+SE2->E2_LOJA+"' "
+_cQuery += " AND SZ6010.D_E_L_E_T_ <> '*' "
+_cQuery += " AND Z6_EMPRESA <> '' "
+_cQuery += " GROUP BY Z6_EMPRESA "
+_cQuery += " ORDER BY Z6_EMPRESA  "
+
+If Select("_CTB03Z") > 0
+	DBSelectArea("_CTB03Z")
+	DBCloseArea()
+EndIf
+
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "_CTB03Z" , .F. , .T. )
+
+DBSelectArea("_CTB03Z")
+DBGotop()
+
+
+_cCsuKey:=se2->(e2_filial+e2_prefixo+e2_num+e2_parcela+e2_tipo+e2_fornece+e2_loja)
+_cKeyRed:=se2->(e2_filial+e2_prefixo+e2_num)
+if ascan(_vFilhos,{|_vAux|_vAux[1]==_cCsuKey})==0
+   _vAmbSe2:=se2->(getarea())
+   se2->(dbsetorder(1))
+   aadd(_vFilhos,{_cCsuKey,{}})
+   while se2->(!eof() .and. e2_filial+e2_prefixo+e2_num==_cKeyRed)
+      if alltrim(se2->e2_csukey)==alltrim(_cCsuKey)
+         se2->(aadd(_vFilhos[len(_vFilhos)][2],{e2_vlcruz,e2_vencrea}))
+      endif
+      se2->(dbskip(1))
+   enddo
+   se2->(restarea(_vAmbSe2))
+endif
+
+_nValTot := &_cCampo
+
+While !EOF()
+
+	If !_bCbx
+		_cCD   := ""
+		_cCc   := ""
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+_cCod,"Z9_HIST"))
+		_nVal  := NoRound(_nValTot * ( _CTB03Z->PERC / 100 ),2)
+		_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_FORNECE+E2_LOJA)
+	Else
+		_cCD   := ""
+		_cCc   := ""
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+_cCod,"Z9_HIST"))
+		_nVal  := NoRound(_nValTot * ( _CTB03Z->PERC / 100 ),2)
+		_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_FORNECE+E2_LOJA)
+
+	EndIf
+	_cTipo := "BB"
+
+
+
+
+
+
+
+
+
+
+
+	if "E2_INSS"   $_cCampo .or.  "E2_IRRF"   $_cCampo .or.  "E2_COFINS" $_cCampo .or.  "E2_ISS"    $_cCampo .or.  "E2_PIS"    $_cCampo .or.  "E2_CSLL"   $_cCampo
+
+	   _dVencFilho:=ctod("")
+
+	   if (_nPosic:=ascan(_vFilhos,{|_vAux|alltrim(_vAux[1])==alltrim(se2->(e2_filial+e2_prefixo+e2_num+e2_parcela+e2_tipo+e2_fornece+e2_loja))}))>0
+          for _nVez:=1 to len(_vFilhos[_nPosic][2])
+              _nValComp:=&_cCampo
+              if _nValComp==_vFilhos[_nPosic][2][_nVez][1]
+                 _dVencFilho:=_vFilhos[_nPosic][2][_nVez][2]
+                 exit
+              endif
+           next
+           if !empty(_dVencFilho)
+             _cHist:=alltrim(_cHist)
+             if right(_cHist,8)==dtoc(se2->e2_vencrea)
+	            _cHist:=left(_cHist,len(_cHist)-8)+dtoc(_dVencFilho)
+	         endif
+           endif
+        endif
+    endif
+
+	_GeraTemp(_CTB03Z->Z6_EMPRESA,_cDeb,_cCred,_cCD,_cCC,_nVal,_cHist,_cKey,_cTipo,SE2->E2_EMIS1,"A")
+
+	DBSelectArea("_CTB03Z")
+	DBSkip()
+EndDo
+
+DBSelectArea("_CTB03Z")
+DBCloseArea()
+
+Return()
+
+
+Static Function _ProvForn()
+
+_nAx := 0
+
+
+
+_cQuery := " SELECT Z6_EMPRESA,SUM(Z6_PERC) AS PERC,SUM(Z6_VALOR) AS VALOR FROM SZ6010 WHERE "
+_cQuery += " Z6_FILIAL = '"+xFilial("SZ6")+"' AND Z6_PREFIXO = '"+SE2->E2_PREFIXO+"' "
+_cQuery += " AND Z6_NUMERO = '"+SE2->E2_NUM+"' AND Z6_PARCELA = '"+SE2->E2_PARCELA+"' "
+_cQuery += " AND Z6_TIPO = '"+SE2->E2_TIPO+"' "
+_cQuery += " AND Z6_FORNECE = '"+SE2->E2_FORNECE+"' AND Z6_LOJA = '"+SE2->E2_LOJA+"' "
+_cQuery += " AND SZ6010.D_E_L_E_T_ <> '*' "
+_cQuery += " AND Z6_EMPRESA <> '' "
+_cQuery += " GROUP BY Z6_EMPRESA "
+_cQuery += " ORDER BY Z6_EMPRESA  "
+
+
+If Select("_CTB03Z") > 0
+	DBSelectArea("_CTB03Z")
+	DBCloseArea()
+EndIf
+
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "_CTB03Z" , .F. , .T. )
+
+DBSelectArea("_CTB03Z")
+DBGotop()
+
+
+_nValTot := SE2->E2_VALOR
+
+While !EOF()
+
+	_nVal := 0
+	_nAx  := 0
+
+	If !_bCbx
+
+		_cCred := _FindCCred()
+		_cDeb  := ""
+		_cCD   := ""
+		_cCc   := ""
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+"51E","Z9_HIST"))
+	Else
+		_cCred := ""
+		_cDeb  := _FindCCred()
+		_cCD   := ""
+		_cCc   := ""
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+"51F","Z9_HIST"))
+
+	EndIf
+
+	_nVal  := NoRound(_nValTot * ( _CTB03Z->PERC / 100 ),2)
+
+	If _bInss
+		_nAx += NoRound(SE2->E2_INSS * ( _CTB03Z->PERC / 100 ),2)
+	EndIf
+
+	If _bIrrf
+		_nAx += NoRound(SE2->E2_IRRF * ( _CTB03Z->PERC / 100 ),2)
+	EndIf
+
+	If _bIss
+		_nAx += NoRound(SE2->E2_ISS *  ( _CTB03Z->PERC / 100 ),2)
+	EndIf
+
+        If _bPis
+                _nAx += NoRound(SE2->E2_PIS *  ( _CTB03Z->PERC / 100 ),2)
+	EndIf
+
+        If _bCof
+                _nAx += NoRound(SE2->E2_COFINS *  ( _CTB03Z->PERC / 100 ),2)
+	EndIf
+
+        If _bCs
+                _nAx += NoRound(SE2->E2_CSLL *  ( _CTB03Z->PERC / 100 ),2)
+	EndIf
+
+	If (_nVal + _nAx) <> _CTB03Z->VALOR
+
+		If (_nVal + _nAx) > _CTB03Z->VALOR
+			_nVal := _nVal - ( (_nVal + _nAx) - _CTB03Z->VALOR )
+		Else
+			_nVal := _nVal + (  _CTB03Z->VALOR - (_nVal + _nAx) )
+		EndIf
+
+	EndIf
+
+	_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_FORNECE+E2_LOJA)
+	_cTipo := "AB"
+	_GeraTemp(_CTB03Z->Z6_EMPRESA,_cDeb,_cCred,_cCD,_cCC,_nVal,_cHist,_cKey,_cTipo,SE2->E2_EMIS1,"A")
+
+	DBSelectArea("_CTB03Z")
+	DBSkip()
+EndDo
+
+DBSelectArea("_CTB03Z")
+DBCloseArea()
+
+Return
+
+
+
+Static Function _AbreEmpresa(_cEmp,_cFil)
+
+Local oAction, oFile , oMeter
+nFile := 0
+
+_bOk := .F. 
+lEnd := .f. 
+
+If Select("CSUTMP") > 0
+
+	_bOk := .T. 
+	_nRecno := CSUTMP->(Recno())
+
+EndIf
+
+cEmpAnt := _cEmp
+cFilAnt := _cFil
+cNumEmp := cEmpAnt + cFilAnt
+
+DBCloseAll()
+OpenFile(cEmpAnt+cFilAnt)
+OpenSM0(cEmpAnt+cFilAnt)
+
+If _bOk
+
+
+
+
+
+
+	_cInd := CriaTrab(NIL, .F. )
+	dbUseArea( .T. , "TOPCONN", _cArq, "CSUTMP", .T. )
+	IndRegua("CSUTMP",_cInd,_cKind,,," Criando Indice    ")
+	DBSelectArea("CSUTMP")
+	DBGoto(_nRecno)
+
+
+EndIf
+
+Return
+
+
+
+Static Function _CPRVNRAT()
+
+_cQuery := " SELECT (SE2010.R_E_C_N_O_) AS RECE2 FROM SE2010 "
+_cQuery += " WHERE E2_RATCSU = 'N' "
+_cQuery += " AND E2_EMIS1 BETWEEN '"+DTOS(MV_PAR02)+"'  AND '"+DTOS(MV_PAR03)+"' "
+_cQuery += " AND SE2010.D_E_L_E_T_ <> '*'  "
+_cQuery += " AND E2_FILIAL = '"+xFilial("SE2")+"' "
+If !_bCbx
+	_cQuery += " AND E2_LA <> 'S' "
+Else
+	_cQuery += " AND E2_NUM = '"+SE2->E2_NUM+"' AND E2_FILIAL = '"+SE2->E2_FILIAL+"' "
+	_cQuery += " AND E2_PREFIXO = '"+SE2->E2_PREFIXO+"' AND E2_PARCELA = '"+SE2->E2_PARCELA+"' "
+	_cQuery += " AND E2_TIPO = '"+SE2->E2_TIPO+"' AND E2_FORNECE = '"+SE2->E2_FORNECE+"' "
+	_cQuery += " AND E2_LOJA = '"+SE2->E2_LOJA+"'  "
+EndIf
+_cQuery += " AND E2_TIPO NOT IN ('INS','INSS','"+ALLTRIM(MVTAXA)+"') "
+_cQuery += " ORDER BY SE2010.R_E_C_N_O_ "
+
+If Select("_CTB03C") > 0
+	DBSelectArea("_CTB03C")
+	DBCloseArea()
+EndIf
+
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "_CTB03C" , .F. , .T. )
+
+DBSelectArea("_CTB03C")
+DBGotop()
+PROCREGUA(RECCOUNT())
+
+_cChave := ""
+_bFirst := .T. 
+
+While !EOF()
+
+	DBSelectArea("SE2")
+	DBGoto(_CTB03C->RECE2)
+
+
+	DbSelectArea("SED")
+	DbSetOrder(1)
+	DbSeek( xFilial("SED")+SE2->E2_NATUREZ, .F.  )
+
+	DBSelectArea("SE2")
+
+	IncProc("Processando Reg: "+SE2->E2_PREFIXO+"/"+SE2->E2_NUM)
+
+	_bInss := IIF(SE2->E2_INSS<>0, .T. , .F. )
+	_bIrrf := IIF(SE2->E2_IRRF<>0, .T. , .F. )
+	_bIss  := IIF(SE2->E2_ISS<>0, .T. , .F. )
+        _bPis  := IIF(SE2->E2_PIS<>0, .T. , .F. )
+        _bCof  := IIF(SE2->E2_COFINS<>0, .T. , .F. )
+        _bCs   := IIF(SE2->E2_CSLL<>0, .T. , .F. )
+
+	If _bInss
+		_ContImp("INSS")
+	EndIf
+
+	If _bIrrf
+		_ContImp("IRRF")
+	EndIf
+
+	If _bIss
+		_ContImp("ISS")
+	EndIf
+
+        If _bPis
+                _ContImp("PIS")
+	EndIf
+
+        If _bCof
+                _ContImp("COF")
+	EndIf
+
+        If _bCs
+                _ContImp("CS")
+	EndIf
+
+
+
+        If _bInss .OR.  _bIrrf .OR.  _bIss .or. _bPis .or. _bCof .or. _bCs
+		_CForn()
+	EndIf
+
+	Reclock("SE2", .F. )
+	SE2->E2_LA := "S"
+	MsUnlock()
+
+	If !_bCbx
+
+		_cDeb  := _FindCDeb(SE2->E2_NATUREZ)
+
+                If !_bInss .AND.  !_bIrrf .AND.  !_bIss .and.  !_bPis .and.  !_bCof .and.  !_bCs
+			_cCred := _FindCCred()
+		Else
+			_cCred := ""
+		EndIf
+
+		_cCD   := IF(!Empty(SE2->E2_CCUSTO) .and. SED->ED_RECDEP="D",IF(!EMPTY(SE2->E2_CCUSTO),SE2->E2_CCUSTO,"INF. C.CUSTO"),"")
+		_cCc   := ""
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+"51A","Z9_HIST"))
+
+                If !_bInss .AND.  !_bIrrf .AND.  !_bIss .and.  !_bPis .and.  !_bCof .and.  !_bCs
+			_nVal  := SE2->E2_VALOR
+		Else
+                        _nVal  := SE2->(E2_VALOR+E2_IRRF+E2_ISS+E2_INSS+E2_PIS+E2_COFINS+E2_CSLL)
+		EndIf
+
+		_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_FORNECE+E2_LOJA)
+		_cTipo := "AA"
+		_GeraTemp(SE2->E2_PREFIXO,_cDeb,_cCred,_cCD,_cCc,_nVal,_cHist,_cKey,_cTipo,SE2->E2_EMIS1,"A")
+	Else
+
+		_cCred  := _FindCDeb(SE2->E2_NATUREZ)
+
+                If !_bInss .AND.  !_bIrrf .AND.  !_bIss .and.  !_bPis .and.  !_bCof .and.  !_bCs
+			_cDeb  := _FindCCred()
+		Else
+			_cDeb := ""
+		EndIf
+
+		_cCc   := IF(!Empty(SE2->E2_CCUSTO) .and. SED->ED_RECDEP="D",IF(!EMPTY(SE2->E2_CCUSTO),SE2->E2_CCUSTO,"INF. C.CUSTO"),"")
+		_cCD   := ""
+
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+"51F","Z9_HIST"))
+
+                If !_bInss .AND.  !_bIrrf .AND.  !_bIss .and.  !_bPis .and.  !_bCof .and.  !_bCs
+			_nVal  := SE2->E2_VALOR
+		Else
+                        _nVal  :=SE2->(E2_VALOR+E2_IRRF+E2_ISS+E2_INSS+E2_PIS+E2_COFINS+E2_CSLL)
+		EndIf
+
+		_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_FORNECE+E2_LOJA)
+		_cTipo := "AA"
+		_GeraTemp(SE2->E2_PREFIXO,_cDeb,_cCred,_cCD,_cCc,_nVal,_cHist,_cKey,_cTipo,SE2->E2_EMIS1,"A")
+	EndIf
+
+	DBSelectArea("_CTB03C")
+	DBSkip()
+
+EndDo
+
+_CTB03C->(DBCloseArea())
+
+Return
+
+
+
+Static Function _CForn()
+
+If !_bCbx
+
+	_cCred := _FindCCred()
+	_cDeb  := ""
+	_cCodH := "51E"
+Else
+
+	_cDeb  := _FindCCred()
+	_cCred := ""
+	_cCodH := "51F"
+
+EndIf
+
+_cCD   := ""
+_cCc   := ""
+_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+_cCodH,"Z9_HIST"))
+_nVal  := SE2->E2_VALOR
+_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_FORNECE+E2_LOJA)
+_cTipo := "AB"
+_GeraTemp(SE2->E2_PREFIXO,_cDeb,_cCred,_cCD,_cCC,_nVal,_cHist,_cKey,_cTipo,SE2->E2_EMIS1,"A")
+
+Return
+
+
+
+Static Function _ContImp(_cImp)
+
+_cCred := ""
+_cDeb  := ""
+
+
+If _cImp == "IRRF"
+
+	If !_bCbx
+		_cCod := "51B"
+		_cCampo := "SE2->E2_IRRF"
+		_cCred := "2010402"
+	Else
+		_cCod := "51G"
+		_cCampo := "SE2->E2_IRRF"
+		_cDeb := "2010402"
+	EndIf
+
+
+ElseIf _cImp == "INSS"
+
+	If !_bCbx
+		_cCod := "51D"
+		_cCampo := "SE2->E2_INSS"
+
+		_cCred := "2010408"
+	Else
+		_cCod := "51I"
+		_cCampo := "SE2->E2_INSS"
+		_cDeb := "2010408"
+
+
+
+	EndIf
+
+ElseIf _cImp == "ISS"
+
+	If !_bCbx
+		_cCod := "51C"
+		_cCampo := "SE2->E2_ISS"
+		_cCred := "2010406"
+
+	Else
+		_cCod := "51H"
+		_cCampo := "SE2->E2_ISS"
+
+		_cDeb := "2010406"
+	EndIf
+
+ElseIf _cImp == "PIS"
+
+	If !_bCbx
+                _cCod := "51J"
+                _cCampo := "SE2->E2_PIS"
+                _cCred := "2010409"
+	Else
+                _cCod := "51K"
+                _cCampo := "SE2->E2_PIS"
+                _cDeb := "2010409"
+	EndIf
+
+ElseIf _cImp == "COF"
+
+	If !_bCbx
+                _cCod := "51L"
+                _cCampo := "SE2->E2_COFINS"
+                _cCred := "2010409"
+	Else
+                _cCod := "51M"
+                _cCampo := "SE2->E2_COFINS"
+                _cDeb := "2010409"
+	EndIf
+
+ElseIf _cImp == "CS"
+
+	If !_bCbx
+                _cCod := "51N"
+                _cCampo := "SE2->E2_CSLL"
+                _cCred := "2010409"
+	Else
+                _cCod := "51O"
+                _cCampo := "SE2->E2_CSLL"
+                _cDeb := "2010409"
+	EndIf
+EndIf
+
+_cCD   := ""
+_cCc   := ""
+_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+_cCod,"Z9_HIST"))
+_nVal  := &_cCampo
+_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_FORNECE+E2_LOJA)
+_cTipo := "BB"
+_GeraTemp(SE2->E2_PREFIXO,_cDeb,_cCred,_cCD,_cCC,_nVal,_cHist,_cKey,_cTipo,SE2->E2_EMIS1,"A")
+
+
+Return()
+
+
+
+
+Static Function _ContaBX()
+
+nVl:=nDc:=nJr:=nMt:=nCm:=0
+_cBanco := ""
+_bRateio := .F. 
+
+ProcRegua(3)
+
+_cQuery := " SELECT SE5010.R_E_C_N_O_ AS RECE5 , SE2010.R_E_C_N_O_ AS RECE2,  "
+_cQuery += " E5_VALOR , E5_FILIAL , E5_PREFIXO , E5_NUMERO , E5_PARCELA "
+_cQuery += " , E5_TIPO , E5_SEQ , E5_CLIFOR , E5_LOJA, E5_TIPODOC , E5_DATA , "
+_cQuery += " E5_BANCO , E5_AGENCIA , E5_CONTA FROM SE5010 , SE2010 "
+_cQuery += " WHERE "
+_cQuery += " SE2010.D_E_L_E_T_ <> '*' AND SE5010.D_E_L_E_T_ <> '*' AND "
+_cQuery += " E2_FILIAL = E5_FILIAL AND "
+_cQuery += " E2_PREFIXO = E5_PREFIXO AND "
+_cQuery += " E2_NUM = E5_NUMERO AND "
+_cQuery += " E2_PARCELA = E5_PARCELA AND "
+_cQuery += " E2_TIPO = E5_TIPO AND "
+_cQuery += " E2_FORNECE = E5_CLIFOR AND "
+_cQuery += " E2_LOJA = E5_LOJA AND "
+_cQuery += " E5_RECPAG = 'P' AND "
+_cQuery += " E5_DATA BETWEEN '"+DTOS(MV_PAR04)+"' AND '"+DTOS(MV_PAR05)+"' AND "
+_cQuery += " E5_FILIAL = '"+xFilial("SE5")+"' "
+_cQuery += " AND E5_TIPODOC <> '' "
+_cQuery += " AND E5_MOTBX <> 'CMP' "
+_cQuery += " AND E5_TIPO NOT IN ( '"+MVRECANT+"' , '"+MV_CRNEG+"')  "
+If !_bCbx
+	_cQuery += " AND E5_LACSU <> 'S' AND "
+	_cQuery += " E5_SITUACA <> 'C' AND "
+Else
+	_cQuery += " AND E5_SITUACA <> 'C' AND E5_NUMERO = '"+SE5->E5_NUMERO+"' AND "
+	_cQuery += " E5_PREFIXO = '"+SE5->E5_PREFIXO+"' AND E5_FILIAL = '"+SE5->E5_FILIAL+"'"
+	_cQuery += " AND E5_PARCELA = '"+SE5->E5_PARCELA+"' AND E5_TIPO = '"+SE5->E5_TIPO+"' "
+	_cQuery += " AND E5_CLIFOR = '"+SE5->E5_CLIFOR+"' AND E5_LOJA = '"+SE5->E5_LOJA+"'	"
+	_cQuery += " AND E5_DATA = '"+DTOS(SE5->E5_DATA)+"' AND "
+EndIf
+_cQuery += " E5_TIPODOC IN ('PA','RA','BA','VL','V2','DC','D2','JR','J2','MT','M2','CM','C2','AP','RF','IF','CP','TL','ES','DB','OD','LJ' ) "
+_cQuery += " ORDER BY E5_FILIAL , E5_PREFIXO , E5_NUMERO , E5_PARCELA , E5_TIPO , E5_SEQ , E5_CLIFOR , E5_LOJA "
+
+If Select("_CTB03D") > 0
+	DBSelectArea("_CTB03D")
+	DBCloseArea()
+EndIf
+IncProc("Analisando Baixas")
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "_CTB03D" , .F. , .T. )
+
+DBSelectArea("_CTB03D")
+__dbCopy("ric5" , { },,,,,.F., )
+
+DBGotop()
+
+If EOF()
+	Return
+EndIf
+
+While !EOF()
+
+	_bTit := .F. 
+
+	DBSelectArea("SE2")
+	DBgoto(_CTB03D->RECE2)
+
+	lEstorno := .F. 
+	cSeq	  :=	_CTB03D->E5_SEQ
+
+	If _CTB03D->E5_TIPODOC == "ES" .OR.  _bCbx
+		lEstorno := .T. 
+	Endif
+
+	If SE2->E2_RATCSU == "S"
+		_bRateio := .T. 
+	EndIf
+
+	cChaveSe5 := "xFilial('SE5')==_CTB03D->E5_FILIAL.And.SE2->E2_PREFIXO ==_CTB03D->E5_PREFIXO.And.SE2->E2_NUM ==_CTB03D->E5_NUMERO.And.SE2->E2_PARCELA ==_CTB03D->E5_PARCELA.And.SE2->E2_TIPO ==_CTB03D->E5_TIPO.And.cSeq ==_CTB03D->E5_SEQ .And. _CTB03D->E5_CLIFOR+_CTB03D->E5_LOJA == SE2->E2_FORNECE+SE2->E2_LOJA "
+
+	While !Eof() .And.  &cChaveSe5
+		nJr:=nMt:=0
+		IncProc("Processando Reg: "+_CTB03D->E5_PREFIXO+"/"+_CTB03D->E5_NUMERO)
+
+		If  ALLTRIM(_CTB03D->E5_TIPODOC) $ "BA/VL/V2/CP/ES/LJ"
+			nVl	    := _CTB03D->E5_VALOR
+			_cBanco := _CTB03D->E5_BANCO+_CTB03D->E5_AGENCIA+_CTB03D->E5_CONTA
+                        nVlBanc := SE2->(E2_VALOR+E2_IRRF+E2_ISS+E2_INSS+E2_PIS+E2_COFINS+E2_CSLL)
+		ElseIf ALLTRIM(_CTB03D->E5_TIPODOC) $ "DC/D2"
+			nDc	  := _CTB03D->E5_VALOR
+		ElseIf ALLTRIM(_CTB03D->E5_TIPODOC) $ "JR/J2/TL"
+			nJr	  := _CTB03D->E5_VALOR
+		ElseIf ALLTRIM(_CTB03D->E5_TIPODOC) $ "MT/M2"
+			nMt := _CTB03D->E5_VALOR
+		ElseIf ALLTRIM(_CTB03D->E5_TIPODOC) $ "CM/C2"
+			nCm := _CTB03D->E5_VALOR
+		Endif
+
+
+
+
+
+
+		_ddData := CTOD(SUBSTR(_CTB03D->E5_DATA,7,2)+"/"+SUBSTR(_CTB03D->E5_DATA,5,2) +"/"+SUBSTR(_CTB03D->E5_DATA,3,2))
+
+
+		DBSelectArea("SE5")
+		DBgoto(_CTB03D->RECE5)
+		Reclock("SE5")
+		_FIELD->E5_LACSU := "S"
+		MsUnlock()
+
+		DBSelectArea("_CTB03D")
+		DBSkip()
+
+		_bTit := .T. 
+
+	Enddo
+
+	If _bTit
+
+
+
+		dbSelectArea("SA2")
+		dbSeek(xFilial()+SE2->E2_FORNECE+SE2->E2_LOJA)
+		dbSelectArea( "SED" )
+		dbSeek( xFilial()+SE2->E2_NATUREZ )
+
+
+
+
+		dbSelectArea( "SA6" )
+		dbSetOrder(1)
+		dbSeek(xFilial("SA6")+_cBanco)
+
+
+
+     If ALLTRIM(SE2->E2_TIPO) $ ("TX/INS/ISS/PIS/COF/CSL")
+
+ 			If ALLTRIM(SE2->E2_NATUREZ) =="2.1.19.30"
+				_BxPag("LEI","SE2")
+				_VcTit:=SE2->E2_VENCTO
+			Else
+				_BxPag("IMP","SE2")
+				_VcTit:=SE2->E2_VENCTO
+	  		EndIf
+
+	  Else
+			_BxPag("FOR","SE2")
+	  EndIf
+
+
+
+		_BxPag("BAN","SE2")
+
+
+
+		_BxPag("JUR","SE2")
+
+
+
+		_BxPag("MUL","SE2")
+
+
+
+
+		_BxPag("DES","SE2")
+
+	EndIf
+
+	DBSelectArea("_CTB03D")
+
+	_bRateio := .F. 
+EndDo
+
+dbselectarea("CSUTMP")
+__dbCopy("ric2" , { },,,,,.F., )
+
+
+Return
+
+Static Function _BxPag(_cTPMV,_cAlias)
+
+_cCD   := ""
+_cCc   := ""
+_bProc := .F. 
+
+If _cTPMV == "FOR"
+
+	_nValTot := ( nVl + nDc )-( nJr + nMt + nCm )
+
+	If !lEstorno
+		_cDeb  := IF(!Empty(SA2->A2_CONTA),SA2->A2_CONTA,"INF. C. FORNECEDOR")
+		_cCred := ""
+		_cCodH := Iif(Empty(SE2->E2_NUMBOR),"53A","53N")
+	Else
+		_cCred  := IF(!Empty(SA2->A2_CONTA),SA2->A2_CONTA,"INF. C. FORNECEDOR")
+		_cDeb := ""
+		If _cAlias == "SE1"
+			_cCodH := "53G"
+		Else
+			_cCodH := "52A"
+		EndIf
+	EndIf
+
+ElseIf _cTPMV == "JUR"
+
+	_nValTot := nJr
+
+	If !lEstorno
+		_cDeb  := "302070108"
+		_cCred := ""
+		_cCodH := Iif(Empty(SE2->E2_NUMBOR),"53B","53O")
+		_cCd   := IF(!Empty(SE2->E2_CCUSTO) .and. SED->ED_RECDEP="D",IF(!EMPTY(SE2->E2_CCUSTO),SE2->E2_CCUSTO,"INF. C.CUSTO"),"")
+	Else
+		_cDeb  := ""
+		_cCred := "302070108"
+		_cCodH := "53H"
+		_cCc   := IF(!Empty(SE2->E2_CCUSTO) .and. SED->ED_RECDEP="D",IF(!EMPTY(SE2->E2_CCUSTO),SE2->E2_CCUSTO,"INF. C.CUSTO"),"")
+	EndIf
+
+ElseIf _cTPMV == "MUL"
+
+	_nValTot := nMt
+
+	If !lEstorno
+		_cDeb  := "302070108"
+		_cCred := ""
+		_cCodH := Iif(Empty(SE2->E2_NUMBOR),"53C","53P")
+		_cCd   := SE2->E2_CCUSTO
+	Else
+		_cDeb  := ""
+		_cCred := "302070108"
+		_cCodH := "53I"
+		_cCc   := SE2->E2_CCUSTO
+	EndIf
+
+ElseIf _cTPMV == "BAN"
+
+	_nValTot := nVl
+
+	If !lEstorno
+		_cDeb  := ""
+		_cCred := IF(!Empty(SA6->A6_CONTA),SA6->A6_CONTA,"INF. C. BANCO")
+		_cCodH := Iif(Empty(SE2->E2_NUMBOR),"53D","53Q")
+
+	Else
+		_cDeb  := IF(!Empty(SA6->A6_CONTA),SA6->A6_CONTA,"INF. C. BANCO")
+		_cCred := ""
+		_cCodH := "53J"
+
+	EndIf
+
+ElseIf _cTPMV == "DES"
+
+	_nValTot := nDc
+
+	If !lEstorno
+		_cDeb  := ""
+		_cCred := SE2->E2_NUM + "ERRO1!!"
+		_cCodH := Iif(Empty(SE2->E2_NUMBOR),"53E","")
+
+	Else
+		_cDeb  := "INF. C.DESC. OBTIVOS"
+		_cCred := ""
+		_cCodH := "53L"
+
+	EndIf
+
+
+ElseIf _cTPMV == "LEI"
+	If ALLTRIM(SE2->E2_CCUSTO) =="5.99.99.9"
+		_bRateio := .T. 
+	EndIf
+	_nValTot := ( nVl + nDc )-( nJr + nMt + nCm )
+
+	If !lEstorno
+		_cDeb  := "2010409"
+		_cCred := ""
+		_cCodH := "53K"
+	Else
+		_cDeb  := ""
+		_cCred := "2010409"
+		_cCodH := "53S"
+	EndIf
+
+ElseIf _cTPMV == "IMP"
+
+	_nValTot := ( nVl + nDc )-( nJr + nMt + nCm )
+
+	If !lEstorno
+		_cDeb  := IF(!Empty(SA2->A2_CONTA),SA2->A2_CONTA,"INF. C. FORNECEDOR")
+		_cCred := ""
+		_cCodH := Iif(Empty(SE2->E2_NUMBOR),"53F","53R")
+	Else
+		_cDeb  := ""
+		_cCred := IF(!Empty(SA2->A2_CONTA),SA2->A2_CONTA,"INF. C. FORNECEDOR")
+		_cCodH := "53J"
+	EndIf
+
+	_bRateio := _VeriRat(SE2->(Recno()))
+
+EndIf
+
+dbselectarea("CSUTMP")
+__dbCopy("ric6" , { },,,,,.F., )
+
+
+If _nValTot <> 0
+	_bProc := .T. 
+EndIf
+
+dbselectarea("CSUTMP")
+__dbCopy("ric7" , { },,,,,.F., )
+
+If _bProc
+
+	If _bRateio
+
+		_RAtBX(_cTPMV)
+
+	Else
+
+
+
+
+
+
+
+		_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+_cCodH,"Z9_HIST"))
+		_nVal  := _nValtot
+		If _cAlias == "SE2"
+			_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_TIPO+E2_FORNECE+E2_LOJA)
+			_cPre  := SE2->E2_PREFIXO
+		Else
+			_ckey  := SE1->(E1_FILIAL+E1_PREFIXO+E1_NUM+DTOS(E1_EMIS1)+E1_TIPO+E1_CLIENTE+E1_LOJA)
+			_cPre  := SUBSTR(SE1->E1_PREFIXO,1,2)
+		EndIf
+
+		If _cAlias == "SE2"
+			If _cTPMV == "FOR" .OR.  _cTPMV == "BAN"
+				_cTipo := "C"
+			Else
+				_cTipo := "D"
+			EndIf
+		Else
+			If _cTPMV == "FOR" .OR.  _cTPMV == "BAN"
+				_cTipo := "E"
+			Else
+				_cTipo := "F"
+			EndIf
+		EndIf
+
+		_GeraTemp(_cPre,_cDeb,_cCred,_cCD,_cCc,_nVal,_cHist,_cKey,_cTipo,_ddData,"B")
+
+	EndIf
+
+EndIf
+
+Return
+
+Static Function _RatBX(_cCTP)
+
+_nRecE2 := 0
+
+
+If ALLTRIM(SE2->E2_TIPO)$("TX/INS/ISS/PIS/COFINS/CS")
+
+	_nRecE2 := SE2->(RECNO())
+
+	DBSelectArea("SE2")
+	DBSetOrder(1)
+
+	DBSeek(SE2->E2_CSUKEY, .F. )
+
+
+EndIf
+
+
+If ALLTRIM(_cCc) == "" .AND.  ALLTRIM(_cCd) == ""
+	_cQuery := " SELECT Z6_EMPRESA,SUM(Z6_PERC) AS PERC,SUM(Z6_VALOR) AS VALOR  FROM SZ6010 WHERE "
+Else
+	_cQuery := " SELECT Z6_EMPRESA,Z6_PERC AS PERC,Z6_CC,Z6_VALOR AS VALOR  FROM SZ6010 WHERE "
+EndIf
+_cQuery += " Z6_FILIAL = '"+xFilial("SZ6")+"' AND Z6_PREFIXO = '"+SE2->E2_PREFIXO+"' "
+_cQuery += " AND Z6_NUMERO = '"+SE2->E2_NUM+"' AND Z6_PARCELA = '"+SE2->E2_PARCELA+"' "
+_cQuery += " AND Z6_TIPO = '"+SE2->E2_TIPO+"' "
+_cQuery += " AND Z6_FORNECE = '"+SE2->E2_FORNECE+"' AND Z6_LOJA = '"+SE2->E2_LOJA+"' "
+_cQuery += " AND SZ6010.D_E_L_E_T_ <> '*' "
+_cQuery += " AND Z6_EMPRESA <> '' "
+If ALLTRIM(_cCc) == "" .AND.  ALLTRIM(_cCd) == ""
+	_cQuery += " GROUP BY Z6_EMPRESA "
+	_cQuery += " ORDER BY Z6_EMPRESA  "
+Else
+	_cQuery += " ORDER BY Z6_EMPRESA , Z6_CC  "
+EndIf
+
+
+If Select("_CTB03Z") > 0
+	DBSelectArea("_CTB03Z")
+	DBCloseArea()
+EndIf
+
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "_CTB03Z" , .F. , .T. )
+
+If _nRecE2 <> 0
+
+	DBSelectArea("SE2")
+	DBgoto(_nRecE2)
+
+EndIf
+
+DBSelectArea("_CTB03Z")
+DBGotop()
+
+While !EOF()
+
+	_nVal := 0
+	_nAx  := 0
+
+	If ALLTRIM(_cCc) == "" .AND.  ALLTRIM(_cCd) == ""
+		_cCD   := ""
+		_cCc   := ""
+	Else
+		If !lEstorno
+			_cCd := IF(!Empty(_CTB03Z->Z6_CC) .and. SED->ED_RECDEP="D",IF(!EMPTY(_CTB03Z->Z6_CC),_CTB03Z->Z6_CC,"INF. C.CUSTO"),"")
+		Else
+			_cCc := IF(!Empty(_CTB03Z->Z6_CC) .and. SED->ED_RECDEP="D",IF(!EMPTY(_CTB03Z->Z6_CC),_CTB03Z->Z6_CC,"INF. C.CUSTO"),"")
+		EndIf
+	EndIf
+	_cHist := &(Posicione("SZ9",1,xFilial("SZ9")+_cCodH,"Z9_HIST"))
+	_nVal  := NoRound(_nValTot * ( _CTB03Z->PERC / 100 ),2)
+
+	If _nRecE2 == 0
+
+		If SE2->E2_INSS > 0
+			_nAx += NoRound(SE2->E2_INSS * ( _CTB03Z->PERC / 100 ),2)
+		EndIf
+
+		If SE2->E2_IRRF > 0
+			_nAx += NoRound(SE2->E2_IRRF * ( _CTB03Z->PERC / 100 ),2)
+		EndIf
+
+        If SE2->E2_ISS > 0
+			_nAx += NoRound(SE2->E2_ISS *  ( _CTB03Z->PERC / 100 ),2)
+		EndIf
+
+        If SE2->E2_PIS > 0
+              _nAx += NoRound(SE2->E2_PIS *  ( _CTB03Z->PERC / 100 ),2)
+		EndIf
+
+        If SE2->E2_COFINS > 0
+              _nAx += NoRound(SE2->E2_COFINS *  ( _CTB03Z->PERC / 100 ),2)
+		EndIf
+
+                If SE2->E2_CSLL > 0
+                        _nAx += NoRound(SE2->E2_CSLL *  ( _CTB03Z->PERC / 100 ),2)
+		EndIf
+
+		If (_nVal + _nAx) <> _CTB03Z->VALOR
+
+			If (_nVal + _nAx) > _CTB03Z->VALOR
+				_nVal := _nVal - ( (_nVal + _nAx) - _CTB03Z->VALOR )
+			Else
+				_nVal := _nVal + (  _CTB03Z->VALOR - (_nVal + _nAx) )
+			EndIf
+
+		EndIf
+
+
+	EndIf
+
+	_ckey  := SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+DTOS(E2_EMIS1)+E2_TIPO+E2_FORNECE+E2_LOJA)
+	_cTipo := "C"
+
+	If _cCtp == "FOR" .OR.  _cCtp == "BAN"
+		_cTipo := "C"
+	Else
+		_cTipo := "D"
+	EndIf
+
+	_GeraTemp(_CTB03Z->Z6_EMPRESA,_cDeb,_cCred,_cCD,_cCc,_nVal,_cHist,_cKey,_cTipo,_ddData,"B")
+
+	DBSelectArea("_CTB03Z")
+	DBSkip()
+EndDo
+
+DBSelectArea("_CTB03Z")
+DBCloseArea()
+
+Return
+
+
+
+Static Function _VeriRat(_nRecSE2)
+
+_bret := .F. 
+_bb := .T. 
+
+DBSelectArea("SE2")
+DBSetOrder(1)
+DBGoto(_nRecSE2)
+
+If DBSeek(SE2->E2_CSUKEY, .F. )
+
+	If ALLTRIM(SE2->E2_RATCSU) == "S"
+		_bRet := .T. 
+	EndIF
+
+EndIf
+
+DBGoto(_nRecSE2)
+
+Return(_bRet)
+
+
+
+Static Function _ContaEst()
+
+nVl:=nDc:=nJr:=nMt:=nCm:=0
+_cBanco := ""
+_bRateio := .F. 
+
+ProcRegua(3)
+
+_cQuery := " SELECT SE5010.R_E_C_N_O_ AS RECE5 , SE1010.R_E_C_N_O_ AS RECE1,  "
+_cQuery += " E5_VALOR , E5_FILIAL , E5_PREFIXO , E5_NUMERO , E5_PARCELA "
+_cQuery += " , E5_TIPO , E5_SEQ , E5_CLIFOR , E5_LOJA, E5_TIPODOC , E5_DATA , "
+_cQuery += " E5_BANCO , E5_AGENCIA , E5_CONTA FROM SE5010 , SE1010 "
+_cQuery += " WHERE "
+_cQuery += " SE1010.D_E_L_E_T_ <> '*' AND SE5010.D_E_L_E_T_ <> '*' AND "
+_cQuery += " E1_FILIAL = E5_FILIAL AND "
+_cQuery += " E1_PREFIXO = E5_PREFIXO AND "
+_cQuery += " E1_NUM = E5_NUMERO AND "
+_cQuery += " E1_PARCELA = E5_PARCELA AND "
+_cQuery += " E1_TIPO = E5_TIPO AND "
+_cQuery += " E1_CLIENTE = E5_CLIFOR AND "
+_cQuery += " E1_LOJA = E5_LOJA AND "
+_cQuery += " E5_RECPAG = 'P' AND "
+_cQuery += " E5_DATA BETWEEN '"+DTOS(MV_PAR04)+"' AND '"+DTOS(MV_PAR05)+"' AND "
+_cQuery += " E5_FILIAL = '"+xFilial("SE5")+"' "
+_cQuery += " AND E5_TIPODOC <> '' "
+_cQuery += " AND E5_MOTBX <> 'CMP' "
+_cQuery += " AND E5_TIPO NOT IN ( '"+MVRECANT+"' , '"+MV_CRNEG+"')  "
+If !_bCbx
+	_cQuery += " AND E5_LACSU <> 'S' AND "
+	_cQuery += " E5_SITUACA <> 'C' AND "
+Else
+	_cQuery += " AND E5_SITUACA <> 'C' AND E5_NUMERO = '"+SE5->E5_NUMERO+"' AND "
+	_cQuery += " E5_PREFIXO = '"+SE5->E5_PREFIXO+"' AND E5_FILIAL = '"+SE5->E5_FILIAL+"'"
+	_cQuery += " AND E5_PARCELA = '"+SE5->E5_PARCELA+"' AND E5_TIPO = '"+SE5->E5_TIPO+"' "
+	_cQuery += " AND E5_CLIFOR = '"+SE5->E5_CLIFOR+"' AND E5_LOJA = '"+SE5->E5_LOJA+"'	"
+	_cQuery += " AND E5_DATA = '"+DTOS(SE5->E5_DATA)+"' AND "
+EndIf
+_cQuery += " E5_TIPODOC = 'ES' "
+_cQuery += " ORDER BY E5_FILIAL , E5_PREFIXO , E5_NUMERO , E5_PARCELA , E5_TIPO , E5_SEQ , E5_CLIFOR , E5_LOJA "
+
+If Select("_CTB03D") > 0
+	DBSelectArea("_CTB03D")
+	DBCloseArea()
+EndIf
+IncProc("Analisando Estorno de Baixas")
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "_CTB03D" , .F. , .T. )
+
+DBSelectArea("_CTB03D")
+DBGotop()
+
+If EOF()
+	Return
+EndIf
+
+While !EOF()
+
+	_bTit := .F. 
+
+	DBSelectArea("SE1")
+	DBgoto(_CTB03D->RECE1)
+
+	lEstorno := .F. 
+	cSeq	  :=	_CTB03D->E5_SEQ
+
+	If _CTB03D->E5_TIPODOC == "ES" .OR.  _bCbx
+		lEstorno := .T. 
+	Endif
+
+	_bRateio := .F. 
+
+
+	cChaveSe5 := "xFilial('SE5')==_CTB03D->E5_FILIAL.And.SE1->E1_PREFIXO ==_CTB03D->E5_PREFIXO.And.SE1->E1_NUM ==_CTB03D->E5_NUMERO.And.SE1->E1_PARCELA ==_CTB03D->E5_PARCELA.And.SE1->E1_TIPO ==_CTB03D->E5_TIPO.And.cSeq ==_CTB03D->E5_SEQ .And. _CTB03D->E5_CLIFOR+_CTB03D->E5_LOJA == SE1->E1_CLIENTE+SE1->E1_LOJA "
+
+	While !Eof() .And.  &cChaveSe5
+
+		IncProc("Processando Reg: "+_CTB03D->E5_PREFIXO+"/"+_CTB03D->E5_NUMERO)
+
+		If  ALLTRIM(_CTB03D->E5_TIPODOC) $ "BA/VL/V2/CP/ES/LJ"
+			nVl	    := _CTB03D->E5_VALOR
+			_cBanco := _CTB03D->E5_BANCO+_CTB03D->E5_AGENCIA+_CTB03D->E5_CONTA
+			nVlBanc := SE1->E1_VALOR+SE1->E1_IRRF+SE1->E1_INSS+SE1->E1_ISS
+		ElseIf ALLTRIM(_CTB03D->E5_TIPODOC) $ "DC/D2"
+			nDc	  := _CTB03D->E5_VALOR
+		ElseIf ALLTRIM(_CTB03D->E5_TIPODOC) $ "JR/J2/TL"
+			nJr	  := _CTB03D->E5_VALOR
+		ElseIf ALLTRIM(_CTB03D->E5_TIPODOC) $ "MT/M2"
+			nMt := _CTB03D->E5_VALOR
+		ElseIf ALLTRIM(_CTB03D->E5_TIPODOC) $ "CM/C2"
+			nCm := _CTB03D->E5_VALOR
+		Endif
+
+
+
+
+
+
+		_ddData := CTOD(SUBSTR(_CTB03D->E5_DATA,7,2)+"/"+SUBSTR(_CTB03D->E5_DATA,5,2) +"/"+SUBSTR(_CTB03D->E5_DATA,3,2))
+
+
+		DBSelectArea("SE5")
+		DBgoto(_CTB03D->RECE5)
+		Reclock("SE5")
+		_FIELD->E5_LACSU := "S"
+		MsUnlock()
+
+		DBSelectArea("_CTB03D")
+		DBSkip()
+
+		_bTit := .T. 
+
+	Enddo
+
+	If _bTit
+
+
+
+		dbSelectArea("SA1")
+		dbSeek(xFilial()+SE1->E1_CLIENTE+SE1->E1_LOJA)
+		dbSelectArea( "SED" )
+		dbSeek( xFilial()+SE1->E1_NATUREZ )
+
+
+
+
+		dbSelectArea( "SA6" )
+		dbSetOrder(1)
+		dbSeek(xFilial("SA6")+_cBanco)
+
+
+		_BxPag("FOR","SE1")
+
+
+
+		_BxPag("BAN","SE1")
+
+
+
+		_BxPag("JUR","SE1")
+
+
+
+		_BxPag("MUL","SE1")
+
+
+
+
+		_BxPag("DES","SE1")
+
+	EndIf
+
+	DBSelectArea("_CTB03D")
+
+	_bRateio := .F. 
+EndDo
+
+
+Return
+
+
+
+Static Function _CEstcp()
+
+nVl:=nDc:=nJr:=nMt:=nCm:=0
+_cBanco := ""
+_bRateio := .F. 
+
+ProcRegua(3)
+
+_cQuery := " SELECT SE5010.R_E_C_N_O_ AS RECE5 , SE2010.R_E_C_N_O_ AS RECE2,  "
+_cQuery += " E5_VALOR , E5_FILIAL , E5_PREFIXO , E5_NUMERO , E5_PARCELA "
+_cQuery += " , E5_TIPO , E5_SEQ , E5_CLIFOR , E5_LOJA, E5_TIPODOC , E5_DATA , "
+_cQuery += " E5_BANCO , E5_AGENCIA , E5_CONTA , E5_NATUREZ FROM SE5010 , SE2010 "
+_cQuery += " WHERE "
+_cQuery += " SE2010.D_E_L_E_T_ <> '*' AND SE5010.D_E_L_E_T_ <> '*' AND "
+_cQuery += " E2_FILIAL = E5_FILIAL AND "
+_cQuery += " E2_PREFIXO = E5_PREFIXO AND "
+_cQuery += " E2_NUM = E5_NUMERO AND "
+_cQuery += " E2_PARCELA = E5_PARCELA AND "
+_cQuery += " E2_TIPO = E5_TIPO AND "
+_cQuery += " E2_FORNECE = E5_CLIFOR AND "
+_cQuery += " E2_LOJA = E5_LOJA AND "
+_cQuery += " E5_RECPAG = 'R' AND "
+_cQuery += " E5_DATA BETWEEN '"+DTOS(MV_PAR04)+"' AND '"+DTOS(MV_PAR05)+"' AND "
+_cQuery += " E5_FILIAL = '"+xFilial("SE5")+"' "
+_cQuery += " AND E5_TIPODOC = 'ES' "
+_cQuery += " AND E5_MOTBX <> 'CMP' "
+_cQuery += " AND E5_TIPO NOT IN ( '"+MVRECANT+"' , '"+MV_CRNEG+"')  "
+_cQuery += " AND E5_LACSU <> 'S' AND "
+_cQuery += " E5_SITUACA <> 'C' AND "
+_cQuery += " E5_TIPODOC = 'ES' "
+_cQuery += " ORDER BY E5_FILIAL , E5_PREFIXO , E5_NUMERO , E5_PARCELA , E5_TIPO , E5_SEQ , E5_CLIFOR , E5_LOJA "
+
+If Select("_CTB03D") > 0
+	DBSelectArea("_CTB03D")
+	DBCloseArea()
+EndIf
+IncProc("Analisando Baixas")
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "_CTB03D" , .F. , .T. )
+
+DBSelectArea("_CTB03D")
+DBGotop()
+
+If EOF()
+	Return
+EndIf
+
+While !EOF()
+
+	_bTit := .F. 
+
+	lEstorno := .T. 
+	_bRateio := .F. 
+
+	DBSelectArea("SE2")
+	DBgoto(_CTB03D->RECE2)
+
+	If SE2->E2_RATCSU == "S"
+		_bRateio := .T. 
+	EndIf
+
+
+
+	IncProc("Processando Reg: "+_CTB03D->E5_PREFIXO+"/"+_CTB03D->E5_NUMERO)
+
+	nVl	    := _CTB03D->E5_VALOR
+	_cBanco := _CTB03D->E5_BANCO+_CTB03D->E5_AGENCIA+_CTB03D->E5_CONTA
+	nVlBanc := SE1->E1_VALOR+SE1->E1_IRRF+SE1->E1_INSS+SE1->E1_ISS
+
+
+
+
+
+
+	_ddData := CTOD(SUBSTR(_CTB03D->E5_DATA,7,2)+"/"+SUBSTR(_CTB03D->E5_DATA,5,2) +"/"+SUBSTR(_CTB03D->E5_DATA,3,2))
+
+	DBSelectArea("SE5")
+	DBgoto(_CTB03D->RECE5)
+	Reclock("SE5")
+	_FIELD->E5_LACSU := "S"
+	MsUnlock()
+
+	DBSelectArea("_CTB03D")
+
+
+
+
+	dbSelectArea("SA2")
+	dbSeek(xFilial()+_CTB03D->E5_CLIFOR+_CTB03D->E5_LOJA)
+	dbSelectArea( "SED" )
+	dbSeek( xFilial()+_CTB03D->E5_NATUREZ )
+
+
+
+
+	dbSelectArea( "SA6" )
+	dbSetOrder(1)
+	dbSeek(xFilial("SA6")+_cBanco)
+
+
+	_BxPag("FOR","SE2")
+
+
+
+	_BxPag("BAN","SE2")
+
+	DBSelectArea("_CTB03D")
+	DBSkip()
+
+	_bRateio := .F. 
+EndDo
+
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function MenuDef()
+
+
+
+
+Local aRotina :=	{ {"Processar","MATA330" ,0 ,1 }, { "Processar","MATA330" ,0 ,2 }, { "Processar","MATA330" ,0 ,3 }, { "Processar","MATA330" ,0 ,4 }, { "Processar","MATA330" ,0 ,5 } }
+
+Return aRotina

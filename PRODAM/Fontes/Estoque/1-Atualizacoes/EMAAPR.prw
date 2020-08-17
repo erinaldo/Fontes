@@ -2,8 +2,6 @@
 #INCLUDE "PROTHEUS.CH"
 #INCLUDE "AP5MAIL.CH"
 
-//U_EMAAPR("01","TESTE","001","000004","01",.T.)
-//U_EMAAPR("01","TESTE","001","000004","01",.F.)
 /*
 ‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -18,22 +16,22 @@
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂ
 */
-User Function EMAAPR(cFil,cDoc,cSer,cFor,cLoj,cEmissao,cPrazo,cApr,cObs, cTo)
+User Function EMAAPR(cFil,cDoc,cSer,cFor,cLoj,cCod,cItem,cEmissao,cPrazo,cApr,cObs, cTo)
 
-Local cConta 	:= GETMV('MV_EMCONTA')
-Local cSenha 	:= GETMV('MV_EMSENHA')
-Local cServer	:= GETMV('MV_RELSERV')
+Local cConta 		:= GETMV('MV_EMCONTA')
+Local cSenha 		:= GETMV('MV_EMSENHA')
+Local cServer		:= GETMV('MV_RELSERV')
 Local cFrom		:= GETMV('MV_RELFROM')
 Local lReturn 	:= .F.
-Local cMensagem := ""
-Local aArquivos := {}
+Local cMensagem 	:= ""
+Local aArquivos 	:= {}
 Local lResulConn 
 
 //cApr = 1 -SIM
 //cApr = 2 - N√O
 cApr := IIF(cApr=="1","Aprovado","Rejeitado")
 
-cMensagem += GeraXml2(cFil, cDoc, cSer, cFor, cLoj, cEmissao, cPrazo, cApr, cObs)
+cMensagem += GeraXml2(cFil, cDoc, cSer, cFor, cLoj, cCod, cItem, cEmissao, cPrazo, cApr, cObs)
 
 //Envia E-mail
 lRet:= U_EnviaEmail(cConta,  cSenha, cServer, cFrom, cTo,"Aviso de Resposta de WorkFlow - An·lise de Amostra",cMensagem,"")
@@ -57,7 +55,7 @@ Return
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂ
 */
-Static Function GeraXml2(cFil,cDoc,cSer,cFor,cLoj,cEmissao,cPrazo,cApr,cObs)
+Static Function GeraXml2(cFil,cDoc,cSer,cFor,cLoj,cCod,cItem,cEmissao,cPrazo,cApr,cObs)
 
 Local cAr := GetArea()
 Local cMensagem := ""
@@ -133,7 +131,7 @@ cMensagem +=' 							<font face="verdana" size="1"><font color="white"><b>Produt
 cMensagem +=' 						<td width="18%"> '
 cMensagem +=' 							<font face="verdana" size="1"><font color="white"><b>Descri&ccedil;&atilde;o</b></font> </font></td> '
 cMensagem +=' 					</tr> '
-cMensagem += 					PopItens(cFil,cDoc,cSer)
+cMensagem += 					PopItens(cFil,cDoc,cSer,cFor,cLoj,cCod,cItem)
 cMensagem +=' 					<tr> '
 cMensagem +=' 						<td align="center" bgcolor="Black" colspan="10"> '
 cMensagem +=' 							&nbsp;</td> '
@@ -167,7 +165,7 @@ Return(cMensagem)
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂ
 */
-Static Function PopItens(cFil,cDoc,cSer)
+Static Function PopItens(cFil,cDoc,cSer,cFor,cLoj,cCod,cItem)
 
 local cAAnt:= GetArea()
 local cAlias := GetNextAlias()
@@ -185,6 +183,10 @@ local cDPr	:= ""
 	   AND D1_FILIAL = %Exp:cFil%
 	   AND D1_DOC = %Exp:cDoc%
 	   AND D1_SERIE = %Exp:cSer%
+	   AND D1_FORNECE = %Exp:cFor%
+	   AND D1_LOJA = %Exp:cLoj%
+	   AND D1_COD = %Exp:cCod%
+	   AND D1_ITEM = %Exp:cItem%
 	   ORDER BY D1_FILIAL,D1_ITEM
 
 	EndSQL

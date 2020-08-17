@@ -1,0 +1,163 @@
+#include "rwmake.ch"
+*---------------------------------------------------------------------------------------------------------------
+User Function CsCtbM04()
+* Manutencao da descricao das contas contabeis na empresa 98 (Consolidadora)
+* Ricardo Luiz da Rocha - Dts Consulting - 06/07/2004 GNSJC
+* Criar, na empresa 98, o campo "CT1_CSALTT" C 150 (visualizar / fora de uso)
+*---------------------------------------------------------------------------------------------------------------
+private _cCT1MESTRE:="CT1020",_vLog:={}
+
+if sm0->m0_codigo<>"98"
+   msgbox("Esta rotina somente pode ser executada na empresa 98 (Consolidadora)")
+   return
+endif
+
+@ 100,091 To 240,540 Dialog oBase Title OemToAnsi("Manutencao da descricao de contas contabeis na empresa Consolidadora")
+@ 012,016 Say u__fAjTxt('Esta rotina realizara a atualizacao da descricao das contas contabeis na')
+@ 022,016 Say u__fAjTxt('empresa 98 (Consolidadora), igualando-as as da empresa 02 (Cardsystem)')
+
+@ 045,130 BmpButton Type 1 Action (_fProssegue(),close(oBase))
+@ 045,170 BmpButton Type 2 Action close(oBase)
+Activate Dialog oBase centered
+Return
+
+*-------------------------------------------------------------------------------------------------------------
+static Function _fProssegue
+*-------------------------------------------------------------------------------------------------------------
+cursorwait()
+processa({||_fAtuCt1()},"Atualizando a descricao das contas")
+cursorarrow()
+if len(_vLog)==0
+   msgbox("Nenhuma atualizacao e necessaria no momento")
+else   
+   _fImpLog()
+endif
+
+*-------------------------------------------------------------------------------------------------------------
+static Function _fAtuCt1
+*-------------------------------------------------------------------------------------------------------------
+_vLog:={}                               
+dbusearea(.t.,"TOPCONN",_cCt1Mestre,"_Ct1Mestre",.t.,.f.)
+
+if upper(alias())<>"_CT1MESTRE"
+   msgbox("Nao foi possivel abrir a tabela principal ("+_cCt1Mestre+") para colher as descricoes das contas")
+   return
+endif
+ct1->(dbsetorder(1)) // CT1_FILIAL+CT1_CONTA
+procregua(_CT1Mestre->(lastrec()))
+_CT1Mestre->(dbgotop())
+_nAlterados:=0
+do while _CT1Mestre->(!eof())
+   if ct1->(dbseek(xfilial()+_CT1Mestre->ct1_conta,.f.))
+      _cNovo  :=_fLimpa(_Ct1Mestre->ct1_desc01)
+      _cAntigo:=ct1->ct1_desc01
+      if alltrim(ct1->ct1_desc01)<>alltrim(_cNovo)
+         if Ct1->(reclock(alias(),.f.))
+            Ct1->ct1_desc01:=_cNovo
+            CT1->ct1_CsAltT:="CsMdtM04 "+substr(cUsuario,7,15)+" "+dtoc(ddatabase)+" "+left(time(),5)+' h Alteracao da descricao, valor antes da alteracao: "'+alltrim(_cAntigo)+'"'
+            aadd(_vLog,ct1->ct1_conta+" "+left(_cAntigo,40)+"   "+left(_cNovo,40))
+            Ct1->(msunlock())
+            _nAlterados++
+         endif
+      endif
+   endif
+   incproc(_Ct1Mestre->ct1_conta+" alterados: "+alltrim(str(_nAlterados)))
+   _Ct1Mestre->(dbskip(1))
+enddo
+_Ct1Mestre->(dbclosearea())
+
+*-------------------------------------------------------------------------
+static function _fImpLog()
+*-------------------------------------------------------------------------
+
+nLastKey  :=0
+limite    :=132
+wnrel     :=nomeprog:="CsCtbM04"
+cDesc1    :="Log de alteracao - descricao de contas contabeis"
+cDesc2    :=" "
+cDesc3    :=" "
+cString   :="CT1"
+tamanho   := "M"
+titulo    := cDesc1
+aReturn   := { "Zebrado", 1,"Administracao", 1, 2, 1, "",0 }
+_nLin     :=99
+m_pag     :=1
+Li        :=0
+Cabec1:="Numero da conta      Descricao antes da alteracao               Descricao apos a alteracao"
+Cabec2:=""   
+cursorarrow()
+wnrel := SetPrint(cString,wnrel,,@Titulo,cDesc1,cDesc2,cDesc3,.t.,,.t.,tamanho)
+if nLastkey==27
+   set filter to
+   return
+endif
+cursorwait()
+
+RptStatus({|| RptDetail() })
+cursorarrow()
+*-------------------------------------------
+Static function rptdetail
+*-------------------------------------------
+setdefault(aReturn,cString)
+setregua(len(_vLog))
+_nLin:=99
+_cUltimo:=_vLog[1]
+for _nVez:=1 to len(_vLog)
+    incregua()
+    if _nLin>58
+       Cabec(titulo,cabec1,cabec2,nomeprog,tamanho)
+       _nLin:=li+2
+    endif
+    @ _nLin++,0 PSAY _vLog[_nVez]
+next
+
+roda(0,"",tamanho)
+
+If aReturn[5] == 1
+   Set Printer To
+   Commit
+   ourspool(wnrel)
+Endif
+MS_FLUSH()
+Return
+
+return
+
+*-------------------------------------------------------------------------
+static function _fLimpa(_cLimpar)
+*-------------------------------------------------------------------------
+local _vTrocar:={},_nVez,_vTrocar2:={{"Ç","C"},;
+                                                        {"Ã","A"},;
+                                                        {"É","E"},;
+                                                        {"Ú","U"},;
+                                                        {"Ê","E"},;
+                                                        {"Ú","U"},;
+                                                        {"Á","A"},;
+                                                        {"Ô","O"},;
+                                                        {"Í","I"},;
+                                                        {"Â","A"},;
+                                                        {"Ú","U"},;
+                                                        {"©","A"},;
+                                                        {CHR(184),"A"},;
+                                                        {CHR(166),"'"},;
+                                                        {"ª","'"}},;
+      _cCaractEsp,_cCaractPad,_nPosic
+_cLimpar:=upper(alltrim(_cLimpar))                                  
+
+for _nVez:=1 to len(_vTrocar)
+   _cLimpar:=strtran(_cLimpar,_vTrocar[_nVez]," ")
+next
+_cLimpar:=upper(alltrim(_cLimpar))
+//do while at("  ",_cLimpar)>0
+//   _cLimpar:=strtran(_cLimpar,"  "," ")
+//enddo
+
+for _nVez:=1 to len(_cLimpar)
+    _cCaractEsp:=substr(_cLimpar,_nVez,1)
+    if (_nPosic:=ascan(_vTrocar2,{|_vAux|_vAux[1]==_cCaractEsp}))>0
+       _cCaractPad:=_vTrocar2[_nPosic][2]
+       _cLimpar:=strtran(_cLimpar,_cCaractEsp,_cCaractPad)
+    endif
+next
+
+return _cLimpar      

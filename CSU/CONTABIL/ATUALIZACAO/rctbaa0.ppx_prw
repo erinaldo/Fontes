@@ -1,0 +1,202 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 17 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbaa0.prw"
+Function U_RCTBAA0
+
+
+
+Private cCadastro := "Permissões de Manutenção de Tabela de Rateio aos Usuários"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Private aRotina := { {"Pesquisar","AxPesqui",0,1} , {"Visualizar","AxVisual",0,2} , {"Incluir","AxInclui",0,3} , {"Alterar","AxAltera",0,4} , {"Excluir","U_RCTBAA0D",0,5} }
+
+Private cDelFunc := ".T."
+
+Private cString := "ZB6"
+
+dbSelectArea("ZB6")
+dbSetOrder(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dbSelectArea(cString)
+mBrowse( 6,1,22,75,cString,,)
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBAA0R(cCodRat)
+Local lRetorno	:= .T. 
+
+If isInCallStack("U_RCTBAA0")
+
+	If Inclui
+
+		If !Empty(M->ZB6_USUARI)
+
+			dbSelectArea("ZB6")
+			dbSetOrder(1)
+			If dbSeek(xFilial("ZB6")+cCodRat+M->ZB6_USUARI, .F. )
+				Aviso("Aviso","A amarração de código de usuário ao código do rateio já existe na base de dados.",{"OK"},,"Atenção",,"BMPPERG")
+				lRetorno	:= .F. 
+			Endif
+
+		Endif
+
+	Endif
+
+Endif
+
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBAA0U(cCodUsu)
+Local lRetorno	:= .T. 
+
+If isInCallStack("U_RCTBAA0")
+
+	If Inclui
+
+		If !Empty(M->ZB6_CODRAT)
+
+			dbSelectArea("ZB6")
+			dbSetOrder(1)
+			If dbSeek(xFilial("ZB6")+M->ZB6_CODRAT+cCodUsu, .F. )
+				Aviso("Aviso","A amarração de código de usuário ao código do rateio já existe na base de dados.",{"OK"},,"Atenção",,"BMPPERG")
+				lRetorno	:= .F. 
+			Endif
+
+		Endif
+
+	Endif
+
+Endif
+
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBAA0D()
+
+RegToMemory("ZB6", .F. )
+
+AxDeleta("ZB6",ZB6->(Recno()),5)
+
+Return

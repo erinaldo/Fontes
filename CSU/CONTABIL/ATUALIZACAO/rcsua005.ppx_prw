@@ -1,0 +1,12 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rcsua005.prw"
+#line 1 "C:\INCLUDE\TOPCONN.ch"
+#line 17 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rcsua005.prw"
+Function U_RCSUA005()
+
+AxCadastro("SZD","Cadastro De Para",".T.",".T.")
+
+
+RETURN()

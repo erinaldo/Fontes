@@ -1,0 +1,287 @@
+#Include "Protheus.ch"
+#Include "topconn.ch"
+
+//-----------------------------------------------------------------------
+/*{Protheus.doc} ASCTBA24
+@Programa para gerar contabilização do TIN tabela SZ9
+
+@param		
+@return		Nenhum
+@author 	Fabiano Albuquerque
+@since 		23/03/2018
+@version 	1.0
+@project	MAN0000001 - Aguassanta - Integra
+*/
+//-----------------------------------------------------------------------
+
+User Function ASCTBA24()
+Local cMensagem := ""
+Local cPerg			:= "XCTB01    "
+Local _aButtons		:= {}
+Local _aSays		:= {}
+Local _cCadastro
+
+// Funcao para criacao das perguntas
+aPerg := {}
+Aadd(aPerg,{cPerg,"01","Data de ?","","","mv_ch1","D",8,0,0,"G","NaoVazio()","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+Aadd(aPerg,{cPerg,"02","Data Ate ?","","","mv_ch2","D",8,0,0,"G","NaoVazio()","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+Aadd(aPerg,{cPerg,"03","Filial de ?","","","mv_ch3","C",7,0,0,"G","Vazio() .Or. ExistCpo('SM0',cEmpAnt + MV_PAR09)","mv_par03","","","","","","","","","","","","","","","","","","","","","","","","","SM0_01","","","",""})
+Aadd(aPerg,{cPerg,"04","Filial Ate ?","","","mv_ch4","C",7,0,0,"G","'ZZ' $ Upper(MV_PAR10).Or.ExistCpo('SM0',cEmpAnt + MV_PAR04)","mv_par04","","","","","","","","","","","","","","","","","","","","","","","","","SM0_01","","","",""})
+Aadd(aPerg,{cPerg,"05","Mostra Lancamento ?","","","mv_ch5","C",1,0,0,"C","NaoVazio()","mv_par05","Sim","Si","Yes","","","Nao","No","No","","","","","","","","","","","","","","","","","","","","",""})
+Aadd(aPerg,{cPerg,"06","Aglutina lancamento ?","","","mv_ch6","C",1,0,0,"C","NaoVazio()","mv_par06","Sim","Si","Yes","","","Nao","No","No","","","","","","","","","","","","","","","","","","","","",""})
+FCriaSx1(aPerg)
+	
+// chamadas das perguntas internamente.
+Pergunte(cPerg,.f.)
+	
+aAdd(_aButtons, { 5,.T.,{|| Pergunte(cPerg,.t.) } } )
+aAdd(_aButtons, { 1,.T.,{|o| o:oWnd:End(),fContabiliza() } } )
+aAdd(_aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
+	
+aAdd(_aSays,"Gera lancamentos contabeis do TIN" )
+	
+FormBatch( _cCadastro, _aSays, _aButtons,,200,405 )
+
+Return
+
+//-----------------------------------------------------------------------
+/*{Protheus.doc} fContabiliza
+@Chamada da funcao de processamento.
+
+@param		
+@return		Nenhum
+@author 	Fabiano Albuquerque
+@since 		23/03/2018
+@version 	1.0
+@project	MAN0000001 - Aguassanta - Integra
+*/
+//-----------------------------------------------------------------------
+
+Static Function fContabiliza()
+
+//Local cFilEC := ""
+
+//If MV_PAR01 < _dDtProv
+//	MsgInfo("Data selecionada para contabilização já foi fechada na Contabilidade!")
+//Else
+	MsgRun("Gerando os registros, aguarde ....",,{ || fProcessa() })
+//EndIF
+
+Return
+
+//-----------------------------------------------------------------------
+/*{Protheus.doc} fProcessa
+@Funcao de processamento.
+
+@param		
+@return		Nenhum
+@author 	Fabiano Albuquerque
+@since 		23/03/2018
+@version 	1.0
+@project	MAN0000001 - Aguassanta - Integra
+*/
+//----------/-------------------------------------------------------------
+
+Static Function fProcessa()
+
+Local _lPrimeiro	:= .T.
+Local lCtbOnline 	:= .T.
+Local cArqctb		:= ""
+Local ldigita		:= (mv_par05==1)
+Local lAglutina		:= (mv_par06==1)
+Local nTotalLCtb	:= 0
+Local nHdlPrv		:= 0
+Local _sDataIni		:= Dtos(mv_par01)
+Local _sDataFim 	:= Dtos(mv_par02)
+Local _sEmpIni		:= mv_par03
+Local _sEmpFim		:= mv_par04
+Local TZ9			:= GetNextAlias()
+
+_cQuery := " SELECT SZ9.Z9_FILIAL, SZ9.Z9_ID, SZ9.Z9_CLIENTE, SZ9.Z9_LOJA, SZ9.Z9_NATUREZ, SZ9.Z9_DTOPER, SZ9.Z9_VALORCP, "
+_cQuery += " SZ9.Z9_VALORLP, SZ9.Z9_CODLP, SZ9.Z9_CCUSTO, SZ9.Z9_HIST, SZ9.Z9_LA "
+_cQuery += " FROM " + RetSqlName("SZ9") + " SZ9 "
+_cQuery += " WHERE SZ9.Z9_DTOPER BETWEEN '" + _sDataIni + "' AND '" + _sDataFim + "' "
+_cQuery += " AND SZ9.Z9_FILIAL BETWEEN '" + SubStr(_sEmpIni,1,3) + "' AND '" + SubStr(_sEmpFim,1,3) + "' "
+_cQuery += " AND SZ9.Z9_LA = '' "
+_cQuery += " AND SZ9.D_E_L_E_T_ = ' ' "
+_cQuery += " ORDER BY Z9_FILIAL, Z9_DTOPER, Z9_ID "
+
+_cQuery := ChangeQuery(_cQuery)
+
+If Select(TZ9)>0
+	(TZ9)->(dbCloseArea())
+Endif
+
+dbUseArea(.T.,'TOPCONN',TcGenQry(,,_cQuery),'TZ9',.T.,.T.)
+
+TCSetField('TZ9','Z9_DTOPER','D',8,0)
+
+DbSelectArea("TZ9")
+TZ9->(DbGoTop())
+
+If TZ9->(Eof())
+	TZ9->(DbCloseArea())
+	ApMsgStop("Nao existem movimentos neste perido a contabilizar")
+	Return
+Endif
+
+DbSelectArea("SA1")
+DbSelectArea("SED")
+
+While !TZ9->(Eof())
+	
+	Begin Transaction
+	
+	If _lPrimeiro
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica o numero do lote contabil                        ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea("SX5")
+		dbSetOrder(1)
+		If MsSeek(xFilial("SX5")+"09TIN   ",.F.)
+			cLoteCtb := AllTrim(X5Descri())
+		Else
+			cLoteCtb := "TIN"
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Executa um execblock                                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If At(UPPER("EXEC"),X5Descri()) > 0
+			cLoteCtb := &(X5Descri())
+		EndIF	
+			
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Cabecalho da contabilizacao                               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nHdlPrv := HeadProva(cLoteCtb,"ASCTBA24",Subs(cUsuario,7,6),@cArqCtb)
+		
+		IF nHdlPrv <= 0
+			HELP(" ",1,"SEM_LANC")
+			lCtbOnLine := .F.
+		EndIf
+		_lPrimeiro := .T.
+	EndIf
+	 
+	_cCliente := TZ9->Z9_CLIENTE + TZ9->Z9_LOJA
+	SA1->(DbSetOrder(1)) // FILIAL + CLIENTE + LOJA
+	SA1->(DbGotop())
+	SA1->(MsSeek( xFilial("SA1") + _cCliente ) )
+	
+	_cNatureza := TZ9->Z9_NATUREZ 
+	SED->(DbSetOrder(1)) // FILIAL + NATUREZA
+	SED->(DbGotop())
+	SED->( MsSeek( xFilial("SED") + _cNatureza ) )
+
+	IF nHdlPrv > 0
+		IF TZ9->Z9_CODLP == "51B"
+			_nTotLcto := DetProva(nHdlPrv,"TN1","ASCTBA24",cLoteCtb)
+		ELSEIF TZ9->Z9_CODLP == "51C"
+			_nTotLcto := DetProva(nHdlPrv,"TN2","ASCTBA24",cLoteCtb)
+		ENDIF 
+
+		nTotalLCtb	+= _nTotLcto
+
+	ENDIF
+	
+	DbSelectArea("SZ9")
+	SZ9->(DbGotop())
+	SZ9->(DbSetOrder(1))
+	MsSeek( xFilial("SZ9")+TZ9->Z9_ID )
+
+	RecLock("SZ9",.F.)
+	SZ9->Z9_LA := "S"
+	MsUnLock()
+	End Transaction
+	
+	TZ9->(DbSkip())
+	
+EndDo
+
+// Rodape do lancamento gerando os totais.
+If nHdlPrv > 0
+	Rodaprova(nHdlPrv,nTotallCtb)
+	If nTotalLCtb > 0
+		nTotalLCtb := 0
+		
+		//Cria transacao para garantir atualizacao do documento
+		Begin Transaction
+		cA100Incl(cArqCtb,nHdlPrv,1,cLoteCtb,lDigita,lAglutina,,_dData)
+		End Transaction
+		
+	EndIf
+Endif
+
+//Tratamento da gravacao do SZ9 e CTB na Integridade Referencial
+TZ9->(FkCommit())
+
+TZ9->(DbCloseArea())
+
+Return
+
+//-----------------------------------------------------------------------
+/*{Protheus.doc} DtContabil
+@Busca a primeira data contabil em aberto no calendario contábil
+
+@param		
+@return		Nenhum
+@author 	Fabiano Albuquerque
+@since 		23/03/2018
+@version 	1.0
+@project	MAN0000001 - Aguassanta - Integra
+*/
+//-----------------------------------------------------------------------
+
+Static Function DtContabil()
+
+Local aArea:=GetArea()
+Local aAreaCTG:=CTG->(GetArea())
+Local _dDataCTG:=ctod('')
+
+DbSelectArea('CTG')
+set filter to CTG_STATUS=='1'
+DbGoTop()
+_dDataCTG:=CTG_DTINI
+set filter to
+
+RestArea(aAreaCTG)
+RestArea(aArea)
+
+Return _dDataCTG
+
+//-----------------------------------------------------------------------
+/*{Protheus.doc} DtContabil
+@Cria as Perguntas da Rotina
+
+@param		
+@return		Nenhum
+@author 	Fabiano Albuquerque
+@since 		23/03/2018
+@version 	1.0
+@project	MAN0000001 - Aguassanta - Integra
+*/
+//-----------------------------------------------------------------------
+
+Static Function FCriaSx1(aRegs)
+
+Local aAreaSX1	:= SX1->(GetArea())
+Local nJ			:= 0
+Local nY			:= 0
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+
+For nY := 1 To Len(aRegs)
+	If !MsSeek(aRegs[nY,1]+aRegs[nY,2])
+		RecLock("SX1",.T.)
+		For nJ := 1 To FCount()
+			If nJ <= Len(aRegs[nY])
+				FieldPut(nJ,aRegs[nY,nJ])
+			EndIf
+		Next nJ
+		MsUnlock()
+	EndIf
+Next nY
+
+RestArea(aAreaSX1)
+
+Return(Nil)

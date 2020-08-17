@@ -29,6 +29,8 @@ Local _nAux1, _dDota, _cDescProd
 
 _dDota			:= aScan (aHeader, {|x| AllTrim(x[2]) == "D1_XDTDOT"})
 _cDescProd		:= aScan (aHeader, {|x| AllTrim(x[2]) == "D1_XDESCCO"})
+_cDescCC		:= aScan (aHeader, {|x| AllTrim(x[2]) == "D1_XDESCCC"})
+
 //_nxTotal		:= aScan (aHeader, {|x| AllTrim(x[2]) == "D1_XTOTAL"})
 //_nvUnit		:= aScan (aHeader, {|x| AllTrim(x[2]) == "D1_VUNIT"})
 //_nTotal		:= aScan (aHeader, {|x| AllTrim(x[2]) == "D1_TOTAL"})
@@ -38,6 +40,10 @@ If _dDota  > 0
 Endif
 If _cDescProd > 0
 	aCols[paramixb[1], _cDescProd] := SC7->C7_XDESCCO
+EndIf
+
+If _cDescCC > 0
+	aCols[paramixb[1], _cDescCC] := SC7->C7_XDESCCC
 EndIf
 
 //If _nxTotal > 0

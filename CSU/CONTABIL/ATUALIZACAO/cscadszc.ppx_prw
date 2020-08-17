@@ -1,0 +1,13 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 3 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\cscadszc.prw"
+
+
+
+
+Function U_CSUCADZC()
+
+AxCadastro("SZC","TIPOS DE MOVIMENTOS BANCARIOS",".T.",".T.")
+
+Return

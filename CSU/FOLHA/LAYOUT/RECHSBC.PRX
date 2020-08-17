@@ -1,0 +1,3943 @@
+#INCLUDE "RWMAKE.CH"
+//#INCLUDE "RecHsbc.Ch"
+#INCLUDE "Recibo.Ch"
+
+#DEFINE      cQuebraLin     Chr(13) + Chr(10)
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ RECHSBC  ³ Autor ³ Isamu K.              ³ Data ³ 30/10/13 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Geracao de Recibos de Pagamento via terminal H S B C       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ RECHSBC( void )                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³            ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function RecHSBC()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais ( Basicas )                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cString:="SRA"        // alias do arquivo principal ( Base )
+Local aOrd   := {STR0001, STR0002, STR0003, STR0005} //"Matricula"###"C.Custo"###"Nome"###"C.Custo + Nome"
+Local cDesc1 := "Geracao de Arquivo para impressao de Recibos via Terminal H.S.B.C  "
+Local cDesc2 := "Sera gerado de acordo com os parametros solicitados pelo"
+Local cDesc3 := "usuario."
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais ( Programa )                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local nExtra, cIndCond, cIndRc
+Local Baseaux := "S", cDemit := "N"
+Local cMesAnoRef
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt( "CSTRING, AORD, CDESC1, CDESC2, CDESC3, BASEAUX" )
+SetPrvt( "CDEMIT, ARETURN, NOMEPROG, ALINHA, NLASTKEY, CPERG" )
+SetPrvt( "CSEM_DE, CSEM_ATE, ALANCA, APROVE, ADESCO, ABASES" )
+SetPrvt( "AINFO, ACODFOL, LI, TITULO, WNREL, NORDEM" )
+SetPrvt( "DDATAREF, NTIPREL, ESC, SEMANA, CFILDE, CFILATE" )
+SetPrvt( "CCCDE, CCCATE, CMATDE, CMATATE, CNOMDE, CNOMATE" )
+SetPrvt( "CHAPADE, CHAPAATE, MENSAG1, MENSAG2, MENSAG3, CSITUACAO" )
+SetPrvt( "CCATEGORIA, CBASEAUX, CMESANOREF, TAMANHO, LIMITE, AORDBAG" )
+SetPrvt( "CMESARQREF, CARQMOV, CALIASMOV, CACESSASR1, CACESSASRA, CACESSASRC" )
+SetPrvt( "CACESSASRI, LATUAL, CARQNTX, CINDCOND, ADRIVER, CCOMPAC" )
+SetPrvt( "CNORMAL, CINICIO, CFIM, TOTVENC, TOTDESC, FLAG" )
+SetPrvt( "CHAVE, DESC_FIL, DESC_END, DESC_CC, DESC_FUNC, DESC_MSG1" )
+SetPrvt( "DESC_MSG2, DESC_MSG3, CFILIALANT, CFUNCAOANT, CCCANT, VEZ" )
+SetPrvt( "ORDEMZ, NATELIM, NBASEFGTS, NFGTS, NBASEIR, NBASEIRFE" )
+SetPrvt( "ORDEM_REL, DESC_CGC, NCONTA, NCONTR, NCONTRT, NLINHAS" )
+SetPrvt( "CDET, NCOL, NTERMINA, NCONT, NCONT1, NVALIDOS, NSEQ_, CREG, LCONTINUA" )
+SetPrvt( "NVALSAL, DESC_BCO, CCHAVESEM, DESC_PAGA, NPOS, CARRAY, NHDL, CNOMEARQ" )
+SetPrvt( "NTOTPROV, NTOTDESC, NTOTLIQ, CQUEBRALIN, NVLIQUIDO" )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Private( Basicas )                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aReturn  := {STR0009, 1, STR0010, 2, 2, 1, "", 1 }	//"Zebrado"###"Administra‡„o"
+Private nomeprog :="RECHSBC"
+Private aLinha   := { }, nLastKey := 0
+Private cPerg    :="RECIBOHSBC"
+Private cSem_De  := "  /  /    "
+Private cSem_Ate := "  /  /    "
+Private nAteLim , nBaseFgts , nFgts , nBaseIr , nBaseIrFe, nVLiquido
+Private cEndereco
+Private cNumero
+Private nTotRLote
+Private nTotArq  
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Private( Programa )                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aLanca := {}
+Private aProve := {}
+Private aDesco := {}
+Private aBases := {}
+Private aInfo  := {}
+Private aCodFol:= {}
+Private li     := 0
+Private nHdl   := 0
+PRIVATE nSeq_  := 1
+Private Titulo := "GERACAO DE ARQUIVO DE RECIBO H.S.B.C. "
+
+nTotProv := nTotProv := nTotLiq := 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+VerPerg()
+pergunte( cPerg, .F. )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel:="RECHSBC"           //Nome Default do relatorio em Disco
+wnrel:=SetPrint( cString, wnrel, cPerg, Titulo, cDesc1, cDesc2, cDesc3, .F., aOrd )
+
+If LastKey() == 27 .OR. nLastKey == 27
+	Return NIL
+EndIf
+
+SetDefault( aReturn, cString )
+
+If LastKey() = 27 .OR. nLastKey = 27
+	Return NIL
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carregando variaveis mv_par?? para Variaveis do Sistema.     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                         ³
+//³ mv_par01        //  Data de Referencia para a impressao      ³
+//³ mv_par02        //  Tipo de Recibo( Pre/Zebrado/Email/Arquivo )³
+//³ mv_par03        //  Emitir Recibos( Adto/Folha/1¦/2¦/V.Extra ) ³
+//³ mv_par04        //  Numero da Semana                         ³
+//³ mv_par05        //  Filial De                                ³
+//³ mv_par06        //  Filial Ate                               ³
+//³ mv_par07        //  Centro de Custo De                       ³
+//³ mv_par08        //  Centro de Custo Ate                      ³
+//³ mv_par09        //  Matricula De                             ³
+//³ mv_par10        //  Matricula Ate                            ³
+//³ mv_par11        //  Nome De                                  ³
+//³ mv_par12        //  Nome Ate                                 ³
+//³ mv_par13        //  Chapa De                                 ³
+//³ mv_par14        //  Chapa Ate                                ³
+//³ mv_par15        //  Mensagem 1                               ³
+//³ mv_par16        //  Mensagem 2                               ³
+//³ mv_par17        //  Mensagem 3                               ³
+//³ mv_par18        //  Situacoes a Imprimir                     ³
+//³ mv_par19        //  Categorias a Imprimir                    ³
+//³ mv_par20        //  Imprimir Bases                           ³
+//³ mv_par21        //  Arquivo de Saida                         ³
+//³ mv_par22        //  Arquivo p/ BDN                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nOrdem     := aReturn[8]
+dDataRef   := mv_par01
+dDataCred  := mv_par02
+nTipRel    := 4
+nTipRec    := mv_par03
+Semana     := mv_par04
+cFilDe     := mv_par05
+cFilAte    := mv_par06
+cCcDe      := mv_par07
+cCcAte     := mv_par08
+cMatDe     := mv_par09
+cMatAte    := mv_par10
+cNomDe     := mv_par11
+cNomAte    := mv_par12
+cSituacao  := mv_par13
+cCategoria := mv_par14
+cBaseAux   := "S"
+cNomeArq   := mv_par15
+cOperacao  := mv_par16
+cAgencia   := mv_par18
+cConta     := mv_par19
+cNum       := ''
+cMesAnoRef := StrZero( Month( dDataRef ), 2 ) + StrZero( Year( dDataRef ), 4 )
+cCodOpera  := ''
+lEhInc     := .T.
+cTipPag    := ''
+cCodInst   := ''
+dDtRefIni  := Stod(Subs(Dtos(dDataRef),1,6)+"01")
+dDtRefFim  := Stod(Subs(Dtos(dDataRef),1,6)+StrZero(f_UltDia(dDataRef),2))
+lContinua  := .F.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Tabela de Tipo de Operacao      ³
+//³                                ³
+//³T   Carga de Lote Mensal        ³
+//³S   Substituicao de Lote proces ³
+//³A   Alteracao de Recibo do Mes  ³
+//³X   Exclusao de Lote Processado ³
+//³E   Exclusao individual de Rec  ³
+//³D   Dispensa de Funcionario     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If  cOperacao == 1
+	cCodOpera := '0'
+	cCodInst  := '00'
+ElseIf cOperacao == 2
+	cCodOPera := '9'
+	cCodInst  := '99'
+ElseIf cOperacao == 3
+	cCodOPera := '5'
+	cCodInst  := '55'
+	lEhInc    := .F.
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Tabela de Tipo de Pagamento     ³
+//³02  1a Parcela                  ³
+//³02  2a Parcela                  ³
+//³01  Folha Normal                ³
+//³03  Adiantamento                ³
+//³K   Antecipação                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If nTipRec == 1
+	cTipPag := "03"
+ElseIf nTipRec == 2
+	cTipPag := "01"
+ElseIf nTipRec == 3
+	cTipPag := "02"
+ElseIf nTipRec == 4
+	cTipPag := "02"
+Else
+	cTipPag := "04"
+Endif
+
+
+RptStatus( {|lEnd| GERRImp( @lEnd, wnRel, cString, cMesAnoRef )}, Titulo )  // Chamada do Relatorio
+
+//Gerar Arquivo
+If nTipRel == 4
+	If nHdl > 0
+		If fClose( nHdl )
+			
+			If nTotRLote <> 0
+				
+				//If lEhInc
+					//Aviso( 'AVISO', 'Gerado o arquivo ' + AllTrim( AllTrim( cNomeArq ) ) + CRLF + CRLF , {'OK'}, 3 )
+				//EndIf
+				
+				Aviso( 'AVISO', 'Gerado o arquivo ' + AllTrim( AllTrim( cNomeArq ) ) + '...', {'OK'} )
+				
+			Else
+				If fErase( cNomeArq ) == 0
+					If lContinua
+						Aviso( 'AVISO', 'N„o existem registros a serem gravados. A geração do arquivo ' + AllTrim( AllTrim( cNomeArq ) ) + ' foi abortada ...', {'OK'} )
+					EndIf
+				Else
+					MsgAlert( 'Ocorreram problemas na tentativa de deleção do arquivo '+AllTrim( cNomeArq )+'.' )
+				EndIf
+			EndIf
+		Else
+			MsgAlert( 'Ocorreram problemas no fechamento do arquivo '+AllTrim( cNomeArq )+'.' )
+		EndIf
+	EndIf
+	
+EndIf
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ GERRIMP  ³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Processamento Para emissao do Recibo                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ R030IMP( lEnd, Wnrel, cString )                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function GERRImp( lEnd, WnRel, cString, cMesAnoRef )
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais ( Basicas )                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local lIgual                 //Vari vel de retorno na compara‡ao do SRC
+Local cArqNew                //Vari vel de retorno caso SRC #SX3
+Local tamanho     := "P"
+Local limite      := 80
+Local aOrdBag     := {}
+Local cMesArqRef  := If( nTipRec == 4, "13"+Right( cMesAnoRef, 4 ), cMesAnoRef )
+Local cArqMov     := ""
+Local cAliasMov   := ""
+Local cAcessaSR1  := &( "{ || " + ChkRH( "GPER030", "SR1", "2" ) + "}" )
+Local cAcessaSRA  := &( "{ || " + ChkRH( "GPER030", "SRA", "2" ) + "}" )
+Local cAcessaSRC  := &( "{ || " + ChkRH( "GPER030", "SRC", "2" ) + "}" )
+Local Mensag1 := Mensag2 := Mensag3 := ""
+Local cAcessaSRI  := &( "{ || " + ChkRH( "GPER030", "SRI", "2" ) + "}" )    
+Local cFolMes     := GETMV("MV_FOLMES")
+
+//Private aTabVbHrs  := {}
+//Private aVerbHrs   := {}
+Private nQtdComp   := 0
+//Private cQuebraLin := Chr( 13 ) + Chr( 10 )  // Caracteres de Salto de Linha
+
+nTotRLote  := 0
+nTotArq    := 0
+
+fEndereco(Sm0->M0_EndEnt)
+
+// Registro Header da Empresa - TIPO 0
+aTipo0 := {}
+//              Descricao                                Ini  Fim   Tipo  Tam Dec  Conteudo
+aAdd( aTipo0, { 'CODIGO DO BANCO HSBC                 ', 001, 003,   'N',   3,  0, '"399"' } )
+aAdd( aTipo0, { 'NÚMERO DO LOTE                       ', 004, 007,   'N',   4,  0, '"0000"' } )
+aAdd( aTipo0, { 'TIPO DE REGISTRO                     ', 008, 008,   'N',   1,  0, '"0"' } )
+aAdd( aTipo0, { 'FILLER                               ', 009, 017,   'C',   9,  0, ' ' } )
+aAdd( aTipo0, { 'TIPO INSCRICAO                       ', 018, 018,   'C',   1,  0, '"2"' } )
+aAdd( aTipo0, { 'NÚMERO DO CNPJ OU CPF DA EMPRESA     ', 019, 032,   'N',  14,  0, 'StrZero(Val(SM0->M0_CGC),14)' } )
+aAdd( aTipo0, { 'CÓDIGO DO CONVENIO SANTANDER         ', 033, 038,   'N',   6,  0, 'StrZero(Val( MV_PAR17 ),6)' } )
+aAdd( aTipo0, { 'FILLER                               ', 039, 052,   'C',  14,  0, ' ' } )
+aAdd( aTipo0, { 'CODIGO DA AGENCIA H.S.B.C.           ', 053, 057,   'N',   5,  0, 'cAgencia' } ) //'Subs( SRA->RA_BCDEPSA, 1, 3 )' } )
+aAdd( aTipo0, { 'FILLER                               ', 058, 058,   'C',   1,  0, '" "' } )
+aAdd( aTipo0, { 'CONTA CORRENTE EMPRESA               ', 059, 071,   'N',  13,  0, 'cConta' } ) //'Subs( SRA->RA_BCDEPSA, 1, 3 )' } )
+aAdd( aTipo0, { 'FILLER                               ', 072, 072,   'C',   1,  0, '" "' } )
+aAdd( aTipo0, { 'NOME DA EMPRESA                      ', 073, 102,   'C',  30,  0, 'Padr(SM0->M0_NOMECOM,30)' } )
+aAdd( aTipo0, { 'NOME DO BANCO                        ', 103, 132,   'C',  30,  0, '"HSBC BANK BRASIL S.A.         "' } )
+aAdd( aTipo0, { 'FILLER                               ', 133, 142,   'C',  10,  0, ' ' } )
+aAdd( aTipo0, { 'CODIGO DO ARQUIVO REMESSA            ', 143, 143,   'N',   1,  0, '"1"' } ) //'Subs( SRA->RA_BCDEPSA, 1, 3 )' } )
+aAdd( aTipo0, { 'DATA DA GERACAO (DDMMAAAA)           ', 144, 151,   'N',   8,  0, 'Subs(Dtos( dDatabase),7,2)+Subs(Dtos(dDataBase),5,2)+Subs(Dtos(dDataBase),1,4)' } )
+aAdd( aTipo0, { 'HORARIO DA GERACAO                   ', 152, 157,   'N',   6,  0, 'StrTran(Time(),":","")                      ' } )
+aAdd( aTipo0, { 'NUMERO SEQUENCIAL DO ARQUIVO         ', 158, 163,   'N',   6,  0, '"000001"' } )
+aAdd( aTipo0, { 'NUMERO VERSAO LAY OUT                ', 164, 166,   'N',   3,  0, '"010"' } )
+aAdd( aTipo0, { 'DENSIDADE GRAVACAO                   ', 167, 171,   'N',   5,  0, '"01600"' } )
+aAdd( aTipo0, { 'SIGLA APLICATIVO                     ', 172, 174,   'C',   3,  0, '"PAY"' } )
+aAdd( aTipo0, { 'IDENTIFICA O ANO                     ', 175, 177,   'C',   3,  0, '"Y2K"' } )
+aAdd( aTipo0, { 'FILLER                               ', 178, 240,   'C',  63,  0, ' ' } )
+
+fEndereco(Sm0->M0_EndEnt)
+
+// Registro Header do Comprovante - TIPO 1
+aTipo1 := {}
+//              Descricao                                Ini  Fim   Tipo  Tam Dec  Conteudo
+aAdd( aTipo1, { 'CODIGO DO BANCO HSBC                 ', 001, 003,   'N',   3,  0, '"399"' } )
+aAdd( aTipo1, { 'NÚMERO DO LOTE SERVICO               ', 004, 007,   'N',   4,  0, '"0001"' } )
+aAdd( aTipo1, { 'TIPO DE REGISTRO                     ', 008, 008,   'N',   1,  0, '"1"' } )
+aAdd( aTipo1, { 'TIPO DE OPERACAO                     ', 009, 009,   'C',   1,  0, '"E"' } )
+aAdd( aTipo1, { 'TIPO DE SERVICO                      ', 010, 011,   'N',   2,  0, 'cTipPag' } )
+aAdd( aTipo1, { 'FILLER                               ', 012, 013,   'C',   2,  0, ' ' } )
+aAdd( aTipo1, { 'NUMERO VERSAO LAY OUT                ', 014, 016,   'N',   3,  0, '"010"' } )
+aAdd( aTipo1, { 'CODIGO DO SERVICO                    ', 017, 017,   'C',   1,  0, '"H"' } ) //'Subs( SRA->RA_BCDEPSA, 1, 3 )' } )
+aAdd( aTipo1, { 'TIPO INSCRICAO                       ', 018, 018,   'N',   1,  0, '"2"' } )
+aAdd( aTipo1, { 'NÚMERO DO CNPJ OU CPF DA EMPRESA     ', 019, 032,   'N',  14,  0, 'StrZero(Val(SM0->M0_CGC),14)' } )
+aAdd( aTipo1, { 'CÓDIGO DO CONVENIO SANTANDER         ', 033, 038,   'N',   6,  0, 'StrZero(Val( MV_PAR17 ),6)' } )
+aAdd( aTipo1, { 'FILLER                               ', 039, 052,   'C',  14,  0, ' ' } )
+aAdd( aTipo1, { 'CODIGO DA AGENCIA H.S.B.C.           ', 053, 057,   'N',   5,  0, 'cAgencia' } ) //'Subs( SRA->RA_BCDEPSA, 1, 3 )' } )
+aAdd( aTipo1, { 'FILLER                               ', 058, 058,   'C',   1,  0, '" "' } )
+aAdd( aTipo1, { 'CONTA CORRENTE EMPRESA               ', 059, 071,   'N',  13,  0, 'cConta' } ) //'Subs( SRA->RA_BCDEPSA, 1, 3 )' } )
+aAdd( aTipo1, { 'FILLER                               ', 072, 072,   'C',   1,  0, '" "' } )
+aAdd( aTipo1, { 'NOME DA EMPRESA                      ', 073, 102,   'C',  30,  0, 'Padr(SM0->M0_NOMECOM,30)' } )
+aAdd( aTipo1, { 'DATA PARA IMPRESSAO (DDMMAAAA)       ', 103, 110,   'N',   8,  0, 'Subs(Dtos( dDataCred),7,2)+Subs(Dtos(dDataCred),5,2)+Subs(Dtos(dDataCred),1,4)' } )
+aAdd( aTipo1, { 'FILLER                               ', 111, 142,   'C',  32,  0, ' ' } )
+aAdd( aTipo1, { 'LOGRADOURO                           ', 143, 172,   'C',  30,  0, 'cEndereco' } )
+aAdd( aTipo1, { 'NUMERO                               ', 173, 177,   'C',   5,  0, 'cNumero' } )
+aAdd( aTipo1, { 'COMPLEMENTO                          ', 178, 192,   'C',  15,  0, ' ' } )
+aAdd( aTipo1, { 'CIDADE                               ', 193, 212,   'C',  20,  0, 'Padr(SM0->M0_CIDENT,20)' } )
+aAdd( aTipo1, { 'CEP EMPRESA                          ', 213, 220,   'C',   8,  0, 'Padr(SM0->M0_CEPENT,20)' } )
+aAdd( aTipo1, { 'ESTADO                               ', 221, 222,   'C',   2,  0, 'Padr(SM0->M0_ESTENT,20)' } )
+aAdd( aTipo1, { 'FILLER                               ', 223, 240,   'C',  18,  0, ' ' } )
+
+
+// Registro Trailler - Funcionario - TIPO 3 SEGMENTO A/C
+aTipo3 := {}
+//              Descricao                                Ini  Fim   Tipo  Tam Dec  Conteudo
+aAdd( aTipo3, { 'CODIGO DO BANCO HSBC                 ', 001, 003,   'N',   3,  0, '"399"' } )
+aAdd( aTipo3, { 'NÚMERO DO LOTE SERVICO               ', 004, 007,   'N',   4,  0, '"0003"' } )
+aAdd( aTipo3, { 'TIPO DE REGISTRO                     ', 008, 008,   'N',   1,  0, '"3"' } )
+aAdd( aTipo3, { 'NÚMERO SEQ REG LOTE                  ', 009, 013,   'N',   5,  0, '"0001"' } )
+aAdd( aTipo3, { 'COD SEQ REG LOTE                     ', 014, 014,   'C',   1,  0, '"A"' } )
+aAdd( aTipo3, { 'TIPO DE MOVIMENTO                    ', 015, 015,   'N',   1,  0, 'cCodOpera' } )
+aAdd( aTipo3, { 'CODIGO INSTRUCAO                     ', 016, 017,   'N',   2,  0, 'cCodInst' } )
+aAdd( aTipo3, { 'CODIGO SERVICO                       ', 018, 018,   'C',   1,  0, '"H"' } )
+aAdd( aTipo3, { 'NÚMERO DA AGÊNCIA DO FUNCIONÁRIO     ', 019, 023,   'N',   5,  0, 'StrZero(Val(Alltrim(Subs( SRA->RA_BCDEPSA, 4, 4 ))),9)' } )
+aAdd( aTipo3, { 'NÚMERO DA CONTA DO FUNCIONÁRIO       ', 024, 036,   'N',  13,  0, 'StrZero(Val(StrTran(AllTrim( SRA->RA_CTDEPSA ),"-","")),13)' } )
+aAdd( aTipo3, { 'FILLER                               ', 037, 037,   'C',   1,  0, ' ' } )
+aAdd( aTipo3, { 'NOME DO FUNCIONÁRIO                  ', 038, 067,   'C',  30,  0, 'PADR(SRA->RA_NOME,30)' } )
+aAdd( aTipo3, { 'NUMERO DOCUMENTO ATRIBUIDO           ', 068, 083,   'C',  16,  0, '"0000000000000000"' } )
+aAdd( aTipo3, { 'NÚMERO DE MATRÍCULA DO FUNCIONÁRIO   ', 084, 093,   'C',  10,  0, 'StrZero(Val(SRA->RA_MAT),10)' } )
+aAdd( aTipo3, { 'FUNÇÃO DO FUNCIONÁRIO                ', 094, 113,   'C',  20,  0, 'GetAdvFVal( "SRJ", "RJ_DESC", xFilial( "SRJ" )+SRA->RA_CODFUNC, 1, "" )' } )
+aAdd( aTipo3, { 'TIPO DE INSCRICAO DO FUNCIONARIO     ', 114, 114,   'N',   1,  0, '"1"' } )
+aAdd( aTipo3, { 'NÚMERO DO CPF DO FUNCIONÁRIO         ', 115, 125,   'N',  11,  0, 'SRA->RA_CIC' } )
+aAdd( aTipo3, { 'PERIODO DE PAGAMENTO INICIO          ', 126, 133,   'N',   8,  0, 'GravaData( dDtRefIni ,.F., 5 )' } )
+aAdd( aTipo3, { 'PERIODO DE PAGAMENTO FINAL           ', 134, 141,   'N',   8,  0, 'GravaData( dDtRefFim ,.F., 5 )' } )
+aAdd( aTipo3, { 'FILLER                               ', 142, 143,   'C',   2,  0, ' ' } )
+aAdd( aTipo3, { 'AREA DE ATUAÇÃO DO FUNCIONARIO       ', 144, 168,   'C',  25,  0, 'PADR(POSICIONE("CTT",1,XFILIAL("CTT")+SRA->RA_CC,"CTT_DESC01"),25) ' } )
+aAdd( aTipo3, { 'FILLER                               ', 169, 240,   'C',  72,  0, ' ' } )
+
+// Registro Trailler - Funcionario - TIPO 3 SEGMENTO A/H
+aTipo4 := {}
+aAdd( aTipo4, { 'CODIGO DO BANCO HSBC                 ', 001, 003,   'N',   3,  0, '"399"' } )
+aAdd( aTipo4, { 'NÚMERO DO LOTE SERVICO               ', 004, 007,   'N',   4,  0, '"0003"' } )
+aAdd( aTipo4, { 'TIPO DE REGISTRO                     ', 008, 008,   'N',   1,  0, '"3"' } )
+aAdd( aTipo4, { 'NÚMERO SEQ REG LOTE                  ', 009, 013,   'N',   5,  0, 'StrZero(nSeq_,5)' } )
+aAdd( aTipo4, { 'COD SEQ REG LOTE                     ', 014, 014,   'C',   1,  0, '"C"' } )
+aAdd( aTipo4, { 'TIPO DE MOVIMENTO                    ', 015, 015,   'N',   1,  0, 'cCodOpera' } )
+aAdd( aTipo4, { 'CODIGO INSTRUCAO                     ', 016, 017,   'N',   2,  0, 'cCodInst' } )
+aAdd( aTipo4, { 'CODIGO SERVICO                       ', 018, 018,   'C',   1,  0, '"H"' } )
+aAdd( aTipo4, { 'DESCRIÇÃO DO LANÇAMENTO 1            ', 019, 047,   'C',  29,  0, 'Padr(cDescPag1,29)' } )
+aAdd( aTipo4, { 'MOEDA                                ', 048, 049,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4, { 'VALOR DO LANÇAMENTO 1                ', 050, 057,   'N',   8,  2, 'StrZero(nValPag1,8,2)' } )
+aAdd( aTipo4, { 'DESCRIÇÃO DO LANÇAMENTO 2            ', 058, 086,   'C',  29,  0, 'Padr(cDescPag2,29)' } )
+aAdd( aTipo4, { 'MOEDA                                ', 087, 088,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4, { 'VALOR DO LANÇAMENTO 2                ', 089, 096,   'N',   8,  2, 'StrZero(nValPag2,8,2)' } )
+aAdd( aTipo4, { 'DESCRIÇÃO DO LANÇAMENTO 3            ', 097, 125,   'C',  29,  0, 'Padr(cDescPag3,29)' } )
+aAdd( aTipo4, { 'MOEDA                                ', 126, 127,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4, { 'VALOR DO LANÇAMENTO 3                ', 128, 135,   'N',   8,  2, 'StrZero(nValPag3,8,2)' } )
+aAdd( aTipo4, { 'DESCRIÇÃO DO LANÇAMENTO 4            ', 136, 164,   'C',  29,  0, 'Padr(cDescPag4,29)' } )
+aAdd( aTipo4, { 'MOEDA                                ', 165, 166,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4, { 'VALOR DO LANÇAMENTO 4                ', 167, 174,   'N',   8,  2, 'StrZero(nValPag4,8,2)' } )
+aAdd( aTipo4, { 'DESCRIÇÃO DO LANÇAMENTO 5            ', 175, 203,   'C',  29,  0, 'Padr(cDescPag5,29)' } )
+aAdd( aTipo4, { 'MOEDA                                ', 204, 205,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4, { 'VALOR DO LANÇAMENTO 5                ', 206, 213,   'N',   8,  2, 'StrZero(nValPag5,8,2)' } )
+aAdd( aTipo4, { 'FILLER                               ', 214, 240,   'C',  27,  0, ' ' } )
+
+// Registro Trailler - Funcionario - TIPO 3 SEGMENTO D/H
+aTipo4D := {}
+aAdd( aTipo4D, { 'CODIGO DO BANCO HSBC                 ', 001, 003,   'N',   3,  0, '"399"' } )
+aAdd( aTipo4D, { 'NÚMERO DO LOTE SERVICO               ', 004, 007,   'N',   4,  0, '"0003"' } )
+aAdd( aTipo4D, { 'TIPO DE REGISTRO                     ', 008, 008,   'N',   1,  0, '"3"' } )
+aAdd( aTipo4D, { 'NÚMERO SEQ REG LOTE                  ', 009, 013,   'N',   5,  0, 'StrZero(nSeq_,5)' } )
+aAdd( aTipo4D, { 'COD SEQ REG LOTE                     ', 014, 014,   'C',   1,  0, '"D"' } )
+aAdd( aTipo4D, { 'TIPO DE MOVIMENTO                    ', 015, 015,   'N',   1,  0, 'cCodOpera' } )
+aAdd( aTipo4D, { 'CODIGO INSTRUCAO                     ', 016, 017,   'N',   2,  0, 'cCodInst' } )
+aAdd( aTipo4D, { 'CODIGO SERVICO                       ', 018, 018,   'C',   1,  0, '"H"' } )
+aAdd( aTipo4D, { 'DESCRIÇÃO DO LANÇAMENTO 1            ', 019, 047,   'C',  29,  0, 'Padr(cDescDes1,29)' } )
+aAdd( aTipo4D, { 'MOEDA                                ', 048, 049,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4D, { 'VALOR DO LANÇAMENTO 1                ', 050, 057,   'N',   8,  2, 'StrZero(nValDes1,8,2)' } )
+aAdd( aTipo4D, { 'DESCRIÇÃO DO LANÇAMENTO 2            ', 058, 086,   'C',  29,  0, 'Padr(cDescDes2,29)' } )
+aAdd( aTipo4D, { 'MOEDA                                ', 087, 088,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4D, { 'VALOR DO LANÇAMENTO 2                ', 089, 096,   'N',   8,  2, 'StrZero(nValDes2,8,2)' } )
+aAdd( aTipo4D, { 'DESCRIÇÃO DO LANÇAMENTO 3            ', 097, 125,   'C',  29,  0, 'Padr(cDescDes3,29)' } )
+aAdd( aTipo4D, { 'MOEDA                                ', 126, 127,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4D, { 'VALOR DO LANÇAMENTO 3                ', 128, 135,   'N',   8,  2, 'StrZero(nValDes3,8,2)' } )
+aAdd( aTipo4D, { 'DESCRIÇÃO DO LANÇAMENTO 4            ', 136, 164,   'C',  29,  0, 'Padr(cDescDes4,29)' } )
+aAdd( aTipo4D, { 'MOEDA                                ', 165, 166,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4D, { 'VALOR DO LANÇAMENTO 4                ', 167, 174,   'N',   8,  2, 'StrZero(nValDes4,8,2)' } )
+aAdd( aTipo4D, { 'DESCRIÇÃO DO LANÇAMENTO 5            ', 175, 203,   'C',  29,  0, 'Padr(cDescDes5,29)' } )
+aAdd( aTipo4D, { 'MOEDA                                ', 204, 205,   'C',   2,  0, '"R$"' } )
+aAdd( aTipo4D, { 'VALOR DO LANÇAMENTO 5                ', 206, 213,   'N',   8,  2, 'StrZero(nValDes5,8,2)' } )
+aAdd( aTipo4D, { 'FILLER                               ', 214, 240,   'C',  27,  0, ' ' } )
+
+// Registro Trailler - Funcionario - TIPO 3 SEGMENTO O/H
+aTipo4O := {}
+aAdd( aTipo4O, { 'CODIGO DO BANCO HSBC                 ', 001, 003,   'N',   3,  0, '"399"' } )
+aAdd( aTipo4O, { 'NÚMERO DO LOTE SERVICO               ', 004, 007,   'N',   4,  0, '"0003"' } )
+aAdd( aTipo4O, { 'TIPO DE REGISTRO                     ', 008, 008,   'N',   1,  0, '"3"' } )
+aAdd( aTipo4O, { 'NÚMERO SEQ REG LOTE                  ', 009, 013,   'N',   5,  0, 'StrZero(nSeq_,5)' } )
+aAdd( aTipo4O, { 'COD SEQ REG LOTE                     ', 014, 014,   'C',   1,  0, '"O"' } )
+aAdd( aTipo4O, { 'TIPO DE MOVIMENTO                    ', 015, 015,   'N',   1,  0, 'cCodOpera' } )
+aAdd( aTipo4O, { 'CODIGO INSTRUCAO                     ', 016, 017,   'N',   2,  0, 'cCodInst' } )
+aAdd( aTipo4O, { 'CODIGO SERVICO                       ', 018, 018,   'C',   1,  0, '"H"' } )
+aAdd( aTipo4O, { 'DESCRIÇÃO DO LANÇAMENTO 1            ', 019, 058,   'C',  40,  0, 'Padr("LIQUIDO A RECEBER -> "+Transform( nVLiquido, "@E 999,999,999.99" ),40)' } )
+aAdd( aTipo4O, { 'INDICATIVO DE CONTINUIDADE           ', 059, 059,   'C',   1,  0, '" "' } )
+aAdd( aTipo4O, { 'FILLER                               ', 060, 240,   'C', 181,  0, ' ' } )
+
+
+// Registro Detalhes do Comprovante - TIPO 2
+aTipo5 := {}
+//              Descricao                                Ini  Fim   Tipo  Tam Dec  Conteudo
+aAdd( aTipo5, { 'CODIGO DO BANCO HSBC                 ', 001, 003,   'N',   3,  0, '"399"' } )
+aAdd( aTipo5, { 'NÚMERO DO LOTE SERVICO               ', 004, 007,   'N',   4,  0, '"0005"' } )
+aAdd( aTipo5, { 'TIPO DE REGISTRO                     ', 008, 008,   'N',   1,  0, '"5"' } )
+aAdd( aTipo5, { 'FILLER                               ', 009, 017,   'C',   9,  0, ' ' } )
+aAdd( aTipo5, { 'QUANTIDADE REGISTROS LOTE (1+3+5)    ', 018, 023,   'N',   6,  0, 'StrZero(nTotRLote,6)' } )
+aAdd( aTipo5, { 'FILLER                               ', 024, 240,   'C', 215,  0, ' ' } )
+
+
+// Registro Trailler da Empresa - TIPO 9
+aTipo9 := {}
+//              Descricao                                Ini  Fim   Tipo  Tam Dec  Conteudo
+aAdd( aTipo9, { 'CODIGO DO BANCO HSBC                 ', 001, 003,   'N',   3,  0, '"399"' } )
+aAdd( aTipo9, { 'NÚMERO DO LOTE SERVICO               ', 004, 007,   'N',   4,  0, '"9999"' } )
+aAdd( aTipo9, { 'TIPO DE REGISTRO                     ', 008, 008,   'N',   1,  0, '"9"' } )
+aAdd( aTipo9, { 'FILLER                               ', 009, 017,   'C',   9,  0, ' ' } )
+aAdd( aTipo9, { 'TOTAL DE LOTES ARQUIVO               ', 018, 023,   'N',   6,  0, '"000001"' } )
+aAdd( aTipo9, { 'QUANTIDADE REGISTROS LOTE (1+3+5+9)  ', 024, 029,   'N',   6,  0, 'StrZero(nTotArq,6)' } )
+aAdd( aTipo9, { 'FILLER                               ', 030, 240,   'C', 211,  0, ' ' } )
+
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//| Verifica se existe o arquivo de fechamento do mes informado  |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+lAtual := ( !fExistArq( cMesArqRef,, 0 ) .AND. MesAno( dDataRef ) == cFolMes )
+
+If !lAtual
+	If !fIniArqMov( cMesArqRef, @cAliasMov , @aOrdBag , @cArqMov )
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//| Se nao encontrar o arquivo retorna o arquivo atual           |
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		ChkFile( cAliasMov , .F. )
+		Return NIL
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cria o arquivo texto                                                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If nTipRel == 4
+	
+	//Verifica se Arquivo Existe
+	If File( cNomeArq )
+		If ( nAviso := Aviso( 'AVISO', 'Deseja substituir o ' + AllTrim( cNomeArq ) + ' existente ?', {'Sim', 'N„o'} ) ) == 1
+			//Deleta Arquivo
+			If fErase( cNomeArq ) <> 0
+				MsgAlert( 'Ocorreram problemas na tentativa de dele‡„o do arquivo '+AllTrim( cNomeArq )+'.' )
+				Return NIL
+			EndIf
+		Else
+			Return NIL
+		EndIf
+	EndIf
+	
+	//Verifica se Nome de Arquivo em Branco
+	If Empty( cNomeArq )
+		MsgAlert( 'Nome do Arquivo nos Parametros em Branco.', 'Aten‡„o!' )
+		Return NIL
+	Else
+		//Cria Arquivo
+		nHdl := fCreate( cNomeArq )
+		nSeq_ := 0
+		lContinua := .T.
+		
+		//Verifica Criacao do Arquivo
+		If nHdl == -1
+			MsgAlert( 'O arquivo '+AllTrim( cNomeArq )+' n„o p“de ser criado! Verifique os parƒmetros.', 'Aten‡„o!' )
+			Return NIL
+		EndIf
+	EndIf
+	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Selecionando a Ordem de impressao escolhida no parametro.    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SRA" )
+If nOrdem == 1
+	dbSetOrder( 1 )
+ElseIf nOrdem == 2
+	dbSetOrder( 2 )
+ElseIf nOrdem == 3
+	dbSetOrder( 3 )
+ElseIf nOrdem == 4
+	dbSetOrder( 8 )
+EndIf
+
+dbGoTop()
+
+If nTipRel == 2
+	aDriver := LEDriver()
+	cCompac := aDriver[1]
+	cNormal := aDriver[2]
+	@ LI, 00 PSAY &cCompac
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Selecionando o Primeiro Registro e montando Filtro.          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If     nOrdem == 1
+	dbSeek( cFilDe + cMatDe, .T. )
+	cInicio := "SRA->RA_FILIAL + SRA->RA_MAT"
+	cFim    := cFilAte + cMatAte
+ElseIf nOrdem == 2
+	dbSeek( cFilDe + cCcDe + cMatDe, .T. )
+	cInicio  := "SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT"
+	cFim     := cFilAte + cCcAte + cMatAte
+ElseIf nOrdem == 3
+	dbSeek( cFilDe + cNomDe + cMatDe, .T. )
+	cInicio := "SRA->RA_FILIAL + SRA->RA_NOME + SRA->RA_MAT"
+	cFim    := cFilAte + cNomAte + cMatAte
+ElseIf nOrdem == 4
+	dbSeek( cFilDe + cCcDe + cNomDe, .T. )
+	cInicio  := "SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_NOME"
+	cFim     := cFilAte + cCcAte + cNomAte
+EndIf
+
+dbSelectArea( "SRA" )
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega Regua Processamento                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SetRegua( RecCount() )   // Total de elementos da regua
+
+TOTVENC:= TOTDESC:= FLAG:= CHAVE := 0
+
+Desc_Fil := Desc_End := DESC_CC:= DESC_FUNC:= ""
+DESC_MSG1:= DESC_MSG2:= DESC_MSG3:= Space( 01 )
+cFilialAnt := "  "
+cFuncaoAnt := "    "
+cCcAnt     := Space( 9 )
+Vez        := 0
+OrdemZ     := 0
+
+If nTipRel == 4
+	GERAHSBC0()
+	GERAHSBC1()
+EndIf
+
+dbSelectArea( "SRA" )
+
+ProcRegua(SRA->(LastRec()))
+
+While !EOF() .AND. &cInicio <= cFim
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Movimenta Regua Processamento                                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	//IncRegua()  // Anda a regua
+	IncProc("Processando: " + SRA->ra_filial+ " - "+SRA->ra_mat+"-"+Alltrim(Sra->Ra_Nome) )
+	
+	If lEnd
+		@Prow()+1, 0 PSAY cCancel
+		Exit
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste Parametrizacao do Intervalo de Impressao            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If 	( SRA->RA_NOME < cNomDe )  .OR. ( SRA->Ra_NOME > cNomAte )    .OR. ;
+		( SRA->RA_MAT < cMatDe )   .OR. ( SRA->Ra_MAT > cMatAte )     .OR. ;
+		( SRA->RA_CC < cCcDe )     .OR. ( SRA->Ra_CC > cCcAte )
+		SRA->( dbSkip( 1 ) )
+		Loop
+	EndIf
+	
+	 //Se o funcionario nao tiver conta no HSBC, nao envia
+	 If nTipRel == 4 .AND. Subs( SRA->RA_BCDEPSAL, 1, 3 ) <> '399'
+	   	SRA->( dbSkip() )
+	    Loop
+	 EndIf
+	
+	aLanca:={}         // Zera Lancamentos
+	aProve:={}         // Zera Lancamentos
+	aDesco:={}         // Zera Lancamentos
+	aBases:={}         // Zera Lancamentos
+	//aVerbHrs:={}
+	nAteLim := nBaseFgts := nFgts := nBaseIr := nBaseIrFe := 0.00
+	nVLiquido := 0
+	
+	Ordem_rel := 1     // Ordem dos Recibos
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste situacao e categoria dos funcionarios			     |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !( SRA->RA_SITFOLH $ cSituacao ) .OR.  ! ( SRA->RA_CATFUNC $ cCategoria )
+		dbSkip()
+		Loop
+	EndIf
+	If SRA->RA_SITFOLH $ "D" .AND. Mesano( SRA->RA_DEMISSA ) #Mesano( dDataRef )
+		dbSkip()
+		Loop
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste controle de acessos e filiais validas				 |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If !( SRA->RA_FILIAL $ fValidFil() ) .OR. !Eval( cAcessaSRA )
+		dbSkip()
+		Loop
+	EndIf
+	
+	If SRA->RA_CODFUNC #cFuncaoAnt           // Descricao da Funcao
+		DescFun( Sra->Ra_Codfunc, Sra->Ra_Filial )
+		cFuncaoAnt:= Sra->Ra_CodFunc
+	EndIf
+	
+	If SRA->RA_CC #cCcAnt                   // Centro de Custo
+		DescCC( Sra->Ra_Cc, Sra->Ra_Filial )
+		cCcAnt:=SRA->RA_CC
+	EndIf
+	
+	If SRA->RA_Filial #cFilialAnt
+		If ! Fp_CodFol( @aCodFol, Sra->Ra_Filial ) .OR. ! fInfo( @aInfo, Sra->Ra_Filial )
+			Exit
+		EndIf
+		Desc_Fil := aInfo[3]
+		Desc_End := aInfo[4]                // Dados da Filial
+		Desc_CGC := aInfo[8]
+		DESC_MSG1:= DESC_MSG2:= DESC_MSG3:= Space( 01 )
+		
+		// MENSAGENS
+		If MENSAG1 #SPACE( 1 )
+			If FPHIST82( SRA->RA_FILIAL, "06", SRA->RA_FILIAL+MENSAG1 )
+				DESC_MSG1 := Left( SRX->RX_TXT, 30 )
+			ElseIf FPHIST82( SRA->RA_FILIAL, "06", "  "+MENSAG1 )
+				DESC_MSG1 := Left( SRX->RX_TXT, 30 )
+			EndIf
+		EndIf
+		
+		If MENSAG2 #SPACE( 1 )
+			If FPHIST82( SRA->RA_FILIAL, "06", SRA->RA_FILIAL+MENSAG2 )
+				DESC_MSG2 := Left( SRX->RX_TXT, 30 )
+			ElseIf FPHIST82( SRA->RA_FILIAL, "06", "  "+MENSAG2 )
+				DESC_MSG2 := Left( SRX->RX_TXT, 30 )
+			EndIf
+		EndIf
+		
+		If MENSAG3 #SPACE( 1 )
+			If FPHIST82( SRA->RA_FILIAL, "06", SRA->RA_FILIAL+MENSAG3 )
+				DESC_MSG3 := Left( SRX->RX_TXT, 30 )
+			ElseIf FPHIST82( SRA->RA_FILIAL, "06", "  "+MENSAG3 )
+				DESC_MSG3 := Left( SRX->RX_TXT, 30 )
+			EndIf
+		EndIf
+		dbSelectArea( "SRA" )
+		
+		
+		cFilialAnt := SRA->RA_FILIAL
+		
+	EndIf
+	
+	Totvenc := Totdesc := 0
+	
+	If nTipRec == 1 .OR. nTipRec == 2
+		dbSelectArea( "SRC" )
+		If dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+			While !Eof() .AND. SRC->RC_FILIAL+SRC->RC_MAT == SRA->RA_FILIAL+SRA->RA_MAT
+				If SRC->RC_SEMANA #Semana
+					dbSkip()
+					Loop
+				EndIf
+				If !Eval( cAcessaSRC )
+					dbSkip()
+					Loop
+				EndIf
+				If ( nTipRec == 1 ) .AND. ( Src->Rc_Pd == aCodFol[7, 1] )      // Desconto de Adto
+					fSomaPd( "P", aCodFol[6, 1], SRC->RC_HORAS, SRC->RC_VALOR )
+					TOTVENC += Src->Rc_Valor
+				ElseIf ( nTipRec == 1 ) .AND. ( Src->Rc_Pd == aCodFol[12, 1] )
+					fSomaPd( "D", aCodFol[9, 1], SRC->RC_HORAS, SRC->RC_VALOR )
+					TOTDESC += SRC->RC_VALOR
+				ElseIf ( nTipRec == 1 ) .AND. ( Src->Rc_Pd == aCodFol[8, 1] )
+					fSomaPd( "P", aCodFol[8, 1], SRC->RC_HORAS, SRC->RC_VALOR )
+					TOTVENC += SRC->RC_VALOR
+				Else
+					If PosSrv( Src->Rc_Pd , SRA->RA_FILIAL , "RV_TIPOCOD" ) == "1"
+						//Filtro verbas que não são de Ferias
+						If PosSrv(Src->Rc_Pd,SRA->RA_FILIAL,"RV_REFFER" ) <> "S"
+							If ( nTipRec <> 1 ) .OR. ( nTipRec == 1 .AND. PosSrv( Src->Rc_Pd, Sra->Ra_Filial, "RV_ADIANTA" ) == "S" )
+								fSomaPd( "P", SRC->RC_PD, SRC->RC_HORAS, SRC->RC_VALOR )
+								TOTVENC += Src->Rc_Valor
+							EndIf
+						Endif
+					ElseIf PosSrv( Src->Rc_Pd , SRA->RA_FILIAL , "RV_TIPOCOD" ) == "2"
+						If ( nTipRec #1 ) .OR. ( nTipRec == 1 .AND. PosSrv( Src->Rc_Pd, Sra->Ra_Filial, "RV_ADIANTA" ) == "S" )
+							//Filtro verbas que não são de Ferias
+							If PosSrv(Src->Rc_Pd,SRA->RA_FILIAL,"RV_REFFER" ) <> "S"
+								fSomaPd( "D", SRC->RC_PD, SRC->RC_HORAS, SRC->RC_VALOR )
+								TOTDESC += Src->Rc_Valor
+							EndIf
+						Endif
+					EndIf
+				EndIf
+				
+				If nTipRec = 1
+					If SRC->RC_PD == aCodFol[10, 1]
+						nBaseIr := SRC->RC_VALOR
+					EndIf
+				ElseIf SRC->RC_PD == aCodFol[13, 1]
+					nAteLim += SRC->RC_VALOR
+				ElseIf SRC->RC_PD$ aCodFol[108, 1]+'*'+aCodFol[17, 1]
+					nBaseFgts += SRC->RC_VALOR
+				ElseIf SRC->RC_PD$ aCodFol[109, 1]+'*'+aCodFol[18, 1]
+					nFgts += SRC->RC_VALOR
+				ElseIf SRC->RC_PD == aCodFol[15, 1]
+					nBaseIr += SRC->RC_VALOR
+				ElseIf SRC->RC_PD == aCodFol[16, 1]
+					nBaseIrFe += SRC->RC_VALOR
+				ElseIf SRC->RC_PD $ aCodFol[021, 1]+'*'+aCodFol[047, 1] 
+				    nVLiquido += SRC->RC_VALOR 
+				EndIf
+				
+				dbSelectArea( "SRC" )
+				dbSkip()
+			
+			Enddo
+		EndIf
+	
+	ElseIf nTipRec == 3
+
+		dbSelectArea( "SRC" )
+		If dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+			While !Eof() .AND. SRA->RA_FILIAL + SRA->RA_MAT == SRC->RC_FILIAL + SRC->RC_MAT
+				If !Eval( cAcessaSRC )
+					dbSkip()
+					Loop
+				EndIf
+				If SRC->RC_PD == aCodFol[22, 1]
+					fSomaPd( "P", SRC->RC_PD, SRC->RC_HORAS, SRC->RC_VALOR )
+					TOTVENC += SRC->RC_VALOR
+				ElseIf SRC->RC_PD == aCodFol[172, 1]
+					fSomaPd( "D", SRC->RC_PD, SRC->RC_HORAS, SRC->RC_VALOR )
+					TOTDESC += SRC->RC_VALOR
+				//ElseIf SRC->RC_PD == aCodFol[108, 1] .OR. SRC->RC_PD == aCodFol[109, 1] .OR. SRC->RC_PD == aCodFol[173, 1]
+					//fSomaPd( "B", SRC->RC_PD, SRC->RC_HORAS, SRC->RC_VALOR )
+				EndIf
+				
+				If SRC->RC_PD == aCodFol[108, 1]
+					nBaseFgts := SRC->RC_VALOR
+				ElseIf SRC->RC_PD == aCodFol[109, 1]
+					nFgts     := SRC->RC_VALOR
+				EndIf
+				dbSelectArea( "SRC" )
+				dbSkip()
+			Enddo
+		EndIf
+	ElseIf nTipRec == 4
+		dbSelectArea( "SRI" )
+		dbSetOrder( 2 )
+		If dbSeek( SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT )
+			While !Eof() .AND. SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT == SRI->RI_FILIAL + SRI->RI_CC + SRI->RI_MAT
+				If !Eval( cAcessaSRI )
+					dbSkip()
+					Loop
+				EndIf
+				If PosSrv( SRI->RI_PD , SRA->RA_FILIAL , "RV_TIPOCOD" ) == "1"
+					fSomaPd( "P", SRI->RI_PD, SRI->RI_HORAS, SRI->RI_VALOR )
+					TOTVENC = TOTVENC + SRI->RI_VALOR
+				ElseIf PosSrv( SRI->RI_PD , SRA->RA_FILIAL , "RV_TIPOCOD" ) == "2"
+					fSomaPd( "D", SRI->RI_PD, SRI->RI_HORAS, SRI->RI_VALOR )
+					TOTDESC = TOTDESC + SRI->RI_VALOR
+				//ElseIf PosSrv( SRI->RI_PD , SRA->RA_FILIAL , "RV_TIPOCOD" ) == "3"
+					//fSomaPd( "B", SRI->RI_PD, SRI->RI_HORAS, SRI->RI_VALOR )
+				EndIf
+				
+				If SRI->RI_PD == aCodFol[19, 1]
+					nAteLim += SRI->RI_VALOR
+				ElseIf SRI->RI_PD$ aCodFol[108, 1]
+					nBaseFgts += SRI->RI_VALOR
+				ElseIf SRI->RI_PD$ aCodFol[109, 1]
+					nFgts += SRI->RI_VALOR
+				ElseIf SRI->RI_PD == aCodFol[27, 1]
+					nBaseIr += SRI->RI_VALOR
+				EndIf
+				dbSkip()
+			Enddo
+		EndIf
+	ElseIf nTipRec == 5
+		dbSelectArea( "SR1" )
+		dbSetOrder( 1 )
+		If dbSeek( SRA->RA_FILIAL + SRA->RA_MAT )
+			While !Eof() .AND. SRA->RA_FILIAL + SRA->RA_MAT ==	SR1->R1_FILIAL + SR1->R1_MAT
+				If Semana #"99"
+					If SR1->R1_SEMANA #Semana
+						dbSkip()
+						Loop
+					EndIf
+				EndIf
+				If !Eval( cAcessaSR1 )
+					dbSkip()
+					Loop
+				EndIf
+				If PosSrv( SR1->R1_PD , SRA->RA_FILIAL , "RV_TIPOCOD" ) == "1"
+					fSomaPd( "P", SR1->R1_PD, SR1->R1_HORAS, SR1->R1_VALOR )
+					TOTVENC = TOTVENC + SR1->R1_VALOR
+				ElseIf PosSrv( SR1->R1_PD , SRA->RA_FILIAL , "RV_TIPOCOD" ) == "2"
+					fSomaPd( "D", SR1->R1_PD, SR1->R1_HORAS, SR1->R1_VALOR )
+					TOTDESC = TOTDESC + SR1->R1_VALOR
+				//ElseIf PosSrv( SR1->R1_PD , SRA->RA_FILIAL , "RV_TIPOCOD" ) == "3"
+					//fSomaPd( "B", SR1->R1_PD, SR1->R1_HORAS, SR1->R1_VALOR )
+				EndIf
+				dbskip()
+			Enddo
+		EndIf
+	EndIf
+	
+	dbSelectArea( "SRA" )
+	
+	If TOTVENC = 0 .AND. TOTDESC = 0
+		dbSkip()
+		Loop
+	EndIf
+	
+	If Vez == 0  .AND.  nTipRec == 2 //--> Verifica se for FOLHA.
+		PerSemana() // Carrega Datas referentes a Semana.
+	EndIf
+	
+	If nTipRel == 4
+		GERAHSBC3()
+		GERAHSBC4()
+		GERAHSBC4D()
+		GERAHSBC4O()
+	EndIf
+	
+	If Vez = 0 .AND. nTipRel <> 4
+		Pergunte( "GPR30A", .T. )
+		If mv_par01 = 2 // Este mv_par e da "Pergunte" GPR30A"
+			dbSelectArea( "SRA" )
+			TOTDESC := TOTVENC := 0
+			LOOP
+		EndIf
+		Vez = 1
+	EndIf
+	
+	dbSelectArea( "SRA" )
+	
+	dbSkip()
+	TOTDESC := TOTVENC := 0
+ENDDO
+
+If nTipRel == 4
+	GERAHSBC5()
+	GERAHSBC9()
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Seleciona arq. defaut do Siga caso Imp. Mov. Anteriores      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !lAtual
+	fFimArqMov( cAliasMov , aOrdBag , cArqMov )
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Termino do relatorio                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea( "SRC" )
+dbSetOrder( 1 )          // Retorno a ordem 1
+dbSelectArea( "SRI" )
+dbSetOrder( 1 )          // Retorno a ordem 1
+dbSelectArea( "SRA" )
+SET FILTER TO
+RetIndex( "SRA" )
+
+If !( Type( "cArqNtx" ) == "U" )
+	fErase( cArqNtx + OrdBagExt() )
+EndIf
+
+Set Device To Screen
+
+If aReturn[5] = 1 .AND. nTipRel <> 4
+	Set Printer To
+	Commit
+	ourspool( wnrel )
+EndIf
+
+MS_FLUSH()
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fImpressao³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ IMRESSAO DO RECIBO FORMULARIO CONTINUO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fImpressao()                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fImpressao()
+Local nConta   := 0
+Local nContr   := 0
+Local nContrT  := 0
+Local aDriver  := LEDriver()
+Private nLinhas:= 16              // Numero de Linhas do Miolo do Recibo
+
+Private cCompac := aDriver[1]
+Private cNormal := aDriver[2]
+
+Ordem_Rel := 1
+
+fCabec()
+
+For nConta = 1 To Len( aLanca )
+	fLanca( nConta )
+	nContr ++
+	nContrT ++
+	If nContr = nLinhas .AND. nContrT < Len( aLanca )
+		nContr:=0
+		Ordem_Rel ++
+		fContinua()
+		fCabec()
+	EndIf
+Next
+
+Li+=( nLinhas-nContr )
+fRodape()
+Li+=3
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fImpreZebr³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ IMRESSAO DO RECIBO FORMULARIO ZEBRADO                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fImpreZebr()                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fImpreZebr()
+
+Local nConta    := nContr := nContrT:=0
+
+fCabecZ()
+fLancaZ( nConta )
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fCabec    ³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ IMRESSAO Cabe‡alho Form Continuo                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fCabec()                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fCabec()   // Cabecalho do Recibo()
+
+
+@ LI, 01 PSAY &cNormal+DESC_Fil
+LI ++
+@ LI, 01 PSAY DESC_END
+LI ++
+@ LI, 01 PSAY DESC_CGC
+
+If !Empty( Semana ) .AND. Semana #'99' .AND.  Upper( SRA->RA_TIPOPGT ) == 'S'
+	@ Li, 37 pSay STR0013 + Semana + ' ( ' + cSem_De + STR0014 + ;	//'Semana '###' a '
+	cSem_Ate + ' )'
+Else
+	@ LI, 55 PSAY MesExtenso( MONTH( dDataRef ) )+"/"+STR( YEAR( dDataRef ), 4 )
+EndIf
+
+LI +=3
+@ LI, 01 PSAY SRA->RA_Mat
+@ LI, 08 PSAY Left( SRA->RA_NOME, 28 )
+@ LI, 37 PSAY SRA->RA_CBO
+@ LI, 43 PSAY SRA->RA_Filial
+@ LI, 54 PSAY SRA->RA_CC
+@ LI, 65 PSAY ORDEM_REL PICTURE "9999"
+LI ++
+
+cDet := STR0015 + SRA->RA_CODFUNC + ' '		//'FUNCAO: '
+cDet += DescFun( SRA->RA_CODFUNC, SRA->RA_FILIAL ) + ' '
+cDet += DescCc( SRA->RA_CC, SRA->RA_FILIAL ) + ' '
+cDet += STR0016 + SRA->RA_CHAPA					//'CHAPA: '
+@ Li, 01 pSay cDet
+
+Li += 2
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fCabecz   ³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ IMRESSAO Cabe‡alho Form ZEBRADO                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fCabecz()                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fCabecZ()   // Cabecalho do Recibo Zebrado()
+
+LI ++
+@ LI, 00 PSAY "*"+REPLICATE( "=", 130 )+"*"
+
+LI ++
+@ LI, 00  PSAY  "|"
+@ LI, 46  PSAY STR0017		//"RECIBO DE PAGAMENTO  "
+@ LI, 131 PSAY "|"
+
+LI ++
+@ LI, 00 PSAY "|"+REPLICATE( "-", 130 )+"|"
+
+LI ++
+@ LI, 00  PSAY STR0018 +  DESC_Fil		//"| Empresa   : "
+@ LI, 92  PSAY STR0019 + SRA->RA_FILIAL	//" Local : "
+@ LI, 131 PSAY "|"
+
+LI ++
+@ LI, 00 PSAY STR0020 + SRA->RA_CC + " - " + DescCc( SRA->RA_CC, SRA->RA_FILIAL )	//"| C Custo   : "
+If !Empty( Semana ) .AND. Semana #"99" .AND.  Upper( SRA->RA_TIPOPGT ) == "S"
+	@ Li, 92 pSay STR0021 + Semana + " ( " + cSem_De + STR0022 + ;   //'Sem.'###' a '
+	cSem_Ate + " )"
+Else
+	@ LI, 92 PSAY MesExtenso( MONTH( dDataRef ) )+"/"+STR( YEAR( dDataRef ), 4 )
+EndIf
+@ LI, 131 PSAY "|"
+
+LI ++
+ORDEMZ ++
+@ LI, 00  PSAY STR0023 + SRA->RA_MAT		//"| Matricula : "
+@ LI, 30  PSAY STR0024 + SRA->RA_NOME	//"Nome  : "
+@ LI, 92  PSAY STR0025						//"Ordem : "
+@ LI, 100 PSAY StrZero( ORDEMZ, 4 ) Picture "9999"
+@ LI, 131 PSAY "|"
+
+LI ++
+@ LI, 00  PSAY STR0026+SRA->RA_CODFUNC+" - "+DescFun( SRA->RA_CODFUNC, SRA->RA_FILIAL )	//"| Funcao    : "
+@ LI, 131 PSAY "|"
+
+LI ++
+@ LI, 00 PSAY "|"+REPLICATE( "-", 130 )+"|"
+
+LI ++
+@ LI, 000 PSAY STR0027		//"| P R O V E N T O S "
+@ LI, 044 PSAY STR0028		//"  D E S C O N T O S"
+@ LI, 088 PSAY STR0029		//"  B A S E S"
+@ LI, 131 PSAY "|"
+
+LI ++
+@ LI, 00 PSAY "|"+REPLICATE( "-", 130 )+"|"
+LI++
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fLanca    ³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao das Verbas ( Lancamentos ) Form. Continuo        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fLanca()                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fLanca( nConta )   // Impressao dos Lancamentos()
+
+Local cString := Transform( aLanca[nConta, 5], "@E 99,999,999.99" )
+Local nCol := If( aLanca[nConta, 1]="P", 43, If( aLanca[nConta, 1]="D", 57, 27 ) )
+
+@ LI, 01 PSAY aLanca[nConta, 2]
+@ LI, 05 PSAY aLanca[nConta, 3]
+If aLanca[nConta, 1] #"B"        // So Imprime se nao for base
+	@ LI, 36 PSAY TRANSFORM( aLanca[nConta, 4], "999.99" )
+EndIf
+@ LI, nCol PSAY cString
+Li ++
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fLancaZ   ³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao das Verbas ( Lancamentos ) Zebrado               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fLancaZ()                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fLancaZ( nConta )   // Impressao dos Lancamentos()
+
+Local nTermina  := 0
+Local nCont     := 0
+Local nCont1    := 0
+Local nValidos  := 0
+
+nTermina := Max( Max( LEN( aProve ), LEN( aDesco ) ), LEN( aBases ) )
+
+For nCont := 1 To nTermina
+	@ LI, 00 PSAY "|"
+	IF nCont <= LEN( aProve )
+		@ LI, 02 PSAY aProve[nCont, 1]+TRANSFORM( aProve[nCont, 2], '999.99' )+TRANSFORM( aProve[nCont, 3], "@E 999,999.99" )
+	EndIf
+	@ LI, 44 PSAY "|"
+	IF nCont <= LEN( aDesco )
+		@ LI, 46 PSAY aDesco[nCont, 1]+TRANSFORM( aDesco[nCont, 2], '999.99' )+TRANSFORM( aDesco[nCont, 3], "@E 999,999.99" )
+	EndIf
+	@ LI, 88 PSAY "|"
+	IF nCont <= LEN( aBases )
+		@ LI, 90 PSAY aBases[nCont, 1]+TRANSFORM( aBases[nCont, 2], '999.99' )+TRANSFORM( aBases[nCont, 3], "@E 999,999.99" )
+	EndIf
+	@ LI, 131 PSAY "|"
+	
+	//---- Soma 1 nos nValidos e Linha
+	nValidos ++
+	Li ++
+	
+	If nValidos = 12
+		@ LI, 00 PSAY "|"+REPLICATE( "-", 130 )+"|"
+		LI ++
+		@ LI, 00 PSAY "|"
+		@ LI, 05 PSAY STR0030			// "CONTINUA !!!"
+		//		@ LI, 76 PSAY "|"+&cCompac
+		LI ++
+		@ LI, 00 PSAY "*"+REPLICATE( "=", 130 )+"*"
+		LI += 8
+		fCabecZ()
+		nValidos := 0
+	EndIf
+Next
+
+For nCont1 := nValidos+1 To 12
+	@ Li, 00  PSAY "|"
+	@ Li, 44  PSAY "|"
+	@ Li, 88  PSAY "|"
+	@ Li, 131 PSAY "|"
+	Li++
+Next
+@ LI, 00 PSAY "|"+REPLICATE( "-", 130 )+"|"
+LI ++
+@ LI, 000 PSAY "|"
+@ LI, 005 PSAY DESC_MSG1
+@ LI, 044 PSAY STR0031+SPACE( 10 )+TRANS( TOTVENC, "@E 999,999,999.99" )	//"| TOTAL BRUTO     "
+@ LI, 088 PSAY "|"+STR0032+SPACE( 07 )+TRANS( TOTDESC, "@E 999,999,999.99" )	//" TOTAL DESCONTOS     "
+@ LI, 131 PSAY "|"
+LI ++
+@ LI, 000 PSAY "|"
+@ LI, 005 PSAY DESC_MSG2
+@ LI, 044 PSAY "|"+REPLICATE( "-", 86 )+"|"
+
+LI ++
+@ LI, 000 PSAY "|"
+@ LI, 005 PSAY DESC_MSG3
+@ LI, 044 PSAY STR0033+SRA->RA_BCDEPSAL+"-"+DescBco( SRA->RA_BCDEPSAL, SRA->RA_FILIAL )	//"| CREDITO:"
+@ LI, 089 PSAY STR0034+SPACE( 05 )+TRANS( ( TOTVENC-TOTDESC ), "@E 999,999,999.99" )			//"| LIQUIDO A RECEBER     "
+@ LI, 132 PSAY "|"
+
+LI ++
+@ LI, 000 PSAY "|"+REPLICATE( "-", 130 )+"|"
+
+LI ++
+@ LI, 000 PSAY "|"
+@ LI, 044 PSAY STR0035 + SRA->RA_CTDEPSAL		//"| CONTA:"
+@ LI, 088 PSAY "|"
+@ LI, 131 PSAY "|"
+
+LI ++
+@ LI, 000 PSAY "|"+REPLICATE( "-", 130 )+"|"
+
+LI ++
+@ LI, 00  PSAY STR0036 + Replicate( "_", 40 )		//"| Recebi o valor acima em ___/___/___ "
+@ li, 131 PSAY "|"
+
+LI ++
+@ LI, 00 PSAY "*"+REPLICATE( "=", 130 )+"*"
+
+ASize( AProve, 0 )
+ASize( ADesco, 0 )
+ASize( aBases, 0 )
+
+Li += 1
+
+//Quebrar pagina
+If LI > 63
+	LI := 0
+EndIf
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fContinua ³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressap da Continuacao do Recibo                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fContinua()                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fContinua()    // Continuacao do Recibo()
+
+Li+=1
+@ LI, 05 PSAY &cNormal + STR0037		//"CONTINUA !!!"
+Li+=8
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fRodape   ³ Autor ³ R.H. - Ze Maria       ³ Data ³ 14.03.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao do Rodape                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fRodape()                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fRodape()    // Rodape do Recibo()
+
+@ LI, 05 PSAY DESC_MSG1
+LI ++
+@ LI, 05 PSAY DESC_MSG2
+@ LI, 42 PSAY TOTVENC PICTURE "@E 999,999,999.99"
+@ LI, 56 PSAY TOTDESC PICTURE "@E 999,999,999.99"
+LI ++
+@ LI, 05 PSAY DESC_MSG3
+LI ++
+MESCOMP = IIF( MONTH( dDataRef ) + 1 > 12, 01, MONTH( dDataRef ) )
+IF MESCOMP = MONTH( SRA->RA_NASC )
+	@ LI, 02 PSAY STR0038		//"F E L I Z   A N I V E R S A R I O  ! !"
+EndIf
+@ LI, 56 PSAY TOTVENC - TOTDESC PICTURE "@E 999,999,999.99"
+LI +=2
+
+If !lAtual
+	nValSal := 0
+	fBuscaSlr( @nValSal, MesAno( dDataRef ) )
+	If nValSal ==0
+		nValSal := SRA->RA_SALARIO
+	EndIf
+Else
+	nValSal := SRA->RA_SALARIO
+EndIf
+@ LI, 05 PSAY &cCompac+Transform( nValSal, "@E 99,999,999.99" )
+
+If nTipRec = 1  // Bases de Adiantamento
+	If cBaseAux = "S" .AND. nBaseIr #0
+		@ LI, 89 PSAY nBaseIr PICTURE "@E 999,999,999.99"
+	EndIf
+ElseIf nTipRec = 2 .OR. nTipRec = 4  // Bases de Folha e 13o. 2o.Parc.
+	If cBaseAux = "S"
+		@ LI, 23 PSAY Transform( nAteLim, "@E 999,999,999.99" )
+		If nBaseFgts #0
+			@ LI, 46 PSAY nBaseFgts PICTURE "@E 999,999,999.99"
+		EndIf
+		If nFgts #0
+			@ LI, 66 PSAY nFgts PICTURE "@E 99,999,999.99"
+		EndIf
+		If nBaseIr #0
+			@ LI, 89 PSAY nBaseIr PICTURE "@E 999,999,999.99"
+		EndIf
+		@ LI, 103 PSAY Transform( nBaseIrfE, "@E 999,999,999.99" )
+	EndIf
+ElseIf nTipRec = 3 // Bases de FGTS e FGTS Depositado da 1¦ Parcela
+	If cBaseAux = "S"
+		If nBaseFgts #0
+			@ LI, 46 PSAY nBaseFgts PICTURE "@E 999,999,999.99"
+		EndIf
+		If nFgts #0
+			@ LI, 66 PSAY nFgts PICTURE "@E 99,999,999.99"
+		EndIf
+	EndIf
+EndIf
+
+@ LI, Pcol() Psay &cNormal
+
+Li ++
+IF SRA->RA_BCDEPSAL #SPACE( 8 )
+	Desc_Bco := DescBco( Sra->Ra_BcDepSal, Sra->Ra_Filial )
+	@ LI, 01 PSAY STR0039	//"CRED:"
+	@ LI, 06 PSAY SRA->RA_BCDEPSAL
+	@ LI, 14 PSAY "-"
+	@ LI, 15 PSAY DESC_BCO
+	@ LI, 60 PSAY STR0040 + SRA->RA_CTDEPSAL	//"CONTA:"
+EndIf
+Return NIL
+
+
+********************
+Static Function PerSemana() // Pesquisa datas referentes a semana.()
+********************
+
+If !Empty( Semana )
+	cChaveSem := StrZero( Year( dDataRef ), 4 )+StrZero( Month( dDataRef ), 2 )+SRA->RA_TNOTRAB
+	If !Srx->( dbSeek( If( cFilial=="  ", "  ", SRA->RA_FILIAL ) + "01" + cChaveSem + Semana , .T. ) ) .AND. ;
+		!Srx->( dbSeek( If( cFilial=="  ", "  ", SRA->RA_FILIAL ) + "01" + Subs( cChaveSem, 3, 9 ) + Semana , .T. ) ) .AND. ;
+		!Srx->( dbSeek( If( cFilial=="  ", "  ", SRA->RA_FILIAL ) + "01" + Left( cChaveSem, 6 )+"999"+ Semana , .T. ) ) .AND. ;
+		!Srx->( dbSeek( If( cFilial=="  ", "  ", SRA->RA_FILIAL ) + "01" + Subs( cChaveSem, 3, 4 )+"999"+ Semana , .T. ) ) .AND. ;
+		HELP( " ", 1, "SEMNAOCAD" )
+		Return NIL
+	EndIf
+	
+	If Len( AllTrim( SRX->RX_COD ) ) == 9
+		cSem_De  := Transforma( CtoD( Left( SRX->RX_TXT, 8 ) ), "DDMMYY" )
+		cSem_Ate := Transforma( CtoD( Subs( SRX->RX_TXT, 10, 8 ) ), "DDMMYY" )
+	Else
+		cSem_De  := Transforma( If( "/" $ SRX->RX_TXT , CtoD( SubStr( SRX->RX_TXT, 1, 10 ) ) , StoD( SubStr( SRX->RX_TXT, 1, 8 ) ) ), "DDMMYY" )
+		cSem_Ate := Transforma( If( "/" $ SRX->RX_TXT , CtoD( SubStr( SRX->RX_TXT, 12, 10 ) ), StoD( SubStr( SRX->RX_TXT, 12, 8 ) ) ), "DDMMYY" )
+	EndIf
+EndIf
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³fSomaPd   ³ Autor ³ R.H. - Mauro          ³ Data ³ 24.09.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Somar as Verbas no Array                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ fSomaPd( Tipo, Verba, Horas, Valor )                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fSomaPd( cTipo, cPd, nHoras, nValor )
+Local nPos
+Local Desc_paga 
+Local cArray := {}
+
+Desc_paga := DescPd( cPd, Sra->Ra_Filial )  // mostra como pagto
+
+If cTipo #'B'
+	//--Array para Recibo Pre-Impresso
+	nPos := Ascan( aLanca, { |X| X[2] = cPd } )
+	If nPos == 0
+		Aadd( aLanca, {cTipo, cPd, Desc_Paga, nHoras, nValor} )
+	Else
+		aLanca[nPos, 4] += nHoras
+		aLanca[nPos, 5] += nValor
+	EndIf
+EndIf
+
+//--Array para o Recibo Pre-Impresso
+If cTipo = 'P'
+	cArray := "aProve"
+ElseIf cTipo = 'D'
+	cArray := "aDesco"
+EndIf
+
+nPos := Ascan( &cArray, { |X| X[1] = cPd } )
+If nPos == 0
+	Aadd( &cArray, {cPd+" "+Desc_Paga, nHoras, nValor } )
+Else
+	&cArray[nPos, 2] += nHoras
+	&cArray[nPos, 3] += nValor
+EndIf
+
+//nPos := 0
+//If ( nPos := aScan( aTabVbHrs, { |x| x[5] == cPd } ) ) > 0
+//	aAdd( aVerbHrs, { aTabVbHrs[nPos][5], nHoras } )
+//EndIf
+
+Return NIL
+
+
+*-------------------------------------------------------
+Static Function Transforma( dData ) //Transforma as datas no formato DD/MM/AAAA()
+*-------------------------------------------------------
+Return( StrZero( Day( dData ), 2 ) +"/"+ StrZero( Month( dData ), 2 ) +"/"+ Right( Str( Year( dData ) ), 4 ) )
+
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ VerPerg      ³ Autor ³ Fernando Joly     ³ Data ³ 15.06.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Verifica as perguntas, Incluindo-as caso n„o existam       ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function VerPerg()
+
+aRegs     := {}
+
+cPerg := Left( cPerg, 6 )
+
+//X1_GRUPO, X1_ORDEM, X1_PERGUNT, X1_PERSPA, X1_PERENG, X1_VARIAVL, X1_TIPO, X1_TAMANHO, X1_DECIMAL, X1_PRESEL, X1_GSC, X1_VALID, X1_VAR01, X1_DEF01, X1_DEFSPA1, X1_DEFENG1, X1_CNT01, X1_VAR02, X1_DEF02, X1_DEFSPA2, X1_DEFENG2, X1_CNT02, X1_VAR03, X1_DEF03, X1_DEFSPA3, X1_DEFENG3, X1_CNT03, X1_VAR04, X1_DEF04, X1_DEFSPA4, X1_DEFENG4, X1_CNT04, X1_VAR05, X1_DEF05, X1_DEFSPA5, X1_DEFENG5, X1_CNT05, X1_F3, X1_PYME, X1_GRPSXG, X1_HELP
+
+aAdd( aRegs, {cPerg, "01", "Data de Referência ?", "¿Fecha Referencia?", "Reference Date ?", "mv_ch1", "D", 8, 0, 0, "G", "naovazio", "mv_par01", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "02", "Data do Credito ?", "Data do Credito ?", "Data do Credito ?", "mv_ch2", "D", 8, 0, 0, "G", "naovazio", "mv_par02", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "03", "Tipo Movimento   ?", "¿Imprimir Facturas?", "Print Receipts ?", "mv_ch3", "N", 1, 0, 2, "C", "", "mv_par03", "Adto.", "Anticipo", "Advance", "", "", "Folha", "Liquidacion", "Payroll", "", "", "1¦Parc.", "1a Cuota", "1st Installment", "", "", "2¦Parc.", "2a Cuota", "2nd Installment", "", "", "Val.Extras", "Vlr. Extras", "Extra Val.", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "04", "Numero da Semana ?", "¿Num.de la Semana?", "Week Number ?", "mv_ch4", "C", 2, 0, 0, "G", "", "mv_par04", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "05", "Filial De ?", "¿De Filial?", "From Branch ?", "mv_ch5", "C", 2, 0, 0, "G", "", "mv_par05", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "XM0", "S", "", ""} )
+aAdd( aRegs, {cPerg, "06", "Filial Até ?", "¿A Filial?", "To Branch ?", "mv_ch6", "C", 2, 0, 0, "G", "naovazio", "mv_par06", "", "", "", "ZZ", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "XM0", "S", "", ""} )
+aAdd( aRegs, {cPerg, "07", "Centro de Custo De ?", "¿De Centro de Costo?", "From Cost Center ?", "mv_ch7", "C", 9, 0, 0, "G", "", "mv_par07", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "CTT", "S", "004", ""} )
+aAdd( aRegs, {cPerg, "08", "Centro de Custo Até ?", "¿A  Centro de Costo?", "To Cost Center ?", "mv_ch8", "C", 9, 0, 0, "G", "naovazio", "mv_par08", "", "", "", "ZZZZZZZZZ", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "CTT", "S", "004", ""} )
+aAdd( aRegs, {cPerg, "09", "Matricula De ?", "¿De Matricula?", "From Registration ?", "mv_ch9", "C", 6, 0, 0, "G", "", "mv_par09", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "SRA", "S", "", ""} )
+aAdd( aRegs, {cPerg, "10", "Matricula Até ?", "¿A  Matricula?", "To Registration ?", "mv_cha", "C", 6, 0, 0, "G", "naovazio", "mv_par10", "", "", "", "ZZZZZZ", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "SRA", "S", "", ""} )
+aAdd( aRegs, {cPerg, "11", "Nome De ?", "¿De Nombre?", "From Name ?", "mv_chb", "C", 30, 0, 0, "G", "", "mv_par11", "", "", "", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "12", "Nome Até ?", "¿A  Nombre?", "To Name ?", "mv_chc", "C", 30, 0, 0, "G", "naovazio", "mv_par12", "", "", "", "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+//aAdd( aRegs, {cPerg, "13", "Mensagem 1 ?", "¿Mensaje 1?", "Message 1 ?", "mv_chd", "C", 1, 0, 0, "G", "", "mv_par13", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+//aAdd( aRegs, {cPerg, "14", "Mensagem 2 ?", "¿Mensaje 2?", "Message 2 ?", "mv_che", "C", 1, 0, 0, "G", "", "mv_par14", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+//aAdd( aRegs, {cPerg, "15", "Mensagem 3 ?", "¿Mensaje 3?", "Message 3 ?", "mv_chf", "C", 1, 0, 0, "G", "", "mv_par15", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "13", "Situaçöes a gerar ?", "¿Situaciones a Imp.?", "Situations to Print ?", "mv_chg", "C", 5, 0, 0, "G", "fSituacao", "mv_par16", "", "", "", " ADFT", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "14", "Categorias a gerar ?", "¿Categorias a Imp.?", "Categories to Print ?", "mv_chh", "C", 15, 0, 0, "G", "fCategoria", "mv_par17", "", "", "", "ACDEGHMPST", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "15", "Arquivo de Saida ?", "Arquivo de Saida ?", "Arquivo de Saida?", "mv_chi", "C", 30, 0, 0, "G", "", "mv_par18", "", "", "", "A:\RECIBO.TXT", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""} )
+aAdd( aRegs, {cPerg, "16", "Tipo de Operacao ?", "Tipo de Operacao ?", "Tipo de Operacao ?", "mv_chj", "N", 1, 0, 1, "C", "", "mv_par19", "Inclusao Recibos", "Carga de Recibos", "Carga de Recibos", "", "", "Exclusao de Recibos", "Dispensa Func.", "Dispensa Func.", "", "", "Alteracao de Recibos", "Exclusao de Lote", "Exclusao de Lote", "", "", "Substituir Lote", "Substituir Lote", "Substituir Lote", "", "", "Excluir Recibo Individual", "Excluir Recibo Individual", "Excluir Recibo Individual", "", "", "S", "", ""} )
+aAdd( aRegs, {cPerg, "17", "Cod.Convenio H.S.B.C   ?", "Cod.Convenio H.S.B.C.  ?", "Cod.Convenio H.S.B.C.  ?", "mv_chk", "C", 6, 0, 0, "G", "", "mv_par20", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""} )
+aAdd( aRegs, {cPerg, "18", "Cod.Agencia Empresa ?", "Cod.Agencia Empresa ?", "Cod.Agencia Empresa ?", "mv_chm", "C", 5, 0, 0, "G", "", "mv_par22", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""} )
+aAdd( aRegs, {cPerg, "19", "C.Corrente Empresa  ?", "C.Corrente Empresa  ?", "C.Corrente Empresa  ?", "mv_chn", "C", 13, 0, 0, "G", "", "mv_par23", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""} )
+
+
+ValidPerg( aRegs, cPerg , .F. )
+
+Return NIL
+
+
+//Fim do Programa
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³ GERAHSBC0ºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de Registro Tipo 0 para hollerith eletronico BDN   º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³COPPEL                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GERAHSBC0()
+
+FWrite( nHdl, GeraLinhas( aTipo0,.T. ) )
+nTotArq++
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³ GERAHSBC1ºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de Registro Tipo 1 para hollerith eletronico BDN   º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³COPPEL                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GERAHSBC1()
+
+FWrite( nHdl, GeraLinhas( aTipo1,.T. ) )
+nTotRLote++
+nTotArq++
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³ GERAHSBC3ºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de Registro Tipo 3 para hollerith eletronico BDN   º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³COPPEL                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GERAHSBC3()
+
+nSeq_++
+
+fWrite( nHdl, GeraLinhas( aTipo3,.T. ) )
+nQtdComp++
+nTotRLote++
+nTotArq++
+
+Return NIL
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³ GERAHSBC4ºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de Registro Tipo 2 para hollerith eletronico BDN   º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³COPPEL                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GERAHSBC4()
+
+Local   nI       := 1
+Local   aVerbas  := {}
+Local   n
+Private cCodPag1  := ''
+Private cDescPag1 := ''
+Private cCodPag2  := ''
+Private cDescPag2 := ''
+Private cCodPag3  := ''
+Private cDescPag3 := ''
+Private cCodPag4  := ''
+Private cDescPag4 := ''
+Private cCodPag5  := ''
+Private cDescPag5 := ''
+Private nValPag1 := 0
+Private nValPag2 := 0
+Private nValPag3 := 0
+Private nValPag4 := 0
+Private nValPag5 := 0
+Private cIdPag   := ''
+
+nQtdComp         := 0
+
+aVerbas := aClone(aProve)  //If( nI == 1, aClone( aProve ), aClone( aDesco ) )
+lGravou := .F.
+nTot    := 0
+
+nSeq_++
+
+x  := Len(aVerbas)
+cLin := ""
+
+for n := 1 to 1
+	
+	If x=1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin  )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=5
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=6
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ +=1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=7
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ +=1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=8
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=9
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ + 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=10
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=11
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=12
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=13
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=14
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+
+	ElseIf x=15
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf  x=16
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=17
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")     //OS 3087/15 - By Isamu K.
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+ StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=18
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//n/Seq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=19
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=20
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=21
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=22
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[22,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[22,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=23
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","") 
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[22,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[22,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[23,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[23,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=24
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[22,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[22,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[23,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[23,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[24,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[24,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=25
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","") 
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "C" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[22,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[22,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[23,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[23,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[24,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[24,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[25,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[25,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	Endif
+	
+next
+
+lGravou := .T.
+nQtdComp++
+//nTotRLote++
+//nTotArq++
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³ GERAHSBC4ºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de Registro Tipo 2 para hollerith eletronico BDN   º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³COPPEL                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GERAHSBC4D()
+
+Local   nI       := 1
+Local   aVerbas  := {}
+Local   n
+Private cCodDes1  := ''
+Private cDescDes1 := ''
+Private cCodDes2  := ''
+Private cDescDes2 := ''
+Private cCodDes3  := ''
+Private cDescDes3 := ''
+Private cCodDes4  := ''
+Private cDescDes4 := ''
+Private cCodDes5  := ''
+Private cDescDes5 := ''
+Private nValDes1 := 0
+Private nValDEs2 := 0
+Private nValDes3 := 0
+Private nValDes4 := 0
+Private nValDes5 := 0
+Private cIdDes   := ''
+
+nQtdComp         := 0
+
+aVerbas := aClone(aDesco)  //If( nI == 1, aClone( aProve ), aClone( aDesco ) )
+lGravou := .F.
+nTot    := 0
+
+//nSeq_++
+
+x  := Len(aVerbas)
+cLin := ""
+
+for n := 1 to 1
+	
+	If x=1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin  )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+	ElseIf x=2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=5
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=6
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ +=1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=7
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ +=1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=8
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=9
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ + 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=10
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=11
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin  )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=12
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=13
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=14
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+
+	ElseIf x=15
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf  x=16
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin  )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=17
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=18
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=19
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=20
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=21
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin  )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=22
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[22,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[22,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=23
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[22,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[22,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[23,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[23,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=24
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+ 		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[22,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[22,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[23,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[23,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[24,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[24,3],8,2),".","")
+		cLin += Space(29) + "R$" + "0"+Replicate("0",7)
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	ElseIf x=25
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[1,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[1,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[2,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[2,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[3,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[3,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[4,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[4,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[5,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[5,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 1
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[6,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[6,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[7,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[7,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[8,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[8,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[9,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[9,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[10,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[10,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 2
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[11,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[11,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[12,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[12,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[13,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[13,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[14,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[14,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[15,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[15,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 3
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[16,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[16,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[17,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[17,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[18,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[18,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[19,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[19,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[20,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[20,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+		//nSeq_ += 4
+		cLin := "399" + "0003" + "3" + StrZero(nSeq_,5) + "D" + cCodOpera + cCodInst + "H"
+		cLin += Padr(Subs(aVerbas[21,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[21,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[22,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[22,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[23,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[23,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[24,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[24,3],8,2),".","")
+		cLin += Padr(Subs(aVerbas[25,1],5),29) + "R$" + "0"+StrTran(StrZero(aVerbas[25,3],8,2),".","")
+		cLin += Space(27) + cQuebraLin
+		FWrite( nHdl, cLin )
+        nTotRLote++
+        nTotArq++
+		nSeq_++
+		
+	Endif
+	
+next
+
+
+lGravou := .T.
+nQtdComp++
+//nTotRLote++
+//nTotArq++
+//nSeq_:=0
+
+
+Return NIL
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³GERAHSBC4OºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de Registro Tipo 4 para hollerith eletronico BDN   º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³COPPEL                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GERAHSBC4O()
+
+//nSeq_++
+
+fWrite( nHdl, GeraLinhas( aTipo4O,.T. ) )
+nQtdComp++
+nTotRLote++
+nTotArq++
+nSeq_:=0
+
+Return NIL
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³ GERAHSBC5ºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de Registro Tipo 5 para hollerith eletronico       º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³Coppel                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GERAHSBC5()
+//nSeq_++
+nTotRLote++
+FWrite( nHdl, GeraLinhas( aTipo5,.T. ) )
+nTotArq++
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³ GERAHSBC9ºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de Registro Tipo 9 para hollerith eletronico       º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³Coppel                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GERAHSBC9()
+//nSeq_++
+nTotArq++
+FWrite( nHdl, GeraLinhas( aTipo9,.F. ) )
+
+
+Return NIL
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³GeralinhasºAutor  ³ Ernani Forastieri  º Data ³  25/08/05   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Geracao de linhas de texto                                 º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³COPPEL                                                      º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function GeraLinhas( aTipo, lQuebra )
+Local cLinha     := ''
+Local nTamMaxLin := 240 // 250
+Local nI         := 0
+
+For nI := 1 To Len( aTipo )
+	bAux      := &( '{ || ' + aTipo[nI][7] + ' } ' )
+	
+	cTipo     := aTipo[nI][4]
+	nTamanho  := aTipo[nI][5]
+	nDecimal  := aTipo[nI][6]
+	
+	uConteudo := EVal( bAux )
+	uConteudo := IIf( ValType( uConteudo ) == 'U' , '', EverChar( uConteudo ) )
+	
+	If     cTipo == 'C'
+		uConteudo := PADR( SubStr( AllTrim( uConteudo ), 1, nTamanho ), nTamanho )
+		
+	ElseIf cTipo == 'N'
+		uConteudo := StrZero( Val( uConteudo ) * (10^nDecimal) , nTamanho )
+		
+	EndIf
+	
+	cLinha += uConteudo
+	
+Next
+
+
+If lQuebra
+   cLinha += Replicate( ' ', nTamMaxLin - Len( cLinha ) ) + cQuebraLin
+Else
+   cLinha += Replicate( ' ', nTamMaxLin - Len( cLinha ) ) 
+Endif
+//If ( nPos := Ascan(aTipo,{ |x| &(x[7]) == "9" })) > 0
+   //cLinha += Replicate( ' ', nTamMaxLin - Len( cLinha ) ) 
+//Else
+   //cLinha += Replicate( ' ', nTamMaxLin - Len( cLinha ) ) + cQuebraLin
+//Endif
+
+Return cLinha
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºRotina    ³ EVERCHAR ºAutor  ³ Ernani Forastieri  º Data ³  13/09/04   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Funcao auxiliar para transformar um campo de qualquer tipo º±±
+±±º          ³ em caracter                                                º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Generico                                                   º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function EverChar( uCpoConver )
+
+Local cRet  := NIL
+Local cTipo := ''
+
+cTipo := ValType( uCpoConver )
+
+If     cTipo == 'C'                    // Tipo Caracter
+	cRet := uCpoConver
+	
+ElseIf cTipo == 'N'                    // Tipo Numerico
+	cRet := AllTrim( Str( uCpoConver ) )
+	
+ElseIf cTipo == 'L'                    // Tipo Logico
+	cRet := IIf( uCpoConver, '.T.', '.F.' )
+	
+ElseIf cTipo == 'D'                    // Tipo Data
+	cRet := DToC( uCpoConver )
+	
+ElseIf cTipo == 'M'                    // Tipo Memo
+	cRet := 'MEMO'
+	
+ElseIf cTipo == 'A'                    // Tipo Array
+	cRet := 'ARRAY[' + AllTrim( Str( Len( uCpoConver ) ) ) + ']'
+	
+ElseIf cTipo == 'U'                    // Indefinido
+	cRet := 'NIL'
+	
+EndIf
+
+Return(cRet)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºFun‡„o    ³ fEnderecoº Autor ³ Isamu K.           º Data ³  24/09/2013 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescri‡„o ³ Divide uma string de endereço e número em duas, uma de en  º±±
+±±º          ³ dereço e outra de número                                   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+static function fEndereco(cEnd)
+
+cEndereco := cEnd
+nUM     := AT("1",cEndereco)
+nDOIS   := AT("2",cEndereco)
+nTRES   := AT("3",cEndereco)
+nQUATRO := AT("4",cEndereco)
+nCINCO  := AT("5",cEndereco)
+nSEIS   := AT("6",cEndereco)
+nSETE   := AT("7",cEndereco)
+nOITO   := AT("8",cEndereco)
+nNOVE   := AT("9",cEndereco)
+nZERO   := AT("0",cEndereco)
+
+IF nUm == 0
+	nUm := 100
+ENDIF
+IF nDois == 0
+	nDois := 100
+ENDIF
+IF nTres == 0
+	nTres := 100
+ENDIF
+IF nQuatro == 0
+	nQuatro := 100
+ENDIF
+IF nCinco == 0
+	nCinco := 100
+ENDIF
+IF nSeis == 0
+	nSeis := 100
+ENDIF
+IF nSete == 0
+	nSete := 100
+ENDIF
+IF nOito == 0
+	nOito := 100
+ENDIF
+IF nNove == 0
+	nNove := 100
+ENDIF
+IF nZero == 0
+	nZero := 100
+ENDIF
+
+
+
+nQuebra := min(nUm,nDois)
+nQuebra := min(nQuebra,nTres)
+nQuebra := min(nQuebra,nQuatro)
+nQuebra := min(nQuebra,nCinco)
+nQuebra := min(nQuebra,nSeis)
+nQuebra := min(nQuebra,nSete)
+nQuebra := min(nQuebra,nOito)
+nQuebra := min(nQuebra,nNove)
+nQuebra := min(nQuebra,nZero)
+
+cNumero   := subs(cEndereco,nQuebra)
+cEndereco := LEFT(cEndereco,nQuebra-1)
+
+nQuebra := at(" ",cNumero)
+cNumero := LEFT(cNumero,nQuebra-1)
+
+if empty(cNumero)
+	cNumero := "SN"
+endif
+
+nQuebra := at(",",cEndereco)
+IF NQUEBRA > 0
+	cEndereco := LEFT(cEndereco,nQuebra-1)
+ENDIF
+
+nQuebra1  := at(" ",cEndereco)
+If nQuebra1 > 0
+	cEndereco := Subs(cEndereco,nQuebra1+1)
+Endif
+
+Return

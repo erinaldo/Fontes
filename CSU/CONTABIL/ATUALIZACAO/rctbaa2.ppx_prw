@@ -1,0 +1,600 @@
+#line 1 "C:\INCLUDE\Protheus.ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "Protheus.ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "Protheus.ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "Protheus.ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "Protheus.ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "Protheus.ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "Protheus.ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "Protheus.ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "Protheus.ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "Protheus.ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "Protheus.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbaa2.prw"
+#line 1 "C:\INCLUDE\TopConn.ch"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbaa2.prw"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_RCTBAA2()
+
+
+
+Local aArea	:= GetArea()
+
+Private aItens		:= {}
+
+Private oOk	    	:= LoadBitmap( GetResources(), "BR_VERDE")
+Private oNo	    	:= LoadBitmap( GetResources(), "BR_VERMELHO")
+
+
+
+
+If U_RCTB99Y()
+	Aviso("Aviso","A tabela de destino já tem itens preenchidos. Por favor, utilize uma tabela com o cadastro do cabeçalho somente.",{"OK"},,"Atenção",,"NOCHECKED")
+	Return .F. 
+Endif
+
+
+
+
+MontaTela()
+
+RestArea(aArea)
+Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function MontaTela()
+
+
+
+
+
+
+Local aAreaZB7		:= ZB7->(GetArea())
+Local nCpo,nCnt
+Local nLoop			:= 0
+Local nOpcA 		:= 0
+Local lSeek
+Local aObjects  	:= {}
+Local aSize     	:= MsAdvSize()
+Local nI			:= 0
+
+
+Local bOk      		:= {|| IF(TudoOK(),(nOpca:=1,oDlgMain:End()),nOpcA:=0) }
+Local bCancel  		:= {|| nOpcA := 0, oDlgMain:End() }
+Local aAlias		:= {}
+
+Private aHeader 	:= {}
+Private aCols	 	:= {}
+Private oDlgMain
+Private oEncMain
+Private oFolder
+Private oGetD
+Private aCampos		:= {}
+Private aVisual		:= {}
+Private aGets		:= {}
+Private aTela		:= {}
+Private bCampo		:= { |nCPO| Field( nCPO ) }
+Private aBotao		:= {}
+
+
+
+
+Private nPMark		:= 0
+Private nPCodRat	:= 0
+Private nPDescri	:= 0
+Private nPAnoMes	:= 0
+Private nPRevisa	:= 0
+Private nPAtivo		:= 0
+Private nPCCTran	:= 0
+Private nPItTran	:= 0
+Private nPClTran	:= 0
+Private nPProces	:= 0
+Private nPPercent	:= 0
+Private nPNomUser	:= 0
+Private nPCompon	:= 0
+
+
+
+
+
+
+
+
+
+
+aAdd( aCampos, "ZB7_CODRAT" )
+aAdd( aCampos, "ZB7_DESCRI" )
+aAdd( aCampos, "ZB7_ANOMES" )
+aAdd( aCampos, "ZB7_REVISA" )
+aAdd( aCampos, "ZB7_ATIVO"  )
+aAdd( aCampos, "ZB7_CCTRAN" )
+aAdd( aCampos, "ZB7_ITTRAN" )
+aAdd( aCampos, "ZB7_CLTRAN" )
+aAdd( aCampos, "ZB7_PROCES" )
+
+
+
+
+
+
+aAdd( aCampos, "ZB7_USRNAM" )
+
+aAdd( aCampos, "NOUSER" )
+
+
+
+
+aObjects := {}
+AAdd( aObjects,{100,060, .t. , .f.  })
+AAdd( aObjects,{100,100, .t. , .t.  })
+
+aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+aPosObj := MsObjSize( aInfo, aObjects )
+
+RegToMemory("ZB7", .F. )
+
+
+
+
+M->ZB7_MESANO	:= Substr(M->ZB7_ANOMES,5,2)+Substr(M->ZB7_ANOMES,1,4)
+
+
+
+
+
+
+M->ZB7_USRNAM	:= UsrRetName(__cUserId)
+
+
+
+
+aHeader := {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Aadd(aHeader,{"OK", "COR", "@BMP", 1, 0, .T. , "", "", "", "R", "", "", .F. , "V", "", "", "", ""})
+
+
+
+
+dbSelectArea("SX3")
+SX3->( dbSetOrder(2) )
+SX3->( dbSeek("ZB8_PERCEN") )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Aadd(aHeader,{	AllTrim(X3Titulo()), SX3->X3_CAMPO, SX3->X3_PICTURE, SX3->X3_TAMANHO, SX3->X3_DECIMAL, SX3->X3_VALID, SX3->X3_USADO, SX3->X3_TIPO, SX3->X3_F3, SX3->X3_CONTEXT, SX3->X3_CBOX, SX3->X3_RELACAO, SX3->X3_WHEN, SX3->X3_VISUAL, SX3->X3_VLDUSER, SX3->X3_PICTVAR, SX3->X3_OBRIGAT})
+
+dbSelectArea("SX3")
+SX3->( dbSetOrder(1) )
+SX3->( dbSeek("ZB7") )
+While SX3->( !Eof()) .And.  SX3->X3_ARQUIVO $ "ZB7"
+
+	If X3USO(X3_USADO) .And.  cNivel >= X3_NIVEL .and.  ( !Alltrim(SX3->X3_CAMPO) $ "ZB7_FILIAL")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		Aadd(aHeader,{	AllTrim(X3Titulo()), SX3->X3_CAMPO, SX3->X3_PICTURE, SX3->X3_TAMANHO, SX3->X3_DECIMAL, SX3->X3_VALID, SX3->X3_USADO, SX3->X3_TIPO, SX3->X3_F3, SX3->X3_CONTEXT, SX3->X3_CBOX, SX3->X3_RELACAO, SX3->X3_WHEN, SX3->X3_VISUAL, SX3->X3_VLDUSER, SX3->X3_PICTVAR, SX3->X3_OBRIGAT})
+	Endif
+	SX3->(dbSkip())
+EndDo
+
+
+
+
+nPMark		:= aScan( aHeader, { |x| AllTrim(x[2]) == "COR" 		})
+nPCodRat	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_CODRAT"	})
+nPDescri	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_DESCRI"	})
+nPAnoMes	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_ANOMES"	})
+nPRevisa	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_REVISA"	})
+nPAtivo		:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_ATIVO"	})
+nPCCTran	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_CCTRAN"	})
+nPItTran	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_ITTRAN"	})
+nPClTran	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_CLTRAN"	})
+nPProces	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_PROCES"	})
+nPPercent	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB8_PERCEN"	})
+
+
+
+
+nPNomUser	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_USRNAM"	})
+nPCompon	:= aScan( aHeader, { |x| AllTrim(x[2]) == "ZB7_COMPON"	})
+
+aCols := MontaAcols()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+oDlgMain := MSDIALOG():New(aSize[7],00,aSize[6],aSize[5],cCadastro,,,,,,,,, .T. )
+
+oEncMain := MSMGet():New("ZB7", ZB7->(RecNo()),2,,,,aCampos,{15,5,97,620},aCampos,1,,,,oDlgMain,,,,,, .T. ,,,)
+
+
+
+
+oGetD := MsNewGetDados():New(100,5,280,620,0,,"TudOk()",,,,9999,,,,oDlgMain,aHeader,@aCols)
+oGetD:oBrowse:blDblClick	:= {||GetPercentual()}
+
+oDlgMain:Activate( oDlgMain:bLClicked, oDlgMain:bMoved, oDlgMain:bPainted,,,,{|Self|EnchoiceBar(oDlgMain,bOk,bCancel,,aBotao)}, oDlgMain:bRClicked, )
+
+If nOpcA == 1
+
+	CalcPercent()
+	Grava()
+
+EndIf
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function MontaAcols()
+Local aRetorno	:= {}
+Local nUsado   	:= Len(aHeader)
+Local aArea    	:= ZB7->(GetArea())
+Local nRecno	:= ZB7->(RecNo())
+Local nLoop		:= 0
+Local dtBase	:= dDataBase
+Local dtBase2	:= dDataBase
+DtBase:=MonthSub(dtbase,11)
+DtBase:=AnoMes(dtbase)
+dtBase2:=AnoMes(dtbase2)
+dbSelectArea("ZB7")
+dbSetOrder(1)
+dbGoTop()
+while !EOF()
+	IF ZB7->ZB7_ANOMES>=DtBase .AND.  ZB7->ZB7_ANOMES<=DtBase2
+
+
+
+  		If U_RCTB99Y()
+			aAdd(aRetorno,Array(nUsado+1))
+
+			For nLoop := 1 to Len(aHeader)
+				If Alltrim(aHeader[nLoop][2])=="COR"
+					aRetorno[Len(aRetorno)][nLoop]		:= oNo
+				ElseIf Alltrim(aHeader[nLoop][2])=="ZB8_PERCEN"
+					aRetorno[Len(aRetorno)][nLoop]		:= 0
+				Else
+					aRetorno[Len(aRetorno)][nLoop]		:= ZB7->&(Alltrim(aHeader[nLoop][2]))
+				Endif
+			next
+
+			aRetorno[Len(aRetorno)][nUsado+1]	:= .F. 
+
+		Endif
+		dbSelectArea("ZB7")
+		dbSkip()
+	ELSE
+		dbSkip()
+	endif
+Enddo
+
+
+
+
+ZB7->(dbGoTo(nRecNo))
+
+RestArea(aArea)
+Return(aRetorno)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function TudoOK()
+
+
+
+Local lRetorno	:= .T. 
+Local nLoop		:= 0
+Local nSoma		:= 0
+
+
+
+
+aEval(oGetD:aCols,{|aItem| nSoma += aItem[nPPercent]})
+If nSoma <> 100
+
+
+
+
+	Aviso("Aviso", "A soma do rateio é diferente de 100%. Por favor, verifique novamente os percentuais das tabelas de rateio selecionadas.", {"OK"},, "Atenção",, "NOCHECKED")
+	lRetorno	:= .F. 
+Endif
+
+Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function GetPercentual()
+
+
+
+Local oDlg, oGroup, oBtnOK, oBtnCn, oGetPerc
+Local oSayPerc
+Local nGetPerc		:= If(oGetD:aCols[oGetD:nAt][nPPercent]==0,CriaVar("ZB8_PERCEN", .F. ),oGetD:aCols[oGetD:nAt][nPPercent])
+Local cTitDialog	:= "Porcentagem para a tabela"
+Local cTitGroup		:= ""
+Local nOpcA			:= 0
+
+
+
+
+oDlg = MsDialog():New( 0, 0, 100, 250, cTitDialog,,,.F.,,,,,,.T.,, ,.F. )
+
+oGroup:= TGroup():New(05,05,(oDlg:nClientHeight/3)-10,(oDlg:nClientWidth/2)-5,cTitGroup,oDlg,,, .T. )
+
+oSayPerc	:= tSay():New(10,10,{||"Porcentagem:"},oDlg,,,,,, .T. ,8388608,16777215,33,20)
+oGetPerc	:= TGet():New(10,52,{|u| if(PCount()>0,nGetPerc:=u,nGetPerc)}, oDlg,30,10,PesqPict("ZB8","ZB8_PERCEN"),{||nGetPerc >= 0 .and.  nGetPerc <= 100},,,,,, .T. ,,,,,,,,,,"nGetPerc")
+
+
+
+
+oBtnOK:=tButton():New((oDlg:nClientHeight/3.2),10,"OK",oDlg,{||nOpcA:=1,oDlg:End()},40,10,,,, .T. )
+oBtnCN:=tButton():New((oDlg:nClientHeight/3.2),(oDlg:nClientWidth/3.2),"Cancelar",oDlg,{||oDlg:End()},40,10,,,, .T. )
+
+oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,, oDlg:bRClicked, )
+
+
+
+
+If nOpcA==1
+	If nGetPerc == 0
+		oGetD:aCols[oGetD:nAt][nPPercent]  	:= nGetPerc
+		oGetD:aCols[oGetD:nAt][nPMark]		:= oNo
+	Else
+		oGetD:aCols[oGetD:nAt][nPPercent]  	:= nGetPerc
+		oGetD:aCols[oGetD:nAt][nPMark]		:= oOk
+	Endif
+	oGetD:Refresh()
+Endif
+
+Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CalcPercent()
+
+
+
+Local aArea    	:= ZB7->(GetArea())
+Local nRecno	:= ZB7->(RecNo())
+Local aCampos	:= {"ZB8_SEQUEN","ZB8_PERCEN","ZB8_CCDBTO","ZB8_ITDBTO","ZB8_CLVLDB"}
+Local aTrab		:= {}
+Local nLoop		:= 0
+Local nLoop2	:= 0
+Local nSequen	:= 0
+
+aItens	:= {}
+
+For nLoop:=1 to Len(oGetD:aCols)
+
+	If oGetD:aCols[nLoop][nPMark]==oOk
+
+		dbSelectArea("ZB8")
+		dbSetOrder(1)
+		If dbSeek(xFilial("ZB8")+oGetD:aCols[nLoop][nPCodRat]+oGetD:aCols[nLoop][nPAnoMes]+oGetD:aCols[nLoop][nPRevisa], .F. )
+			while !EOF() .and. ZB8->(ZB8_FILIAL+ZB8_CODRAT+ZB8_ANOMES+ZB8_REVISA)==xFilial("ZB8")+oGetD:aCols[nLoop][nPCodRat]+oGetD:aCols[nLoop][nPAnoMes]+oGetD:aCols[nLoop][nPRevisa]
+				aAdd(aItens,Array(Len(aCampos)))
+
+
+
+
+				For nLoop2 := 1 to Len(aCampos)
+					If aCampos[nLoop2]=="ZB8_SEQUEN"
+					    aItens[Len(aItens)][nLoop2]	:= STRZERO(nSequen+1,TAMSX3("ZB8_SEQUEN")[1])
+				    	nSequen++
+					ElseIf aCampos[nLoop2]=="ZB8_PERCEN"
+
+						aItens[Len(aItens)][nLoop2]	:= (oGetD:aCols[nLoop][nPPercent]*ZB8->ZB8_PERCEN)/100
+					Else
+						aItens[Len(aItens)][nLoop2]	:= ZB8->&(aCampos[nLoop2])
+					Endif
+				next
+
+				ZB8->(dbSkip())
+			EndDo
+		Endif
+
+	Endif
+
+next
+
+ZB7->(dbGoTo(nRecNo))
+RestArea(aArea)
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function Grava()
+
+
+
+Local nLoop		:= 0
+Local nLoop2	:= 0
+Local aCampos	:= {"ZB8_SEQUEN","ZB8_PERCEN","ZB8_CCDBTO","ZB8_ITDBTO","ZB8_CLVLDB"}
+
+For nLoop:=1 to Len(aItens)
+
+	dbSelectArea("ZB8")
+	RecLock("ZB8", .T. )
+    ZB8->ZB8_FILIAL	:= xFilial("ZB8")
+    ZB8->ZB8_CODRAT	:= M->ZB7_CODRAT
+    ZB8->ZB8_ANOMES	:= M->ZB7_ANOMES
+    ZB8->ZB8_REVISA	:= M->ZB7_REVISA
+    For nLoop2	:= 1 to Len(aItens[nLoop])
+    	ZB8->&(aCampos[nLoop2])	:= aItens[nLoop][nLoop2]
+	next
+	MsUnlock()
+
+next
+
+
+
+
+
+
+
+For nLoop	:= 1 to Len(oGetD:aCols)
+	If oGetD:aCols[nLoop][nPMark]==oOk
+		dbSelectArea("ZB7")
+		dbSetOrder(1)
+		If dbSeek(xFilial("ZB7")+oGetD:aCols[nLoop][nPCodRat]+oGetD:aCols[nLoop][nPAnoMes]+oGetD:aCols[nLoop][nPRevisa]+oGetD:aCols[nLoop][nPAtivo], .F. )
+			Reclock("ZB7", .F. )
+			ZB7->ZB7_COMPON	:= "1"
+			MsUnlock()
+		Endif
+	Endif
+next
+
+Return .T. 

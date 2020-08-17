@@ -1,0 +1,42 @@
+#line 1 "C:\INCLUDE\PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "PROTHEUS.Ch"
+#line 23 "c:\users\cst1350.br\desktop\PROJET~1\contabil\EXECBL~1\CTBHIS~1.PRW"
+Function U_CTBHIST(_lCalc,_cParam)
+
+
+Local _aAreaCT1 := CT1->(GetArea())
+Local _cHist	:=" "
+Local dDataMov  := IIF(Upper(FUNNAME())=="U_RMANA01",Stod(StrZero(Year(dDataBase),4)+StrZero(nMes,2)+"01"),dDataBase)
+_lCalc := If( _lCalc == nil, .t. , _lCalc ) ;
+_cParam := If( _cParam == nil, "A", _cParam ) ;
+
+CT1->(MsSeek(xFilial("CT1")+SN3->N3_CDEPREC))
+If _cParam == "A"
+
+	_cHist := If(_lCalc,"","DESCALC ")+"AMORTIZACAO MES" +" "+(SUBSTR(DTOC(dDataMov),4,5)+" - "+Alltrim(CT1->CT1_DESC01))
+Else
+	_cHist := If(_lCalc,"","DESCALC ")+"MES" +" "+(SUBSTR(DTOC(dDataMov),4,5)+" - "+Alltrim(CT1->CT1_DESC01))
+EndIf
+
+
+RestArea(_aAreaCT1)
+Return (_cHist)

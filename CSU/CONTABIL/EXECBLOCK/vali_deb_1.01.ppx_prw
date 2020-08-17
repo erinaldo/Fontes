@@ -1,0 +1,5 @@
+Function U_vali_deb()
+
+MsgAlert("Informação invalida !!! Esta linha de lançamento NÃO é a DEBITO.")
+
+Return .f. 

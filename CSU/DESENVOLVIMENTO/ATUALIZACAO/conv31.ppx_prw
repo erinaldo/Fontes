@@ -1,0 +1,1283 @@
+#line 1 "C:\INCLUDE\RWMAKE.CH"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "RWMAKE.CH"
+#line 24 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\conv31.prw"
+Function U_Converte()
+
+SetPrvt("aRadio,aRadConf,nRadio,nRadConf,lEnd,lContinua,lAbortPrint,cArqTxt,cArq,aCampo,cArqInd,cInd,cCampo,nDe,nAte,nTam,lProc,aDados")
+SetPrvt("aHeader,aCols,aRotina,nI,nJ,cLinhaOk,cTudoOk,cCadastro,nOpc,nOpcao,cTexto,cSTexto,oProc,cGrp,cDelim1,cDelim2,cYesNo,lOpen")
+
+
+aRadio    	:= {"Conversao","Configuracao"}
+aRadConf   	:= {"Configuracao Conversao","Configuracao DePara"}
+aCampo	    := {}
+aHeader		:= {}
+aCols		:= {}
+aRotina		:= {}
+aDados		:= {}
+lEnd        := .F. 
+lContinua   := .T. 
+lProc		:= .T. 
+lOpen		:= .T. 
+lAbortPrint := .F. 
+nRadio  	:= 1
+nRadConf	:= 1
+nDe			:= 0
+nAte		:= 0
+nTam		:= 0
+nI			:= 0
+nJ			:= 0
+nOpc		:= 0
+nOpcao		:= 0
+nAvs		:= 0
+cCampo		:= ""
+cInd	 	:= ""
+cArqInd  	:= ""
+cLinhaOk	:= ""
+cTudoOk		:= ""
+cCadastro	:= ""
+cTexto		:= ""
+cSTexto		:= ""
+cYesNo		:= "N"
+cArqTxt  	:= Space(24)
+cArq     	:= Space(3)
+cGrp		:= Space(4)
+cDelim1		:= Space(1)
+cDelim2		:= Space(1)
+oProc		:= Nil
+
+
+oDlg := MSDialog():New(0, 0, 130, 200, OemToAnsi("Conversao de Tabelas Ver.3.0"),,,,,,,,, .t. ,,,)
+ TGroup():New(10,10,35,90,OemToAnsi(),, , , .t. )
+ IW_Radio(15,15,"nRadio",aRadio)
+ SButton():New(45, 10, 01,{|| ContProc()},,)
+ SButton():New(45, 45, 02,{|| oDlg:End()},,)
+
+oDlg:Activate(,,,.T.,, ,)
+
+
+If File(cArqInd + OrdBagExt())
+
+	dbSelectArea("CONV")
+	dbCloseArea("CONV")
+	Ferase (cArqInd+OrdBagExt())
+
+	dbSelectArea("DEPA")
+	dbCloseArea("DEPA")
+	Ferase (cArqInd+OrdBagExt())
+
+Endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ContProc()
+
+If lOpen
+
+
+	If !File("\CONVERTE.DBF")
+		CriaTabe()
+	Endif
+
+
+	dbUseArea( .T. ,,"\CONVERTE","CONV")
+
+
+
+	cArqInd := CriaTrab(Nil, .F. )
+
+
+	cInd := "CNV_ARQ + CNV_CAMPO"
+
+
+	IndRegua("CONV",cArqInd,cInd,,,"Selecionando Registros")
+
+
+	If !File("\DEPARA.DBF")
+		CriaTabe()
+	Endif
+
+
+	dbUseArea( .T. ,,"\DEPARA","DEPA")
+
+
+
+	cArqInd := CriaTrab(Nil, .F. )
+
+
+	cInd := "DE_GRP + DE_DE"
+
+
+	IndRegua("DEPA",cArqInd,cInd,,,"Selecionando Registros")
+
+
+	If !File("\CTRCNV.DBF")
+		CriaTabe()
+	Endif
+
+
+	dbUseArea( .T. ,,"\CTRCNV","CCNV")
+
+
+
+	cArqInd := CriaTrab(Nil, .F. )
+
+
+	cInd := "CTR_TABE"
+
+
+	IndRegua("CCNV",cArqInd,cInd,,,"Selecionando Registros")
+
+	lOpen := .F. 
+
+Endif
+
+If nRadio == 1
+	oDlg1 := MSDialog():New(0, 0, 190, 250, OemToAnsi("Conversao de Tabelas"),,,,,,,,, .t. ,,,)
+	 IW_Say(15,12,"Nome do Arquivo Fonte",,,,, )
+	 IW_Edit(15,72,"cArqTxt","@!",,,{||fGetPath()},,,,,{|x| iif(PCount()>0,cArqTxt := x,cArqTxt) })
+	 IW_Say(28,12,"Nome Tabela Destino",,,,, )
+	 IW_Edit(28,72,"cArq","@!",,,{||!Empty(cArq)},,,,,{|x| iif(PCount()>0,cArq := x,cArq) })
+	 IW_Say(41,12,"Arquivo Delimitado ?",,,,, )
+	 IW_Edit(41,72,"cYesNo","@!",,,{||cYesNo$"SN"},,,,,{|x| iif(PCount()>0,cYesNo := x,cYesNo) })
+
+	 SButton():New(60, 18, 01,{|| OkDelim()},,)
+	 SButton():New(60, 65, 02,{|| oDlg1:End()},,)
+	oDlg1:Activate(,,,.T.,, ,)
+Else
+	OKConf()
+Endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OKDelim()
+
+oDlg1:End()
+
+If cYesNo =="S"
+
+	oDlg1 := MSDialog():New(0, 0, 150, 250, OemToAnsi("Delimitador de Arquivo"),,,,,,,,, .t. ,,,)
+	 IW_Say(15,12,"Delimitador do Campo",,,,, )
+	 IW_Edit(15,72,"cDelim1",,,,{||!Empty(cDelim1)},,,,,{|x| iif(PCount()>0,cDelim1 := x,cDelim1) })
+	 IW_Say(28,12,"Delimitador de Dados",,,,, )
+	 IW_Edit(28,72,"cDelim2",,,,,,,,,{|x| iif(PCount()>0,cDelim2 := x,cDelim2) })
+
+	 SButton():New(45, 18, 01,{|| OkProcDelim()},,)
+	 SButton():New(45, 65, 02,{|| oDlg1:End()},,)
+
+	oDlg1:Activate(,,,.T.,, ,)
+
+Else
+
+	OkProc()
+
+Endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OKConf()
+
+
+oDlg1 := MSDialog():New(0, 0, 130, 215, OemToAnsi("Configuracao"),,,,,,,,, .t. ,,,)
+ TGroup():New(10,10,35,100,OemToAnsi(),, , , .t. )
+ IW_Radio(15,15,"nRadConf",aRadConf)
+ SButton():New(45, 10, 01,{|| Conv()},,)
+ SButton():New(45, 45, 02,{|| oDlg1:End()},,)
+
+oDlg1:Activate(,,,.T.,, ,)
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function Conv()
+
+oDlg1:End()
+
+cArq	:= Space(3)
+cGrp	:= Space(4)
+cYesNo 	:= "N"
+
+If nRadConf	== 1
+	oDlg1 := MSDialog():New(0, 0, 150, 250, OemToAnsi("Configuracao da Conversao"),,,,,,,,, .t. ,,,)
+	 IW_Say(15,12,"Nome da Tabela",,,,, )
+	 IW_Edit(15,72,"cArq","@!",,,{||!Empty(cArq)},,,,,{|x| iif(PCount()>0,cArq := x,cArq) })
+	 IW_Say(28,12,"Arquivo Delimitado ?",,,,, )
+	 IW_Edit(28,72,"cYesNo","@!",,,{||cYesNo$"SN"},,,,,{|x| iif(PCount()>0,cYesNo := x,cYesNo) })
+
+	 SButton():New(58, 18, 01,{|| OkConv()},,)
+	 SButton():New(58, 65, 02,{|| oDlg1:End()},,)
+	oDlg1:Activate(,,,.T.,, ,)
+Else
+	oDlg1 := MSDialog():New(0, 0, 150, 250, OemToAnsi("Configuracao do Depara"),,,,,,,,, .t. ,,,)
+	 IW_Say(28,12,"Nome do Grupo",,,,, )
+	 IW_Edit(28,62,"cGrp","@!",,,{||!Empty(cGrp)},,,,,{|x| iif(PCount()>0,cGrp := x,cGrp) })
+
+	 SButton():New(58, 18, 01,{|| OkDe()},,)
+	 SButton():New(58, 65, 02,{|| oDlg1:End()},,)
+	oDlg1:Activate(,,,.T.,, ,)
+Endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OKProc()
+
+oDlg1:End()
+
+
+FT_FUSE(cArqTxt)
+
+
+If CCNV->(dbSeek(cArq),Found())
+
+	If (nAvs := Aviso("AVISO","Ultima Conversao Nao Concluida. Continua de Onde Parou?", {"Sim","N„o"})) == 1
+		FT_FGOTO(CCNV->CTR_REC)
+	Else
+		FT_FGOTOP()
+	EndIf
+
+Else
+
+
+	If RecLock("CCNV", .T. )
+		CCNV->CTR_TABE := cArq
+	Endif
+
+	MsUnlock()
+
+	FT_FGOTOP()
+Endif
+
+
+oProc := MsNewProcess():New({|lEnd| ConvProc(lEnd,oProc)},"Lendo","Processando...", .T. )
+
+oProc:Activate()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OKProcDelim()
+
+oDlg1:End()
+
+
+FT_FUSE(cArqTxt)
+
+
+If CCNV->(dbSeek(cArq),Found())
+
+	If (nAvs := Aviso("AVISO","Ultima Conversao Nao Concluida. Continua de Onde Parou?", {"Sim","N„o"})) == 1
+		FT_FGOTO(CCNV->CTR_REC)
+	Else
+		FT_FGOTOP()
+	EndIf
+
+Else
+
+
+	If RecLock("CCNV", .T. )
+		CCNV->CTR_TABE := cArq
+	Endif
+
+	MsUnlock()
+
+	FT_FGOTOP()
+Endif
+
+
+oProc := MsNewProcess():New({|lEnd| DelimProc(lEnd,oProc)},"Lendo","Processando...", .T. )
+
+oProc:Activate()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OKConv()
+
+
+
+
+
+
+aRotina	:=	{{	"", ""	, 0 , 1}, {	"", ""	, 0 , 2}, {	"", ""	, 0 , 3}, {	"", ""	, 0 , 4}, {	"", ""	, 0 , 5}  }
+
+oDlg1:End()
+
+CONV->(dbSeek(cArq))
+
+
+If ! CONV->(Found())
+
+	aCampo := {}
+
+
+	If SX3->(dbSeek(cArq))
+
+		While SX3->(!Eof()) .And.  SX3->X3_ARQUIVO == cArq
+
+			aAdd(aCampo,{SX3->X3_ARQUIVO,SX3->X3_CAMPO,SX3->X3_TITULO,SX3->X3_TIPO})
+
+			SX3->(dbSkip())
+
+		EndDo
+
+		For nI:=1 to Len(aCampo)
+
+			If RecLock("CONV", .T. )
+
+				For nJ:=1 to 4
+					CONV->(FieldPut(nJ,aCampo[nI,nJ]))
+				next
+
+				MsUnlock("CONV")
+
+			Endif
+
+		next
+
+	Else
+
+
+		Help("",1,"","HELP","Tabela Nao Localizada no SX3",1,0)
+		Return
+
+	Endif
+
+Endif
+
+aHeader := {}
+
+If cYesNo == "S"
+
+	aAdd(aHeader,{ "Campo","CNV_CAMPO","@!",10,0,,,"C","CONV",} )
+	aAdd(aHeader,{ "Nome","CNV_NOME","@!",12,0,,,"C","CONV",} )
+	aAdd(aHeader,{ "Tipo","CNV_TIPO","@!",1,0,,,"C","CONV",} )
+	aAdd(aHeader,{ "Ordem","CNV_ORDEM","999",3,0,,,"C","CONV",} )
+	aAdd(aHeader,{ "Formula","CNV_FORM","@!",300,0,,,"C","CONV",} )
+
+Else
+
+	aAdd(aHeader,{ "Campo","CNV_CAMPO","@!",10,0,,,"C","CONV",} )
+	aAdd(aHeader,{ "Nome","CNV_NOME","@!",12,0,,,"C","CONV",} )
+	aAdd(aHeader,{ "Tipo","CNV_TIPO","@!",1,0,,,"C","CONV",} )
+	aAdd(aHeader,{ "De","CNV_DE","9999",4,0,,,"N","CONV",} )
+	aAdd(aHeader,{ "Ate","CNV_ATE","9999",4,0,,,"N","CONV",} )
+	aAdd(aHeader,{ "Tamanho","CNV_TAM","9999",4,0,,,"N","CONV",} )
+	aAdd(aHeader,{ "Formula","CNV_FORM","@!",300,0,,,"C","CONV",} )
+
+Endif
+
+
+
+
+CONV->(dbSeek(cArq))
+
+
+aCols	:= {}
+nI		:= 0
+nOpc	:= 3
+
+
+While CONV->(!Eof()) .And.  (CONV->CNV_ARQ == cArq)
+
+	nI += 1
+	aAdd(aCols,{})
+
+	If cYesNo == "S"
+
+		aAdd(aCOLS[nI],CONV->CNV_CAMPO)
+		aAdd(aCOLS[nI],CONV->CNV_NOME)
+		aAdd(aCOLS[nI],CONV->CNV_TIPO)
+		aAdd(aCOLS[nI],CONV->CNV_ORDEM)
+		aAdd(aCOLS[nI],CONV->CNV_FORM)
+		aAdd(aCOLS[nI], .F. )
+
+	Else
+
+		aAdd(aCOLS[nI],CONV->CNV_CAMPO)
+		aAdd(aCOLS[nI],CONV->CNV_NOME)
+		aAdd(aCOLS[nI],CONV->CNV_TIPO)
+		aAdd(aCOLS[nI],CONV->CNV_DE)
+		aAdd(aCOLS[nI],CONV->CNV_ATE)
+		aAdd(aCOLS[nI],CONV->CNV_TAM)
+		aAdd(aCOLS[nI],CONV->CNV_FORM)
+		aAdd(aCOLS[nI], .F. )
+
+	Endif
+
+	CONV->(dbSkip())
+
+End
+
+oDlg1 = MsDialog():New( 44, 5, 310, 645, (cCadastro),,,.F.,,,,, oDlg1,.T.,, ,.F. )
+
+ IW_Say(10,15,"Nome da Tabela",,,,, )
+ IW_Edit(23,08,"cArq",,,,,{|| .F. },,,,{|x| iif(PCount()>0,cArq := x,cArq) })
+
+oGet := MSGetDados():New(44,5,128,315,nOpc,"u_fLOK()","u_fTOK","", .T. ,,,,1000)
+oDlg1:Activate(,,,.F.,, ,{|Self|EnchoiceBar(oDlg1,{||nOpcao:=1,If(u_fTOK(),oDlg1:End(),nOpcao:=0)},{||oDlg1:End()})})
+
+If nOpcao == 1
+
+	fGravaCon()
+Endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OKDe()
+
+
+
+
+
+
+aRotina	:=	{{	"", ""	, 0 , 1}, {	"", ""	, 0 , 2}, {	"", ""	, 0 , 3}, {	"", ""	, 0 , 4}, {	"", ""	, 0 , 5}  }
+aHeader	:= {}
+aCols	:= {}
+
+oDlg1:End()
+
+aAdd(aHeader,{ "De","DE_DE","@!",10,0,,,"C","DEPA",} )
+aAdd(aHeader,{ "Para","DE_PARA","@!",10,0,,,"C","DEPA",} )
+
+
+
+
+DEPA->(dbSeek(cGrp))
+
+
+nI		:= 0
+nOpc	:= 3
+
+While DEPA->(!Eof()) .And.  (DEPA->DE_GRP == cGrp)
+
+	nI += 1
+	aAdd(aCols,{})
+	aAdd(aCOLS[nI],DEPA->DE_DE)
+	aAdd(aCOLS[nI],DEPA->DE_PARA)
+	aAdd(aCOLS[nI], .F. )
+
+	DEPA->(dbSkip())
+
+End
+
+oDlg1 = MsDialog():New( 44, 5, 310, 645, (cCadastro),,,.F.,,,,, oDlg1,.T.,, ,.F. )
+
+ IW_Say(10,15,"Nome do Grupo",,,,, )
+ IW_Edit(23,08,"cGrp",,,,,{|| .F. },,,,{|x| iif(PCount()>0,cGrp := x,cGrp) })
+
+oGet := MSGetDados():New(44,5,128,315,nOpc,"u_fLOK()","u_fTOK()","", .T. ,,,,1000)
+oDlg1:Activate(,,,.F.,, ,{|Self|EnchoiceBar(oDlg1,{||nOpcao:=1,If(u_fTOK(),oDlg1:End(),nOpcao:=0)},{||oDlg1:End()})})
+
+If nOpcao == 1
+
+	fGravaDe()
+Endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ConvProc(lEnd,oObj)
+
+
+oObj:SetRegua1(FT_FLASTREC())
+
+While lContinua .And.  !FT_FEOF()
+
+	CONV->(dbGotop())
+
+
+	oObj:SetRegua2(CONV->(RecCount()))
+
+
+	cSTexto := FT_FREADLN()
+
+	If CONV->(dbSeek(cArq),!Found())
+		IW_MsgBox(cArq + " Nao Localizado. Selecionar Configuracao","Erro","STOP")
+		Return
+	Endif
+
+	If RecLock(cArq, .T. )
+
+		While lContinua .And.  CONV->CNV_ARQ == cArq
+
+			If lAbortPrint .Or.  lEnd
+				If Aviso("ATEN€AO","Deseja abandonar a Conversao arquivo " + AllTrim(cArq) + " ?",{"Sim","N„o"}) == 1
+					lContinua := .F. 
+					Exit
+				EndIf
+			Endif
+
+			cCampo := cArq + "->" + AllTrim(CONV->CNV_CAMPO)
+			nDe	   := CONV->CNV_DE
+			nAte   := CONV->CNV_ATE
+			nTam   := CONV->CNV_TAM
+
+
+
+
+			oObj:IncRegua2("Processando Campo : " + cCampo)
+
+
+			If nDe > 0
+
+				If nTam = 0
+					nTam := (nAte - nDe + 1)
+				Endif
+
+
+	    		If CONV->CNV_TIPO == "C"
+   					If !Empty(CONV->CNV_FORM)
+   						cTexto := Subst(cSTexto,nDe,nTam)
+						&cCampo := CONV->&CNV_FORM
+					Else
+	    				&cCampo := Subst(cSTexto,nDe,nTam)
+	    			Endif
+			    ElseIf CONV->CNV_TIPO == "D"
+   					If !Empty(CONV->CNV_FORM)
+   						cTexto := Subst(cSTexto,nDe,nTam)
+						&cCampo := cTod(CONV->&CNV_FORM)
+					Else
+	    				&cCampo := cTod(Subst(cSTexto,nDe,nTam))
+	    			Endif
+			    ElseIf CONV->CNV_TIPO == "N"
+   					If !Empty(CONV->CNV_FORM)
+   						cTexto := Subst(cSTexto,nDe,nTam)
+		    			&cCampo := Val(CONV->&CNV_FORM)
+					Else
+	    				&cCampo := Val(Subst(cSTexto,nDe,nTam))
+	    			Endif
+			    Endif
+
+
+			ElseIf!Empty(CONV->CNV_FORM)
+
+				If CONV->CNV_TIPO == "C"
+    				If RecLock(cArq, .F. )
+						&cCampo := CONV->&CNV_FORM
+		    		Endif
+			    ElseIf CONV->CNV_TIPO == "D"
+    				If RecLock(cArq, .F. )
+						&cCampo := cTod(CONV->&CNV_FORM)
+		    		Endif
+			    ElseIf CONV->CNV_TIPO == "N"
+    				If RecLock(cArq, .F. )
+		    			&cCampo := Val(CONV->&CNV_FORM)
+		    		Endif
+			    Endif
+
+			Endif
+
+			CONV->(dbSkip())
+
+		Enddo
+
+		MsUnlock(cArq)
+
+	Endif
+
+
+	FT_FSKIP()
+
+
+	If RecLock("CCNV", .F. )
+		CCNV->CTR_REC	:= FT_FRECNO()
+	Endif
+
+	MsUnlock()
+
+
+
+
+	oObj:IncRegua1("Processando " + cArqTxt)
+
+Enddo
+
+
+FT_FUSE()
+
+
+If RecLock("CCNV", .F. )
+	CCNV->(dbDelete())
+Endif
+
+MsUnlock()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function DelimProc(lEnd,oObj)
+
+Local nRec_  := 0
+
+aDados := {}
+
+
+oObj:SetRegua1(FT_FLASTREC())
+
+
+If CONV->(dbSeek(cArq),!Found())
+	IW_MsgBox(cArq + " Nao Localizado. Selecionar Configuracao","Erro","STOP")
+	Return
+Else
+
+	If CONV->(Eof())
+		IW_MsgBox(" Ordem Nao Localizada. Selecionar Configuracao","Erro","STOP")
+		Return
+	Else
+		nRec_ := CONV->(Recno())
+	Endif
+
+Endif
+
+While lContinua .And.  !FT_FEOF()
+
+
+	oObj:SetRegua2(CONV->(RecCount()))
+
+
+	cSTexto := FT_FREADLN()
+
+
+	If At(cDelim1,cSTexto) == 0
+		lContinua := .F. 
+		Loop
+	Endif
+
+	aDados := fSepara(cStexto)
+
+	If RecLock(cArq, .T. )
+
+		While CONV->CNV_ARQ == cArq .And.  lContinua
+
+			If lAbortPrint .Or.  lEnd
+				If Aviso("ATEN€AO","Deseja abandonar a Conversao arquivo " + AllTrim(cArq) + " ?",{"Sim","N„o"}) == 1
+					lContinua := .F. 
+					Exit
+				EndIf
+			Endif
+
+
+			If Val(CONV->CNV_ORDEM) > Len(aDados)
+				CONV->(dbSkip())
+				Loop
+			Endif
+
+
+			If Val(CONV->CNV_ORDEM) = 0
+				If Empty(CONV->CNV_FORM)
+					CONV->(dbSkip())
+					Loop
+				Endif
+			Else
+
+				cTexto := aDados[Val(CONV->CNV_ORDEM)]
+			Endif
+
+
+			cCampo := cArq + "->" + AllTrim(CONV->CNV_CAMPO)
+
+
+
+
+			oObj:IncRegua2("Processando Campo : " + cCampo)
+
+
+			If CONV->CNV_TIPO == "C"
+				If !Empty(CONV->CNV_FORM)
+					&cCampo := CONV->&CNV_FORM
+				Else
+    				&cCampo := cTexto
+    			Endif
+		    ElseIf CONV->CNV_TIPO == "D"
+				If !Empty(CONV->CNV_FORM)
+					&cCampo := cTod(CONV->&CNV_FORM)
+				Else
+    				&cCampo := cTod(cTexto)
+    			Endif
+		    ElseIf CONV->CNV_TIPO == "N"
+				If !Empty(CONV->CNV_FORM)
+		   			&cCampo := Val(CONV->&CNV_FORM)
+				Else
+	    			&cCampo := Val(cTexto)
+	    		Endif
+		    Endif
+
+			CONV->(dbSkip())
+
+		Enddo
+
+		MsUnlock(cArq)
+
+
+		CONV->(dbGoto(nRec_))
+
+
+		aDados := {}
+
+	Endif
+
+
+	FT_FSKIP()
+
+
+	If RecLock("CCNV", .F. )
+		CCNV->CTR_REC	:= FT_FRECNO()
+	Endif
+
+	MsUnlock()
+
+
+
+
+	oObj:IncRegua1("Processando " + cArqTxt)
+
+Enddo
+
+
+FT_FUSE()
+
+
+If RecLock("CCNV", .F. )
+	CCNV->(dbDelete())
+Endif
+
+MsUnlock()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function fDePara(cGrp,cDpr)
+
+Local cDePara := ""
+
+If Empty(cGrp)
+	Return(cDePara)
+Endif
+
+
+If Len(cGrp) < 4
+   cGrp :=	Left((cGrp + Space(4)),4)
+Endif
+
+If DEPA->(dbSeek(cGrp + cDpr))
+	cDePara := DEPA->DE_PARA
+Else
+	cDePara := ""
+Endif
+
+Return(cDePara)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function fSepara(cTxt)
+
+Local aData   := {}
+Local cTxtAux := ""
+
+
+If Empty(cDelim2)
+
+	While At(cDelim1,cTxt) > 0
+
+		aAdd(aData,Subst(cTxt,1,At(cDelim1,cTxt) - 1))
+
+		cTxt := Subst(cTxt,At(cDelim1,cTxt) + 1)
+
+		If At(cDelim1,cTxt) = 0
+			aAdd(aData,cTxt)
+		Endif
+
+	Enddo
+
+Else
+
+	While At(cDelim1,cTxt) > 0
+
+
+		If At(cDelim2,cTxt) <> 1
+
+			aAdd(aData,Subst(cTxt,1,At(cDelim1,cTxt) - 1))
+
+			cTxt := Subst(cTxt,At(cDelim1,cTxt) + 1)
+		Else
+
+			cTxtAux := Subst(cTxt,At(cDelim2,cTxt) + 1)
+			cTxtAux := Subst(cTxtAux,1,At(cDelim2,cTxtAux) - 1)
+
+			aAdd(aData,cTxtAux)
+
+			cTxt := Subst(cTxt,At(cDelim1,cTxt) + 1)
+
+		Endif
+
+
+		If At(cDelim1,cTxt) = 0
+
+
+			If At(cDelim2,cTxt) <> 1
+				aAdd(aData,cTxt)
+			Else
+				cTxtAux := Subst(cTxt,At(cDelim2,cTxt) + 1)
+				cTxtAux := Subst(cTxtAux,1,At(cDelim2,cTxtAux) - 1)
+
+				aAdd(aData,cTxtAux)
+
+			Endif
+
+		Endif
+	Enddo
+Endif
+
+Return(aData)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function fGetPath()
+Local cRet  :=Alltrim(ReadVar())
+Local cPath  := cArqTxt
+
+oWnd := GetWndDefault()
+
+While .T. 
+	If Empty(cPath)
+		cPath := cGetFile( "Arquivos Texto de Importacao | *.TXT ",OemToAnsi("Selecione Arquivo"))
+	EndIf
+
+	If Empty(cPath)
+		Return .F. 
+	EndIf
+	&cRet := cPath
+	Exit
+EndDo
+
+If oWnd <> Nil
+	GetdRefresh()
+EndIf
+
+Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function fGravaCon()
+
+Local nI, nJ, nT, aCampo
+
+aCampo := {}
+
+If cYesNo == "S"
+
+	aAdd(aCampo,"CNV_CAMPO")
+	aAdd(aCampo,"CNV_NOME")
+	aAdd(aCampo,"CNV_TIPO")
+	aAdd(aCampo,"CNV_ORDEM")
+	aAdd(aCampo,"CNV_FORM")
+
+	nT := Len(aCampo) + 1
+
+Else
+
+	aAdd(aCampo,"CNV_CAMPO")
+	aAdd(aCampo,"CNV_NOME")
+	aAdd(aCampo,"CNV_TIPO")
+	aAdd(aCampo,"CNV_DE")
+	aAdd(aCampo,"CNV_ATE")
+	aAdd(aCampo,"CNV_TAM")
+	aAdd(aCampo,"CNV_FORM")
+
+	nT := Len(aCampo) + 1
+
+Endif
+
+For nI := 1 to Len(aCols)
+
+	CONV->(dbSeek(cArq + aCols[nI,1]))
+
+	If CONV->(! Eof())
+
+		If aCols[nI,nT]
+
+			If RecLock("CONV", .F. )
+				CONV->(dbDelete())
+			Endif
+
+		Else
+
+			If RecLock("CONV", .F. ) .And.  !aCols[nI,nT]
+
+				For nJ := 2 to Len(aCampo)
+					CONV->(FieldPut(FieldPos(aCampo[nJ]),aCols[nI,nJ]))
+				next
+
+			Endif
+
+		Endif
+
+	Else
+
+		If RecLock("CONV", .T. ) .And.  !aCols[nI,nT]
+
+
+			CONV->(FieldPut(FieldPos(aCampo[1]),cArq))
+
+			For nJ := 2 to Len(aCampo)
+				CONV->(FieldPut(FieldPos(aCampo[nJ]),aCols[nI,nJ]))
+			next
+
+		Endif
+
+	Endif
+
+next
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function fGravaDe()
+
+Local nI, nJ
+
+For nI := 1 to Len(aCols)
+
+	DEPA->(dbSeek(cGrp + aCols[nI,1]))
+
+	If DEPA->(! Eof())
+
+		If aCols[nI,3]
+
+			If RecLock("DEPA", .F. )
+				DEPA->(dbDelete())
+			Endif
+
+		Else
+
+			If RecLock("DEPA", .F. )
+
+				For nJ := 1 to 2
+					DEPA->(FieldPut(nJ + 1,aCols[nI,nJ]))
+				next
+
+			Endif
+
+		Endif
+
+	Else
+
+		If RecLock("DEPA", .T. ) .And.  !aCols[nI,3]
+
+			DEPA->(FieldPut(1,cGrp))
+			For nJ := 1 to 2
+				DEPA->(FieldPut(nJ + 1,aCols[nI,nJ]))
+			next
+
+		Endif
+
+	Endif
+
+next
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_fLOK()
+
+Local lRet := .T. 
+Local nLin := n
+
+If (Empty(aCols[nLin,1]) .And.  (nI >= nLin)) .And.  !aCols[nLin,9]
+	MsgStop("Coluna Campo em Branco !!!")
+	lRet := .F. 
+Else
+	If (Empty(aCols[nLin,2]) .And.  (nI >= nLin)) .And.  !aCols[nLin,9]
+		MsgStop("Coluna Tipo em Branco !!!")
+		lRet := .F. 
+	Endif
+Endif
+
+
+If cYesNo == "S"
+	If Val(aCols[nLin,4]) > 0 .And.  lRet
+		aCols[nLin,4] := Right("00" + AllTrim(aCols[nLin,4]),3)
+	Endif
+Endif
+
+
+Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_fTOk()
+
+lRet  := u_fLOK()
+
+Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CriaTabe()
+
+
+If !File("\CONVERTE.DBF")
+
+	aCampo := {}
+
+
+	aAdd(aCampo,{ "CNV_ARQ"  ,"C",  3,0} )
+	aAdd(aCampo,{ "CNV_CAMPO","C", 10,0} )
+	aAdd(aCampo,{ "CNV_NOME ","C", 12,0} )
+	aAdd(aCampo,{ "CNV_TIPO" ,"C",  1,0} )
+	aAdd(aCampo,{ "CNV_ORDEM","C", 3,0} )
+	aAdd(aCampo,{ "CNV_DE"   ,"N",  4,0} )
+	aAdd(aCampo,{ "CNV_ATE"  ,"N",  4,0} )
+	aAdd(aCampo,{ "CNV_TAM"  ,"N",  4,0} )
+	aAdd(aCampo,{ "CNV_FORM" ,"C",300,0} )
+
+
+	dBCreate("\CONVERTE",aCampo)
+Endif
+
+If !File("\DEPARA.DBF")
+
+	aCampo := {}
+
+
+	aAdd(aCampo,{ "DE_GRP" ,"C", 4,0} )
+	aAdd(aCampo,{ "DE_DE"  ,"C", 10,0} )
+	aAdd(aCampo,{ "DE_PARA","C", 10,0} )
+
+
+	dBCreate("\DEPARA",aCampo)
+Endif
+
+If !File("\CTRCNV.DBF")
+
+	aCampo := {}
+
+
+	aAdd(aCampo,{ "CTR_TABE" ,"C", 3,0} )
+	aAdd(aCampo,{ "CTR_REC"  ,"N", 12,0} )
+
+
+
+	dBCreate("\CTRCNV",aCampo)
+Endif
+
+Return

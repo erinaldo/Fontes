@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TOTVSMessage>
+	<MessageInformation version="1.000">
+		<UUID>a4b759d3-6f1f-485e-9b51-8ca4a3050d4c</UUID>
+		<Type>BusinessMessage</Type>
+		<Transaction>RETAILSALES</Transaction>
+		<StandardVersion>1.000</StandardVersion>
+		<SourceApplication>Bematech PDV Hospitality</SourceApplication>
+		<CompanyId>61</CompanyId>
+		<BranchId>61</BranchId>
+		<GeneratedOn>2016-07-22T15:09:44</GeneratedOn>
+		<DeliveryType>Async</DeliveryType>
+		<Product name="BEMATECH" version="1.3.2.2"/>
+	</MessageInformation>
+	<BusinessMessage>
+		<BusinessEvent>
+			<Entity>RETAILSALES</Entity>
+			<Event>upsert</Event>
+			<Identification>
+				<Key name="InternalId">VENDA|429|547|6396647</Key>
+			</Identification>
+		</BusinessEvent>
+		<BusinessContent>
+			<InternalId>VENDA|429|547|6396647</InternalId>
+			<CompanyId>61</CompanyId>
+			<BranchId>61</BranchId>
+			<DocumentCode>000071</DocumentCode>
+			<SerieCode/>
+			<CustomerVendorInternalId/>
+			<OperatorCode>C02</OperatorCode>
+			<StationCode>547</StationCode>
+			<IssueDateDocument>2016-07-22T15:09:27</IssueDateDocument>
+			<PersonalIdentification>13284700919</PersonalIdentification>
+			<TotalPrice>25.9</TotalPrice>
+			<GrossPrice>25.9</GrossPrice>
+			<CommodityPrice>25.9</CommodityPrice>
+			<DiscountValue>0</DiscountValue>
+			<DiscountPercent>0</DiscountPercent>
+			<NetPrice>25.9</NetPrice>
+			<IncreaseValue>0</IncreaseValue>
+			<KeyAcessNFe>28160707417970000136650660000000711000000717</KeyAcessNFe>
+			<NfceProtocol>328160000035847</NfceProtocol>
+			<Change>0</Change>
+			<KindOfDocument>NFCE</KindOfDocument>
+			<BookingInformation>
+				<HotelAccountCode/>
+				<CheckinDate/>
+				<HabitationalUnitType/>
+				<HabitationalUnitNumber/>
+				<MainGuestName/>
+				<AdditionalGuestName/>
+				<GroupName/>
+				<EventName/>
+			</BookingInformation>
+			<ListOfTaxes>
+				<Tax WithholdingTax="false">
+					<Taxe>ICM</Taxe>
+					<Value>3.74</Value>
+				</Tax>
+				<Tax WithholdingTax="false">
+					<Taxe>PIS</Taxe>
+					<Value>0.36</Value>
+				</Tax>
+				<Tax WithholdingTax="false">
+					<Taxe>COFINS</Taxe>
+					<Value>1.67</Value>
+				</Tax>
+			</ListOfTaxes>
+			<StateTaxBurden>4.93</StateTaxBurden>
+			<MunicipalTaxBurden>0.00</MunicipalTaxBurden>
+			<FederalTaxBurden>1.92</FederalTaxBurden>
+			<TaxSource>IBPT/FECOMERCIO Xe67eQ</TaxSource>
+			<ListOfSaleItem>
+				<SaleItem>
+					<ItemInternalId>AR61</ItemInternalId>
+					<ItemOrder>1</ItemOrder>
+					<OperationCode>5102</OperationCode>
+					<Quantity>1</Quantity>
+					<UnitPrice>22</UnitPrice>
+					<ItemPrice>22</ItemPrice>
+					<DiscountPercentage>0</DiscountPercentage>
+					<DiscountAmount>0</DiscountAmount>
+					<Increase>0</Increase>
+					<IsCanceled>false</IsCanceled>
+					<BoardBasisInformation>
+						<BoardBasisType/>
+						<BoardBasisValue/>
+						<BreakfastValue/>
+					</BoardBasisInformation>
+					<ListOfTaxes>
+						<Tax WithholdingTax="false">
+							<Taxe>ICM</Taxe>
+							<CalculationBasis>22</CalculationBasis>
+							<Percentage>17</Percentage>
+							<ReductionBasePercent>0</ReductionBasePercent>
+							<Value>3.74</Value>
+						</Tax>
+						<Tax WithholdingTax="false">
+							<Taxe>COFINS</Taxe>
+							<CalculationBasis>22</CalculationBasis>
+							<Percentage>7.6</Percentage>
+							<ReductionBasePercent>0</ReductionBasePercent>
+							<Value>1.67</Value>
+						</Tax>
+						<Tax WithholdingTax="false">
+							<Taxe>PIS</Taxe>
+							<CalculationBasis>22</CalculationBasis>
+							<Percentage>1.65</Percentage>
+							<ReductionBasePercent>0</ReductionBasePercent>
+							<Value>0.36</Value>
+						</Tax>
+					</ListOfTaxes>
+				</SaleItem>
+				<SaleItem>
+					<ItemInternalId>AR6</ItemInternalId>
+					<ItemOrder>2</ItemOrder>
+					<OperationCode>5405</OperationCode>
+					<Quantity>1</Quantity>
+					<UnitPrice>3.9</UnitPrice>
+					<ItemPrice>3.9</ItemPrice>
+					<DiscountPercentage>0</DiscountPercentage>
+					<DiscountAmount>0</DiscountAmount>
+					<Increase>0</Increase>
+					<IsCanceled>false</IsCanceled>
+					<BoardBasisInformation>
+						<BoardBasisType/>
+						<BoardBasisValue/>
+						<BreakfastValue/>
+					</BoardBasisInformation>
+					<ListOfTaxes>
+						<Tax WithholdingTax="false">
+							<Taxe>ICM</Taxe>
+							<CalculationBasis>0</CalculationBasis>
+							<Percentage>0</Percentage>
+							<ReductionBasePercent>0</ReductionBasePercent>
+							<Value>0</Value>
+						</Tax>
+						<Tax WithholdingTax="false">
+							<Taxe>PIS</Taxe>
+							<CalculationBasis>3.9</CalculationBasis>
+							<Percentage>0</Percentage>
+							<ReductionBasePercent>0</ReductionBasePercent>
+							<Value>0</Value>
+						</Tax>
+						<Tax WithholdingTax="false">
+							<Taxe>COFINS</Taxe>
+							<CalculationBasis>3.9</CalculationBasis>
+							<Percentage>0</Percentage>
+							<ReductionBasePercent>0</ReductionBasePercent>
+							<Value>0</Value>
+						</Tax>
+					</ListOfTaxes>
+				</SaleItem>
+			</ListOfSaleItem>
+			<ListOfSaleCondition>
+				<SaleCondition>
+					<PaymentMethodCode>R$</PaymentMethodCode>
+					<DateOfPayment>2016-07-22</DateOfPayment>
+					<PaymentValue>25.9</PaymentValue>
+					<FinancialManagerCode/>
+					<EftDocument/>
+					<EftDate/>
+					<EftAutorization/>
+					<EftInstitute/>
+					<EftParcel/>
+					<UniqueSerialNumber/>
+					<AccountReceivableDocumentInternalId/>
+					<BankCheck/>
+					<AgencyCheck/>
+					<AccountCheck/>
+					<CardNumber/>
+					<SerieCheck/>
+					<PhoneNumber/>
+					<DocumentOfIdentification/>
+				</SaleCondition>
+			</ListOfSaleCondition>
+		</BusinessContent>
+	</BusinessMessage>
+</TOTVSMessage>

@@ -1,0 +1,2251 @@
+#line 1 "C:\INCLUDE\CTBR265.Ch"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		Static STR0001 := "Este programa ira imprimir o Comparativo de Contas Contabeis."
+		Static STR0002 := "Os valores sao ref. a movimentacao do periodo solicitado. "
+		Static STR0003 := "Comparativo de Contas Contabeis"
+		Static STR0004 := "|CODIGO            |DESCRICAO          |  PERIODO 01  |  PERIODO 02  |  PERIODO 03  |  PERIODO 04  |  PERIODO 05  |  PERIODO 06  |  PERIODO 07  |  PERIODO 08  |  PERIODO 09  |  PERIODO 10  |  PERIODO 11  |  PERIODO 12  |"
+		Static STR0005 := "COMPARATIVO ANALITICO DE "
+		Static STR0006 := " ATE "
+		Static STR0007 := " EM "
+		Static STR0008 := "COMPARATIVO SINTETICO DE "
+		Static STR0009 := " ATENCAO "
+		Static STR0010 := "***** CANCELADO PELO OPERADOR *****"
+		Static STR0011 := "T O T A I S  D O  P E R I O D O: "
+		Static STR0012 := "COMPARATIVO DE "
+		Static STR0013 := "Zebrado"
+		Static STR0014 := "Administracao"
+		Static STR0015 := "Criando Arquivo Temporario..."
+
+		Static STR0017 := "Caso nao atualize os saldos  basicos  na"
+		Static STR0018 := "digitacao dos lancamentos (MV_ATUSAL='N'),"
+		Static STR0019 := "rodar a rotina de atualizacao de saldos "
+		Static STR0020 := "para todos os periodos solicitados nesse "
+		Static STR0021 := "relatorio."
+		Static STR0022 := "Por favor, verifique se o calend.contabil e a amarracao moeda/calendario "
+		Static STR0023 := "foram cadastrados corretamente..."
+		Static STR0024 := "TOTAL DO PERIODO: "
+		Static STR0025 := "TOTAL DO GRUPO ("
+		Static STR0026 := "ACUMULADO"
+		Static STR0027 := "  ATE"
+		Static STR0028 := " TOTAL PERIODO "
+		Static STR0029 := "Conta Contábil"
+		Static STR0030 := "CODIGO"
+		Static STR0031 := "DESCRICAO"
+
+
+
+
+
+	STATIC uInit := __InitFun()
+
+	Static Function __InitFun()
+	uInit := Nil
+	If Type("cPaisLoc") == "C"
+
+		If cPaisLoc == "PTG"
+			STR0001 := "Este Programa Irá Imprimir O Comparativo De Contas Contabilísticas."
+			STR0002 := "Os valores são ref. ao movimento do período pedido. "
+			STR0003 := "Comparativo De Contas Contabilísticas"
+			STR0004 := "|código            |descrição          |  período 01  |  período 02  |  período 03  |  período 04  |  período 05  |  período 06  |  período 07  |  período 08  |  período 09  |  período 10  |  período 11  |  período 12  |"
+			STR0005 := "Comparativo analítico de "
+			STR0006 := " até "
+			STR0007 := " em "
+			STR0008 := "Comparativo sintético de "
+			STR0009 := " atenção "
+			STR0010 := "***** cancelado pelo operador *****"
+			STR0011 := "Totais do período: "
+			STR0012 := "Comparativo de "
+			STR0013 := "Código de barras"
+			STR0014 := "Administração"
+			STR0015 := "A Criar Ficheiro Temporário..."
+			STR0017 := "Caso não actualize os saldos  básicos  na"
+			STR0018 := "Digitação dos movimentos (mv_atusal='n'),"
+			STR0019 := "Correr o procedimento  de actualização de saldos "
+			STR0020 := "Para todos os períodos solicitados no "
+			STR0021 := "Relatório."
+			STR0022 := "Por favor, verifique se o calend.contabilístico e a associação moeda/calendário "
+			STR0023 := "Foram registados correctamente..."
+			STR0024 := "Total do período: "
+			STR0025 := "Total do grupo ("
+			STR0026 := "Acumulado"
+			STR0027 := "  Até"
+			STR0028 := " total período "
+			STR0029 := "Conta contabilística"
+			STR0030 := "Código"
+			STR0031 := "Descrição"
+		EndIf
+		EndIf
+	Return Nil
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\RELATO~1\ctbr265x.prw"
+#line 1 "C:\INCLUDE\PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "PROTHEUS.Ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "PROTHEUS.Ch"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\RELATO~1\ctbr265x.prw"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_Ctbr265X()
+
+Private Titulo		:= ""
+Private NomeProg	:= "CTBR265X"
+Private _eol		:= Chr(13)+chr(10)
+
+
+
+
+
+
+
+CTBR265R3()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CTBR265R4()
+
+
+
+
+oReport := ReportDef()
+
+If !Empty( oReport:uParam )
+	Pergunte( oReport:uParam, .F.  )
+EndIf
+
+oReport :PrintDialog()
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ReportDef()
+Local cREPORT		:= "CTBR265"
+Local cTITULO		:= Capital(STR0003)
+Local cDESC			:= OemToAnsi(STR0001)+OemtoAnsi(STR0002)
+
+Local cPerg	   		:= PADR("CTR265",LEN(SX1->X1_GRUPO))
+Local aTamConta		:= {20}
+Local aTamDesc		:= {20}
+Local aTamVal		:= {12}
+
+
+
+
+
+
+
+
+
+
+oReport	:= TReport():New( cReport,cTITULO,cPERG, { |oReport| ReportPrint( oReport ) }, cDESC )
+oReport:SetLandScape( .T. )
+
+
+oReport:nFontBody := 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+oSection1  := TRSection():New( oReport, STR0029, {"cArqTmp","CT1"},, .F. , .F.  )
+TRCell():New( oSection1, "CONTA"   , ,STR0030,,aTamConta[1],,)
+TRCell():New( oSection1, "DESCCTA" , ,STR0031,,aTamDesc[1] ,,)
+TRCell():New( oSection1, "COLUNA1" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA2" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA3" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA4" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA5" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA6" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA7" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA8" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA9" , ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA10", ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA11", ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNA12", ,       ,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+TRCell():New( oSection1, "COLUNAT" , ,STR0028,,aTamVal[1]+2,,,"RIGHT",,"RIGHT")
+
+oSection1:SetTotalInLine( .F. )
+oSection1:SetTotalText(STR0011)
+
+Return(oReport)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ReportPrint( oReport )
+
+Local oSection1 	:= oReport:Section(1)
+
+
+
+Local oTotCol1, oTotCol2, oTotCol3, oTotCol4 , oTotCol5 , oTotCol6 , oTotCol7, oTotCol8, oTotCol9, oTotCol10, oTotCol11, oTotCol12, oTotColTot
+
+
+
+Local oTotGrp1,	oTotGrp2, oTotGrp3, oTotGrp4 , oTotGrp5 , oTotGrp6 , oTotGrp7,	oTotGrp8, oTotGrp9, oTotGrp10, oTotGrp11, oTotGrp12, oTotGrpTot, oBreakGrp
+
+Local aCtbMoeda		:= {}
+Local cSeparador	:= ""
+Local cPicture
+Local cDescMoeda
+Local nDivide		:= 1
+Local cString		:= "CT1"
+
+Local cCodMasc		:= ""
+Local cGrupo		:= ""
+Local cArqTmp
+Local dDataFim 		:= mv_par02
+
+Local lFirstPage	:= .T. 
+Local lJaPulou		:= .F. 
+Local lQbGrupo		:= Iif(mv_par11==1, .T. , .F. )
+Local lPrintZero	:= Iif(mv_par17==1, .T. , .F. )
+Local lPula			:= Iif(mv_par16==1, .T. , .F. )
+Local lNormal		:= Iif(mv_par18==1, .T. , .F. )
+Local nDecimais
+
+Local cSegmento		:= mv_par12
+Local cSegIni		:= mv_par13
+Local cSegFim		:= mv_par14
+Local cFiltSegm		:= mv_par15
+Local cSegAte   	:= mv_par20
+Local nDigitAte		:= 0
+
+Local lImpAntLP		:= Iif(mv_par21 == 1, .T. , .F. )
+Local dDataLP		:= mv_par22
+Local nMeses		:= 1
+Local nCont			:= 0
+Local nDigitos		:= 0
+Local nVezes		:= 0
+Local nPos			:= 0
+Local lVlrZerado	:= Iif(mv_par07 == 1, .T. , .F. )
+Local lImpSint		:= Iif(mv_par05 = 2, .F. , .T. )
+Local cHeader 		:= ""
+Local cTpComp		:= If( mv_par25 == 1,"M","S" )
+Local lAtSlBase		:= Iif(GETMV("MV_ATUSAL")== "S", .T. , .F. )
+Local cFilter		:= ""
+Local cTipoAnt		:= ""
+Local cFilUser		:= ""
+Local cDifZero		:= ""
+Local cEspaco
+Local bCond
+
+Local aTamConta		:= {20}
+Local aTamDesc		:= {20}
+Local aTamVal		:= {12}
+Local aMeses		:= {}
+Local aPeriodos
+
+If ( !AMIIn(34) )
+	Return
+EndIf
+
+
+
+
+cMensagem := STR0017+chr(13)
+cMensagem += STR0018+chr(13)
+cMensagem += STR0019+chr(13)
+cMensagem += STR0020+chr(13)
+cMensagem += STR0021+chr(13)
+
+IF !lAtSlBase
+	IF !MsgYesNo(cMensagem,STR0009)
+		Return
+	Endif
+EndIf
+
+
+
+
+
+If !ct040Valid(mv_par06)
+	Return
+Else
+   aSetOfBook := CTBSetOf(mv_par06)
+Endif
+
+If mv_par19 == 2
+	nDivide := 100
+ElseIf mv_par19 == 3
+	nDivide := 1000
+ElseIf mv_par19 == 4
+	nDivide := 1000000
+EndIf
+
+aCtbMoeda  	:= CtbMoeda(mv_par08,nDivide)
+If Empty(aCtbMoeda[1])
+   Help(" ",1,"NOMOEDA")
+   Return
+Endif
+
+cDescMoeda 	:= Alltrim(aCtbMoeda[2])
+
+If !Empty(aCtbMoeda[6])
+	cDescMoeda += STR0007 + aCtbMoeda[6]
+EndIf
+
+nDecimais := DecimalCTB(aSetOfBook,mv_par08)
+cPicture  := AllTrim( Right(AllTrim(aSetOfBook[4]),12) )
+
+aPeriodos := ctbPeriodos(mv_par08, mv_par01, mv_par02, .T. , .F. )
+
+For nCont := 1 to len(aPeriodos)
+
+	If aPeriodos[nCont][1] >= mv_par01 .And.  aPeriodos[nCont][2] <= mv_par02
+		If nMeses <= 12
+			AADD(aMeses,{StrZero(nMeses,2),aPeriodos[nCont][1],aPeriodos[nCont][2]})
+			nMeses += 1
+		EndIf
+	EndIf
+Next
+
+If nMeses == 1
+	cMensagem := STR0022
+	cMensagem += STR0023
+	MsgAlert(cMensagem)
+	Return
+EndIf
+
+If Empty(aSetOfBook[2])
+	cMascara := GetMv("MV_MASCARA")
+	cCodMasc := ""
+Else
+	cCodmasc	:= aSetOfBook[2]
+	cMascara 	:= RetMasCtb(aSetOfBook[2],@cSeparador)
+EndIf
+
+If !Empty(cSegAte)
+    nDigitAte	:= CtbRelDig(cSegAte,cMascara)
+EndIf
+
+If !Empty(cSegmento)
+	If Empty(mv_par06)
+		Help("",1,"CTN_CODIGO")
+		Return
+	Endif
+	dbSelectArea("CTM")
+	dbSetOrder(1)
+	If MsSeek(xFilial()+cCodMasc)
+		While !Eof() .And.  CTM->CTM_FILIAL == xFilial() .And.  CTM->CTM_CODIGO == cCodMasc
+			nPos += Val(CTM->CTM_DIGITO)
+			If CTM->CTM_SEGMEN == STRZERO(val(cSegmento),2)
+				nPos -= Val(CTM->CTM_DIGITO)
+				nPos ++
+				nDigitos := Val(CTM->CTM_DIGITO)
+				Exit
+			EndIf
+			dbSkip()
+		EndDo
+	Else
+		Help("",1,"CTM_CODIGO")
+		Return
+	EndIf
+EndIf
+
+
+If mv_par25 == 2
+	cHeader := "SLD"
+	mv_par23 := 2
+Endif
+
+
+
+
+
+IF mv_par05 == 1
+	Titulo:=	STR0008
+ElseIf mv_par05 == 2
+	Titulo:=	STR0005
+ElseIf mv_par05 == 3
+	Titulo:=	STR0012
+EndIf
+
+
+Titulo += 	DTOC(mv_par01) + STR0006 + Dtoc(aMeses[Len(aMeses)][3]) + STR0007 + cDescMoeda
+
+If mv_par25 == 2
+	Titulo += " - "+STR0026
+Endif
+If mv_par10 > "1"
+	Titulo += " (" + Tabela("SL", mv_par10, .F. ) + ")"
+Endif
+
+oReport:SetPageNumber( mv_par09 )
+oReport:SetCustomText( {|| CtCGCCabTR(,,,,,dDataFim,titulo,,,,,oReport) } )
+
+DbSelectArea("CT1")
+cFilUser := oSection1:GetAdvplExp("CT1")
+
+If Empty(cFilUser)
+	cFilUser := ".T."
+EndIf
+
+
+
+
+
+
+
+
+
+MsgMeter({|	oMeter, oText, oDlg, lEnd | CTGerComp(oMeter, oText, oDlg, @lEnd,@cArqTmp, mv_par01,mv_par02,"CT7","",mv_par03,mv_par04,,,,,,,mv_par08, mv_par10,aSetOfBook,cSegmento,cSegIni,cSegFim,cFiltSegm, .F. , .F. ,mv_par11,cHeader,lImpAntLP,dDataLP,nDivide,cTpComp, .F. ,, .T. ,aMeses,lVlrZerado,,,lImpSint,cString,cFilUser)}, STR0015, STR0003)
+
+oReport:NoUserFilter()
+
+If Select("cArqTmp") == 0
+	Return
+EndIf
+
+dbSelectArea("cArqTmp")
+dbGoTop()
+
+
+
+If RecCount() == 0 .And.  !Empty(aSetOfBook[5])
+	dbCloseArea()
+	FErase(cArqTmp+GetDBExtension())
+	FErase("cArqInd"+OrdBagExt())
+	Return
+Endif
+
+
+
+oSection1:OnPrintLine( {|| ( IIf( lPula .And.  (cTipoAnt == "1" .Or.  (cArqTmp->TIPOCONTA == "1" .And.  cTipoAnt == "2")), oReport:SkipLine(),NIL), cTipoAnt := cArqTmp->TIPOCONTA )  })
+
+cDifZero := " (cArqTmp->COLUNA1  <> 0 .OR. cArqTmp->COLUNA2  <> 0 .OR. cArqTmp->COLUNA3  <> 0 .OR. "
+cDifZero += "  cArqTmp->COLUNA4  <> 0 .OR. cArqTmp->COLUNA5  <> 0 .OR. cArqTmp->COLUNA6  <> 0 .OR. "
+cDifZero += "  cArqTmp->COLUNA7  <> 0 .OR. cArqTmp->COLUNA8  <> 0 .OR. cArqTmp->COLUNA9  <> 0 .OR. "
+cDifZero += "  cArqTmp->COLUNA10 <> 0 .OR. cArqTmp->COLUNA11 <> 0 .OR. cArqTmp->COLUNA12 <> 0)"
+
+If mv_par05 == 1
+	cFilter := "cArqTmp->TIPOCONTA  <>  '2'  "
+	If !lVlrZerado
+		cFilter += " .AND. " + cDifZero
+	EndIf
+ElseIf mv_par05 == 2
+	cFilter := "cArqTmp->TIPOCONTA  <>  '1'  "
+	If !lVlrZerado
+		cFilter += " .AND. " + cDifZero
+	EndIf
+EndIf
+
+If !lVlrZerado
+	If Empty(cFilter)
+		cFilter := cDifZero
+	Endif
+EndIf
+
+oSection1:SetFilter( cFilter )
+
+For nCont := 1 to Len(aMeses)
+	cColVal := "COLUNA"+Alltrim(Str(nCont))
+	cDtCab := Strzero(Day(aMeses[nCont][2]),2)+"/"+Strzero(Month(aMeses[nCont][2]),2)+ " - "
+	cDtCab += Strzero(Day(aMeses[nCont][3]),2)+"/"+Strzero(Month(aMeses[nCont][3]),2)
+
+	oSection1:Cell(cColVal):SetTitle(Substr(STR0004,43,07)+" "+Alltrim(Str(nCont)+Chr(13)+Chr(10)+cDtCab))
+Next
+
+For nCont:= Len(aMeses)+1 to 12
+	cColVal := "COLUNA"+Alltrim(Str(nCont))
+	oSection1:Cell(cColVal):SetTitle(Substr(STR0004,43,07)+" "+Alltrim(Str(nCont))	)
+Next
+
+
+
+
+IF mv_par23 = 2
+	oSection1:Cell("DESCCTA"):SetBlock ( { || (cArqTmp->DESCCTA) })
+
+
+	oSection1:Cell("CONTA"  ):SetBlock( {|| IF( cArqTmp->TIPOCONTA == "2" .And.  mv_par05 <> 2,	cEspaco:=SPACE(02),	cEspaco:="" ), IF( lNormal,	cEspaco + EntidadeCTB(cArqTmp->CONTA,0,0,70, .F. ,cMascara,,,,,, .F. ), IF( cArqTmp->TIPOCONTA == "1",	AllTrim(cArqTmp->CONTA),	cEspaco + AllTrim(cArqTmp->CTARES) ) ) } )
+ElseIf mv_par23 = 1 .and.  MV_PAR24 = 2
+	oSection1:Cell("CONTA"  ):Disable()
+	oSection1:Cell("DESCCTA"):SetBlock ( { || (cArqTmp->DESCCTA) })
+Else
+	oSection1:Cell("DESCCTA"):Disable()
+
+
+	oSection1:Cell("CONTA"  ):SetBlock( {|| IF( cArqTmp->TIPOCONTA == "2" .And.  mv_par05 <> 2,	cEspaco:=SPACE(02),	cEspaco:="" ), IF( lNormal,	cEspaco + EntidadeCTB(cArqTmp->CONTA,0,0,70, .F. ,cMascara,,,,,, .F. ), IF( cArqTmp->TIPOCONTA == "1",	AllTrim(cArqTmp->CONTA),	cEspaco + AllTrim(cArqTmp->CTARES) ) ) } )
+EndIf
+
+oSection1:Cell("COLUNA1"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA1 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA2"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA2 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA3"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA3 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA4"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA4 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA5"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA5 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA6"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA6 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA7"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA7 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA8"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA8 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA9"):SetBlock ( { || ValorCTB(cArqTmp->COLUNA9 ,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA10"):SetBlock( { || ValorCTB(cArqTmp->COLUNA10,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA11"):SetBlock( { || ValorCTB(cArqTmp->COLUNA11,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+oSection1:Cell("COLUNA12"):SetBlock( { || ValorCTB(cArqTmp->COLUNA12,,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) } )
+
+
+If mv_par23 == 1
+
+
+
+	oSection1:Cell("COLUNAT"):SetBlock( { || ValorCTB(cArqTmp->(COLUNA1+COLUNA2+COLUNA3+ COLUNA4+COLUNA5+COLUNA6+ COLUNA7+COLUNA8+COLUNA9+ COLUNA10+COLUNA11+COLUNA12),,,aTamVal[1],nDecimais, .T. ,cPicture,, , , , , ,lPrintZero, .F. ) } )
+Else
+	oSection1:Cell("COLUNAT"):Disable()
+Endif
+
+
+
+
+
+bCond := {|| Iif( cArqTmp->TIPOCONTA="1", IF( mv_par05 <> 1	, .F. , IF(cArqTmp->NIVEL1 , .T. , .F. ) ), .T.  ) }
+
+
+
+If lQbGrupo
+
+
+	oBreakGrp := TRBreak():New(oSection1, { || cArqTmp->GRUPO },{|| "T O T A I S  D O  G R U P O("+" "+ RTrim( Upper(AllTrim(cGrupo) )) + " )" },,, .F. )
+	oBreakGrp:OnBreak( { |x| cGrupo := x } )
+
+
+	oTotGrp1 := TRFunction():New(oSection1:Cell("COLUNA1"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA1, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp2 := TRFunction():New(oSection1:Cell("COLUNA2"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA2, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp3 := TRFunction():New(oSection1:Cell("COLUNA3"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA3, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp4 := TRFunction():New(oSection1:Cell("COLUNA4"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA4, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp5 := TRFunction():New(oSection1:Cell("COLUNA5"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA5, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp6 := TRFunction():New(oSection1:Cell("COLUNA6"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA6, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp7 := TRFunction():New(oSection1:Cell("COLUNA7"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA7, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp8 := TRFunction():New(oSection1:Cell("COLUNA8"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA8, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp9 := TRFunction():New(oSection1:Cell("COLUNA9"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA9, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp10 := TRFunction():New(oSection1:Cell("COLUNA10"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA10, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp11 := TRFunction():New(oSection1:Cell("COLUNA11"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA11, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+	oTotGrp12 := TRFunction():New(oSection1:Cell("COLUNA12"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->COLUNA12, 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+
+	TRFunction():New(oSection1:Cell("COLUNA1"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp1:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA2"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp2:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA3"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp3:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA4"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp4:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA5"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp5:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA6"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp6:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA7"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp7:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA8"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp8:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA9"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp9:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA10"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp10:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA11"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp11:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+	TRFunction():New(oSection1:Cell("COLUNA12"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrp12:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+
+
+	If mv_par23 == 1
+
+
+
+		oTotGrpTot := TRFunction():New(oSection1:Cell("COLUNAT"),,"SUM",oBreakGrp,,, { || If( Eval(bCond), cArqTmp->(COLUNA1+COLUNA2+COLUNA3+COLUNA4+ COLUNA5+COLUNA6+COLUNA7+COLUNA8+ COLUNA9+COLUNA10+COLUNA11+COLUNA12), 0 ) }, .F. , .F. , .F. ,oSection1)
+
+
+		TRFunction():New(oSection1:Cell("COLUNAT"),,"ONPRINT",oBreakGrp,,, { || ValorCTB(oTotGrpTot:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .F. , .F. ,oSection1 )
+
+		oTotGrpTot:Disable()
+	EndIf
+
+	oTotGrp1:Disable()
+	oTotGrp2:Disable()
+	oTotGrp3:Disable()
+	oTotGrp4:Disable()
+	oTotGrp5:Disable()
+	oTotGrp6:Disable()
+	oTotGrp7:Disable()
+	oTotGrp8:Disable()
+	oTotGrp9:Disable()
+	oTotGrp10:Disable()
+	oTotGrp11:Disable()
+	oTotGrp12:Disable()
+EndIf
+
+
+
+
+oTotCol1  := TRFunction():New(oSection1:Cell("COLUNA1"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA1, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol2  := TRFunction():New(oSection1:Cell("COLUNA2"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA2, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol3  := TRFunction():New(oSection1:Cell("COLUNA3"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA3, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol4  := TRFunction():New(oSection1:Cell("COLUNA4"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA4, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol5  := TRFunction():New(oSection1:Cell("COLUNA5"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA5, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol6  := TRFunction():New(oSection1:Cell("COLUNA6"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA6, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol7  := TRFunction():New(oSection1:Cell("COLUNA7"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA7, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol8  := TRFunction():New(oSection1:Cell("COLUNA8"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA8, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol9  := TRFunction():New(oSection1:Cell("COLUNA9"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA9, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol10 := TRFunction():New(oSection1:Cell("COLUNA10"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA10, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol11 := TRFunction():New(oSection1:Cell("COLUNA11"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA11, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+oTotCol12 := TRFunction():New(oSection1:Cell("COLUNA12"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->COLUNA12, 0 ) }, .F. , .T. , .F. ,oSection1)
+
+
+If mv_par23 == 1
+
+
+	oTotColTot := TRFunction():New(oSection1:Cell("COLUNAT"),,"SUM",,,, { || If( Eval(bCond), cArqTmp->(COLUNA1+COLUNA2+COLUNA3+COLUNA4+COLUNA5+COLUNA6+ COLUNA7+COLUNA8+COLUNA9+COLUNA10+COLUNA11+COLUNA12), 0 ) }, .F. , .T. , .F. ,oSection1)
+EndIf
+
+
+TRFunction():New(oSection1:Cell("COLUNA1"),,"ONPRINT",,,, { || ValorCTB(oTotCol1:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA2"),,"ONPRINT",,,, { || ValorCTB(oTotCol2:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA3"),,"ONPRINT",,,, { || ValorCTB(oTotCol3:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA4"),,"ONPRINT",,,, { || ValorCTB(oTotCol4:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA5"),,"ONPRINT",,,, { || ValorCTB(oTotCol5:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA6"),,"ONPRINT",,,, { || ValorCTB(oTotCol6:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA7"),,"ONPRINT",,,, { || ValorCTB(oTotCol7:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA8"),,"ONPRINT",,,, { || ValorCTB(oTotCol8:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA9"),,"ONPRINT",,,, { || ValorCTB(oTotCol9:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA10"),,"ONPRINT",,,, { || ValorCTB(oTotCol10:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA11"),,"ONPRINT",,,, { || ValorCTB(oTotCol11:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+TRFunction():New(oSection1:Cell("COLUNA12"),,"ONPRINT",,,, { || ValorCTB(oTotCol12:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+
+
+If mv_par23 == 1
+
+	TRFunction():New(oSection1:Cell("COLUNAT"),,"ONPRINT",,,, { || ValorCTB(oTotColTot:GetValue(),,,aTamVal[1],nDecimais, .T. ,cPicture,,,,,,,lPrintZero, .F. ) }, .F. , .T. , .F. ,oSection1 )
+EndIf
+
+oTotCol1:Disable()
+oTotCol2:Disable()
+oTotCol3:Disable()
+oTotCol4:Disable()
+oTotCol5:Disable()
+oTotCol6:Disable()
+oTotCol7:Disable()
+oTotCol8:Disable()
+oTotCol9:Disable()
+oTotCol10:Disable()
+oTotCol11:Disable()
+oTotCol12:Disable()
+
+
+If mv_par23 == 1
+	oTotColTot:Disable()
+EndIf
+
+oReport:SetTotalInLine( .F. )
+oReport:SetTotalText(STR0011)
+oSection1:Print()
+
+dbSelectArea("cArqTmp")
+dbClearFilter()
+dbCloseArea()
+If Select("cArqTmp") == 0
+	FErase(cArqTmp+GetDBExtension())
+	FErase(cArqTmp+OrdBagExt())
+EndIF
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function Ctbr265R3()
+Local aSetOfBook
+Local aCtbMoeda		:= {}
+LOCAL cDesc1 		:= STR0001
+LOCAL cDesc2 		:= STR0002
+Local cDesc3		:= ""
+LOCAL wnrel
+LOCAL cString		:= "CT1"
+Local titulo 		:= STR0003
+Local lRet			:= .T. 
+Local nDivide		:= 1
+Local lAtSlBase		:= Iif(GETMV("MV_ATUSAL")== "S", .T. , .F. )
+
+PRIVATE Tamanho		:="G"
+PRIVATE nLastKey 	:= 0
+PRIVATE cPerg	 	:= PADR("CTR265",LEN(SX1->X1_GRUPO))
+PRIVATE aReturn 	:= { STR0013, 1,STR0014, 2, 2, 1, "",1 }
+PRIVATE aLinha		:= {}
+PRIVATE nomeProg  	:= "CTBR265"
+
+If ( !AMIIn(34) )
+	Return
+EndIf
+li 		:= 80
+m_pag	:= 1
+
+
+
+
+cMensagem := STR0017+chr(13)
+cMensagem += STR0018+chr(13)
+cMensagem += STR0019+chr(13)
+cMensagem += STR0020+chr(13)
+cMensagem += STR0021+chr(13)
+
+IF !lAtSlBase
+	IF !MsgYesNo(cMensagem,STR0009)
+		Return
+	Endif
+EndIf
+
+Pergunte("CTR265", .F. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+wnrel	:= "CTBR265"
+wnrel := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3, .F. ,"",,Tamanho)
+
+If nLastKey == 27
+	dbClearFilter()
+	Return
+Endif
+
+
+
+
+
+If !ct040Valid(mv_par06)
+	lRet := .F. 
+Else
+   aSetOfBook := CTBSetOf(mv_par06)
+Endif
+
+If mv_par19 == 2
+	nDivide := 100
+ElseIf mv_par19 == 3
+	nDivide := 1000
+ElseIf mv_par19 == 4
+	nDivide := 1000000
+EndIf
+
+If lRet
+	aCtbMoeda  	:= CtbMoeda(mv_par08,nDivide)
+	If Empty(aCtbMoeda[1])
+      Help(" ",1,"NOMOEDA")
+      lRet := .F. 
+   Endif
+Endif
+
+If !lRet
+	dbClearFilter()
+	Return
+EndIf
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	dbClearFilter()
+	Return
+Endif
+
+RptStatus({|lEnd| CTR265Imp(@lEnd,wnRel,cString,aSetOfBook,aCtbMoeda,nDivide)})
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CTR265Imp(lEnd,WnRel,cString,aSetOfBook,aCtbMoeda,nDivide)
+
+Local aColunas		:= {}
+LOCAL CbTxt			:= Space(10)
+Local CbCont		:= 0
+LOCAL limite		:= 220
+Local cabec1   		:= ""
+Local cabec2   		:= ""
+Local cSeparador	:= ""
+Local cPicture
+Local cDescMoeda
+Local cCodMasc		:= ""
+Local cMascara
+Local cGrupo		:= ""
+Local cArqTmp
+Local dDataFim 		:= mv_par02
+Local lFirstPage	:= .T. 
+Local lJaPulou		:= .F. 
+Local lPrintZero	:= Iif(mv_par17==1, .T. , .F. )
+Local lPula			:= Iif(mv_par16==1, .T. , .F. )
+Local lNormal		:= Iif(mv_par18==1, .T. , .F. )
+Local nDecimais
+Local aTotCol		:= {0,0,0,0,0,0,0,0,0,0,0,0}
+Local aTotGrp		:= {0,0,0,0,0,0,0,0,0,0,0,0}
+Local cSegmento		:= mv_par12
+Local cSegAte   	:= mv_par20
+Local cSegIni		:= mv_par13
+Local cSegFim		:= mv_par14
+Local cFiltSegm		:= mv_par15
+Local nDigitAte		:= 0
+Local lImpAntLP		:= Iif(mv_par21 == 1, .T. , .F. )
+Local dDataLP		:= mv_par22
+Local aMeses		:= {}
+Local nTotGeral		:= 0
+Local aPeriodos
+Local nMeses		:= 1
+Local nCont			:= 0
+Local nDigitos		:= 0
+Local nVezes		:= 0
+Local nPos			:= 0
+Local lVlrZerado	:= Iif(mv_par07 == 1, .T. , .F. )
+Local lImpSint		:= Iif(mv_par05 = 2, .F. , .T. )
+Local lSinalMov		:= CtbSinalMov()
+Local cHeader 		:= ""
+Local cTpComp		:= If( mv_par25 == 1,"M","S" )
+
+cDescMoeda 	:= Alltrim(aCtbMoeda[2])
+
+If !Empty(aCtbMoeda[6])
+	cDescMoeda += STR0007 + aCtbMoeda[6]
+EndIf
+
+nDecimais := DecimalCTB(aSetOfBook,mv_par08)
+cPicture  := AllTrim( Right(AllTrim(aSetOfBook[4]),12) )
+
+aPeriodos := ctbPeriodos(mv_par08, mv_par01, mv_par02, .T. , .F. )
+
+For nCont := 1 to len(aPeriodos)
+
+	If aPeriodos[nCont][1] >= mv_par01 .And.  aPeriodos[nCont][2] <= mv_par02
+		If nMeses <= 12
+			AADD(aMeses,{StrZero(nMeses,2),aPeriodos[nCont][1],aPeriodos[nCont][2]})
+			nMeses += 1
+		EndIf
+	EndIf
+Next
+
+If nMeses == 1
+	cMensagem := STR0022
+	cMensagem += STR0023
+	MsgAlert(cMensagem)
+	Return
+EndIf
+
+If Empty(aSetOfBook[2])
+	cMascara := GetMv("MV_MASCARA")
+	cCodMasc := ""
+Else
+	cCodmasc	:= aSetOfBook[2]
+	cMascara 	:= RetMasCtb(aSetOfBook[2],@cSeparador)
+EndIf
+
+
+
+
+IF mv_par05 == 1
+	Titulo:=	STR0008
+ElseIf mv_par05 == 2
+	Titulo:=	STR0005
+ElseIf mv_par05 == 3
+	Titulo:=	STR0012
+EndIf
+
+
+Titulo += 	DTOC(mv_par01) + STR0006 + Dtoc(aMeses[Len(aMeses)][3]) + STR0007 + cDescMoeda
+
+If mv_par25 == 2
+	Titulo += " - "+STR0026
+Endif
+If mv_par10 > "1"
+	Titulo += " (" + Tabela("SL", mv_par10, .F. ) + ")"
+Endif
+
+aColunas := { 000, 001, 019, 020, 039, 040, 054, 055, 069, 070, 084, 085, 099, 100, 114,  115, 129, 130, 144, 145, 159, 160, 174, 175, 189, 190 , 204, 205, 219}
+
+cabec1 := STR0004
+
+If mv_par25 == 2
+	mv_par23 := 2
+Endif
+
+If mv_par23 = 1
+	If mv_par24 = 2
+		Cabec1 := Stuff(Cabec1, 2, 10, Subs(Cabec1, 21, 10))
+	Endif
+	Cabec1 := Stuff(Cabec1, 21, 20, "")
+	Cabec1 += " TOTAL PERIODO|"
+	For nCont := 6 To Len(aColunas)
+		aColunas[nCont] -= 20
+	Next
+	For nCont := 3 To Len(aColunas)
+		If mv_par24 = 2
+			aColunas[nCont] += 5
+		Endif
+	Next
+	If mv_par24 = 2
+		Cabec1 := Stuff(Cabec1, 19, 0, Space(5))
+		cabec2 := "|                       |"
+	Else
+		cabec2 := "|                  |"
+	Endif
+Else
+	If mv_par18 = 2
+
+		Cabec1 := 	Left(Cabec1, 11) + "|" + Subs(Cabec1, 21, 15) + Space(12) + "|" + Subs(Cabec1, 41)
+		Cabec2 := 	"|          |                           |"
+	Else
+		cabec2 := "|                  |                   |"
+	Endif
+Endif
+For nCont := 1 to Len(aMeses)
+	If mv_par25 == 2
+		cabec2 += " "+STR0027+" - "
+	Else
+		cabec2 += SPACE(1)+Strzero(Day(aMeses[nCont][2]),2)+"/"+Strzero(Month(aMeses[nCont][2]),2)+ " - "
+	Endif
+	cabec2 += Strzero(Day(aMeses[nCont][3]),2)+"/"+Strzero(Month(aMeses[nCont][3]),2)+"|"
+Next
+
+For nCont:= Len(aMeses)+1 to 12
+	cabec2+=SPACE(14)+"|"
+Next
+
+If mv_par23 = 1
+	Cabec2 += "              |"
+Endif
+
+If mv_par18 = 2 .And.  mv_par23 = 2
+	aColunas[3]	:= 11
+	aColunas[4]	:= 12
+Endif
+
+m_pag := mv_par09
+
+
+If !Empty(cSegAte)
+    nDigitAte	:= CtbRelDig(cSegAte,cMascara)
+EndIf
+
+If !Empty(cSegmento)
+	If Empty(mv_par06)
+		Help("",1,"CTN_CODIGO")
+		Return
+	Endif
+	dbSelectArea("CTM")
+	dbSetOrder(1)
+	If MsSeek(xFilial()+cCodMasc)
+		While !Eof() .And.  CTM->CTM_FILIAL == xFilial() .And.  CTM->CTM_CODIGO == cCodMasc
+			nPos += Val(CTM->CTM_DIGITO)
+			If CTM->CTM_SEGMEN == STRZERO(val(cSegmento),2)
+				nPos -= Val(CTM->CTM_DIGITO)
+				nPos ++
+				nDigitos := Val(CTM->CTM_DIGITO)
+				Exit
+			EndIf
+			dbSkip()
+		EndDo
+	Else
+		Help("",1,"CTM_CODIGO")
+		Return
+	EndIf
+EndIf
+
+If mv_par25 == 2
+	cHeader := "SLD"
+Endif
+
+
+
+
+
+
+
+
+
+MsgMeter({|	oMeter, oText, oDlg, lEnd | CTGerComp(oMeter, oText, oDlg, @lEnd,@cArqTmp, mv_par01,mv_par02,"CT7","",mv_par03,mv_par04,,,,,,,mv_par08, mv_par10,aSetOfBook,cSegmento,cSegIni,cSegFim,cFiltSegm, .F. , .F. ,mv_par11,cHeader,lImpAntLP,dDataLP,nDivide,cTpComp, .F. ,, .T. ,aMeses,lVlrZerado,,,lImpSint,cString,aReturn[7])}, STR0015, STR0003)
+
+If Select("cArqTmp") == 0
+	Return
+EndIf
+
+dbSelectArea("cArqTmp")
+dbGoTop()
+
+
+CTBR265G()
+CTBR265W()
+
+
+
+If RecCount() == 0 .And.  !Empty(aSetOfBook[5])
+	dbCloseArea()
+	FErase(cArqTmp+GetDBExtension())
+	FErase("cArqInd"+OrdBagExt())
+	Return
+Endif
+
+
+SetRegua(RecCount())
+
+cGrupo := GRUPO
+dbSelectArea("cArqTmp")
+
+While !Eof()
+
+	If lEnd
+		PrintOut(_PROW()+1,0,STR0010,,)
+		Exit
+	EndIF
+
+	IncRegua()
+
+
+
+	If mv_par05 == 1
+		If TIPOCONTA == "2"
+			dbSkip()
+			Loop
+		EndIf
+	ElseIf mv_par05 == 2
+		If TIPOCONTA == "1"
+			dbSkip()
+			Loop
+		EndIf
+	EndIf
+
+
+	If (Abs(COLUNA1)+Abs(COLUNA2)+Abs(COLUNA3)+Abs(COLUNA4)+Abs(COLUNA5)+Abs(COLUNA6)+ Abs(COLUNA7)+Abs(COLUNA8)+Abs(COLUNA9)+Abs(COLUNA10)+Abs(COLUNA11)+Abs(COLUNA12)) == 0
+		If mv_par07 == 2
+			dbSkip()
+			Loop
+		ElseIf  mv_par07 == 1
+			If CtbExDtFim("CT1")
+				dbSelectArea("CT1")
+				dbSetOrder(1)
+				If MsSeek(xFilial()+cArqTmp->CONTA)
+					If !CtbVlDtFim("CT1",mv_par01)
+			     		dbSelectArea("cArqTmp")
+			     		dbSkip()
+			     		Loop
+					EndIf
+				EndIf
+			EndIf
+			dbSelectArea("cArqTmp")
+		EndIf
+	EndIf
+
+
+	If !Empty(cSegAte)
+		If Len(Alltrim(CONTA)) > nDigitAte
+			dbSkip()
+			Loop
+		Endif
+	EndIf
+
+	If !Empty(cSegmento)
+		If Empty(cSegIni) .And.  Empty(cSegFim) .And.  !Empty(cFiltSegm)
+			If  !(Substr(cArqTmp->CONTA,nPos,nDigitos) $ (cFiltSegm) )
+				dbSkip()
+				Loop
+			EndIf
+		Else
+
+			If Substr(cArqTmp->CONTA,nPos,nDigitos) < Alltrim(cSegIni) .Or.  Substr(cArqTmp->CONTA,nPos,nDigitos) > Alltrim(cSegFim)
+				dbSkip()
+				Loop
+			EndIf
+		Endif
+	EndIf
+
+
+	If mv_par11 == 1
+		If cGrupo <> GRUPO
+			PrintOut(li,00,REPLICATE("-",limite),,)
+			li++
+			PrintOut(li,aColunas[1],"|",,)
+			If mv_par23 <> 1
+				PrintOut(li,aColunas[2],"T O T A I S  D O  G R U P O("+Alltrim(cGrupo)+"):",,)
+				PrintOut(li,aColunas[5],"|",,)
+			Else
+				PrintOut(li,aColunas[2],STR0025+Alltrim(cGrupo)+"):",,)
+				PrintOut(li,aColunas[7],"|",,)
+    			PrintOut(li,aColunas[29]+15,"|",,)
+				Li++
+				PrintOut(li,aColunas[1],"|",,)
+				PrintOut(li,aColunas[3],"|",,)
+			Endif
+			ValorCTB(aTotGrp[1],li,aColunas[6],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[7],"|",,)
+			ValorCTB(aTotGrp[2],li,aColunas[8],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[9],"|",,)
+			ValorCTB(aTotGrp[3],li,aColunas[10],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[11],"|",,)
+			ValorCTB(aTotGrp[4],li,aColunas[12],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[13],"|",,)
+			ValorCTB(aTotGrp[5],li,aColunas[14],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[15],"|",,)
+			ValorCTB(aTotGrp[6],li,aColunas[16],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[17],"|",,)
+			ValorCTB(aTotGrp[7],li,aColunas[18],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[19],"|",,)
+			ValorCTB(aTotGrp[8],li,aColunas[20],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[21],"|",,)
+			ValorCTB(aTotGrp[9],li,aColunas[22],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[23],"|",,)
+			ValorCTB(aTotGrp[10],li,aColunas[24],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[25],"|",,)
+			ValorCTB(aTotGrp[11],li,aColunas[26],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[27],"|",,)
+			ValorCTB(aTotGrp[12],li,aColunas[28],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[29],"|",,)
+			If mv_par23 = 1
+
+
+				ValorCTB(	aTotGrp[1] + aTotGrp[2] + aTotGrp[3] + aTotGrp[4] + aTotGrp[5] + aTotGrp[6] + aTotGrp[7] + aTotGrp[8] + aTotGrp[9] + aTotGrp[10] + aTotGrp[11] + aTotGrp[12],li,aColunas[29]  + 1,12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+				PrintOut(li,aColunas[29]+15,"|",,)
+			Endif
+
+			li++
+			li			:= 60
+			cGrupo		:= GRUPO
+			aTotGrp 	:= {0,0,0,0,0,0,0,0,0,0,0,0}
+		EndIf
+	Else
+		If NIVEL1
+			li 	:= 60
+		EndIf
+	EndIf
+
+	IF li > 58
+		If !lFirstPage
+			PrintOut(_PROW()+1,00,Replicate("-",limite),,)
+		EndIf
+		CtCGCCabec(,,,Cabec1,Cabec2,dDataFim,Titulo,,"2",Tamanho)
+		lFirstPage := .F. 
+	End
+
+	PrintOut(li,aColunas[1],"|",,)
+	If mv_par23 = 1 .And.  mv_par24 = 2
+		PrintOut(li,aColunas[2],Left(DESCCTA,18),,)
+	Else
+		If lNormal
+			If TIPOCONTA == "2"
+				EntidadeCTB(Subs(CONTA,1,16),li,aColunas[2]+2,16, .F. ,cMascara,cSeparador)
+			Else
+				EntidadeCTB(Subs(CONTA,1,16),li,aColunas[2],18, .F. ,cMascara,cSeparador)
+			EndIf
+		Else
+			If TIPOCONTA == "2"
+				PrintOut(li,aColunas[2],Alltrim(CTARES),,)
+			Else
+				PrintOut(li,aColunas[2],Alltrim(CONTA),,)
+			EndIf
+		EndIf
+	Endif
+	PrintOut(li,aColunas[3],"|",,)
+	If mv_par23 <> 1
+		If mv_par18 = 2
+			PrintOut(li,aColunas[4],Left(DESCCTA,27),,)
+		Else
+			PrintOut(li,aColunas[4],Left(DESCCTA,19),,)
+		Endif
+		PrintOut(li,aColunas[5],"|",,)
+	Endif
+	ValorCTB(COLUNA1,li,aColunas[6],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[7],"|",,)
+	ValorCTB(COLUNA2,li,aColunas[8],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[9],"|",,)
+	ValorCTB(COLUNA3,li,aColunas[10],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[11],"|",,)
+	ValorCTB(COLUNA4,li,aColunas[12],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[13],"|",,)
+	ValorCTB(COLUNA5,li,aColunas[14],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[15],"|",,)
+	ValorCTB(COLUNA6,li,aColunas[16],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[17],"|",,)
+	ValorCTB(COLUNA7,li,aColunas[18],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[19],"|",,)
+	ValorCTB(COLUNA8,li,aColunas[20],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[21],"|",,)
+	ValorCTB(COLUNA9,li,aColunas[22],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[23],"|",,)
+	ValorCTB(COLUNA10,li,aColunas[24],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[25],"|",,)
+	ValorCTB(COLUNA11,li,aColunas[26],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[27],"|",,)
+	ValorCTB(COLUNA12,li,aColunas[28],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+	PrintOut(li,aColunas[29],"|",,)
+	If mv_par23 = 1
+
+
+		ValorCTB(	COLUNA1 + COLUNA2 + COLUNA3 + COLUNA4 + COLUNA5 + COLUNA6 + COLUNA7 + COLUNA8 + COLUNA9 + COLUNA10 + COLUNA11 + COLUNA12, li,aColunas[29]  + 1,12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+		PrintOut(li,aColunas[29]+15,"|",,)
+	Endif
+
+	lJaPulou := .F. 
+
+	If lPula .And.  TIPOCONTA == "1"
+		li++
+		PrintOut(li,aColunas[1],"|",,)
+		PrintOut(li,aColunas[3],"|",,)
+		If mv_par23 <> 1
+			PrintOut(li,aColunas[5],"|",,)
+		Endif
+		PrintOut(li,aColunas[7],"|",,)
+		PrintOut(li,aColunas[9],"|",,)
+		PrintOut(li,aColunas[11],"|",,)
+		PrintOut(li,aColunas[13],"|",,)
+		PrintOut(li,aColunas[15],"|",,)
+		PrintOut(li,aColunas[17],"|",,)
+		PrintOut(li,aColunas[19],"|",,)
+		PrintOut(li,aColunas[21],"|",,)
+		PrintOut(li,aColunas[23],"|",,)
+		PrintOut(li,aColunas[25],"|",,)
+		PrintOut(li,aColunas[27],"|",,)
+		PrintOut(li,aColunas[29],"|",,)
+		li++
+		lJaPulou := .T. 
+	Else
+		li++
+	EndIf
+
+
+
+	If mv_par05 == 1
+		If TIPOCONTA == "1"
+			If NIVEL1
+				For nVezes := 1 to Len(aMeses)
+					aTotCol[nVezes] +=&("COLUNA"+Alltrim(Str(nVezes,2)))
+					aTotGrp[nVezes] +=&("COLUNA"+Alltrim(Str(nVezes,2)))
+				Next
+			EndIf
+		EndIf
+	Else
+		If Empty(cSegAte)
+			If TIPOCONTA == "2"
+				For nVezes := 1 to Len(aMeses)
+					aTotCol[nVezes] +=&("COLUNA"+Alltrim(Str(nVezes,2)))
+					aTotGrp[nVezes] +=&("COLUNA"+Alltrim(Str(nVezes,2)))
+				Next
+			EndIf
+		Else
+			If TIPOCONTA == "1"
+				If NIVEL1
+					For nVezes := 1 to Len(aMeses)
+						aTotCol[nVezes] +=&("COLUNA"+Alltrim(Str(nVezes,2)))
+					Next
+				EndIf
+			EndIf
+    	Endif
+	EndIf
+
+	dbSkip()
+	If lPula .And.  TIPOCONTA == "1"
+		If !lJaPulou
+			PrintOut(li,aColunas[1],"|",,)
+			PrintOut(li,aColunas[3],"|",,)
+			If mv_par23 <> 1
+				PrintOut(li,aColunas[5],"|",,)
+			Endif
+			PrintOut(li,aColunas[7],"|",,)
+			PrintOut(li,aColunas[9],"|",,)
+			PrintOut(li,aColunas[11],"|",,)
+			PrintOut(li,aColunas[13],"|",,)
+			PrintOut(li,aColunas[15],"|",,)
+			PrintOut(li,aColunas[17],"|",,)
+			PrintOut(li,aColunas[19],"|",,)
+			PrintOut(li,aColunas[21],"|",,)
+			PrintOut(li,aColunas[23],"|",,)
+			PrintOut(li,aColunas[25],"|",,)
+			PrintOut(li,aColunas[27],"|",,)
+			PrintOut(li,aColunas[29],"|",,)
+			li++
+		EndIf
+	EndIf
+EndDO
+
+IF li <> 80 .And.  !lEnd
+	IF li > 58
+		PrintOut(_PROW()+1,00,Replicate("-",limite),,)
+		CtCGCCabec(,,,Cabec1,Cabec2,dDataFim,Titulo,,"2",Tamanho)
+		li++
+	End
+	If mv_par11 == 1
+		If cGrupo <> GRUPO
+			PrintOut(li,00,REPLICATE("-",limite),,)
+			li++
+			PrintOut(li,aColunas[1],"|",,)
+			If mv_par23 <> 1
+				PrintOut(li,aColunas[2],"T O T A I S  D O  G R U P O("+ALLTRIM(cGrupo),,)
+				PrintOut(li,aColunas[5],"|",,)
+			Else
+				PrintOut(li,aColunas[2],STR0025+ALLTRIM(cGrupo),,)
+				PrintOut(li,aColunas[3],"|",,)
+			Endif
+			ValorCTB(aTotGrp[1],li,aColunas[6],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[7],"|",,)
+			ValorCTB(aTotGrp[2],li,aColunas[8],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[9],"|",,)
+			ValorCTB(aTotGrp[3],li,aColunas[10],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[11],"|",,)
+			ValorCTB(aTotGrp[4],li,aColunas[12],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[13],"|",,)
+			ValorCTB(aTotGrp[5],li,aColunas[14],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[15],"|",,)
+			ValorCTB(aTotGrp[6],li,aColunas[16],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[17],"|",,)
+			ValorCTB(aTotGrp[7],li,aColunas[18],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[19],"|",,)
+			ValorCTB(aTotGrp[8],li,aColunas[20],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[21],"|",,)
+			ValorCTB(aTotGrp[9],li,aColunas[22],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[23],"|",,)
+			ValorCTB(aTotGrp[10],li,aColunas[24],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[25],"|",,)
+			ValorCTB(aTotGrp[11],li,aColunas[26],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[27],"|",,)
+			ValorCTB(aTotGrp[12],li,aColunas[28],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+			PrintOut(li,aColunas[29],"|",,)
+			If mv_par23 = 1
+
+
+				ValorCTB(	aTotGrp[1] + aTotGrp[2] + aTotGrp[3] + aTotGrp[4] + aTotGrp[5] + aTotGrp[6] + aTotGrp[7] + aTotGrp[8] + aTotGrp[9] + aTotGrp[10] + aTotGrp[11] + aTotGrp[12],li,aColunas[29] + 1 ,12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+				PrintOut(li,aColunas[29]+15,"|",,)
+			Endif
+			li++
+			cGrupo		:= GRUPO
+			aTotGrp 	:= {0,0,0,0,0,0}
+		EndIf
+	EndIf
+
+	PrintOut(li,00,REPLICATE("-",limite),,)
+	li++
+	PrintOut(li,aColunas[1],"|",,)
+	If mv_par23 <> 1
+		PrintOut(li,aColunas[2],STR0011,,)
+		PrintOut(li,aColunas[5],"|",,)
+	Else
+		PrintOut(li,aColunas[2],STR0024,,)
+		PrintOut(li,aColunas[3],"|",,)
+	Endif
+	ValorCTB(aTotCol[1],li,aColunas[6],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[7],"|",,)
+	ValorCTB(aTotCol[2],li,aColunas[8],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[9],"|",,)
+	ValorCTB(aTotCol[3],li,aColunas[10],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[11],"|",,)
+	ValorCTB(aTotCol[4],li,aColunas[12],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[13],"|",,)
+	ValorCTB(aTotCol[5],li,aColunas[14],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[15],"|",,)
+	ValorCTB(aTotCol[6],li,aColunas[16],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[17],"|",,)
+	ValorCTB(aTotCol[7],li,aColunas[18],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[19],"|",,)
+	ValorCTB(aTotCol[8],li,aColunas[20],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[21],"|",,)
+	ValorCTB(aTotCol[9],li,aColunas[22],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[23],"|",,)
+	ValorCTB(aTotCol[10],li,aColunas[24],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[25],"|",,)
+	ValorCTB(aTotCol[11],li,aColunas[26],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[27],"|",,)
+	ValorCTB(aTotCol[12],li,aColunas[28],12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+
+	PrintOut(li,aColunas[29],"|",,)
+	If mv_par23 = 1
+
+
+		ValorCTB(	aTotCol[1] + aTotCol[2] + aTotCol[3] + aTotCol[4] + aTotCol[5] + aTotCol[6] + aTotCol[7] + aTotCol[8] + aTotCol[9] + aTotCol[10] + aTotCol[11] + aTotCol[12],li,aColunas[29] + 1,12,nDecimais, .T. ,cPicture, , , , , , ,lPrintZero)
+		PrintOut(li,aColunas[29]+15,"|",,)
+	Endif
+
+	li++
+	PrintOut(li,00,REPLICATE("-",limite),,)
+	li++
+	PrintOut(li,0," ",,)
+	roda(cbcont,cbtxt,"M")
+	dbClearFilter()
+EndIF
+
+If aReturn[5] = 1
+	Set( 24, "" )
+	dbCommitAll()
+	Ourspool(wnrel)
+EndIf
+
+dbSelectArea("cArqTmp")
+dbClearFilter()
+dbCloseArea()
+If Select("cArqTmp") == 0
+	FErase(cArqTmp+GetDBExtension())
+	FErase(cArqTmp+OrdBagExt())
+EndIF
+dbselectArea("CT2")
+
+MS_FLUSH()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static function CTBR265W()
+
+local oDlg , oQry , oOk , oCanc , oDst , oNomSt , oMBrowse
+local cQuery 	:= ""
+local cDst   	:= SPACE(255)
+local cNomSt 	:= SPACE(255)
+local lMBrowse	:= .F. 
+
+oDlg = MsDialog():New( 0, 0, 150, 400, "Gera Comparativo X 12 Meses CSU",,,.F.,,,,,,.T.,, ,.F. )
+
+ TSay():New( 005, 005,{||  "Diretorio Destino: "},oDlg,,,.F.,.F.,.F.,.T.,,, 150, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+ oDst := TGet():New( 015, 005, { | u | If( PCount() == 0, cDst, cDst := u ) },oDlg, 150, 7,,,,,,.F.,,.T.,,.F.,{||  .f. },.F.,.F.,,.F.,.F. ,,"cDst",,,, )
+ SButton():New( 014, 160,14,{||  (cDst:=DirAjuste(),oDst:Refresh())}, oDlg,.T.,,)
+
+ TSay():New( 030, 005,{||  "Nome do Arquivo Destino: "},oDlg,,,.F.,.F.,.F.,.T.,,, 100, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+ oNomSt := TGet():New( 040, 005, { | u | If( PCount() == 0, cNomSt, cNomSt := u ) },oDlg, 100, 7,,{||  !Empty(cNomSt)},,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"cNomSt",,,, )
+
+ oOk := SButton():New( 055, 140,1,{||  (Processa({||ctbr265e(cQuery,cDst,cNomSt,lMBrowse)}),oDlg:End())}, oDlg,.T.,,)
+ oCanc := SButton():New( 055, 170,2,{||  oDlg:End()}, oDlg,.T.,,)
+
+oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,, oDlg:bRClicked, )
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static function ctbr265e(cQuery,cDst,cNomSt,lMBrowse)
+
+Local nCnt		:= 0
+local nHdl		:= 0
+local cChar		:= ";"
+local cEnter 	:= CHR(13)+CHR(10)
+local cLinha	:= ""
+local uCampo	:= ""
+
+local cExt		:= ".TXT"
+
+cDst 	:= Alltrim(cDst)
+cNomSt 	:= Alltrim(cNomSt)
+
+if !empty(cDst)
+
+	if !empty(cNomSt)
+
+		dbSelectArea("PLAN")
+		dbGotop()
+
+		nHdl := Fcreate(cDst+cNomSt+cExt,0)
+
+		if nHdl > 0
+
+
+
+
+
+			cLinha := ""
+			For nCnt := 1 TO FCOUNT()
+
+				cLinha += FieldName(nCnt)+";"
+			next
+
+
+			cLinha += _eol
+
+			cLinha := StrTran(cLinha,"COLUNA","MOV.PERIODO ")
+
+			fwrite(nHdl,cLinha)
+
+
+
+			cLinha := ";;"
+
+			dIni	:= MV_PAR01
+			dFim0	:= Mv_PAR02
+
+			If dIni <> FirstDay(MV_PAR01)
+				dIni := LastDay(MV_PAR01)+1
+			EndIf
+
+			If dFim0 <> LastDay(MV_PAR02)
+				dFim0 := FirstDay(MV_PAR02)-1
+			EndIf
+
+            For ii := 1 to 12
+	            dFim	:= LastDay(dIni)
+	            If dFim >= dFim0
+	            	EXIT
+	            EndIf
+	            cLinha	+= dToC(dIni)+" a "+dToC(dFim)+";;"
+				dIni	:= dFim+1
+			next
+
+			dFim := dFim0
+
+            cLinha	+= dToC(dIni)+" a "+dToC(dFim)+_eol
+			fwrite(nHdl,cLinha)
+			dbgotop()
+
+			nLenCta := 0
+
+			while !eof()
+
+				IncProc()
+
+
+				If Len(ALLTRIM(FieldGet(1)))<>nLenCta
+					cLinha := _eol
+					fwrite(nHdl,cLinha)
+				    nLenCta := Len(ALLTRIM(FieldGet(1)))
+				EndIf
+
+				cLinha := ""
+
+				For nCnt := 1 TO FCOUNT()
+
+					uCampo := FieldGet(nCnt)
+
+					If valtype(uCampo) == "C"
+
+						uCampo := strtran(uCampo," ","")
+
+					ElseIf valtype(uCampo) == "D"
+
+						uCampo := DTOC(uCampo)
+
+					Elseif valtype(uCampo)="N"
+						If uCampo > 0 .OR.  uCampo < 0
+							uCampo := Alltrim(Str(uCampo))
+							If At(".",uCampo) > 0
+								uCampo := STUFF(uCampo,AT(".",uCampo),1,",")
+							EndIf
+						Else
+							uCampo := "0"
+						Endif
+
+					Elseif valtype(uCampo)="L"
+						uCampo := IIF(uCampo,"VERDADEIRO","FALSO")
+
+					Endif
+
+
+					cLinha += uCampo+";"
+
+				next
+
+
+				cLinha += _eol
+
+				fwrite(nHdl,cLinha)
+
+				dbskip()
+
+			enddo
+
+
+
+
+			Fclose(nHdl)
+
+			If File(cDst+cNomSt+cExt)
+				MsgAlerT("Arquivo "+cDst+cNomSt+cExt+ " foi gerado! ")
+
+
+			EndIF
+
+		else
+			MsgAlert("Não foi possivel criar o arquivo "+cDst+cNomSt+cExt+" !")
+		endif
+
+	else
+		MsgAlert( "Nao foi especificado o nome do arquivo")
+	endif
+
+else
+	MsgAlert(" Nao foi especificada a pasta de destino do arquivo")
+endif
+
+dbSelectArea("PLAN")
+dbCloseArea()
+
+dbSelectArea("cArqTmp")
+dbGoTop()
+
+Return .t. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static function DirAjuste()
+
+local cFile := Alltrim(cGetFile( "*.*",OemToAnsi("Selecione Diretorio"),,"C:\", .F. ,16))
+
+Return(LEFT(cFile,RAT("\",cFile)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ctbr265g()
+Local aStrExc	:= {}
+Local cArqTrab	:= ""
+Local cDC1		:= ""
+Local cDC2		:= ""
+Local cDC3		:= ""
+Local cDC4		:= ""
+Local cDC5		:= ""
+Local cDC6		:= ""
+Local cDCt		:= ""
+Local lAtivo	:= .f. 
+Local nFator	:= 0
+
+aadd(aStrExc,{"CONTA"		,"C",TamSx3("CT1_CONTA")  [1],TamSx3("CT1_CONTA")  [2]})
+aadd(aStrExc,{"DESCCTA"		,"C",TamSx3("CT1_DESC01") [1],TamSx3("CT1_DESC01") [2]})
+
+aadd(aStrExc,{"COLUNA1"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC1"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA2"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC2"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA3"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC3"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA4"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC4"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA5"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC5"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA6"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC6"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA7"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC7"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA8"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC8"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA9"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC9"			,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA10"	,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC10"		,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA11"	,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC11"		,"C",1                       ,0                       })
+aadd(aStrExc,{"COLUNA12"	,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DC12"		,"C",1                       ,0                       })
+aadd(aStrExc,{"TOTAL"		,"N",TamSx3("CT3_ATUDEB") [1],TamSx3("CT3_ATUDEB") [2]})
+aadd(aStrExc,{"DCT"			,"C",1                       ,0                       })
+
+cArqTrab := CriaTrab(aStrExc, .T. )
+dbUseArea( .T. ,,cArqTrab,"PLAN", .T. , .F. )
+dbSelectArea("PLAN")
+IndRegua("PLAN",cArqTrab,"CONTA",,,"Gerando Planilha...")
+
+dbSelectArea("cArqTmp")
+dbGoTop()
+
+While !cArqTmp->(Eof())
+
+	IncProc("Gerando Planilha")
+
+	cDC1	:= " "
+	cDC2	:= " "
+	cDC3	:= " "
+	cDC4	:= " "
+	cDC5	:= " "
+	cDC6	:= " "
+	cDC7	:= " "
+	cDC8	:= " "
+	cDC9	:= " "
+	cDC10	:= " "
+	cDC11	:= " "
+	cDC12	:= " "
+	cDCT	:= " "
+
+
+	nTotal := 	cArqTmp->COLUNA1+cArqTmp->COLUNA2+cArqTmp->COLUNA3+cArqTmp->COLUNA4 +cArqTmp->COLUNA5 +cArqTmp->COLUNA6+ cArqTmp->COLUNA7+cArqTmp->COLUNA8+cArqTmp->COLUNA9+cArqTmp->COLUNA10+cArqTmp->COLUNA11+cArqTmp->COLUNA12
+
+	If cArqTmp->NORMAL == "1"
+
+		If cArqTmp->COLUNA1 < 0
+			cDC1	:= "D"
+		ElseIf cArqTmp->COLUNA1 > 0
+			cDC1	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA2 < 0
+			cDC2	:= "D"
+		ElseIf cArqTmp->COLUNA2 > 0
+			cDC2	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA3 < 0
+			cDC3	:= "D"
+		ElseIf cArqTmp->COLUNA3 > 0
+			cDC3	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA4 < 0
+			cDC4	:= "D"
+		ElseIf cArqTmp->COLUNA4 > 0
+			cDC4	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA5 < 0
+			cDC5	:= "D"
+		ElseIf cArqTmp->COLUNA5 > 0
+			cDC5	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA6 < 0
+			cDC6	:= "D"
+		ElseIf cArqTmp->COLUNA6 > 0
+			cDC6	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA7 < 0
+			cDC7	:= "D"
+		ElseIf cArqTmp->COLUNA7 > 0
+			cDC7	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA8 < 0
+			cDC8	:= "D"
+		ElseIf cArqTmp->COLUNA8 > 0
+			cDC8	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA9 < 0
+			cDC9	:= "D"
+		ElseIf cArqTmp->COLUNA9 > 0
+			cDC9	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA10 < 0
+			cDC10	:= "D"
+		ElseIf cArqTmp->COLUNA10 > 0
+			cDC10	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA11 < 0
+			cDC11	:= "D"
+		ElseIf cArqTmp->COLUNA11 > 0
+			cDC11	:= "C"
+		EndIf
+
+		If cArqTmp->COLUNA12 < 0
+			cDC12	:= "D"
+		ElseIf cArqTmp->COLUNA12 > 0
+			cDC12	:= "C"
+		EndIf
+
+		If nTotal < 0
+			cDCT	:= "D"
+		ElseIf nTotal > 0
+			cDCT	:= "C"
+		EndIf
+
+	ElseIf cArqTmp->NORMAL=="2"
+
+		If cArqTmp->COLUNA1 > 0
+			cDC1	:= "C"
+		ElseIf cArqTmp->COLUNA1 < 0
+			cDC1	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA2 > 0
+			cDC2	:= "C"
+		ElseIf cArqTmp->COLUNA2 < 0
+			cDC2	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA3 > 0
+			cDC3	:= "C"
+		ElseIf cArqTmp->COLUNA3 < 0
+			cDC3	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA4 > 0
+			cDC4	:= "C"
+		ElseIf cArqTmp->COLUNA4 < 0
+			cDC4	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA5 > 0
+			cDC5	:= "C"
+		ElseIf cArqTmp->COLUNA5 < 0
+			cDC5	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA6 > 0
+			cDC6	:= "C"
+		ElseIf cArqTmp->COLUNA6 < 0
+			cDC6	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA7 > 0
+			cDC7	:= "C"
+		ElseIf cArqTmp->COLUNA7 < 0
+			cDC7	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA8 > 0
+			cDC8	:= "C"
+		ElseIf cArqTmp->COLUNA8 < 0
+			cDC8	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA9 > 0
+			cDC9	:= "C"
+		ElseIf cArqTmp->COLUNA9 < 0
+			cDC9	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA10 > 0
+			cDC10	:= "C"
+		ElseIf cArqTmp->COLUNA10 < 0
+			cDC10	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA11 > 0
+			cDC11	:= "C"
+		ElseIf cArqTmp->COLUNA11 < 0
+			cDC11	:= "D"
+		EndIf
+
+		If cArqTmp->COLUNA12 > 0
+			cDC12	:= "C"
+		ElseIf cArqTmp->COLUNA12 < 0
+			cDC12	:= "D"
+		EndIf
+
+		If nTotal > 0
+			cDCT	:= "C"
+		ElseIf nTotal < 0
+			cDCT	:= "D"
+		EndIf
+
+
+	EndIf
+
+	lAtivo := iif(Left(cArqTmp->CONTA,1)=="1", .t. , .f. )
+	nFator	:= iif(lAtivo,-1,1)
+
+	dbSelectArea("PLAN")
+	RecLock("PLAN", .T. )
+
+	PLAN->CONTA		:= cArqTmp->CONTA
+	PLAN->DESCCTA	:= GetAdvFVal("CT1","CT1_DESC01",xFilial("CT1")+cArqTmp->CONTA,1,"SEM DESCRIÇÃO")
+
+	PLAN->COLUNA1	:= cArqTmp->COLUNA1*nFator
+	PLAN->DC1		:= cDC1
+
+	PLAN->COLUNA2	:= cArqTmp->COLUNA2*nFator
+	PLAN->DC2		:= cDC2
+
+	PLAN->COLUNA3	:= cArqTmp->COLUNA3*nFator
+	PLAN->DC3		:= cDC3
+
+	PLAN->COLUNA4	:= cArqTmp->COLUNA4*nFator
+	PLAN->DC4		:= cDC4
+
+	PLAN->COLUNA5	:= cArqTmp->COLUNA5*nFator
+	PLAN->DC5		:= cDC5
+
+	PLAN->COLUNA6	:= cArqTmp->COLUNA6*nFator
+	PLAN->DC6		:= cDC6
+
+	PLAN->COLUNA7	:= cArqTmp->COLUNA7*nFator
+	PLAN->DC7		:= cDC1
+
+	PLAN->COLUNA8	:= cArqTmp->COLUNA8*nFator
+	PLAN->DC8		:= cDC2
+
+	PLAN->COLUNA9	:= cArqTmp->COLUNA9*nFator
+	PLAN->DC9		:= cDC3
+
+	PLAN->COLUNA10	:= cArqTmp->COLUNA10*nFator
+	PLAN->DC10		:= cDC4
+
+	PLAN->COLUNA11	:= cArqTmp->COLUNA11*nFator
+	PLAN->DC11		:= cDC5
+
+	PLAN->COLUNA12	:= cArqTmp->COLUNA12*nFator
+	PLAN->DC12		:= cDC6
+
+	PLAN->TOTAL		:= nTotal*nFator
+	PLAN->DCT		:= cDCT
+
+	MsUnLock()
+
+	dbSelectArea("cArqTmp")
+	dbSkip()
+
+EndDo
+
+dbSelectArea("PLAN")
+dbGotop()
+
+Return()

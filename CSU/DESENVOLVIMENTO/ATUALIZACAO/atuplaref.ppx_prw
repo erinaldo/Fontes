@@ -1,0 +1,88 @@
+#line 1 "C:\INCLUDE\Protheus.ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 28 "Protheus.ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 29 "Protheus.ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 31 "Protheus.ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 33 "Protheus.ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 35 "Protheus.ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 37 "Protheus.ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 38 "Protheus.ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 42 "Protheus.ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 44 "Protheus.ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "Protheus.ch"
+#line 1 "C:\INCLUDE\FWCSS.CH"
+#line 50 "Protheus.ch"
+#line 22 "c:\users\csu.ikawakami\desktop\protheus 12 desenv\projeto_csu\desenvolvimento\atualizacao\atuplaref.prw"
+Function U_ATUPLAREF()
+
+Processa( { || ProcAtu() }, "Efetuando carga CT1....." )
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ProcAtu()
+
+Local nCont := 0
+
+DbSelectArea ("CVN")
+DbSetOrder(2)
+
+DbSelectArea ("CVD")
+DbSetOrder(1)
+
+DbSelectArea ("CT1")
+DbSetOrder(1)
+DbGotop()
+
+
+ProcRegua(CT1->(RecCount()))
+
+While !CT1->(EOF())
+
+	IncProc("Processando Atualização...")
+
+	If CVD->(DbSeek(xFilial("CT1")+CT1->CT1_CONTA))
+		RecLock("CT1", .F. )
+		CT1->CT1_PLAREF := CVD->CVD_CTAREF
+		CT1->(MsUnLock())
+		nCont++
+
+		If CVN->(DbSeek(xFilial("CT1")+CVD->CVD_CODPLA+CVD->CVD_CTAREF))
+			RecLock("CT1", .F. )
+			CT1->CT1_DESCPR := CVN->CVN_DSCCTA
+			CT1->(MsUnLock())
+		EndIf
+    EndIf
+    CT1->(DbSkip())
+EndDo
+
+Iif(FindFunction("APMsgAlert"), APMsgAlert("Registros atualizados:"+Str(nCont), "Atenção"), MsgAlert("Registros atualizados:"+Str(nCont), "Atenção"))
+
+Return()

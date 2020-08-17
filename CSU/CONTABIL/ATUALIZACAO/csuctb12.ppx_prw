@@ -1,0 +1,4718 @@
+#line 1 "C:\INCLUDE\PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "PROTHEUS.CH"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csuctb12.prw"
+#line 1 "C:\INCLUDE\Rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "Rwmake.ch"
+#line 3 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csuctb12.prw"
+#line 1 "C:\INCLUDE\TBICONN.CH"
+#line 1 "C:\INCLUDE\TotvsMail.ch"
+#line 9 "TBICONN.CH"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csuctb12.prw"
+#line 1 "C:\INCLUDE\TopConn.ch"
+#line 5 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csuctb12.prw"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_CSUCTB12()
+
+Local nPos      := 0
+
+
+
+
+
+
+
+
+
+
+Private aRotina	:= {{ "Pesquisar"	, "AxPesqui"   , 0, 1 }, { "Visualizar" 	, "U_ProvManut", 0, 2 }, { "Incluir"		, "U_ProvManut", 0, 3 }, { "Alterar"		, "U_ProvManut", 0, 4 }, { "Excluir"		, "U_ProvManut", 0, 5 }, { "LOG - Desflegue", "U_LogDesf", 0, 4 }, { "Desflegue Prov", "U_DesflegP", 0, 4 }, { "Contabilizar", "U_ProvContab(1)", 0, 4 }, { "Estornar"	, "U_ProvContab(2)", 0, 4 }, { "Imprimir"	, "U_ProvImpri", 0, 4 }, { "Legenda"		, "U_ProvLegen", 0, 2 }}
+
+
+
+
+
+
+
+Private aCores    := { 	{ 'Empty(ZB1_DTLCTO).And. Empty(ZB1_DTESTO).And.ZB1_SLDEST==0.And.Empty(ZB1_PCEXC) .And. ZB1_CONFER<>"S"'	, "ENABLE"		},{ '!Empty(ZB1_DTLCTO).And. ZB1_SLDEST==0.And.Empty(ZB1_PCEXC) .And. ZB1_CONFER<>"S"'		, "BR_AZUL"		},{ 'ZB1_SLDEST<>ZB1_VALDOC.And.ZB1_SLDEST<>0.And.Empty(ZB1_PCEXC) .And. ZB1_CONFER<>"S"'		, "BR_CINZA"	},{ '!Empty(ZB1_PCEXC) .And. ZB1_SLDEST<>ZB1_VALDOC .And. ZB1_CONFER<>"S"'					, "BR_PRETO"	},{ 'ZB1_CONFER == "S" '		 																, "BR_BRANCO"	},{ '!Empty(ZB1_PCEXC) .And. ZB1_SLDEST==ZB1_VALDOC .And. ZB1_CONFER<>"S"'					, "DISABLE"		},{ 'ZB1_SLDEST==ZB1_VALDOC .And. ZB1_CONFER<>"S"'											, "DISABLE"		}}
+
+PRIVATE cCadastro	:= "Manutenção de Provisão"
+PRIVATE aBackZB2    := {}
+Private lExec	   	:= .F. 
+Private cEol        := Chr(13)+Chr(10)
+
+
+AtuDci()
+
+ChkFile("ZB2")
+dbSelectArea("ZB2")
+ChkFile("ZB1")
+dbSelectArea("ZB1")
+
+
+
+
+mBrowse(6,1,22,75,"ZB1",,,,,,aCores)
+
+Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_ProvManut(cAlias,nReg,nOpcx)
+
+
+Local nRecZB1	 := 0
+Local nOpc		 := 0
+
+Local nX         := 0
+Local nY         := 0
+Local nCounterZB2:= 0
+
+Local aObjects	 := {}
+Local aInfo 	 := {}
+Local aPosGet	 := {}
+Local aPosObj	 := {}
+Local aSizeAut	 := {}
+Local aButVisual := {}
+Local aButtons	 := {}
+Local aRecClasZB2:= {}
+
+Local cCadastro	 := "Provisão"
+Local cQuery     := ""
+Local cAliasZB2  := "ZB2"
+Local cVarFoco   := "     "
+Local cIndex     := ""
+Local cCond      := ""
+
+Local oDlg
+
+Local bCabOk     := {|| .T. }
+Local bWhileZB2  := {|| .T. }
+Local bSaida     := { |lF0| lF0 }
+
+Local cBlqProv	 := Alltrim(GetMv("MV_PROVBLQ"))
+
+
+Private oDlg
+
+Private VISUAL := .F. 
+Private INCLUI := .F. 
+Private ALTERA := .F. 
+Private aCabPC := {}
+Private aItePC := {}
+Private aSldPC := {}
+Private cTheme := Upper(Alltrim(GetTheme()))
+Private lPrima := .T. 
+
+Private aStruZB2   	:= {}
+Private aRecZB2	 	:= {}
+Private nPosNPCEZ   := 0
+Private nPosCusEZ   := 0
+Private nPosPerEZ   := 0
+Private nPosValEZ   := 0
+Private nPosDesEZ   := 0
+Private nPosClaEZ   := 0
+Private nPosIteEZ   := 0
+Private nPosNatEZ	:= 0
+Private nPosContr	:= 0
+Private cCtaNatur	:= " "
+Private nVlDocume	:= 0
+Private nVlSldPC 	:= 0
+Private nPercTot	:= 0
+Private nValTot	 	:= 0
+Private nPercFalt	:= 0
+Private nValFalta	:= 0
+
+Private lContinua   := .T. 
+Private lProvInclui := .F. 
+Private lProvExclui := .F. 
+Private lProvAltera := .F. 
+Private lQuery      := .F. 
+Private lProcGet    := .T. 
+
+PRIVATE lProvVisual	:= .F. 
+PRIVATE n          	:= 1
+PRIVATE aCols	   	:= {}
+PRIVATE aHeader    	:= {}
+
+PRIVATE oGetDados
+PRIVATE oFocoProv
+PRIVATE bGDRefresh 	:= {|| IIf(oGetDados<>Nil,(oGetDados:oBrowse:Refresh()), .F. ) }
+PRIVATE nUsado	 	:= 0
+PRIVATE cCdFornec	 := " "
+PRIVATE cLjFornec	 := " "
+PRIVATE cAprovAnt	 := "N"
+PRIVATE cCompeten	 := " "
+PRIVATE dEmDocume	 := CtoD(" ")
+PRIVATE dVcDocume	 := CtoD(" ")
+PRIVATE cNomUsuar	 := UsrFullName(__CUserID)
+PRIVATE cNrContra	 := " "
+PRIVATE cNrDocume	 := " "
+PRIVATE cNrPedCom	 := " "
+PRIVATE cProvisao	 := " "
+PRIVATE dLctConta	 := CtoD(" ")
+PRIVATE cHistoric	 := Space(40)
+PRIVATE dDtDigita	 := dDataBase
+PRIVATE aCpoAlt		 := {}
+PRIVATE nGetMethod
+PRIVATE oDtDigita
+PRIVATE oAprovAnt
+PRIVATE odLctConta
+PRIVATE oHistoric
+PRIVATE oCdFornec
+PRIVATE oCompeten
+PRIVATE oEmDocume
+PRIVATE oVcDocume
+PRIVATE oLjFornec
+PRIVATE oNomUsuar
+PRIVATE oNrContra
+PRIVATE oNrDocume
+PRIVATE oNrPedCom
+PRIVATE oPercTot
+PRIVATE oValTot
+PRIVATE oPercFalt
+PRIVATE oValFalta
+PRIVATE oVlDocume
+PRIVATE oProvisao
+PRIVATE lF0 := .F. 
+PRIVATE aCpoEnchoice:={}
+
+oBoldIV := TFont():New( "Arial", 07, -13,.F.,.T.,,,,,,,,,,, )
+
+lWhenGet   := .T. 
+
+
+
+
+Do Case
+	Case aRotina[nOpcx][4] == 2
+		lProvVisual := .T. 
+		VISUAL := .T. 
+
+	Case aRotina[nOpcx][4] == 3
+		If cBlqProv == "Desbloqueado"
+			lProvInclui	:= .T. 
+			INCLUI := .T. 
+		Else
+			MsgAlert("A inclusão de provisões foi bloqueada pelo departamento contábil. Tente novamente mais tarde.","Função Bloqueada")
+			lProvInclui	:= .F. 
+			INCLUI := .F. 
+			Return()
+		EndIf
+
+	Case aRotina[nOpcx][4] == 4
+		If cBlqProv == "Desbloqueado"
+			lProvAltera	:= .T. 
+			ALTERA := .T. 
+		Else
+			MsgAlert("A alteração de provisões foi bloqueada pelo departamento contábil. Tente novamente mais tarde.","Função Bloqueada")
+			lProvAltera	:= .F. 
+			ALTERA := .F. 
+			Return()
+		EndIf
+
+	Case aRotina[nOpcx][4] == 5
+		If cBlqProv == "Desbloqueado"
+			lProvExclui	:= .T. 
+			VISUAL := .T. 
+		Else
+			MsgAlert("A exclusão de provisões foi bloqueada pelo departamento contábil. Tente novamente mais tarde.","Função Bloqueada")
+			lProvExclui	:= .F. 
+			VISUAL := .F. 
+			Return()
+		EndIf
+
+	OtherWise
+		lProvVisual := .T. 
+		VISUAL := .T. 
+EndCase
+
+If INCLUI
+	aAdd(aButtons, {"PEDIDO",{||TrazPC()},OemToAnsi( "Selecionar Pedido de Compra - <F5> "),"Pedidos"} )
+	SetKey(116,{||TrazPC()})
+	aAdd(aButtons, {"PEDIDO2",{||TrazItPC()},OemToAnsi("Selecionar Pedido de Compra ( por item ) - <F6> "),"Itens de Pedidos"} )
+	SetKey(117,{||TrazItPC()})
+	aAdd(aButtons, {"PMSSETAUP",{||FazRateio()},OemToAnsi("Executar o Rateio Externo - <F7> "),"Rateio Externo"} )
+	SetKey(118,{||FazRateio()})
+
+
+	aAdd(aButtons, {"BMPTRG",{||CarrTabRat()},OemToAnsi("Carregar Tabela de Rateios - <F8> "),"Tabela Rateios"} )
+	SetKey(119,{||CarrTabRat()})
+EndIf
+
+nRecZB1	 := IIF(INCLUI,0,ZB1->(RecNo()))
+
+
+If (lProvAltera .Or.  lProvExclui) .And.  !Empty( DtoS(ZB1->ZB1_DTLCTO)+DtoS(ZB1->ZB1_DTESTO) )
+	cMsg:="Provisão já contabilizada não pode sofrer alterações ou exclusão!"
+	Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+	Return()
+EndIf
+
+
+RegToMemory("ZB1",lProvInclui)
+M->ZB1_APROVA:="N"
+
+
+DbSelectArea("SX3")
+DbSetOrder(1)
+DbSeek("ZB1")
+
+While ! Eof() .and.  X3_ARQUIVO == "ZB1"
+
+	If X3USO(x3_usado) .and.  cNivel >= X3_NIVEL
+		Aadd(aCpoEnchoice,x3_campo)
+	EndIf
+
+	DbSkip()
+
+End
+
+If lProvInclui
+	M->ZB1_PROVIS := GetSXENum("ZB1","ZB1_PROVIS")
+	M->ZB1_DTDIGI := dDataBase
+EndIf
+cProvisao := M->ZB1_PROVIS
+cAprovAnt := "N"
+
+dbSelectArea("ZB1")
+
+
+
+Pergunte("PRVCTB", .F. )
+
+
+
+
+If Type("aBackZB2")=="U" .Or.  Empty(aBackZB2)
+
+	aBackZB2 := {}
+
+	dbSelectArea("SX3")
+	dbSetOrder(1)
+	MsSeek("ZB2")
+	While !Eof() .And.  (SX3->X3_ARQUIVO == "ZB2")
+		IF X3USO(SX3->X3_USADO) .AND.  cNivel >= SX3->X3_NIVEL
+
+
+
+
+
+
+
+
+
+
+			AADD( aBackZB2,{ TRIM(x3titulo()), SX3->X3_CAMPO	, SX3->X3_PICTURE	, SX3->X3_TAMANHO	, SX3->X3_DECIMAL	, SX3->X3_VALID	, SX3->X3_USADO	, SX3->X3_TIPO	, SX3->X3_F3		, SX3->X3_CONTEXT } )
+
+			If     Alltrim(aBackZB2[Len(aBackZB2)][2]) == "ZB2_PERCEN"
+				aBackZB2[Len(aBackZB2)][6] := "u_CalValZB2() .And. M->ZB2_PERCEN > 0 .And. M->ZB2_PERCEN < 100.01"
+				aBackZB2[Len(aBackZB2)][3] := "@E 999.99999"
+			ElseIf Alltrim(aBackZB2[Len(aBackZB2)][2]) == "ZB2_VALOR"
+				aBackZB2[Len(aBackZB2)][6] := "u_CalPerZB2() .And. M->ZB2_VALOR > 0"
+			ElseIf Alltrim(aBackZB2[Len(aBackZB2)][2]) == "ZB2_NATURE"
+				aBackZB2[Len(aBackZB2)][6] := "u_VldNatFor( M->ZB2_NATURE , cCdFornec , cLjFornec )"
+				aBackZB2[Len(aBackZB2)][9] := "SZHZB2"
+			ElseIf Alltrim(aBackZB2[Len(aBackZB2)][2]) == "ZB2_CCUSTO"
+
+				aBackZB2[Len(aBackZB2)][6] := 'ExistCpo("CTT") .And. u_VerCCBloq(M->ZB2_CCUSTO)'
+			ElseIf Alltrim(aBackZB2[Len(aBackZB2)][2]) == "ZB2_ITEMCT"
+
+				aBackZB2[Len(aBackZB2)][6] := 'ExistCpo("CTD")'
+			ElseIf Alltrim(aBackZB2[Len(aBackZB2)][2]) == "ZB2_CLVL"
+
+				aBackZB2[Len(aBackZB2)][6] := 'ExistCpo("CTH")'
+			ElseIf Alltrim(aBackZB2[Len(aBackZB2)][2]) == "ZB2_PEDCOM"
+				aBackZB2[Len(aBackZB2)][6] := "U_VerPC()"
+			Endif
+		EndIf
+		dbSelectArea("SX3")
+		dbSkip()
+	EndDo
+EndIf
+aHeader := aBackZB2
+nUsado  := Len(aHeader)
+
+
+
+
+VerPosZB2()
+
+
+
+
+If INCLUI
+
+
+
+
+	AdicCols()
+Else
+
+
+
+
+	MontAcols(cProvisao, .T. )
+EndIf
+
+
+
+
+
+
+cTitulo        := "Manutencao no Cadastro de Provisão Contábil"
+cAliasEnchoice := "ZB1"
+PRIVATE aTELA[0][0],aGETS[0]
+aSize := MsAdvSize()
+aObjects := {}
+AAdd( aObjects, { 100, 100, .t. , .t.  } )
+AAdd( aObjects, { 100, 100, .t. , .t.  } )
+AAdd( aObjects, { 100, 015, .t. , .f.  } )
+
+aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
+aPosObj := MsObjSize( aInfo, aObjects )
+
+aPosGet := MsObjGetPos( aSize[3]-aSize[1], 315, { { 003, 033, 160, 200, 240, 265 } } )
+
+Private aCpos2         := aClone(aCpoEnchoice)
+
+nGetMethod  := If ( Inclui .Or.  Altera, 1 + 2 + 4, 0 )
+aCpoAlt	  := { "ZB2_PEDCOM","ZB2_NATURE", "ZB2_PERCEN", "ZB2_VALOR", "ZB2_CCUSTO", "ZB2_ITEMCT", "ZB2_CLVL" }
+
+oDlg = MsDialog():New( aSize[7], 0, aSize[6], aSize[5], "Provisão Contábil",,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+
+Zero();MsMGet():New( cAliasEnchoice, ZB1->(Recno()), nOpcx, , , , , aPosObj[1],aCpos2,3,,,"ProvVldTOk")
+
+oGetDados := MSNewGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4], nGetMethod, "U_VldLinZB2", "U_VldTudZB2", "+ZB2_ITEM", aCpoAlt , , 9999, , , "U_DelOk()", oDlg, aHeader, aCols )
+
+nGetLin := aPosObj[3,1]
+
+If cTheme<>"FLAT"
+	 TSay():New( nGetLin, 060,{||  "Percentual"},oDlg,, oBoldIV,.F.,.F.,.F.,.T., 8388608,, C(035), C(008),.F.,.F.,.F.,.F.,.F.,.F. )
+	 oPercTot := TGet():New( nGetLin, 100, { | u | If( PCount() == 0, nPercTot, nPercTot := u ) },oDlg, C(060), C(009), "@E 999.99999",, 0,, oBoldIV,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"nPercTot",,,, )
+	 TSay():New( nGetLin, 210,{||  "Valor"},oDlg,, oBoldIV,.F.,.F.,.F.,.T., 8388608,, C(035), C(008),.F.,.F.,.F.,.F.,.F.,.F. )
+	 oValTot := TGet():New( nGetLin, 230, { | u | If( PCount() == 0, nValTot, nValTot := u ) },oDlg, C(060), C(009), "@E 99999,999,999.99",, 0,, oBoldIV,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"nValTot",,,, )
+	 TSay():New( nGetLin, 350,{||  "Falta %"},oDlg,,,.F.,.F.,.F.,.T., 128,, C(035), C(007),.F.,.F.,.F.,.F.,.F.,.F. )
+	 oPercFalt := TGet():New( nGetLin, 370, { | u | If( PCount() == 0, nPercFalt, nPercFalt := u ) },oDlg, C(040), C(005), "@E 999.99999",, 0,,,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"nPercFalt",,,, )
+	 TSay():New( nGetLin, 435,{||  "Valor"},oDlg,,,.F.,.F.,.F.,.T., 128,, C(035), C(007),.F.,.F.,.F.,.F.,.F.,.F. )
+	 oValFalta := TGet():New( nGetLin, 450, { | u | If( PCount() == 0, nValFalta, nValFalta := u ) },oDlg, C(040), C(005), "@E 99999,999,999.99",, 0,,,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"nValFalta",,,, )
+Else
+	 TSay():New( nGetLin, C(060),{||  "Percentual"},oDlg,, oBoldIV,.F.,.F.,.F.,.T., 8388608,, C(035), C(008),.F.,.F.,.F.,.F.,.F.,.F. )
+	 oPercTot := TGet():New( nGetLin, C(095), { | u | If( PCount() == 0, nPercTot, nPercTot := u ) },oDlg, C(060), C(009), "@E 999.99999",, 0,, oBoldIV,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"nPercTot",,,, )
+	 TSay():New( nGetLin, C(195),{||  "Valor"},oDlg,, oBoldIV,.F.,.F.,.F.,.T., 8388608,, C(035), C(008),.F.,.F.,.F.,.F.,.F.,.F. )
+	 oValTot := TGet():New( nGetLin, C(215), { | u | If( PCount() == 0, nValTot, nValTot := u ) },oDlg, C(060), C(009), "@E 99999,999,999.99",, 0,, oBoldIV,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"nValTot",,,, )
+	 TSay():New( nGetLin, C(327),{||  "Falta %"},oDlg,,,.F.,.F.,.F.,.T., 128,, C(035), C(007),.F.,.F.,.F.,.F.,.F.,.F. )
+	 oPercFalt := TGet():New( nGetLin, C(343), { | u | If( PCount() == 0, nPercFalt, nPercFalt := u ) },oDlg, C(040), C(005), "@E 999.99999",, 0,,,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"nPercFalt",,,, )
+	 TSay():New( nGetLin, C(386),{||  "Valor"},oDlg,,,.F.,.F.,.F.,.T., 128,, C(035), C(007),.F.,.F.,.F.,.F.,.F.,.F. )
+	 oValFalta := TGet():New( nGetLin, C(398), { | u | If( PCount() == 0, nValFalta, nValFalta := u ) },oDlg, C(040), C(005), "@E 99999,999,999.99",, 0,,,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"nValFalta",,,, )
+EndIf
+
+If lProvVisual
+	RecValZB2()
+EndIf
+
+
+
+oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,{|Self|(EnchoiceBar(oDlg,{||aCols:=oGetDados:aCols,lF0:=U_VldTudZB2(),If(Eval(bSaida,lF0),(oDlg:End(),nOpc:=1),(nOpc:=0))},{||oDlg:End()},,aButtons))}, oDlg:bRClicked, )
+
+	If nOpc == 1 .And.  (lProvInclui .Or. lProvAltera .Or. lProvExclui)
+		ProvGrava( lProvExclui,nRecZB1,aRecZB2,lProvAltera )
+	ElseIf nOpc == 0 .And.  lProvInclui
+		RollBackSX8()
+	EndIf
+
+
+
+	If lProvAltera .Or.  lProvExclui
+		MsUnlockAll()
+	EndIf
+
+	Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_ProvLegen()
+
+
+
+
+
+
+
+	Local aLegenda := { { "ENABLE"		, "Aberta"	  					}, { "BR_AZUL"		, "Contabilizada"				}, { "BR_CINZA"	, "Parcialmete Estornada"		}, { "BR_PRETO"	, "Pendente de Estorno com PC Excluido"	},	{ "BR_BRANCO"	, "Estorno Off-Line"		}, { "DISABLE"		, "Estornada"					}}
+
+	BrwLegenda(cCadastro,"Legenda" ,aLegenda)
+
+	Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function ProvGrava( lDeleta,nRecZB1,aRecZB2,lProvAltera )
+
+	Local cArquivo  := ""
+	Local cLote     := ""
+	Local nHdlPrv   := 0
+	Local nTotalLcto:= 0
+	Local nV        := 0
+	Local nX        := 0
+	Local nY        := 0
+	Local nZ        := 0
+	Local nW        := 0
+	Local nOper     := 0
+	Local lQuery    := .F. 
+	Local cQuery    := ""
+	Local cProvis 	:= cTipo := cHistor := cNomUsu := cOrigem := ""
+	Local dData   	:= CtoD("")
+	Local nValor  	:= nValCr := nValDb := 0
+
+	cNomUsu := cNomUsuar
+	cOrigem := "MANUTENCAO DE PROVISAO"
+	dData	:= DDATABASE
+
+
+
+
+	If !lDeleta
+
+
+
+		dbSelectArea("ZB1")
+		dbSetOrder(1)
+		If nRecZB1 <> 0
+			MsGoto(nRecZB1)
+			RecLock("ZB1", .F. )
+			nOper := 2
+		Else
+			RecLock("ZB1", .T. )
+			nOper := 1
+		EndIf
+		ZB1->ZB1_FILIAL	:= xFilial("ZB1")
+		ZB1->ZB1_PROVIS	:= M->ZB1_PROVIS
+		ZB1->ZB1_COMPET	:= M->ZB1_COMPET
+		ZB1->ZB1_FORNEC	:= M->ZB1_FORNEC
+		ZB1->ZB1_LOJA	:= M->ZB1_LOJA
+		ZB1->ZB1_DOC	:= M->ZB1_DOC
+		ZB1->ZB1_EMIDOC	:= M->ZB1_EMIDOC
+		ZB1->ZB1_VENCTO	:= M->ZB1_VENCTO
+		ZB1->ZB1_VALDOC	:= M->ZB1_VALDOC
+		ZB1->ZB1_HISTOR	:= M->ZB1_HISTOR
+		ZB1->ZB1_DTLCTO	:= M->ZB1_DTLCTO
+		ZB1->ZB1_SALDO	:= M->ZB1_VALDOC
+		ZB1->ZB1_SLDEST	:= 0
+		ZB1->ZB1_DTDIGI := dDtDigita
+		ZB1->ZB1_USUARI := cNomUsuar
+		ZB1->ZB1_APROVA := cAprovAnt
+		ZB1->(FkCommit())
+		If nOper = 1
+			ConfirmSX8("ZB1","ZB1_PROVIS")
+		EndIf
+		cProvis := ZB1->ZB1_PROVIS
+		nValor	:= ZB1->ZB1_SALDO
+
+
+
+
+		For nX := 1 to Len(aCols)
+
+
+
+			If !aCols[nx][Len(aHeader)+1]
+				dbSelectArea("ZB2")
+				If nX <= Len(aRecZB2)
+					MsGoto(aRecZB2[nx])
+					RecLock("ZB2", .F. )
+				Else
+					RecLock("ZB2", .T. )
+				EndIf
+				ZB2->ZB2_FILIAL	:= xFilial("ZB2")
+				ZB2->ZB2_PROVIS	:= M->ZB1_PROVIS
+				ZB2->ZB2_FORNEC	:= M->ZB1_FORNEC
+				ZB2->ZB2_LOJA	:= M->ZB1_LOJA
+				ZB2->ZB2_COMPET	:= M->ZB1_COMPET
+				For nY := 1 To Len(aHeader)
+					If aHeader[nY][10] # "V"
+						ZB2->(FieldPut(FieldPos(aHeader[nY][2]),aCols[nX][nY]))
+					EndIf
+				next
+				ZB2->ZB2_SALDO	:= aCols[nx][nPosValEZ]
+				ZB2->ZB2_SLDEST	:= 0
+				ZB2->(MsUnLock())
+				nValCr += ZB2->ZB2_SALDO
+
+			Else
+				If  nX <= Len(aRecZB2)
+					MsGoto(aRecZB2[nx])
+					nValDB += ZB2->ZB2_SALDO
+					RecLock("ZB2", .F. )
+					ZB2->(dbDelete())
+					ZB2->(MsUnLock())
+				EndIf
+			EndIf
+		next
+	Else
+		For nX := 1 to Len(aRecZB2)
+			dbSelectArea("ZB2")
+			MsGoto(aRecZB2[nx])
+			nValDb += ZB2->ZB2_SALDO
+			RecLock("ZB2", .F. , .T. )
+			ZB2->(dbDelete())
+			ZB2->(MsUnlock())
+		next
+
+		ZB2->(FkCommit())
+
+		dbSelectArea("ZB1")
+		MsGoto(nRecZB1)
+		RecLock("ZB1", .F. , .T. )
+		nOper := 3
+
+		ZB1->(dbDelete())
+		ZB1->(MsUnlock())
+		ZB1->(FkCommit())
+
+	EndIf
+
+	If nOper==1
+		cTipo 	:= "3"
+		cHistor	:= "INCLUSAO DA PROVISAO"
+	ElseIf nOper==2
+		cTipo	:= "4"
+		cHistor	:= "ALTERACAO DA PROVISAO"
+	ElseIf nOper==3
+		cTipo	:= "5"
+		cHistor	:= "EXCLUSAO DA PROVISAO"
+	EndIf
+
+	If nValor<>(nValCr+nValDb)
+		nValor := nValor - nValCr + nValDb
+	EndIf
+
+
+	lOcor := U_GrvOcorPrv(cProvis,cTipo,dData,nValor,cOrigem,cHistor,cNomUsu)
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+	Static Function C(nTam)
+	Local nHRes	 := oMainWnd:nClientWidth
+	Local cTheme := Upper(Alltrim(GetTheme()))
+
+	If nHRes == 640
+		nTam *= 0.8
+	ElseIf (nHRes == 798) .Or. (nHRes == 800)
+		nTam *= 1
+	Else
+		nTam *= 1.28
+	EndIf
+
+
+
+
+	If "MP8" $ oApp:cVersion
+		If (Alltrim(GetTheme()) == "FLAT") .Or.  SetMdiChild()
+			nTam *= 0.90
+		EndIf
+	EndIf
+	Return Int(nTam)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function ProvVldTOk()
+
+	Local lRet := .T. 
+	Local cMsg := ""
+
+
+	cProvisao  	:= M->ZB1_PROVIS
+	cCompeten  	:= M->ZB1_COMPET
+	cCdFornec  	:= M->ZB1_FORNEC
+	cLjFornec  	:= M->ZB1_LOJA
+	cNoFornec  	:= Posicione("SA2",1,xFilial("SA2")+M->ZB1_FORNEC,"A2_NOME")
+	cNrDocume  	:= M->ZB1_DOC
+	dEmDocume  	:= M->ZB1_EMIDOC
+	dVcDocume  	:= M->ZB1_VENCTO
+	nVlDocume  	:= M->ZB1_VALDOC
+	cHistoric	:= M->ZB1_HISTOR
+	dLctConta  	:= M->ZB1_DTLCTO
+	dDtDigita	:= M->ZB1_DTDIGI
+	cAprovAnt  	:= "N"
+	If Empty(cHistoric)
+		cMsg += "Digite o histórico"+Chr(10)
+		lRet := .F. 
+	EndIf
+	If nVlDocume == 0
+		cMsg += "Digite o valor da Provisão"+Chr(10)
+		lRet := .F. 
+	EndIf
+
+	If !lRet
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+	EndIf
+
+	Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_CalValZB2()
+
+
+
+
+
+	Local lRet   := .F. 
+	Local cAlias := Alias()
+
+
+
+
+
+	If !Empty( M->ZB2_PERCEN )
+
+		aCols[n][nPosValEZ] := Round( ( M->ZB2_PERCEN / 100 ) * M->ZB1_VALDOC , 2 )
+		aCols[n][nPosPerEZ] := M->ZB2_PERCEN
+
+
+
+
+
+		oGetDados:aCols := aCols
+		RecValZB2()
+		lRet := .T. 
+
+	Endif
+
+	Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_CalPerZB2()
+
+
+
+
+
+	Local lRet   := .F. 
+	Local cAlias := Alias()
+
+
+
+
+
+	If !Empty( M->ZB2_VALOR )
+
+		aCols[n][nPosPerEZ]  := Round( M->ZB2_VALOR / M->ZB1_VALDOC * 100 , 5 )
+		aCols[n][nPosValEZ]  := Round( ( aCols[n][nPosPerEZ] / 100 ) * M->ZB1_VALDOC , 2 )
+
+
+
+
+
+		oGetDados:aCols := aCols
+		RecValZB2()
+		lRet := .T. 
+
+	Endif
+
+	Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_VldLinZB2()
+
+
+
+
+
+	Local cObrig     := "ZB2_PEDCOM¹ZB2_NATURE¹ZB2_PERCEN¹ZB2_VALOR¹ZB2_CCUSTO¹ZB2_ITEMCT¹ZB2_CLVL"
+	Local nContVlr   := 0
+	Local cmsg 		 := ""
+	Local lRet		 := .T. 
+	Local cAliasSC7  := "_QRYSC7"
+	Local cMsg2      := " Este pedido já foi utilizado em outra provisão, favor verificar um pedido válido nos botões PEDIDO e ITENS DO PEDIDO."
+	Local wxp		 := 0
+	Local lAchou     := .F. 
+
+
+
+
+
+	RecValZB2()
+
+
+
+
+
+	If aCols[ n , Len(aHeader) + 1 ]
+		Return .T. 
+	Endif
+
+
+
+
+
+	For x := 1 to Len(aHeader)
+
+
+
+
+
+		If Trim(aHeader[x , 2] ) $ cObrig
+
+
+
+
+
+			If Empty(aCols[ n , x ])
+				cMsg += "O Campo : " + Trim(aHeader[ x , 1 ]) + "' é de preenchimento obrigatório!"+Chr(10)
+				lRet:= .F. 
+			Endif
+
+		Endif
+
+	Next
+
+
+
+
+
+
+
+
+
+
+	If !lRet
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+	EndIf
+
+	If lRet
+		lRet := U_VldCTBg( BuscaCols("ZB2_ITEMCT"), BuscaCols("ZB2_CCUSTO"), BuscaCols("ZB2_CLVL"), Nil )
+	EndIf
+
+	If lRet
+		lRet := U_VerCCBloq(BuscaCols("ZB2_CCUSTO"))
+	EndIf
+
+
+
+
+
+
+
+	cQuery := "SELECT 	SC7.*, R_E_C_N_O_ RECSC7, ( ((C7_QUANT-C7_QUJE)* C7_PRECO)+C7_VALIPI ) SALDO "+Chr(13) + Chr(10)
+	cQuery += "FROM		"+RetSqlName("SC7")+" SC7 "+Chr(13) + Chr(10)
+	cQuery += "WHERE 	SC7.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += "AND		SC7.C7_FILENT = '"+xFilEnt(xFilial("SC7"))+"' "+Chr(13) + Chr(10)
+	cQuery += "AND		SC7.C7_FORNECE = '"+M->ZB1_FORNEC+"' "+Chr(13) + Chr(10)
+	cQuery += "AND		(SC7.C7_QUANT-SC7.C7_QUJE) > 0 "+Chr(13) + Chr(10)
+	cQuery += "AND 		SC7.C7_NUM IN ("+Chr(13) + Chr(10)
+
+	cQuery += 		"SELECT PEDIDO "+Chr(13) + Chr(10)
+
+	cQuery += 		"FROM "+Chr(13) + Chr(10)
+	cQuery += 			"( "+Chr(13) + Chr(10)
+
+
+
+
+
+	cQuery += 				"SELECT	SC7.C7_NUM PEDIDO, (SC7.C7_QUANT*SC7.C7_PRECO)+C7_VALIPI VALOR "+Chr(13) + Chr(10)
+	cQuery += 				"FROM	"+RetSqlName("SC7")+" SC7 "+Chr(13) + Chr(10)
+	cQuery += 				"WHERE	SC7.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	SC7.C7_FORNECE = '"+M->ZB1_FORNEC+"' "+Chr(13) + Chr(10)
+
+
+
+	cQuery += 				"AND	C7_QUANT > C7_QUJE  "+Chr(13) + Chr(10)
+
+	cQuery += 				"UNION	ALL "+Chr(13) + Chr(10)
+
+	cQuery += 				"SELECT	ZB2_PEDCOM PEDIDO, -ZB2_VALOR VALOR "+Chr(13) + Chr(10)
+	cQuery += 				"FROM	"+RetSqlName("ZB2")+" ZB2 "+Chr(13) + Chr(10)
+	cQuery += 				"WHERE	ZB2.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	ZB2.ZB2_FORNEC = '"+cCdFornec+"' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	ZB2.ZB2_LOJA = '"+M->ZB1_LOJA+"' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	ZB2.ZB2_VLESTO <= 0 "+Chr(13) + Chr(10)
+
+	cQuery += 			") AS T "+Chr(13) + Chr(10)
+
+	cQuery += 			"GROUP BY PEDIDO "+Chr(13) + Chr(10)
+
+	cQuery += 			"HAVING SUM(VALOR) > "+IIF(M->ZB1_VALDOC > 0, ALLTRIM( STR ( M->ZB1_VALDOC - 0.01 ) ) , "99999999999999999.99" )+" "+Chr(13) + Chr(10)
+
+	cQuery += 			")"+Chr(13) + Chr(10)
+
+	cQuery += 			"ORDER BY SC7.C7_NUM,SC7.C7_ITEM "+Chr(13) + Chr(10)
+
+
+	cQuery := ChangeQuery(cQuery)
+
+	If Select(cAliasSC7)>0
+		(cAliasSC7)->(dbCloseArea())
+	EndIf
+
+	dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),cAliasSC7, .T. , .T. )
+
+	(cAliasSC7)->(DbGoTop())
+
+	While (cAliasSC7)->(!Eof())
+		For wxp := 1 To Len(aCols)
+			If !aCols[wXP][ Len( aCols[wXP])]
+				If aCols[wxp][GdFieldPos("ZB2_PEDCOM")] == (cAliasSC7)->C7_NUM
+					lAchou := .T. 
+				EndIf
+			EndIf
+		Next
+		(cAliasSC7)->(DbSkip())
+
+	EndDo
+
+	If !lAchou
+		Aviso("Pedido de compras já utilizado",cMsg2,{"Fechar"},3)
+		lRet := .F. 
+	EndIf
+
+	Return (lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_VldTudZB2()
+
+
+
+
+
+	Local cObrig     := "ZB2_PEDCOM¹ZB2_NATURE¹ZB2_PERCEN¹ZB2_VALOR¹ZB2_CCUSTO¹ZB2_ITEMCT¹ZB2_CLVL"
+	Local nValTotal  := 0, nTamVal := TamSX3("ZB1_VALDOC")[1]
+	Local nValPerc   := 0
+	Local lRet		 := .T. 
+	Local aPCSld	 := {}
+	Local cAliasSC7  := "_QRYSC7"
+	Local cMsg2      := " Este pedido já foi utilizado em outra provisão, favor verificar um pedido válido nos botões PEDIDO e ITENS DO PEDIDO."
+	Local wxp		 := 0
+	Local lAchou     := .f. , lSED := .t. 
+
+
+
+
+
+	If lProvExclui .Or.  lProvVisual
+		Return .T. 
+	Endif
+
+
+
+
+
+	aCpos:={ M->ZB1_COMPET, M->ZB1_FORNEC, M->ZB1_VALDOC, M->ZB1_HISTOR }
+
+	aTits:={ "Competência","Cód.do Fornecedor","Valor do Documento","Histórico" }
+	cMsg:=""
+	For nI:=1 To Len(aCpos)
+		If Empty(aCpos[nI])
+			cMsg += "O Campo: '"+ aTits[nI] + "' é de preenchimento obrigatório!"+Chr(10)
+			lRet := .F. 
+		EndIf
+	next
+
+	SED->( DbSetOrder(1) )
+
+	For x := 1 to Len(aCols)
+		If ! aCols[ x , Len(aHeader) + 1 ]
+			For y := 1 to Len(aHeader)
+				If Trim(aHeader[y , 2] ) $ cObrig
+
+
+
+
+
+					If Empty(aCols[ x , y ])
+						cMsg += "O Campo : " + Trim(aHeader[ y , 1 ]) + "' é de preenchimento obrigatório!"+Chr(10)
+						lRet := .F. 
+					Endif
+				EndIf
+			next
+
+			nPC := Ascan( aPCSld, { |y| y[1] = aCols[x][nPosNPCEZ] } )
+			If nPC>0
+				aPCSld[nPc][2] += aCols[x][nPosValEZ]
+			Else
+				aAdd( aPCSld, { aCols[x][nPosNPCEZ], aCols[x][nPosValEZ] } )
+				aSort(aPCSld,,, { |y,z| y[1] < z[1] } )
+			EndIf
+
+
+
+
+
+			nValTotal += Acols[x][nPosValEZ]
+			nValPerc  += Acols[x][nPosPerEZ]
+
+		Endif
+
+		If lRet
+			lRet := U_VldCTBg( BuscaCols("ZB2_ITEMCT"), BuscaCols("ZB2_CCUSTO"), BuscaCols("ZB2_CLVL"), Nil )
+			If !lRet
+				cMsg += "Regra x Contra-Regra foi violada, verifique! (linha:"+Str(x,4)+")"+Chr(10)
+			EndIf
+		EndIf
+
+
+
+
+		If !SED->( DbSeek( xFilial("SED")+aCols[x][GdFieldPos("ZB2_NATURE")] ) )
+			cMsg += "A natureza: " + aCols[x][GdFieldPos("ZB2_NATURE")] + " informada no item "+AllTrim(Str(x))+" é inválida!"+Chr(10)
+			lSED := .f. 
+		EndIf
+
+	next
+
+	lRet := lRet .And.  lSED
+
+	For nX:=1 to Len(aSldPC)
+		nPC := Ascan( aPCSld, { |x| x[1] = aSldPC[nX][1] } )
+		If nPc>0
+			If aSldPC[nX][2] < aPCSld[nPC][2]
+				cMsg += "Valor provisionado é maior que o saldo do Pedido "+aSldPC[nX][1]+"!"+Chr(10)
+				lRet := .F. 
+			EndIf
+		EndIf
+	next
+
+	If !lRet
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		Return .F. 
+	EndIf
+
+
+
+
+	AjustaDif( M->ZB1_VALDOC, nValTot)
+
+
+	If Round( nPercTot , 2 )   <> 100
+		cMsg:="O Percentual Rateado devera ser 100 % !"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		Return .F. 
+	Endif
+
+
+
+
+
+	If Round( M->ZB1_VALDOC, nTamVal ) <> Round( nValTot, nTamVal )
+
+		Aviso("Somatoria dos Itens x Total" , "A somatória do total dos itens não está igual ao valor total da provisão." , {"Ok"} , 1 , "Erro" )
+		lRet := .f. 
+	Endif
+
+
+
+
+
+
+	cQuery := "SELECT 	SC7.*, R_E_C_N_O_ RECSC7, ( ((C7_QUANT-C7_QUJE)* C7_PRECO)+C7_VALIPI ) SALDO "+Chr(13) + Chr(10)
+	cQuery += "FROM		"+RetSqlName("SC7")+" SC7 "+Chr(13) + Chr(10)
+	cQuery += "WHERE 	SC7.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += "AND		SC7.C7_FILENT = '"+xFilEnt(xFilial("SC7"))+"' "+Chr(13) + Chr(10)
+	cQuery += "AND		SC7.C7_FORNECE = '"+M->ZB1_FORNEC+"' "+Chr(13) + Chr(10)
+	cQuery += "AND		(SC7.C7_QUANT-SC7.C7_QUJE) > 0 "+Chr(13) + Chr(10)
+	cQuery += "AND 		SC7.C7_NUM IN ("+Chr(13) + Chr(10)
+
+	cQuery += 		"SELECT PEDIDO "+Chr(13) + Chr(10)
+
+	cQuery += 		"FROM "+Chr(13) + Chr(10)
+	cQuery += 			"( "+Chr(13) + Chr(10)
+
+
+
+
+
+	cQuery += 				"SELECT	SC7.C7_NUM PEDIDO, (SC7.C7_QUANT*SC7.C7_PRECO)+C7_VALIPI VALOR "+Chr(13) + Chr(10)
+	cQuery += 				"FROM	"+RetSqlName("SC7")+" SC7 "+Chr(13) + Chr(10)
+	cQuery += 				"WHERE	SC7.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	SC7.C7_FORNECE = '"+M->ZB1_FORNEC+"' "+Chr(13) + Chr(10)
+
+
+	cQuery += 				"AND	C7_QUANT > C7_QUJE  "+Chr(13) + Chr(10)
+
+	cQuery += 				"UNION	ALL "+Chr(13) + Chr(10)
+
+	cQuery += 				"SELECT	ZB2_PEDCOM PEDIDO, -ZB2_VALOR VALOR "+Chr(13) + Chr(10)
+	cQuery += 				"FROM	"+RetSqlName("ZB2")+" ZB2 "+Chr(13) + Chr(10)
+	cQuery += 				"WHERE	ZB2.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	ZB2.ZB2_FORNEC = '"+cCdFornec+"' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	ZB2.ZB2_LOJA = '"+M->ZB1_LOJA+"' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	ZB2.ZB2_VLESTO <= 0 "+Chr(13) + Chr(10)
+
+	cQuery += 			") AS T "+Chr(13) + Chr(10)
+
+	cQuery += 			"GROUP BY PEDIDO "+Chr(13) + Chr(10)
+
+	cQuery += 			"HAVING SUM(VALOR) > "+IIF(M->ZB1_VALDOC > 0, ALLTRIM( STR ( M->ZB1_VALDOC - 0.01 ) ) , "99999999999999999.99" )+" "+Chr(13) + Chr(10)
+
+	cQuery += 			")"+Chr(13) + Chr(10)
+
+	cQuery += 			"ORDER BY SC7.C7_NUM,SC7.C7_ITEM "+Chr(13) + Chr(10)
+
+
+
+	cQuery := ChangeQuery(cQuery)
+
+	If Select(cAliasSC7)>0
+		(cAliasSC7)->(dbCloseArea())
+	EndIf
+
+	dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),cAliasSC7, .T. , .T. )
+
+	(cAliasSC7)->(DbGoTop())
+
+	While (cAliasSC7)->(!Eof())
+		For wxp := 1 To Len(aCols)
+			If !aCols[wXP][ Len( aCols[wXP])]
+				If aCols[wxp][GdFieldPos("ZB2_PEDCOM")] == (cAliasSC7)->C7_NUM
+					lAchou := .T. 
+				EndIf
+			EndIf
+		Next
+		(cAliasSC7)->(DbSkip())
+
+	EndDo
+
+	If !lAchou
+		Aviso("Pedido de compras já utilizado",cMsg2,{"Fechar"},3)
+		Return .F. 
+	EndIf
+
+	nAux := n
+	CCBloqProv	:= 0
+
+	If lRet
+		For n := 1 To Len( aCols )
+			If !GdDeleted(n)
+				lRet := U_VerCCBloq(BuscaCols("ZB2_CCUSTO"))
+				If !lRet
+					CCBloqProv ++
+				EndIf
+			EndIf
+		Next
+	EndIf
+
+	If CCBloqProv > 0
+		lRet := .F. 
+	Else
+		lRet := .T. 
+	EndIf
+
+	n := nAux
+
+	Return (lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function RecValZB2(nTipo)
+
+
+
+
+
+	Local i, lRecalc:= .F. 
+	nTipo := If( nTipo == nil, 0, nTipo ) ;
+
+	If Len(oGetDados:aCols)>1
+		aCols := oGetDados:aCols
+	Endif
+
+	If nTipo==1 .And.  !lPrima .And.  Aviso("Alteração do Valor da Provisão","Executa o recálculo dos valores pelo percentual?",{"Confirma","Cancela"},3)==1
+		lRecalc:= .T. 
+	EndIf
+
+	lPrima:= .F. 
+
+
+
+
+
+	nValTot  := 0
+	nPercTot := 0
+	nVlDocume:= M->ZB1_VALDOC
+
+
+
+
+
+	nRegs    := 0
+
+
+
+
+
+	For i := 1 To Len(aCols)
+
+
+
+
+
+		If !aCols[i][nUsado + 1]
+			If (nTipo==1 .And.  cAprovAnt<>"S") .Or.  lRecalc
+				aCols[i][nPosValEZ] := Round(nVlDocume * aCols[i][nPosPerEZ] * 0.01,2)
+			EndIf
+			nValTot  += aCols[i][nPosValEZ ]
+			nPercTot += aCols[i][nPosPerEZ ]
+
+			If aCols [ i , nPosValEZ ] <> 0
+				nRegs  ++
+			Endif
+
+		EndIf
+
+	Next
+
+
+
+
+	nValFalta := M->ZB1_VALDOC - nValTot
+	nPercFalt := (nValFalta / M->ZB1_VALDOC) * 100
+	nPercTot  := (nValTot / M->ZB1_VALDOC) * 100
+
+	If nTipo==1
+		oGetDados:aCols := aCols
+		oGetDados:ForceRefresh()
+	EndIf
+	oValTot:Refresh()
+	oPercTot:Refresh()
+	oValFalta:Refresh()
+	oPercFalt:Refresh()
+
+	Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function AdicCols()
+
+
+
+
+
+	Local nNum, nX
+
+
+
+
+
+	Aadd( aCols , Array( nUsado + 1) )
+	nX:=Len(aCols)
+
+
+
+
+
+	For nHeader := 1 to nUsado
+		If ( Trim(aHeader[nHeader][2])=="ZB2_ITEM" )
+			aCols[nX][nHeader] := StrZero(nX,3)
+		Else
+			If ( aHeader[nHeader][10] <> "V" )
+				aCols[nX][nHeader] := CriaVar(AllTrim(aHeader[nHeader][2]))
+			Else
+				_cTpCp := aHeader[nHeader][9]
+
+
+
+				aCols[nX][nHeader] := Iif(_cTpCP="1",Space(aHeader[nHeader][5]),				Iif(_cTpCp="2",0,				Iif(_cTpCp="4",CtoD(Space(8)),				CriaVar(AllTrim(aHeader[nHeader][2])))))
+			EndIf
+		EndIf
+	next
+	aCols[ nX , nUsado + 1] := .F. 
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function VerPosZB2()
+
+
+
+
+
+	nPosNPCEZ	:= aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_PEDCOM"  })
+	nPosNatEZ	:= aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_NATURE"  })
+	nPosCusEZ   := aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_CCUSTO"  })
+	nPosIteEZ   := aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_ITEMCT"  })
+	nPosClaEZ   := aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_CLVL"    })
+	nPosPerEZ   := aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_PERCEN"  })
+	nPosValEZ   := aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_VALOR"   })
+	nPosDesEZ   := aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_NATDES"  })
+	nPosContr   := aScan( aHeader , { |x| Upper( Trim ( x[2] ) ) == "ZB2_CONTRA"  })
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function VerFornece()
+
+	Local aArea:=GetArea()
+	Local lRet:= .T. 
+
+	dbSelectArea("SA2")
+	dbSetOrder(1)
+	If SA2->(dbSeek(xFilial("SA2")+M->ZB1_FORNEC))
+		M->ZB1_NOFORN := SA2->A2_NOME
+		M->ZB1_LOJA	  := SA2->A2_LOJA
+	Else
+		cMsg:="Fornecedor não encontrado!"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		Ret := .F. 
+	EndIf
+
+	RestArea(aArea)
+
+	Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_VerPC()
+
+	Local aArea:=GetArea()
+	Local lRet:= .T. 
+
+	dbSelectArea("SC7")
+	dbSetOrder(3)
+	If SC7->(dbSeek(xFilial("SC7")+M->ZB1_FORNEC+M->ZB1_LOJA+M->ZB2_PEDCOM))
+		lRet := .T. 
+	Else
+		cMsg:="Pedido de Compras não encontrado, ou não pertence ao mesmo fornecedor!"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		lRet := .F. 
+	EndIf
+
+	RestArea(aArea)
+
+	Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function TrazPC()
+
+	Local nSldPed    := 0
+	Local nOpc       := 0
+	Local nx         := 0
+	Local cQuery     := ""
+	Local cAliasSC7  := "SC7"
+	Local lQuery     := .F. 
+	Local bSavSetKey := SetKey(115,Nil)
+	Local bSavKeyF5  := SetKey(116,{||TrazPC()})
+	Local bSavKeyF6  := SetKey(117,Nil)
+	Local bSavKeyF7  := SetKey(118,Nil)
+	Local bSavKeyF8  := SetKey(119,Nil)
+	Local bSavKeyF9  := SetKey(120,Nil)
+	Local bSavKeyF10 := SetKey(121,Nil)
+	Local bSavKeyF11 := SetKey(122,Nil)
+	Local bWhile
+	Local cChave     := ""
+	Local cCadastro  := ""
+	Local aArea      := GetArea()
+	Local aAreaSA2   := SA2->(GetArea())
+	Local aAreaSC7   := SC7->(GetArea())
+	Local aStruSC7   := SC7->(dbStruct())
+	Local aF4For     := {}
+	Local nF4For     := 0
+	Local oOk        := LoadBitMap(GetResources(), "LBOK")
+	Local oNo        := LoadBitMap(GetResources(), "LBNO")
+	Local aButtons   := { {"PESQUISA",{||A103VisuPC(aRecSC7[oListBox:nAt])},"Visualiza Pedido","Visualiza Pedido2"} }
+	Local oDlg,oListBox
+	Local cNomeFor   := ""
+	Local aRecSC7    := {}
+	Local aTitCampos := {}
+	Local aConteudos := {}
+	Local aUsCont    := {}
+	Local aUsTitu    := {}
+	Local bLine      := { || .T.  }
+	Local cLine      := ""
+	Local nLoop      := 0
+	Local lRet103Vpc := .T. 
+	Local lContinua  := .T. 
+	Local aButtons   := {}
+
+	dbSelectArea("SA2")
+	dbSetOrder(1)
+	MsSeek(xFilial()+cCdFornec+cLjFornec)
+	cNomeFor	:= SA2->A2_NOME
+
+	dbSelectArea("SC7")
+	SC7->( dbSetOrder( 9 ) )
+	lQuery    := .T. 
+	cAliasSC7 := "_QRYSC7"
+
+
+
+
+
+
+
+	cQuery := "SELECT 	SC7.*, R_E_C_N_O_ RECSC7, ( ((C7_QUANT-C7_QUJE)* C7_PRECO)+C7_VALIPI ) SALDO "+Chr(13) + Chr(10)
+	cQuery += "FROM		"+RetSqlName("SC7")+" SC7 "+Chr(13) + Chr(10)
+	cQuery += "WHERE 	SC7.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += "AND		SC7.C7_FILENT = '"+xFilEnt(xFilial("SC7"))+"' "+Chr(13) + Chr(10)
+	cQuery += "AND		SC7.C7_FORNECE = '"+M->ZB1_FORNEC+"' "+Chr(13) + Chr(10)
+	cQuery += "AND		(SC7.C7_QUANT-SC7.C7_QUJE) > 0 "+Chr(13) + Chr(10)
+	cQuery += "AND 		SC7.C7_NUM IN ("+Chr(13) + Chr(10)
+
+	cQuery += 		"SELECT PEDIDO "+Chr(13) + Chr(10)
+
+	cQuery += 		"FROM "+Chr(13) + Chr(10)
+	cQuery += 			"( "+Chr(13) + Chr(10)
+
+
+
+
+
+	cQuery += 				"SELECT	SC7.C7_NUM PEDIDO, (SC7.C7_QUANT*SC7.C7_PRECO)+C7_VALIPI VALOR "+Chr(13) + Chr(10)
+	cQuery += 				"FROM	"+RetSqlName("SC7")+" SC7 "+Chr(13) + Chr(10)
+	cQuery += 				"WHERE	SC7.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	SC7.C7_FORNECE = '"+M->ZB1_FORNEC+"' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	C7_QUANT > C7_QUJE  "+Chr(13) + Chr(10)
+
+	cQuery += 				"UNION	ALL "+Chr(13) + Chr(10)
+
+	cQuery += 				"SELECT	ZB2_PEDCOM PEDIDO, -ZB2_VALOR VALOR "+Chr(13) + Chr(10)
+	cQuery += 				"FROM	"+RetSqlName("ZB2")+" ZB2 "+Chr(13) + Chr(10)
+	cQuery += 				"WHERE	ZB2.D_E_L_E_T_ = '' "+Chr(13) + Chr(10)
+	cQuery += 				"AND	ZB2.ZB2_FORNEC = '"+cCdFornec+"' "+Chr(13) + Chr(10)
+	cQuery += 			") AS T "+Chr(13) + Chr(10)
+
+	cQuery += 			"GROUP BY PEDIDO "+Chr(13) + Chr(10)
+
+	cQuery += 			"HAVING SUM(VALOR) > "+IIF(M->ZB1_VALDOC > 0, ALLTRIM( STR ( M->ZB1_VALDOC - 0.01 ) ) , "99999999999999999.99" )+" "+Chr(13) + Chr(10)
+
+	cQuery += 			")"+Chr(13) + Chr(10)
+
+	cQuery += 			"ORDER BY SC7.C7_NUM,SC7.C7_ITEM "+Chr(13) + Chr(10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	cQuery := ChangeQuery(cQuery)
+
+	If Select(cAliasSC7)>0
+		(cAliasSC7)->(dbCloseArea())
+	EndIf
+
+	dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),cAliasSC7, .T. , .T. )
+
+	For nX := 1 To Len(aStruSC7)
+		If aStruSC7[nX,2]<>"C"
+			TcSetField(cAliasSC7,aStruSC7[nX,1],aStruSC7[nX,2],aStruSC7[nX,3],aStruSC7[nX,4])
+		EndIf
+	next
+
+	(cAliasSC7)->(dbGoTop())
+	bWhile := {|| (cAliasSC7)->(!Eof())}
+
+	While Eval(bWhile)
+
+
+
+
+		If ( Empty((cAliasSC7)->C7_RESIDUO) .And.  (cAliasSC7)->C7_TPOP <> "P" )
+			nF4For := aScan(aF4For,{|x|x[2]==(cAliasSC7)->C7_LOJA .And.  x[3]==(cAliasSC7)->C7_NUM})
+			If ( nF4For == 0 )
+				aConteudos := { .F. ,(cAliasSC7)->C7_LOJA,(cAliasSC7)->C7_NUM,DTOC((cAliasSC7)->C7_EMISSAO),IIF((cAliasSC7)->C7_TIPO==2,"AE","PC"), (cAliasSC7)->SALDO }
+				aadd(aF4For, aConteudos )
+				aAdd(aRecSC7,Iif(lQuery,(cAliasSC7)->RECSC7,RecNo()))
+			Else
+				aF4For[nF4For][6] += (cAliasSC7)->SALDO
+			EndIf
+		EndIf
+
+		(cAliasSC7)->(dbSkip())
+	EndDo
+
+
+
+	If ( !Empty(aF4For) )
+
+		aTitCampos := {" ","Loja","Pedido","Emissao","Origem","Saldo" }
+
+
+		cLine := "{If(aF4For[oListBox:nAt,1],oOk,oNo),aF4For[oListBox:nAT][2],aF4For[oListBox:nAT][3],"+ "aF4For[oListBox:nAT][4],aF4For[oListBox:nAT][5],Transform(aF4For[oListBox:nAT][6], '@E 999,999,999.99')"
+
+		cLine += " } "
+
+
+
+
+		bLine := &( "{ || " + cLine + " }" )
+
+
+		oDlg = MsDialog():New( 50, 40, 285, 541, OemToAnsi("Selecionar Pedido de Compra - <F5> "),,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+
+		oListBox := TWBrowse():New( 27,4,243,80,,aTitCampos,,oDlg,,,,,,,,,,,, .F. ,, .T. ,, .F. ,,,)
+		oListBox:SetArray(aF4For)
+		oListBox:bLDblClick := { || aF4For[oListBox:nAt,1] := !aF4For[oListBox:nAt,1] }
+		oListBox:bLine := bLine
+
+		 TSay():New( 15, 4,{||  OemToAnsi("Fornecedor")},oDlg,,,.F.,.F.,.F.,.T.,,, 47, 9,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TGet():New( 14, 35, { | u | If( PCount() == 0, cNomeFor, cNomeFor := u ) },oDlg, 120, 9, PesqPict("SA2","A2_NOME"),,,,,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"cNomeFor",,,, )
+
+		oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,{|Self|EnchoiceBar(oDlg,{||(nOpc:=1,nF4For:=oListBox:nAt,oDlg:End())},{||(nOpc:=0,nF4For:=oListBox:nAt,oDlg:End())},,aButtons)}, oDlg:bRClicked, )
+
+		If M->ZB1_VALDOC<=0
+			cMsg:="Digite primeiramente o valor da Provisão!"
+			Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+			Return( .T. )
+		EndIf
+
+		Processa({|| TrazPCVl(aF4For,nOpc,cCdFornec,cLjFornec)})
+
+
+
+	Else
+		Help(" ",1,"A103F4")
+	EndIf
+
+
+
+
+	If lQuery
+		(cAliasSC7)->(dbCloseArea())
+	Endif
+	SetKey(115,bSavSetKey)
+	SetKey(116,bSavKeyF5)
+	SetKey(117,bSavKeyF6)
+	SetKey(118,bSavKeyF7)
+	SetKey(119,bSavKeyF8)
+	SetKey(120,bSavKeyF9)
+	SetKey(121,bSavKeyF10)
+	SetKey(122,bSavKeyF11)
+
+	RestArea(aAreaSA2)
+	RestArea(aAreaSC7)
+	RestArea(aArea)
+
+	Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function TrazPCVl(aF4For,nOpc,cA100For,cLoja)
+
+	Local nx           := 0
+	Local cSeek        := ""
+	Local aStruZB1     := ZB1->(dbStruct())
+	Local aTemp 	   := {}
+	Local nVlSaldo	   := 0
+	Local lFirst := .T. 
+
+	If ( nOpc == 1 )
+		For nx	:= 1 to Len(aF4For)
+			If aF4For[nx][1]
+				If lFirst
+					aCabPC := {}
+					aSldPc := {}
+					lFirst := .F. 
+				EndIf
+
+
+
+				dbSelectArea("SA2")
+				dbSetOrder(1)
+				MsSeek(xFilial()+cA100For+cLoja)
+
+
+
+				dbSelectArea("SC7")
+				dbSetOrder(9)
+				cSeek := ""
+				cSeek += xFilEnt(xFilial())+cA100For
+				cSeek += aF4For[nx][2]+aF4For[nx][3]
+				MsSeek(cSeek)
+				dbSelectArea("SC7")
+				dbSetOrder(14)
+
+				cNrPedCom := SC7->C7_NUM
+				While ( !Eof() .And.  SC7->C7_FILENT+SC7->C7_FORNECE+SC7->C7_LOJA+SC7->C7_NUM==cSeek )
+
+
+
+
+
+
+
+					nTotPed:=	Round(SC7->((C7_QUANT-C7_QUJE)*C7_PRECO)+SC7->C7_VALIPI,2)
+
+					aAdd( aCabPC, { SC7->C7_NUM, SC7->C7_CC, SC7->C7_ITEMCTA, SC7->C7_CLVL, nTotPed, SC7->C7_CONTRA, "", 0 } )
+
+					dbSelectArea("SC7")
+					dbSkip()
+				End
+				If cAprovAnt=="S"
+					Exit
+				EndIf
+
+			EndIf
+		Next
+
+		If Len(aCabPC)>0
+
+			aTemp 	:= aClone(aCabPC)
+			aSort(aTemp,,, { |x,y| x[1]+x[2]+x[3]+x[4] < y[1]+y[2]+y[3]+y[4] } )
+			aCabPC	:= {}
+
+			cChAnt := " "
+			For nI:=1 to Len(aTemp)
+				If aTemp[nI][1]+aTemp[nI][2]+aTemp[nI][3]+aTemp[nI][4] <> cChAnt
+					aAdd(aCabPC, aTemp[nI])
+					cChAnt := aTemp[nI][1]+aTemp[nI][2]+aTemp[nI][3]+aTemp[nI][4]
+					nIt:=nI
+				Else
+
+
+
+					nAxot := Ascan( aCabPC, { |x| x[1]+x[2]+x[3]+x[4] == aTemp[nI][1]+aTemp[nI][2]+aTemp[nI][3]+aTemp[nI][4] } )
+					aCabPC[nAxot][5] += aTemp[nI][5]
+				EndIf
+			next
+
+			For nI:=1 to Len(aCabPC)
+
+				cChAnt := aCabPC[nI][1]+aCabPC[nI][2]+aCabPC[nI][3]+aCabPC[nI][4]
+
+				cAliasZB1 := "QRYVAL"
+
+				If Select(cAliasZB1)>0
+					(cAliasZB1)->(dbCloseArea())
+				EndIf
+
+				cQuery := "SELECT SUM(ZB2_VALOR) VALOR FROM "+Chr(13) + Chr(10)
+				cQuery += RetSqlName("ZB2") + " ZB2 "+Chr(13) + Chr(10)
+				cQuery += "WHERE "+Chr(13) + Chr(10)
+				cQuery += "ZB2_FILIAL = '"+xFilial("ZB2")+"' AND ZB2.D_E_L_E_T_ = ' ' AND "+Chr(13) + Chr(10)
+				cQuery += "ZB2_FORNEC+ZB2_LOJA = '"+cCdFornec+cLjFornec+"' AND "+Chr(13) + Chr(10)
+				cQuery += "ZB2_PEDCOM+ZB2_CCUSTO+ZB2_ITEMCT+ZB2_CLVL='"+cChAnt+"' "
+
+				cQuery := ChangeQuery(cQuery)
+
+				If Select(cAliasZB1)>0
+					(cAliasZB1)->(dbCloseArea())
+				EndIf
+
+				dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),cAliasZB1, .T. , .T. )
+
+				(cAliasZB1)->(dbGoTop())
+
+				If !(cAliasZB1)->(Eof() .And. Bof())
+					nVlSaldo := (cAliasZB1)->VALOR
+				Else
+					nVlSaldo := 0
+				EndIf
+
+				aCabPC[nI][5]-=nVlSaldo
+
+				nPC := Ascan( aSldPC, { |x| x[1] = aCabPC[nI][1] } )
+				If nPC>0
+					aSldPC[nPc][2] += aCabPC[nI][5]
+				Else
+					aAdd( aSldPC, { aCabPC[nI][1], aCabPC[nI][5] } )
+					aSort(aSldPC,,, { |x,y| x[1] < y[1] } )
+				EndIf
+
+			next
+
+			MontAcols(,,aCabPC)
+
+			If !Empty(aCols[1][1])
+				RecValZB2()
+				For nI:=1 to Len(aCols)
+					aCols[nI][nPosPerEZ] := Round( ( aCols[nI][nPosValEZ] / M->ZB1_VALDOC) * 100  , 2 )
+				next
+				oGetDados:aCols := aCols
+				oGetDados:ForceRefresh()
+
+			EndIf
+		EndIf
+
+	EndIf
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function A103VisuPC(nRecSC7)
+
+	Local aArea			:= GetArea()
+	Local aAreaSC7		:= SC7->(GetArea())
+	Local cSavCadastro	:= cCadastro
+	Local nBack         := n
+	PRIVATE nTipo 		:= 1
+	PRIVATE cCadastro	:= "Consulta ao Pedido de Compra"
+	PRIVATE l120Auto	:= .F. 
+	PRIVATE aBackSC7  	:= {}
+
+	dbSelectArea("SC7")
+	MsGoto(nRecSC7)
+
+	A120Pedido(Alias(),RecNo(),2)
+	n := nBack
+	cCadastro	:= cSavCadastro
+	RestArea(aAreaSC7)
+	RestArea(aArea)
+
+	Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function TrazItPC(aPedido)
+
+	Local cSeek      := ""
+	Local nOpca      := 0
+	Local aArea      := GetArea()
+	Local aAreaSA2	  := SA2->(GetArea())
+	Local aAreaSC7	  := SC7->(GetArea())
+	Local aAreaSB1	  := SB1->(GetArea())
+	Local aStruSC7   := SC7->(dbStruct())
+	Local aCab       := {}
+	Local aCampos    := {}
+	Local aNew       := {}
+	Local aArrayF4	  := {}
+	Local aArrSldo	 := {}
+	Local aTamCab     := {}
+	Local oOk        := LoadBitMap(GetResources(), "LBOK")
+	Local oNo        := LoadBitMap(GetResources(), "LBNO")
+
+	Local aButtons	  := { 	{"PESQUISA",{||A103VisuPC(aArrSldo[oQual:nAt][2])},"Visualiza Pedido","Visualiza Pedido2"}, {"DBG10",{||A103PesqP(aCab,aCampos,aArrayF4,oQual)},"Pesquisar"} }
+	Local bSavSetKey  := SetKey(115,Nil)
+	Local bSavKeyF5   := SetKey(116,Nil)
+	Local bSavKeyF6   := SetKey(117,Nil)
+	Local bSavKeyF7   := SetKey(118,Nil)
+	Local bSavKeyF8   := SetKey(119,Nil)
+	Local bSavKeyF9   := SetKey(120,Nil)
+	Local bSavKeyF10  := SetKey(121,Nil)
+	Local bSavKeyF11  := SetKey(122,Nil)
+	Local nFreeQt     := 0
+	Local cQuery      := ""
+	Local cAliasSC7   := "SC7"
+	Local cCpoObri    := ""
+	Local nSavQual
+	Local nPed        := 0
+	Local nX          := 0
+	Local nAuxCNT     := 0
+	Local lRet103Vpc  := .T. 
+	Local lContinua   := .T. 
+	Local lQuery      := .F. 
+	Local oQual
+	Local oDlg
+	Local bWhile
+	Local nVlSaldo 	  := 0
+	Local lFirst := .T. 
+	aPedido := If( aPedido == nil, {}, aPedido ) ;
+
+	dbSelectArea("SA2")
+	dbSetOrder(1)
+	MsSeek(xFilial()+cCdFornec+cLjFornec)
+	cNomeFor	:= SA2->A2_NOME
+
+	dbSelectArea("SC7")
+
+	lQuery    := .T. 
+	cAliasSC7 := "_QRYSC7"
+
+	If Select(cAliasSC7)>0
+		(cAliasSC7)->(dbCloseArea())
+	EndIf
+
+
+
+
+
+
+
+	cQuery := "SELECT 	SC7.*, R_E_C_N_O_ RECSC7, ( ((C7_QUANT-C7_QUJE)* C7_PRECO)+C7_VALIPI ) SALDO "+Chr(13) + Chr(10)
+	cQuery += "FROM "+Chr(13) + Chr(10)
+	cQuery += RetSqlName("SC7") + " SC7 "+Chr(13) + Chr(10)
+	cQuery += "WHERE "+Chr(13) + Chr(10)
+	cQuery += "SC7.C7_FILENT = '"+xFilEnt(xFilial("SC7"))+"' AND SC7.D_E_L_E_T_ = ' ' AND "+Chr(13) + Chr(10)
+	cQuery += "SC7.C7_FORNECE = '"+M->ZB1_FORNEC+"' AND "+Chr(13) + Chr(10)
+	cQuery += "(SC7.C7_QUANT-SC7.C7_QUJE)>0 AND "+Chr(13) + Chr(10)
+
+
+
+
+
+	cQuery += "( ( ((SC7.C7_QUANT-SC7.C7_QUJE)*SC7.C7_PRECO)+C7_VALIPI) > (SELECT SUM(ZB2_VALOR) SALDO "+Chr(13) + Chr(10)
+	cQuery += 				   					   "FROM "+RetSqlName("ZB1")+" ZB1a, "+RetSqlName("ZB2")+" ZB2a "+Chr(13) + Chr(10)
+	cQuery += 									  "WHERE ZB1a.ZB1_FILIAL='"+xFilial("ZB1")+"' AND ZB1a.D_E_L_E_T_ = ' ' "+Chr(13) + Chr(10)
+	cQuery +=									    "AND ZB2a.ZB2_FILIAL='"+xFilial("ZB2")+"' AND ZB2a.D_E_L_E_T_ = ' ' "+Chr(13) + Chr(10)
+	cQuery += 									    "AND ZB1a.ZB1_FORNEC+ZB1a.ZB1_LOJA='"+cCdFornec+cLjFornec+"' "+Chr(13) + Chr(10)
+	cQuery +=									 	"AND ZB2a.ZB2_PEDCOM=SC7.C7_NUM "+Chr(13) + Chr(10)
+
+	cQuery += 									 	"AND ZB2a.ZB2_PROVIS=ZB1a.ZB1_PROVIS) "+Chr(13) + Chr(10)
+	cQuery += "OR SC7.C7_NUM NOT IN (SELECT ZB2_PEDCOM FROM "+RetSqlName("ZB2")+" ZB2b "+Chr(13) + Chr(10)
+	cQuery += 					 "WHERE ZB2b.ZB2_FILIAL='"+xFilial("ZB2")+"' AND ZB2b.D_E_L_E_T_ = ' ' "+Chr(13) + Chr(10)
+	cQuery += 					   "AND ZB2b.ZB2_FORNEC+ZB2b.ZB2_LOJA='"+cCdFornec+cLjFornec+"') ) "+Chr(13) + Chr(10)
+
+	cQuery += "ORDER BY " + SqlOrder( SC7->( IndexKey() ) )
+
+	cQuery := ChangeQuery(cQuery)
+
+	dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),cAliasSC7, .T. , .T. )
+
+	For nX := 1 To Len(aStruSC7)
+		If aStruSC7[nX,2]<>"C"
+			TcSetField(cAliasSC7,aStruSC7[nX,1],aStruSC7[nX,2],aStruSC7[nX,3],aStruSC7[nX,4])
+		EndIf
+	next
+
+	bWhile := {|| (cAliasSC7)->(!Eof())}
+
+	aCpoObri := { "C7_LOJA","C7_NUM","C7_ITEM","C7_PRODUTO","SALDO","C7_DESCRI"}
+
+	If (cAliasSC7)->(!Eof())
+		aCols := {}
+
+		aAdd(aCab," ")
+		aAdd(aCampos,{"OK","L",,})
+		aAdd(aTamCab,2)
+
+		For _nY=1 to Len(aCpoObri)
+			If aCpoObri[_nY]=="SALDO"
+				aAdd(aCab,"Saldo")
+				aAdd(aCampos,{"SALDO","N",,"@E 9999,999,999.99"})
+				aAdd(aTamCab,15)
+			Else
+				dbSelectArea("SX3")
+				dbSetOrder(2)
+				MsSeek(aCpoObri[_nY])
+				AAdd(aCab,x3Titulo())
+				Aadd(aCampos,{SX3->X3_CAMPO,SX3->X3_TIPO,SX3->X3_CONTEXT,SX3->X3_PICTURE})
+				aadd(aTamCab,CalcFieldSize(SX3->X3_TIPO,SX3->X3_TAMANHO,SX3->X3_DECIMAL,SX3->X3_PICTURE,X3Titulo()))
+			EndIf
+		next
+
+		dbSelectArea(cAliasSC7)
+		While Eval(bWhile)
+
+			If ( Empty((cAliasSC7)->C7_RESIDUO) .And.  (cAliasSC7)->C7_TPOP <> "P" )
+
+				Aadd(aArrayF4,Array(Len(aCampos)))
+				For nX := 1 to Len(aCampos)
+
+					If aCampos[nX][3] <> "V"
+						If aCampos[nX][2] == "N"
+							If Alltrim(aCampos[nX][1]) == "SALDO"
+								aArrayF4[Len(aArrayF4)][nX] := Transform((cAliasSC7)->SALDO,"@E 9999,999,999.99")
+							Else
+								aArrayF4[Len(aArrayF4)][nX] := Transform((cAliasSC7)->(FieldGet(FieldPos(aCampos[nX][1]))),PesqPict("SC7",aCampos[nX][1]))
+							Endif
+						Else
+							If nX==1
+								aArrayF4[Len(aArrayF4)][nX] := .F. 
+							Else
+								aArrayF4[Len(aArrayF4)][nX] := (cAliasSC7)->(FieldGet(FieldPos(aCampos[nX][1])))
+							Endif
+						Endif
+					Else
+						aArrayF4[Len(aArrayF4)][nX] := CriaVar(aCampos[nX][1], .T. )
+					EndIf
+				next
+
+				AAdd( aArrSldo,{(cAliasSC7)->SALDO,Iif(lQuery,(cAliasSC7)->RECSC7,RecNo())} )
+			EndIf
+			(cAliasSC7)->(dbSkip())
+		End
+
+		If !Empty(aArrayF4)
+
+			cLine := "{ If( aArrayF4[oQual:nAt,1],oOk,oNo ), aArrayF4[oQual:nAT][2], aArrayF4[oQual:nAT][3], aArrayF4[oQual:nAT][4], aArrayF4[oQual:nAT][5], aArrayF4[oQual:nAT][6] }"
+
+
+
+
+			bLine := &( "{ || " + cLine + " }" )
+
+
+			oDlg = MsDialog():New( 30, 20, 265, 521, OemToAnsi("Selecionar Pedido de Compra ( por item ) - <F6> "),,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+
+			oQual := TWBrowse():New( 29,4,243,76,,aCab,aTamCab,oDlg,,,,,,,,,,,, .F. ,, .T. ,, .F. ,,,)
+			oQual:SetArray(aArrayF4)
+			oQual:bLDblClick := { || aArrayF4[oQual:nAt,1] := !aArrayF4[oQual:nAt,1] }
+			oQual:bLine := bLine
+
+			 TSay():New( 15, 4,{||  OemToAnsi("Fornecedor")},oDlg,,,.F.,.F.,.F.,.T.,,, 47, 9,.F.,.F.,.F.,.F.,.F.,.F. )
+			 TGet():New( 14, 35, { | u | If( PCount() == 0, cNomeFor, cNomeFor := u ) },oDlg, 120, 9, PesqPict("SA2","A2_NOME"),,,,,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"cNomeFor",,,, )
+
+			oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,{|Self|EnchoiceBar(oDlg,{||nSavQual:=oQual:nAT,nOpca:=1,oDlg:End()},{||oDlg:End()},,aButtons)}, oDlg:bRClicked, )
+
+			If M->ZB1_VALDOC<=0
+				cMsg:="Digite primeiramente o valor da Provisão!"
+				Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+				Return( .T. )
+			EndIf
+
+			If nOpca == 1
+				For nI:=1 to Len(aArrayF4)
+					If aArrayF4[nI][1]
+						If lFirst
+							aItePC := {}
+							aSldPC := {}
+							lFirst := .F. 
+						EndIf
+						dbSelectArea("SC7")
+						MsGoto(aArrSldo[nI][2])
+
+
+
+
+
+						aAdd( aItePC, { SC7->C7_NUM, SC7->C7_CC, SC7->C7_ITEMCTA, SC7->C7_CLVL, SC7->((C7_QUANT-C7_QUJE)*C7_PRECO)+SC7->C7_VALIPI, SC7->C7_CONTRA," ", 0 } )
+						If cAprovAnt=="S"
+							Exit
+						Endif
+					EndIf
+				next
+
+				If Len(aItePC)>0
+					aTemp 	:= aClone(aItePC)
+					aSort(aTemp,,, { |x,y| x[1]+x[7]+x[2]+x[3]+x[4] < y[1]+y[7]+y[2]+y[3]+y[4] } )
+					aItePC	:= {}
+
+					cChAnt := " "
+					For nI:=1 to Len(aTemp)
+						If aTemp[nI][1]+aTemp[nI][7]+aTemp[nI][2]+aTemp[nI][3]+aTemp[nI][4] <> cChAnt
+							aAdd(aItePC, aTemp[nI])
+							cChAnt := aTemp[nI][1]+aTemp[nI][7]+aTemp[nI][2]+aTemp[nI][3]+aTemp[nI][4]
+							nAt:=nI
+						Else
+							nAxot := Ascan( aItePC, { |x| x[1]+x[2]+x[3]+x[4] == aTemp[nI][1]+aTemp[nI][2]+aTemp[nI][3]+aTemp[nI][4] } )
+							aItePC[nAxot][5] += aTemp[nI][5]
+						EndIf
+					next
+
+					For nI:=1 to Len(aItePC)
+
+
+						cChAnt := aItePC[nI][1]+aItePC[nI][2]+aItePC[nI][3]+aItePC[nI][4]
+
+						cAliasZB1 := "QRYVAL"
+
+						If Select(cAliasZB1)>0
+							(cAliasZB1)->(dbCloseArea())
+						EndIf
+
+						cQuery := "SELECT SUM(ZB2_VALOR) VALOR FROM "+Chr(13) + Chr(10)
+						cQuery += RetSqlName("ZB2") + " ZB2 "+Chr(13) + Chr(10)
+						cQuery += "WHERE "+Chr(13) + Chr(10)
+						cQuery += "ZB2_FILIAL = '"+xFilial("ZB2")+"' AND ZB2.D_E_L_E_T_ = ' ' AND "+Chr(13) + Chr(10)
+						cQuery += "ZB2_FORNEC+ZB2_LOJA = '"+cCdFornec+cLjFornec+"' AND "+Chr(13) + Chr(10)
+
+						cQuery += "ZB2_PEDCOM+ZB2_CCUSTO+ZB2_ITEMCT+ZB2_CLVL='"+cChAnt+"' "
+
+						cQuery := ChangeQuery(cQuery)
+
+						If Select(cAliasZB1)>0
+							(cAliasZB1)->(dbCloseArea())
+						EndIf
+
+						dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),cAliasZB1, .T. , .T. )
+
+						(cAliasZB1)->(dbGoTop())
+
+						If !(cAliasZB1)->(Eof() .And. Bof())
+							nVlSaldo := (cAliasZB1)->VALOR
+						Else
+							nVlSaldo := 0
+						EndIf
+
+						aItePC[nI][5]-=nVlSaldo
+
+						nPC := Ascan( aSldPC, { |x| x[1] = aItePC[nI][1] } )
+						If nPC>0
+							aSldPC[nPc][2] += aItePC[nI][5]
+						Else
+							aAdd( aSldPC, { aItePC[nI][1], aItePC[nI][5] } )
+							aSort(aSldPC,,, { |x,y| x[1] < y[1] } )
+						EndIf
+
+					next
+
+					MontAcols(,,aItePC)
+
+					If !Empty(aCols[1][1])
+						RecValZB2()
+						For nI:=1 to Len(aCols)
+							aCols[nI][nPosPerEZ] := Round( ( aCols[nI][nPosValEZ] / M->ZB1_VALDOC) * 100  , 2 )
+						next
+						oGetDados:aCols := aCols
+						oGetDados:ForceRefresh()
+					EndIf
+				EndIf
+			EndIf
+
+		Else
+			Help(" ",1,"A103F4")
+		EndIf
+	Else
+		Help(" ",1,"A103F4")
+	EndIf
+
+	If Select(cAliasSC7)>0
+		(cAliasSC7)->(dbCloseArea())
+	EndIf
+
+	SetKey(115,bSavSetKey)
+	SetKey(116,bSavKeyF5)
+	SetKey(117,bSavKeyF6)
+	SetKey(118,bSavKeyF7)
+	SetKey(119,bSavKeyF8)
+	SetKey(120,bSavKeyF9)
+	SetKey(121,bSavKeyF10)
+	SetKey(122,bSavKeyF11)
+	RestArea(aAreaSA2)
+	RestArea(aAreaSC7)
+	RestArea(aAreaSB1)
+	RestArea(aArea)
+
+	Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function a103PesqP(aCab,aCampos,aArrayF4,oQual)
+
+	Local aCpoBusca := {}
+	Local aCpoPict  := {}
+
+	Local cPesq   := Space(30)
+	Local cBusca  := ""
+	Local cTitulo := OemtoAnsi("Pesquisar")
+
+	Local nOpca   := 0
+	Local nPos    := 0
+	Local nx      := 0
+	Local nTipo   := 1
+	Local nBusca  := Iif(oQual:nAt == Len(aArrayF4) .Or.  oQual:nAt == 1, oQual:nAt, oQual:nAt+1 )
+
+	Local oDlg
+	Local oBusca
+	Local oPesq1
+	Local oPesq2
+	Local oPesq3
+	Local oPesq4
+
+	For nX := 1 to Len(aCampos)
+		AAdd(aCpoBusca,aCab[nX])
+		AAdd(aCpoPict,aCampos[nX][4])
+	Next
+
+	If Len(aCampos) > 0 .And.  Len(aArrayF4) > 0
+
+		oDlg = MsDialog():New( 00, 0, 100, 490, OemtoAnsi(cTitulo),,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+
+		 oBusca := TComboBox():New( 05, 05, { | u | If( PCount() == 0, cBusca, cBusca := u ) }, aCpoBusca, 206, 36, oDlg,,{|Self|(nTipo:=oBusca:nAt,A103ChgPic(nTipo,aCampos,@cPesq,@oPesq1,@oPesq2,@oPesq3,@oPesq4))},,,,.T.,,,.F.,,.F.,,, ,"cBusca" )
+
+		 oPesq1 := TGet():New( 022, 005, { | u | If( PCount() == 0, cPesq, cPesq := u ) },oDlg, 206, 10, "@!",,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"cPesq",,,, )
+
+		 oPesq2 := TGet():New( 022, 005, { | u | If( PCount() == 0, cPesq, cPesq := u ) },oDlg, 206, 10, "@!",,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"cPesq",,,, )
+
+		 oPesq3 := TGet():New( 022, 005, { | u | If( PCount() == 0, cPesq, cPesq := u ) },oDlg, 206, 10, "@!",,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"cPesq",,,, )
+
+		 oPesq4 := TGet():New( 022, 005, { | u | If( PCount() == 0, cPesq, cPesq := u ) },oDlg, 206, 10, "@!",,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"cPesq",,,, )
+
+		oPesq1:Hide()
+		oPesq2:Hide()
+		oPesq3:Hide()
+		oPesq4:Hide()
+
+		Do Case
+			Case aCampos[1][2] == "C"
+
+				dbSelectArea("SX3")
+				dbSetOrder(2)
+				If MsSeek(aCampos[1][1])
+					If !Empty(SX3->X3_F3)
+						oPesq2:cF3 := SX3->X3_F3
+						oPesq1:Hide()
+						oPesq2:Show()
+						oPesq3:Hide()
+						oPesq4:Hide()
+					Else
+						oPesq1:Show()
+						oPesq2:Hide()
+						oPesq3:Hide()
+						oPesq4:Hide()
+					Endif
+				Endif
+
+			Case aCampos[1][2] == "D"
+				oPesq1:Hide()
+				oPesq2:Hide()
+				oPesq3:Show()
+				oPesq4:Hide()
+			Case aCampos[1][2] == "N"
+				oPesq1:Hide()
+				oPesq2:Hide()
+				oPesq3:Hide()
+				oPesq4:Show()
+		EndCase
+
+		cPesq := CriaVar(aCampos[1][1], .F. )
+		cPict := aCampos[1][4]
+
+		 oBut1 := SButton():New( 05, 215,1,{||  (nOpca:=1,oDlg:End())}, oDlg,.T.,,)
+		 oBut1 := SButton():New( 20, 215,2,{||  (nOpca:=0,oDlg:End())}, oDlg,.T.,,)
+
+		oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,, oDlg:bRClicked, )
+
+		If nOpca == 1
+
+			Do Case
+
+				Case aCampos[nTipo][2] == "C"
+					nPos := Ascan(aArrayF4,{|x| Alltrim(cPesq) == Alltrim(x[nTipo])},nBusca)
+				Case aCampos[nTipo][2] == "N"
+					nPos := Ascan(aArrayF4,{|x| Transform(cPesq,PesqPict("SC7",aCampos[nTipo][1])) == x[nTipo]},nBusca)
+				Case aCampos[nTipo][2] == "D"
+					nPos := Ascan(aArrayF4,{|x| Dtos(cPesq) == Dtos(x[nTipo])},nBusca)
+			EndCase
+
+			If nPos > 0
+				oQual:bLine := { || aArrayF4[oQual:nAT] }
+				oQual:nFreeze := 1
+				oQual:nAt := nPos
+				oQual:Refresh()
+				oQual:SetFocus()
+			Else
+				Help(" ",1,"REGNOIS")
+			Endif
+
+		EndIf
+
+	Endif
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function VerRatAnt()
+
+	Local nSldPed    := 0
+	Local nOpc       := 0
+	Local nx         := 0
+	Local cQuery     := ""
+	Local cAliasZB1  := "ZB1"
+	Local lQuery     := .F. 
+	Local bSavSetKey := SetKey(115,Nil)
+	Local bSavKeyF5  := SetKey(116,{||TrazPC()})
+	Local bSavKeyF6  := SetKey(117,Nil)
+	Local bSavKeyF7  := SetKey(118,Nil)
+	Local bSavKeyF8  := SetKey(119,Nil)
+	Local bSavKeyF9  := SetKey(120,Nil)
+	Local bSavKeyF10 := SetKey(121,Nil)
+	Local bSavKeyF11 := SetKey(122,Nil)
+	Local bWhile
+	Local cChave     := ""
+	Local cCadastro  := ""
+	Local aArea      := GetArea()
+	Local aAreaSA2   := SA2->(GetArea())
+	Local aAreaZB1   := ZB1->(GetArea())
+	Local aStruZB1   := ZB1->(dbStruct())
+	Local aF4For     := {}
+	Local nF4For     := 0
+	Local oOk        := LoadBitMap(GetResources(), "LBOK")
+	Local oNo        := LoadBitMap(GetResources(), "LBNO")
+	Local oDlg,oListBox
+	Local cNomeFor   := ""
+	Local aRecZB1    := {}
+	Local aTitCampos := {}
+	Local aConteudos := {}
+	Local aUsCont    := {}
+	Local aUsTitu    := {}
+	Local bLine      := { || .T.  }
+	Local cLine      := ""
+	Local nLoop      := 0
+	Local lContinua  := .T. 
+	Local aButtons   := {}
+	Local cProvis    := ""
+
+	If M->ZB1_APROVA=="N"
+		Return( .T. )
+	EndIf
+
+	If M->ZB1_VALDOC<=0
+		cMsg:="Digite primeiramente o valor da Provisão!"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		Return( .T. )
+	EndIf
+
+	dbSelectArea("SA2")
+	dbSetOrder(1)
+	MsSeek(xFilial()+cCdFornec+cLjFornec)
+	cNomeFor	:= SA2->A2_NOME
+
+	dbSelectArea("ZB1")
+	ZB1->( dbSetOrder( 1 ) )
+	lQuery    := .T. 
+	cAliasZB1 := "QRYZB1"
+
+	cQuery := "SELECT ZB1.*, R_E_C_N_O_ RECZB1 FROM "+Chr(13) + Chr(10)
+	cQuery += RetSqlName("ZB1") + " ZB1 "+Chr(13) + Chr(10)
+	cQuery += "WHERE "+Chr(13) + Chr(10)
+	cQuery += "ZB1_FILIAL = '"+xFilial("ZB1")+"' AND "+Chr(13) + Chr(10)
+	cQuery += "ZB1_FORNEC = '"+cCdFornec+"' AND "+Chr(13) + Chr(10)
+	cQuery += "ZB1.D_E_L_E_T_ = ' ' "+Chr(13) + Chr(10)
+	cQuery += "ORDER BY " + SqlOrder( ZB1->( IndexKey() ) )
+
+	cQuery := ChangeQuery(cQuery)
+
+	If Select(cAliasZB1)>0
+		(cAliasZB1)->(dbCloseArea())
+	EndIf
+
+	dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),cAliasZB1, .T. , .T. )
+
+	For nX := 1 To Len(aStruZB1)
+		If aStruZB1[nX,2]<>"C"
+			TcSetField(cAliasZB1,aStruZB1[nX,1],aStruZB1[nX,2],aStruZB1[nX,3],aStruZB1[nX,4])
+		EndIf
+	next
+
+	(cAliasZB1)->(dbGoTop())
+	bWhile := {|| (cAliasZB1)->(!Eof())}
+
+	While Eval(bWhile)
+
+		nF4For := aScan(aF4For,{|x|x[2]==(cAliasZB1)->ZB1_LOJA .And.  x[3]==(cAliasZB1)->ZB1_PROVIS})
+		If ( nF4For == 0 )
+
+			aConteudos := { .F. , (cAliasZB1)->ZB1_LOJA, (cAliasZB1)->ZB1_PROVIS, DTOC((cAliasZB1)->ZB1_DTDIGI), (cAliasZB1)->ZB1_VALDOC, (cAliasZB1)->ZB1_USUARI }
+
+			aadd(aF4For, aConteudos )
+			aAdd(aRecZB1,Iif(lQuery,(cAliasZB1)->RECZB1,RecNo()))
+		EndIf
+		(cAliasZB1)->(dbSkip())
+	EndDo
+
+
+
+	If ( !Empty(aF4For) )
+
+		aTitCampos := {" ","Loja","Provisão","Dt.Digita.","Valor","Usuário" }
+
+		cLine := "{If(aF4For[oListBox:nAt,1],oOk,oNo),aF4For[oListBox:nAT][2],aF4For[oListBox:nAT][3],aF4For[oListBox:nAT][4],aF4For[oListBox:nAT][5],Transform(aF4For[oListBox:nAT][6], '@E 999,999,999.99')"
+
+		cLine += " } "
+
+
+
+
+		bLine := &( "{ || " + cLine + " }" )
+
+
+		oDlg = MsDialog():New( 50, 40, 285, 541, OemToAnsi("Selecionar Provisão Anterior"),,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+
+		oListBox := TWBrowse():New( 27,4,243,80,,aTitCampos,,oDlg,,,,,,,,,,,, .F. ,, .T. ,, .F. ,,,)
+		oListBox:SetArray(aF4For)
+		oListBox:bLDblClick := { || aF4For[oListBox:nAt,1] := !aF4For[oListBox:nAt,1] }
+		oListBox:bLine := bLine
+
+		 TSay():New( 15, 4,{||  OemToAnsi("Fornecedor")},oDlg,,,.F.,.F.,.F.,.T.,,, 47, 9,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TGet():New( 14, 35, { | u | If( PCount() == 0, cNomeFor, cNomeFor := u ) },oDlg, 120, 9, PesqPict("SA2","A2_NOME"),,,,,.F.,,.T.,,.F.,{||  .F. },.F.,.F.,,.F.,.F. ,,"cNomeFor",,,, )
+
+		oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,{|Self|EnchoiceBar(oDlg,{||(nOpc:=1,nF4For:=oListBox:nAt,oDlg:End())},{||(nOpc:=0,nF4For:=oListBox:nAt,oDlg:End())},,aButtons)}, oDlg:bRClicked, )
+
+		If ( nOpc == 1 )
+			cProvis := ""
+			For nx	:= 1 to Len(aF4For)
+				If aF4For[nx][1]
+					cProvis := aF4For[nx][3]
+					Exit
+				EndIf
+			next
+
+			If Empty(cProvis)
+				Aviso("Atenção!","Nenhuma Provisão anterior foi escolhida!",{"Fechar"},2)
+			Else
+				MontAcols(cProvis, .F. )
+
+				If !Empty(aCols[1][1])
+					For nI:=1 to Len(aCols)
+						aCols[nI][nPosValEZ] := Round( ( aCols[nI][nPosPerEZ] / 100 ) * M->ZB1_VALDOC , 2 )
+					next
+					oGetDados:aCols := aCols
+					oGetDados:ForceRefresh()
+					RecValZB2()
+				EndIf
+			EndIf
+		EndIf
+
+	Else
+		Help(" ",1,"A103F4")
+		M->ZB1_APROVA:="N"
+		cAprovAnt:="N"
+	EndIf
+
+
+
+
+
+	If lQuery
+		(cAliasZB1)->(dbCloseArea())
+	Endif
+	SetKey(115,bSavSetKey)
+	SetKey(116,bSavKeyF5)
+	SetKey(117,bSavKeyF6)
+	SetKey(118,bSavKeyF7)
+	SetKey(119,bSavKeyF8)
+	SetKey(120,bSavKeyF9)
+	SetKey(121,bSavKeyF10)
+	SetKey(122,bSavKeyF11)
+
+	RestArea(aAreaSA2)
+	RestArea(aAreaZB1)
+	RestArea(aArea)
+
+	Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function MontAcols(cProvis,lRec,aPedidos)
+
+	Local lFirst	:= .T. 
+	Local lContinua	:= .T. 
+	Local lPedidos  := .F. 
+	Local nI, nY,cCampo,cItem:="001"
+	Local cNCampos:="ZB2_PEDCOM,ZB2_VALOR,ZB2_CONTRA"
+
+	cProvis := If( cProvis == nil, "", cProvis ) ;
+	lRec := If( lRec == nil, .F. , lRec ) ;
+	aPedidos := If( aPedidos == nil, {}, aPedidos ) ;
+	lPedidos		:= Len(aPedidos)>0
+
+
+
+
+	If ALTERA .Or.  lProvExclui
+		If !SoftLock("ZB1")
+			lContinua := .F. 
+		EndIf
+	EndIf
+	If lContinua
+		If lPedidos
+			If M->ZB1_APROVA<>"S"
+				aCols := {}
+			EndIf
+			For nI:=1 to Len(aPedidos)
+
+				If M->ZB1_APROVA<>"S"
+
+					If Len(aCols)<nI
+						AdicCols()
+					EndIf
+
+					If !aCols[nI][nUsado+1]
+
+						nX:=Len(aCols)
+
+						For nY := 1 To nUsado
+
+							cCampo:=AllTrim(aHeader[nY][2])
+							Do Case
+								Case cCampo=="ZB2_ITEM"
+									aCols[nX][nY] := StrZero(nX,3)
+								Case cCampo=="ZB2_NATURE"
+									aCols[nX][nY] := Iif(!Empty(aPedidos[nI][7]),aPedidos[nI][7],CriaVar(aHeader[nY][2]))
+								Case cCampo=="ZB2_PEDCOM"
+									aCols[nX][nY] := aPedidos[nI][1]
+								Case cCampo=="ZB2_CCUSTO"
+									aCols[nX][nY] := aPedidos[nI][2]
+								Case cCampo=="ZB2_ITEMCT"
+									aCols[nX][nY] := aPedidos[nI][3]
+								Case cCampo=="ZB2_CLVL"
+									aCols[nX][nY] := aPedidos[nI][4]
+								Case cCampo=="ZB2_VALOR"
+									aCols[nX][nY] := aPedidos[nI][5]
+								Case cCampo=="ZB2_CONTRA"
+									aCols[nX][nY] := aPedidos[nI][6]
+								Case cCampo=="ZB2_PERCEN"
+									aCols[nX][nY] := Iif(!Empty(aPedidos[nI][8]),aPedidos[nI][8],CriaVar(aHeader[nY][2]))
+								Otherwise
+									aCols[nX][nY] := CriaVar(aHeader[nY][2])
+							EndCase
+						next
+						aCols[Len(aCols)][nUsado+1] := .F. 
+
+
+						aCols[Len(aCols)][nPosDesEZ] := Posicione("SED",1,xFilial("SED")+aCols[Len(aCols)][nPosNatEZ],"ED_DESCRIC")
+
+					EndIf
+				Else
+
+					aCols:=oGetDados:aCols
+					For _nI:=1 To Len(aCols)
+						aCols[_nI][nPosNPCEZ] := aPedidos[nI][1]
+
+					next
+
+					oGetDados:aCols := aCols
+					oGetDados:ForceRefresh()
+					lRet := .T. 
+					Exit
+				EndIf
+			next
+		Else
+
+
+
+			dbSelectArea("ZB2")
+			dbSetOrder(1)
+			lQuery    := .T. 
+			cAliasZB2 := "ProvZB2"
+			aStruZB2  := ZB2->(dbStruct())
+			cQuery    := "SELECT ZB2.*,ZB2.R_E_C_N_O_ ZB2RECNO "+Chr(13) + Chr(10)
+			cQuery    += "FROM "+RetSqlName("ZB2")+" ZB2 "+Chr(13) + Chr(10)
+			cQuery    += "WHERE ZB2.ZB2_FILIAL='"+xFilial("ZB2")+"' AND "+Chr(13) + Chr(10)
+			cQuery    += "ZB2.ZB2_PROVIS='"+cProvis+"' AND "+Chr(13) + Chr(10)
+			cQuery    += "ZB2.D_E_L_E_T_=' ' "+Chr(13) + Chr(10)
+			cQuery    += "ORDER BY "+SqlOrder(ZB2->(IndexKey()))
+
+			cQuery := ChangeQuery(cQuery)
+
+			If Select(cAliasZB2)>0
+				(cAliasZB2)->(dbCloseArea())
+			EndIf
+
+			dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),cAliasZB2, .T. , .T. )
+			For nX := 1 To Len(aStruZB2)
+				If aStruZB2[nX][2]<>"C"
+					TcSetField(cAliasZB2,aStruZB2[nX][1],aStruZB2[nX][2],aStruZB2[nX][3],aStruZB2[nX][4])
+				EndIf
+			next
+
+
+
+			bWhileZB2 := { || ( !Eof() .And.  lContinua .And.  (cAliasZB2)->ZB2_FILIAL == xFilial("ZB2") .And.  (cAliasZB2)->ZB2_PROVIS == cProvis) }
+
+			While Eval( bWhileZB2 )
+
+
+				If lRec
+					aadd(aRecZB2,If(lQuery,(cAliasZB2)->ZB2RECNO,(cAliasZB2)->(RecNo())))
+				EndIf
+
+				If M->ZB1_APROVA<>"S" .Or.  (M->ZB1_APROVA=="S" .And. !lFirst)
+					AdicCols()
+				EndIf
+
+				lFirst:= .F. 
+
+				For nY := 1 To nUsado
+
+					If ( aHeader[nY][10] <> "V")
+						If !AllTrim(aHeader[nY][2])$cNCampos .Or.  (AllTrim(aHeader[nY][2])$cNCampos .And.  M->ZB1_APROVA<>"S")
+							aCols[Len(aCols)][nY] := FieldGet(FieldPos(aHeader[nY][2]))
+						Else
+							aCols[Len(aCols)][nY] := CriaVar(aHeader[nY][2])
+						EndIf
+					Else
+						aCols[Len(aCols)][nY] := CriaVar(aHeader[nY][2])
+					EndIf
+				next
+				aCols[Len(aCols)][nUsado+1] := .F. 
+
+
+				aCols[Len(aCols)][nPosDesEZ] := Posicione("SED",1,xFilial("SED")+aCols[Len(aCols)][nPosNatEZ],"ED_DESCRIC")
+
+
+
+
+				dbSelectArea(cAliasZB2)
+				dbSkip()
+			End
+			If lQuery
+				(cAliasZB2)->(dbCloseArea())
+			EndIf
+		EndIf
+	EndIf
+	If !Len(aCols) > 0
+		lContinua := .F. 
+		Help(" ",1,"RECNO")
+	EndIf
+	If !lContinua
+		If lProvAltera .Or.  lProvExclui
+			MsUnlockAll()
+		EndIf
+	EndIf
+
+	Return (lContinua)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function VerCompet()
+
+	Local lRet	:= .T. 
+	Local dCompet := SuperGetMv("MV_XMESNFE")
+	Local cCompet := ""
+	If !Empty(dCompet)
+		cCompet := Left(DtoS(dCompet),6)
+	Else
+		cCompet := Left(DtoS(dDatabase),6)
+	EndIf
+
+	If Val(Left(M->ZB1_COMPET,2))<1 .Or.  Val(Left(M->ZB1_COMPET,2))>12 .Or.  Val(Right(M->ZB1_COMPET,4))<2006
+		cMsg:="Mês/Ano de Competência informado está incorreto, verifique!"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		lRet := .F. 
+	Else
+		If (Right(M->ZB1_COMPET,4)+Left(M->ZB1_COMPET,2)) > cCompet
+
+			cMsg:="Mês/Ano de Competência informado deve ser menor ou igual ao atual!"+Chr(10)+ " (Competência atual: "+Right(cCompet,2)+"/"+Left(cCompet,4)+")"
+			Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+			lRet := .F. 
+		EndIf
+	EndIf
+
+	Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function VerValor()
+
+	Local lRet	:= .T. 
+
+	If M->ZB1_VALDOC > nVlSldPC
+
+		cMsg:="Valor deve ser menor ou igual ao saldo do PC!"+Chr(10)+ " (Saldo do PC: "+TransForm(nVlSldPc,"@E 9999,999,999.99")+")"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		lRet := .F. 
+	EndIf
+
+	Return(lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_DelOk()
+
+	Local _lRet := .t. , _N:=oGetDados:nAt
+	Local _lDel := aCols[_N, Len(aCols[_N])]
+
+	If !lExec
+		If !_lDel
+			nValTot  -= aCols[_N][nPosValEZ]
+			nPercTot := (nValTot / M->ZB1_VALDOC) * 100
+			oValTot:Refresh()
+			oPercTot:Refresh()
+		Else
+			nValTot  += aCols[_N][nPosValEZ]
+			nPercTot := (nValTot / M->ZB1_VALDOC) * 100
+			oValTot:Refresh()
+			oPercTot:Refresh()
+		EndIf
+		lExec := .T. 
+	Else
+		lExec := .F. 
+	EndIf
+
+	Return(_lRet)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function AjustaDif( _nValRat , _nValTotal )
+
+
+
+
+
+	Local q
+	Local nNumColunas := Len( aCols )
+	Local lAjuste     := .F. 
+	Local nValAjuste  := _nValRat - _nValTotal
+
+
+
+
+
+	For q := Len( aCols ) to 1 Step -1
+
+
+
+
+
+		If !lAjuste
+
+
+
+
+
+			If ! aCols[ q , Len(aHeader) + 1 ]
+
+
+
+
+
+				If nValAjuste < 0
+
+					If aCols[q][nPosValEZ ] > nValAjuste * -1
+						aCols[q][nPosValEZ ] += nValAjuste
+						lAjuste := .T. 
+					Endif
+
+				Else
+
+
+
+
+
+					aCols[q][nPosValEZ ] += nValAjuste
+					lAjuste := .T. 
+
+				Endif
+
+				aCols[q][nPosPerEZ ] := ( aCols[q][nPosValEZ ] / _nValTotal ) * 100
+			Endif
+
+		Endif
+
+
+	next
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_PROVCONTAB(nTipo)
+
+	Local aSay    := {}
+	Local aButton := {}
+	Local nOpc    := 0
+	Local cDTipo  := Iif(nTipo==1,"Contabilização","Estorno")
+	Local cTitulo := cDTipo+" de provisoes de Pedidos de Compra"
+	Local cDesc1  := "Esta rotina tem como finalidade gerar um lancamento padrao para cada "
+	Local cDesc2  := "Provisao (Contabilização ou Estorno) "
+	Local cDesc3  := " "
+	Local cDesc4  := " "
+
+	Private cProvis 	:= cTipo := cHistor := cNomUsu := cOrigem := ""
+	Private dData   	:= CtoD("")
+	Private nValor  	:= nValCr := nValDb := 0
+	Private lCtbOk      := .T. 
+
+	Private cPerg := "CSUC12"
+
+	Private lProvContab	:= nTipo==1
+	Private lProvEstorn := nTipo==2
+
+	cNomUsu := UsrFullName(__CUserID)
+	cOrigem := "MANUTENCAO PROVISAO"
+	dData	:= DDATABASE
+
+	ValidPerg(cPerg)
+	Pergunte(cPerg, .F. )
+
+	aAdd( aSay, cDesc1 )
+	aAdd( aSay, cDesc2 )
+	aAdd( aSay, cDesc3 )
+	aAdd( aSay, cDesc4 )
+
+	aAdd( aButton, { 5, .T. , {|| Pergunte(cPerg, .T.  )    }} )
+	aAdd( aButton, { 1, .T. , {|| nOpc := 1, FechaBatch() }} )
+	aAdd( aButton, { 2, .T. , {|| FechaBatch()            }} )
+
+	FormBatch( cTitulo, aSay, aButton )
+
+	If nOpc == 1
+		cProvis	:= ZB1->ZB1_PROVIS
+		If lProvContab
+			Processa( {|| U_ProvConD()},"Aguarde ...","Processando...")
+			cHistor := "CONTABILIZACAO DA PROVISAO"
+			cTipo	:= "1"
+		EndIf
+		If lProvEstorn
+			Processa( {|| U_ProvEstD()},"Aguarde ...","Processando...")
+			cHistor := "ESTORNO DA PROVISAO"
+			cTipo	:= "2"
+		EndIf
+
+		If lCtbOk
+
+
+			lOcor := U_GrvOcorPrv(cProvis,cTipo,dData,nValor,cOrigem,cHistor,cNomUsu)
+
+			Aviso("ATENÇÃO!","A Rotina de "+cDTipo+" das Provisões foi Executada com Sucesso !",{"Ok"})
+
+		EndIf
+
+	Endif
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_ProvConD()
+
+	Local _cQuery
+	Local nHdlPrv
+	Local cArquivo	:= ""
+	Local cPadrao	:= "210"
+	Local lPadrao210:= .F. 
+	Local lPadrao215:= .F. 
+
+	Local nTotal	:= 0
+	Local nZB1Rec	:= 0
+	Local cChavSC7	:= ""
+	Local _cData	:= mv_par07
+	Private cLote	:= ""
+	Private cAliasZB1:="WORK"
+	Private aStruZB1:= ZB1->(dbStruct())
+	Private cRotina := "CSUCTB12"
+	Private lCancel	:= .F. 
+	Private nRazao	:= Iif(lCancel,-1,1)
+
+	lPadrao210 := VerPadrao(cPadrao)
+	lPadrao215 := VerPadrao("215")
+
+	If !lPadrao210 .Or.  !lPadrao215
+		cMsg:="Lançamento Padrão 210 e/ou 215 não está(ão) configurado(s)!"+cEnter+"Falar com a Contabilidade!"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		lCtbOk := .F. 
+		Return
+	EndIf
+
+	_cQuery:= "SELECT ZB1.*, ZB1.R_E_C_N_O_  RECZB1, ZB2.R_E_C_N_O_ RECZB2 "+Chr(13) + Chr(10)
+	_cQuery+=   "FROM "
+	_cQuery+=   RetSqlName("ZB1")+" ZB1, "+Chr(13) + Chr(10)
+	_cQuery+=   RetSqlName("ZB2")+" ZB2  "+Chr(13) + Chr(10)
+	_cQuery+= "WHERE "
+	_cQuery+= 	    "ZB1_FILIAL = '"+xFilial("ZB1")+"' AND ZB1.D_E_L_E_T_ = ' ' "
+	_cQuery+=   "AND ZB2_FILIAL = '"+xFilial("ZB2")+"' AND ZB2.D_E_L_E_T_ = ' ' "
+	_cQuery+=   "AND ZB1_PROVIS BETWEEN '"+mv_par01+"' AND '"+mv_par02+"' "+Chr(13) + Chr(10)
+	_cQuery+=   "AND ZB1_DTDIGI BETWEEN '"+DtoS(mv_par03)+"' AND '"+DtoS(mv_par04)+"' "+Chr(13) + Chr(10)
+	_cQuery+=   "AND ZB1_FORNEC BETWEEN '"+mv_par05+"' AND '"+mv_par06+"' "+Chr(13) + Chr(10)
+	_cQuery+=   "AND ZB1_CONFER = 'S' "
+
+
+	_cQuery+=   "AND ZB2_PROVIS = ZB1_PROVIS "+Chr(13) + Chr(10)
+	_cQuery+= "ORDER BY ZB1_PROVIS, ZB1_FORNEC "
+	_cQuery:= ChangeQuery( _cQuery )
+
+	If Select ("WORK") > 0
+		WORK->(dbCloseArea())
+	EndIf
+
+	dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "WORK" , .F. , .T. )
+
+	If Select ("WORK") == 0
+		ApMSgStop("Não Existem Registros para Serem Processados Nesta Empresa!","Aviso")
+		WORK->(dbCloseArea())
+		lCtbOk := .F. 
+		Return
+	EndIf
+
+	For nX := 1 To Len(aStruZB1)
+		If aStruZB1[nX,2]<>"C"
+			TcSetField(cAliasZB1,aStruZB1[nX,1],aStruZB1[nX,2],aStruZB1[nX,3],aStruZB1[nX,4])
+		EndIf
+	next
+
+	If "CSUCTB12" $ FunName()
+		aF4For := ExibeProvis(1)
+	Else
+		aF4For := { { , Work->ZB1_PROVIS } }
+	EndIf
+
+	aProvis:={}
+
+	For nI:=1 to Len(aF4For)
+		If "CSUCTB12" $ FunName()
+			If aF4For[nI][1]
+				aAdd(aProvis, aF4For[nI][2])
+			EndIf
+		Else
+			aAdd(aProvis, aF4For[nI][2])
+		EndIf
+	next
+
+	If Len(aProvis)>0
+
+		dbSelectArea("WORK")
+		WORK->(dbGoTop())
+
+		cLote    := "090010"
+		nHdlPrv  := HeadProva(cLote,cRotina,Substr(cUsuario,7,6),@cArquivo)
+
+		u_ContProv1()
+
+		While WORK->(!Eof())
+
+			If aScan(aProvis,WORK->ZB1_PROVIS)>0
+
+				dbSelectArea("ZB1")
+				ZB1->(dbSetOrder(1))
+				ZB1->(dbGoTo(WORK->RECZB1))
+				nZB1Rec  := WORK->RECZB1
+				ZB2->(dbSetOrder(1))
+				ZB2->(dbGoTo(WORK->RECZB2))
+				cChavSC7 := xFilial("SC7")+ZB1->(ZB1_FORNECE+ZB1_LOJA)+ZB2->ZB2_PEDCOM
+				_cProvis := WORK->ZB1_PROVIS
+
+				dbSelectArea("SA2")
+				SA2->(dbSetOrder(1))
+				SA2->(dbSeek(xFilial("SA2")+ZB1->(ZB1_FORNEC+ZB1_LOJA)))
+
+				While WORK->(!Eof()) .And. WORK->ZB1_PROVIS=_cProvis
+					dbSelectArea("ZB2")
+					ZB2->(dbGoTo(WORK->RECZB2))
+					nTotal := 0
+					nTotal += DetProva(nHdlPrv,cPadrao,cRotina,cLote)
+					nValor += nTotal
+					RecLock("ZB2", .F. )
+					ZB2->ZB2_CONFER	:= ""
+
+
+					ZB2->(MsUnlock())
+					WORK->(dbSkip())
+				End
+
+				nTotal += DetProva(nHdlPrv,"215",cRotina,cLote)
+
+				ZB1->(dbGoTo(nZB1Rec))
+				RecLock("ZB1", .F. )
+				ZB1->ZB1_CONFER	:= ""
+				ZB1->ZB1_DTLCTO := _cData
+
+
+				MsUnLock()
+
+
+				dbSelectArea("SC7")
+				SC7->(dbSetOrder(1))
+				If SC7->(dbSeek(cChavSC7))
+					While SC7->(!Eof()) .And. SC7->(C7_FILIAL+C7_FORNECE+C7_LOJA+C7_NUM)==cChavSC7
+						RecLock("SC7", .F. )
+						SC7->C7_X_PROV := "S"
+						MsUnLock()
+						SC7->(dbSkip())
+					End
+				EndIf
+
+			Else
+				WORK->(dbSkip())
+			EndIf
+		End
+
+		nValor := nTotal
+		RodaProva(nHdlPrv,nTotal)
+		cA100Incl(cArquivo,nHdlPrv,3,cLote,Iif(mv_par08==1, .T. , .F. ), .F. ,,_cData)
+		lCtbOk := .T. 
+
+	Else
+
+		lCtbOk := .F. 
+
+	EndIf
+
+	WORK->(dbCloseArea())
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_ProvEstD()
+
+	Local _cQuery
+	Local nHdlPrv
+	Local cArquivo	:= ""
+	Local cPadrao	:= "220"
+	Local lPadrao220:= .F. 
+	Local lPadrao225:= .F. 
+
+	Local nTotal	:= 0
+	Local nZB1Rec	:= 0
+	Local nTotSld   := 0
+	Local cChavSC7	:= ""
+	Local _cData	:= mv_par07
+	Private cLote	:= ""
+	Private cLote	:= LoteCont("COM")
+	Private cAliasZB1:="WORK"
+	Private aStruZB1:= ZB1->(dbStruct())
+	Private cRotina := "CSUCTB12"
+
+	lPadrao220 := VerPadrao(cPadrao)
+	lPadrao225 := VerPadrao("225")
+
+	If !lPadrao220 .Or.  !lPadrao225
+		cMsg:="Lançamento Padrão 220 e/ou 225 não está(ão) configurado(s)!"+cEnter+"Falar com a Contabilidade!"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		lCtbOk := .F. 
+		Return()
+	EndIf
+
+	_cQuery:= "SELECT ZB1.*, ZB1.R_E_C_N_O_  RECZB1, ZB2.R_E_C_N_O_ RECZB2 "+Chr(13) + Chr(10)
+	_cQuery+=   "FROM "
+	_cQuery+=   RetSqlName("ZB1")+" ZB1, "+Chr(13) + Chr(10)
+	_cQuery+=   RetSqlName("ZB2")+" ZB2  "+Chr(13) + Chr(10)
+	_cQuery+= "WHERE "
+	_cQuery+= 	    "ZB1_FILIAL = '"+xFilial("ZB1")+"' AND ZB1.D_E_L_E_T_ = ' ' "
+	_cQuery+=   "AND ZB2_FILIAL = '"+xFilial("ZB2")+"' AND ZB2.D_E_L_E_T_ = ' ' "
+	_cQuery+=   "AND ZB1_PROVIS BETWEEN '"+mv_par01+"' AND '"+mv_par02+"' "+Chr(13) + Chr(10)
+	_cQuery+=   "AND ZB1_DTDIGI BETWEEN '"+DtoS(mv_par03)+"' AND '"+DtoS(mv_par04)+"' "+Chr(13) + Chr(10)
+	_cQuery+=   "AND ZB1_FORNEC BETWEEN '"+mv_par05+"' AND '"+mv_par06+"' "+Chr(13) + Chr(10)
+
+	_cQuery+=   "AND ZB1_SLDEST < ZB1_VALDOC "+Chr(13) + Chr(10)
+	_cQuery+=   "AND ZB2_PROVIS = ZB1_PROVIS "+Chr(13) + Chr(10)
+	_cQuery+= "ORDER BY ZB1_PROVIS, ZB1_FORNEC "
+	_cQuery:= ChangeQuery( _cQuery )
+
+	MemoWrite("C:\ESTORNA.sql",_cQuery)
+
+	If Select (cAliasZB1) > 0
+		WORK->(dbCloseArea())
+	EndIf
+
+	dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "WORK" , .F. , .T. )
+
+	Work->( DbGoTop() )
+
+	If Select ("WORK") == 0
+		ApMSgStop("Não Existem Registros para Serem Processados Nesta Empresa!","Aviso")
+		WORK->(dbCloseArea())
+		lCtbOk := .F. 
+		Return
+	EndIf
+
+	For nX := 1 To Len(aStruZB1)
+		If aStruZB1[nX,2]<>"C"
+			TcSetField(cAliasZB1,aStruZB1[nX,1],aStruZB1[nX,2],aStruZB1[nX,3],aStruZB1[nX,4])
+		EndIf
+	next
+
+	If "CSUCTB12" $ FunName()
+		aF4For := ExibeProvis(2)
+	Else
+		aF4For := { { , Work->ZB1_PROVIS } }
+	EndIf
+
+	aProvis:={}
+
+	For nI:=1 to Len(aF4For)
+		If "CSUCTB12" $ FunName()
+			If aF4For[nI][1]
+				aAdd(aProvis, aF4For[nI][2])
+			EndIf
+		Else
+			aAdd(aProvis, aF4For[nI][2])
+		EndIf
+	next
+
+	If Len(aProvis)>0
+
+		dbSelectArea("WORK")
+		WORK->(dbGoTop())
+
+		cLote    := "090020"
+		nHdlPrv  := HeadProva(cLote,cRotina,Substr(cUsuario,7,6),@cArquivo)
+
+		While WORK->(!Eof())
+
+			If aScan(aProvis,WORK->ZB1_PROVIS)>0
+
+				dbSelectArea("ZB1")
+				ZB1->(dbGoTo(WORK->RECZB1))
+				nZB1Rec  := WORK->RECZB1
+				ZB2->(dbGoTo(WORK->RECZB2))
+				cChavSC7 := xFilial("SC7")+ZB1->(ZB1_FORNECE+ZB1_LOJA)+ZB2->ZB2_PEDCOM
+				_cProvis := WORK->ZB1_PROVIS
+
+				dbSelectArea("SA2")
+				SA2->(dbSetOrder(1))
+				SA2->(dbSeek(xFilial("SA2")+ZB1->(ZB1_FORNEC+ZB1_LOJA)))
+
+				nTotSld := 0
+				While WORK->(!Eof()) .And. WORK->ZB1_PROVIS=_cProvis
+					dbSelectArea("ZB2")
+					ZB2->(dbGoTo(WORK->RECZB2))
+					nTotal := 0
+					nTotal += DetProva(nHdlPrv,cPadrao,cRotina,cLote)
+					RecLock("ZB2", .F. )
+					ZB2->ZB2_SALDO	-= nTotal
+					ZB2->ZB2_SLDEST	+= nTotal
+					ZB2->ZB2_VLESTO := nTotal
+					If ZB2->ZB2_SALDO >= 1.00
+						ZB2->ZB2_SALDO:=0
+						ZB2->ZB2_SLDEST:=ZB2->ZB2_VALOR
+					EndIf
+					ZB2->(MsUnlock())
+					nTotSld += nTotal
+					WORK->(dbSkip())
+				EndDo
+
+				ZB1->(dbGoTo(nZB1Rec))
+				RecLock("ZB1", .F. )
+				ZB1->ZB1_DTESTO := _cData
+				ZB1->ZB1_SALDO	-= nTotSld
+				ZB1->ZB1_SLDEST	+= nTotSld
+				ZB1->ZB1_VLESTO := nTotSld
+				If ZB1->ZB1_SALDO >= 1.00
+					ZB1->ZB1_SALDO:=0
+					ZB1->ZB1_SLDEST:=ZB1->ZB1_VALDOC
+				EndIf
+				MsUnLock()
+
+				nTotal += DetProva(nHdlPrv,"225",cRotina,cLote)
+
+				dbSelectArea("SC7")
+				SC7->(dbSetOrder(1))
+				If SC7->(dbSeek(cChavSC7))
+					While SC7->(!Eof()) .And. SC7->(C7_FILIAL+C7_FORNECE+C7_LOJA+C7_NUM)==cChavSC7
+						RecLock("SC7", .F. )
+						SC7->C7_X_PROV := " "
+						MsUnLock()
+						SC7->(dbSkip())
+					End
+				EndIf
+
+			Else
+				WORK->(dbSkip())
+			EndIf
+		End
+
+		nValor := nTotal
+		RodaProva(nHdlPrv,nTotal)
+		cA100Incl(cArquivo,nHdlPrv,3,cLote,Iif(mv_par08==1, .T. , .F. ), .F. ,,_cData)
+		lCtbOk := .T. 
+
+	Else
+
+		lCtbOk := .F. 
+
+	EndIf
+
+	WORK->(dbCloseArea())
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function ExibeProvis(nCtEs)
+
+	Local nOpc       := 0
+	Local nx         := 0
+	Local cQuery     := ""
+	Local cAliasZB1  := "WORK"
+	Local lQuery     := .F. 
+	Local cDTipo      := Iif(nCtEs==1,"Contabilizar","Estornar")
+	Local bSavSetKey := SetKey(115,Nil)
+	Local bSavKeyF5  := SetKey(116,{||TrazPC()})
+	Local bSavKeyF6  := SetKey(117,Nil)
+	Local bSavKeyF7  := SetKey(118,Nil)
+	Local bSavKeyF8  := SetKey(119,Nil)
+	Local bSavKeyF9  := SetKey(120,Nil)
+	Local bSavKeyF10 := SetKey(121,Nil)
+	Local bSavKeyF11 := SetKey(122,Nil)
+	Local bWhile
+	Local cChave     := ""
+	Local cCadastro  := ""
+	Local aArea      := GetArea()
+	Local aAreaSA2   := SA2->(GetArea())
+	Local aAreaZB1   := ZB1->(GetArea())
+	Local aStruZB1   := ZB1->(dbStruct())
+	Local aF4For     := {}
+	Local nF4For     := 0
+	Local oOk        := LoadBitMap(GetResources(), "LBOK")
+	Local oNo        := LoadBitMap(GetResources(), "LBNO")
+	Local oDlg,oListBox
+	Local aRecZB1    := {}
+	Local aTitCampos := {}
+	Local aConteudos := {}
+	Local aUsCont    := {}
+	Local aUsTitu    := {}
+	Local bLine      := { || .T.  }
+	Local cLine      := ""
+	Local nLoop      := 0
+	Local lContinua  := .T. 
+	Local aButtons   := {}
+	Local _lFaz		 := .F. 
+
+	dbSelectArea("ZB1")
+	ZB1->( dbSetOrder( 1 ) )
+
+	(cAliasZB1)->(dbGoTop())
+	bWhile := {|| (cAliasZB1)->(!Eof())}
+
+	While Eval(bWhile)
+
+		_lFaz := ( ( nCtEs==1.And.Empty( (cAliasZB1)->ZB1_DTLCTO ) .Or.  ( nCtEs==2.And.(cAliasZB1)->ZB1_SLDEST < (cAliasZB1)->ZB1_VALDOC ) ) )
+		nF4For := aScan(aF4For,{|x| x[2]==(cAliasZB1)->ZB1_PROVIS})
+		If ( nF4For == 0 ) .And.  _lFaz
+
+			aConteudos := { .F. , (cAliasZB1)->ZB1_PROVIS, DTOC((cAliasZB1)->ZB1_DTDIGI), Transform((cAliasZB1)->ZB1_SALDO, "@E 99999,999,999.99") , (cAliasZB1)->ZB1_USUARI }
+
+			aadd(aF4For, aConteudos )
+			aAdd(aRecZB1,Iif(lQuery,(cAliasZB1)->RECZB1,RecNo()))
+		EndIf
+		(cAliasZB1)->(dbSkip())
+	EndDo
+
+
+
+	If ( !Empty(aF4For) )
+
+		aTitCampos := {" ","Provisão","Dt.Digita.","Valor","Usuário" }
+
+		cLine := "{If(aF4For[oListBox:nAt,1],oOk,oNo),aF4For[oListBox:nAT][2],aF4For[oListBox:nAT][3],aF4For[oListBox:nAT][4],aF4For[oListBox:nAT][5]"
+
+		cLine += " } "
+
+
+
+
+		bLine := &( "{ || " + cLine + " }" )
+
+
+		oDlg = MsDialog():New( 50, 40, 285, 541, OemToAnsi("Selecionar Provisões para "+cDTipo),,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+
+		oListBox := TWBrowse():New( 27,4,243,80,,aTitCampos,,oDlg,,,,,,,,,,,, .F. ,, .T. ,, .F. ,,,)
+		oListBox:SetArray(aF4For)
+		oListBox:bLDblClick := { || aF4For[oListBox:nAt,1] := !aF4For[oListBox:nAt,1] }
+		oListBox:bLine := bLine
+
+		oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,{|Self|EnchoiceBar(oDlg,{||(nOpc:=1,nF4For:=oListBox:nAt,oDlg:End())},{||(nOpc:=0,nF4For:=oListBox:nAt,oDlg:End())},,aButtons)}, oDlg:bRClicked, )
+
+		If nOpc==0
+			aF4For:={}
+		EndIf
+
+	Else
+		Help(" ",1,"A103F4")
+	EndIf
+
+
+
+
+	SetKey(115,bSavSetKey)
+	SetKey(116,bSavKeyF5)
+	SetKey(117,bSavKeyF6)
+	SetKey(118,bSavKeyF7)
+	SetKey(119,bSavKeyF8)
+	SetKey(120,bSavKeyF9)
+	SetKey(121,bSavKeyF10)
+	SetKey(122,bSavKeyF11)
+
+	RestArea(aAreaSA2)
+	RestArea(aAreaZB1)
+	RestArea(aArea)
+
+	Return(aF4For)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_ProvImpri(cAlias,nRecno,nOpc)
+
+	Private cPerg := "CSC12B"
+	private nomeprog  := "CSUCTB12"
+	private lweb      := IsBlind()
+	private lPrimVez  := .t. 
+	Private oPrn
+
+
+	Private oFont1 := TFont():New( "Arial",,10,, .t. ,,,,, .f.  )
+	Private oFont3 := TFont():New( "Arial",,12,, .t. ,,,,, .f.  )
+
+
+	Private oFont1c := TFont():New( "Courier New",,10,, .t. ,,,,, .f.  )
+	Private oFont9c := TFont():New( "Courier New",,8,, .f. ,,,,, .f.  )
+
+	ValidPer2(cPerg)
+	Pergunte(cPerg, .F. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	o_dlg := MSDialog():New(200, 1, 380, 380, OemToAnsi(OemToAnsi("Relaçao de Provisões Contábeis")),,,,,,,,, .t. ,,,)
+	 TGroup():New(02,10,080,180,OemToAnsi(),, , , .t. )
+	 IW_Say(10,018,OemToAnsi("Esta rotina imprime a Relaçao de Provisões Contábeis"),,,,, )
+	 IW_Say(18,018,OemToAnsi(""),,,,, )
+	 IW_Say(26,018,OemToAnsi(""),,,,, )
+	 IW_Say(34,018,OemToAnsi(""),,,,, )
+	 SButton():New(65, 038, 05,{|| Pergunte(cPerg, .T. )},,)
+	 SButton():New(65, 068, 01,{|| OkProc()},,)
+	 SButton():New(65, 098, 02,{|| o_dlg:End()},,)
+	 SButton():New(65, 128, 07,{|| oPrn:=Setup()},,)
+	o_dlg:Activate(,,,.T.,, ,)
+
+	if Select( "TRB" ) > 0
+		dbSelectArea( "TRB" )
+		dbCloseArea()
+	endif
+
+	MS_FLUSH()
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function OkProc()
+
+	Local aStruZB1 := ZB1->(dbStruct())
+	Local aStruZB2 := ZB2->(dbStruct())
+	Private bProcessa, cTitulo, cMsg, lAborta
+
+o_dlg	:End()
+
+	cQuery := "SELECT ZB1.* "
+	cQuery += "  FROM "+RetSQLName("ZB1")+" ZB1 "
+	cQuery += " WHERE ZB1.D_E_L_E_T_<>'*' "
+	cQuery += "   AND ZB1_PROVIS BETWEEN '"+mv_par01+"' AND '"+mv_par02+"' "
+	cQuery += "   AND ZB1_DTDIGI BETWEEN '"+DtoS(mv_par03)+"' AND '"+DtoS(mv_par04)+"' "
+	cQuery += "   AND ZB1_FORNEC BETWEEN '"+mv_par05+"' AND '"+mv_par06+"' "
+	cQuery += "   AND ZB1_DTLCTO BETWEEN '"+DtoS(mv_par07)+"' AND '"+DtoS(mv_par08)+"' "
+	If mv_par09=2
+		If Empty(mv_par10)
+			cQuery += " AND ZB1_SALDO > 0 "
+		Else
+			cQuery += " AND ZB1_DTLCTO<='"+DtoS(mv_par10)+"' AND ( ZB1_SALDO > 0 OR ( ZB1_SALDO=0 AND ZB1_DTESTO>'"+DtoS(mv_par10)+"' ) ) "
+		EndIf
+	EndIf
+	cQuery += "ORDER BY ZB1_PROVIS, ZB1_DTDIGI, ZB1_FORNEC "
+
+	cQuery := ChangeQuery(cQuery)
+
+	MemoWrite("C:\CSUIMPRO.sql",cQuery)
+
+	If Select("TRB")>0
+		dbSelectArea("TRB")
+		dbCloseArea()
+	EndIf
+
+	dbUseArea( .T. ,"TOPCONN",TcGenQry(,,cQuery),"TRB", .F. , .T. )
+
+	For nX := 1 To Len(aStruZB1)
+		If aStruZB1[nX,2]<>"C"
+			TcSetField("TRB",aStruZB1[nX,1],aStruZB1[nX,2],aStruZB1[nX,3],aStruZB1[nX,4])
+		EndIf
+	next
+
+	bProcessa := { |lFim| ImpRelato(@lFim) }
+	cTitulo   := "Impressão do Relatório"
+	cMsg      := "Imprimindo... Aguarde..."
+	lAborta   := .T. 
+	Processa( bProcessa, cTitulo, cMsg, lAborta )
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function ImpRelato(lFim)
+
+
+
+
+
+	Local cDesc1		:= "Este programa tem como objetivo imprimir relatorio "
+	Local cDesc2    	:= "de acordo com os parametros informados pelo usuario."
+	Local cDesc3    	:= "Relação de Provisões Contábeis"
+	Local cPict     	:= ""
+	Local titulo    	:= "Relação de Provisões Contábeis"
+	Local nLin      	:= 80
+	Local Cabec1    	:= ""
+	Local Cabec2    	:= ""
+	Local imprime   	:= .T. 
+	Local aOrd := {}
+
+	Private lEnd    	:= .F. 
+	Private lAbortPrint := .F. 
+	Private CbTxt   	:= ""
+	Private limite     	:= 132
+	Private tamanho     := "G"
+	Private nomeprog    := "CSUCTB12"
+	Private nTipo       := 18
+	Private aReturn     := { "Zebrado", 1, "Administracao", 2, 2, 1, "", 1}
+	Private nLastKey   	:= 0
+	Private cbtxt      	:= Space(10)
+	Private cbcont     	:= 00
+	Private CONTFL     	:= 01
+	Private m_pag      	:= 01
+	Private wnrel      	:= "CSUPROVI"
+
+	Private cString := "ZB1"
+
+	If mv_par11<>1
+		Cabec1    	:= "                                                   --------- DOCUMENTO ----------                                                                  PC                                                                      "
+
+		Cabec2    	:= "PROVISÃO  COD.FORNEC-NOME DO FORNECEDOR            NUMERO  EMISSÃO     VENCIMENTO HISTÓRICO                           USUÁRIO         DT.PROVISAO  EXC  DT.CONTAB        PROVISÃO        ESTORNO   DT.ESTORNO         SALDO"
+
+
+	Else
+
+		Cabec1    	:= "PROVISÃO  COD.FORNEC-NOME DO FORNECEDOR            NUMERO  EMISSÃO     VENCIMENTO HISTÓRICO                           USUÁRIO         DT.PROVISAO  PC   DT.CONTAB        PROVISÃO        ESTORNO   DT.ESTORNO         SALDO"
+
+
+		Cabec2    	:= "           SEQ  DATA        TIPO        ORIGEM                 HISTORICO                                         VALOR                             EXC                                                                     "
+
+	EndIf
+
+
+
+
+
+	wnrel := SetPrint(cString,NomeProg,cPerg,@titulo,cDesc1,cDesc2,cDesc3, .T. ,aOrd, .T. ,Tamanho,, .T. )
+
+	If nLastKey == 27
+		Return
+	Endif
+
+	SetDefault(aReturn,cString)
+
+	If nLastKey == 27
+		Return
+	Endif
+
+	nTipo := If(aReturn[4]==1,15,18)
+
+
+
+
+
+	RptStatus({|| RunReport(Cabec1,Cabec2,Titulo,nLin) },Titulo)
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function RunReport(Cabec1,Cabec2,Titulo,nLin)
+
+	Local nOrdem
+	Local cProvis
+	Local dDtProv
+	Local nValor
+	Local nVlesto
+	Local nSaldo
+	Local nLin:=66
+	Local aTipo := { "PROVISÃO","ESTORNO","INCLUSÃO","ALTERAÇÃO","EXCLUSÃO" }
+
+	dbSelectArea(cString)
+	dbSetOrder(1)
+
+	dbSelectArea("TRB")
+
+
+
+	SetRegua(RecCount())
+
+	TRB->(dbGoTop())
+	If TRB->(Eof() .And. Bof())
+		cMsg:="Não há dados para este relatório!"
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		Return()
+	EndIf
+
+	cChave:=""
+	aTot:={0,0,0}
+	While TRB->(!EOF())
+
+
+
+
+
+		If lAbortPrint
+			PrintOut(nLin,00,"*** CANCELADO PELO OPERADOR ***",)
+			Exit
+		Endif
+
+		If nLin > 56
+			Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+			nLin := 9
+		Endif
+
+		PrintOut(nLin,000,TRB->ZB1_PROVIS,)
+		PrintOut(nLin,010,TRB->ZB1_FORNEC+"/"+ZB1_LOJA+"-"+Left(Posicione("SA2",1,xFilial("SA2")+TRB->(ZB1_FORNEC+ZB1_LOJA),"A2_NOME"),30),)
+		PrintOut(nLin,051,TRB->ZB1_DOC,)
+		PrintOut(nLin,059,TRB->ZB1_EMIDOC,"@D")
+		PrintOut(nLin,071,TRB->ZB1_VENCTO,"@D")
+		PrintOut(nLin,082,Left(TRB->ZB1_HISTOR,35),"@!")
+		PrintOut(nLin,118,TRB->ZB1_USUARI,"@!")
+		PrintOut(nLin,134,TRB->ZB1_DTDIGI,"@D")
+		PrintOut(nLin,148,TRB->ZB1_PCEXC,"@!")
+		PrintOut(nLin,152,TRB->ZB1_DTLCTO,"@D")
+		PrintOut(nLin,164,TRB->ZB1_VALDOC,"@E 99,999,999.99")
+		PrintOut(nLin,179,TRB->ZB1_SLDEST,"@E 99,999,999.99")
+		PrintOut(nLin,195,TRB->ZB1_DTESTO,"@D")
+		_nSaldo := 0
+		If mv_par09=2
+			If Empty(mv_par10)
+				_nSaldo := TRB->ZB1_SALDO
+			Else
+				_nSaldo := Iif(Empty(TRB->ZB1_DTESTO), TRB->ZB1_SALDO, TRB->(ZB1_SALDO+ZB1_SLDEST))
+			EndIf
+		EndIf
+
+		PrintOut(nLin,206,_nSaldo,"@E 99,999,999.99")
+
+		If mv_par11==1
+
+
+
+			dbSelectArea("ZB3")
+			dbSetOrder(1)
+			If ZB3->(dbSeek(xFilial("ZB3")+TRB->ZB1_PROVIS))
+
+				While ZB3->(!Eof() .And. ZB3->ZB3_PROVIS=TRB->ZB1_PROVIS)
+
+					nLin++
+
+					If nLin > 56
+						Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+						nLin := 9
+					Endif
+
+					PrintOut(nLin,012,ZB3->ZB3_SEQUEN,"@!")
+					PrintOut(nLin,017,ZB3->ZB3_DATA,"@D")
+					PrintOut(nLin,029,aTipo[Val(ZB3->ZB3_TIPO)],"@!")
+					PrintOut(nLin,041,ZB3->ZB3_ORIGEM,"@!")
+					PrintOut(nLin,063,ZB3->ZB3_HISTOR,"@!")
+					PrintOut(nLin,105,ZB3->ZB3_VALOR,"@E 99,999,999.99")
+
+					ZB3->(dbSkip())
+
+				End
+			EndIf
+		EndIf
+
+		aTot[1]+=TRB->ZB1_VALDOC
+		aTot[2]+=TRB->ZB1_SLDEST
+		aTot[3]+=_nSaldo
+
+		nLin++
+
+		TRB->(dbSkip())
+	End
+
+	If aTot[1]>0
+		nLin+=3
+		If nLin>53
+			Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+			nLin := 12
+		EndIf
+		PrintOut(nLin,163,"--------------",)
+		PrintOut(nLin,178,"--------------",)
+		PrintOut(nLin,205,"--------------",)
+		nLin++
+		PrintOut(nLin,001,"TOTAL GERAL",)
+		PrintOut(nLin,163,aTot[1],"@E 999,999,999.99")
+		PrintOut(nLin,178,aTot[2],"@E 999,999,999.99")
+		PrintOut(nLin,205,aTot[3],"@E 999,999,999.99")
+	EndIf
+
+
+
+
+
+	Set( 20, "SCREEN" )
+
+
+
+
+
+	If aReturn[5]==1
+		dbCommitAll()
+		Set( 24, "" )
+		OurSpool(wnrel)
+	Endif
+
+	MS_FLUSH()
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function ValidPerg(cPerg)
+
+	Local _sAlias := Alias()
+	Local aRegs := {}
+	Local i,j
+
+	dbSelectArea("SX1")
+	dbSetOrder(1)
+	cPerg := PADR(cPerg,Len(SX1->X1_GRUPO))
+
+	aAdd(aRegs,{cPerg,"01","Provisao de      ?"		,""	,"" ,"mv_ch1","C",9,0,0,"G",""	,"MV_PAR01","","","","","","","","","","","","","","","","","","","","","","","","","ZB1","",""})
+	aAdd(aRegs,{cPerg,"02","Provisao até     ?"		,""	,"" ,"mv_ch2","C",9,0,0,"G",""	,"MV_PAR02","","","","","","","","","","","","","","","","","","","","","","","","","ZB1","",""})
+	aAdd(aRegs,{cPerg,"03","Dt.Digitação de  ?"		,"" ,"" ,"mv_ch3","D",8,0,0,"G",""	,"MV_PAR03","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"04","Dt.Digitação até ?"		,"" ,"" ,"mv_ch4","D",8,0,0,"G",""	,"MV_PAR04","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"05","Fornecedor de    ?"		,"" ,"" ,"mv_ch5","C",6,0,0,"G",""	,"MV_PAR05","","","","","","","","","","","","","","","","","","","","","","","","","SA2","",""})
+	aAdd(aRegs,{cPerg,"06","Fornecedor até   ?"		,"" ,"" ,"mv_ch6","C",6,0,0,"G",""	,"MV_PAR06","","","","","","","","","","","","","","","","","","","","","","","","","SA2","",""})
+	aAdd(aRegs,{cPerg,"07","Data Contabilização?"	,""	,"" ,"mv_ch7","D",8,0,0,"G",""	,"MV_PAR07","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"08","Exibe Contabilização?"	,""	,""	,"mv_ch8","C",1,0,2,"C",""	,"mv_par08","Sim","","","","","Não","","","","","","","","","","","","","","","","","","","","","","",""})
+
+	For i:=1 to Len(aRegs)
+		If !dbSeek(cPerg+aRegs[i,2])
+			RecLock("SX1", .T. )
+			For j:=1 to FCount()
+				If j <= Len(aRegs[i])
+					FieldPut(j,aRegs[i,j])
+				Endif
+			Next
+			MsUnlock()
+		Endif
+	Next
+
+	dbSelectArea(_sAlias)
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function FazRateio()
+
+	Local oDlg11
+	Local cCodRateio	:= CriaVar("CTJ_RATEIO")
+	Local nOpca 		:= 0
+	Local cHistorico 	:= CriaVar("CT2_HIST")
+	Local cSeq			:= ""
+	Local nIncAlt		:= 3
+
+	Private cDebito	 	:= CriaVar("CT2_DEBITO")
+	Private cCredito 	:= CriaVar("CT2_CREDIT")
+
+	If !CtbInUse()
+		Return
+	Endif
+
+	aCols := oGetDados:aCols
+	cMsg:=""
+	If Len(aCols)>1
+		cMsg:="O rateio externo só pode ser efetuado para Pedido de Compras único!"+Chr(10)
+	EndIf
+	If Empty(aCols[1][nPosNPCEZ])
+		cMsg:="Indique o nr. do Pedido de Compras antes de solicitar o rateio externo!"+Chr(10)
+	EndIf
+	If Empty(aCols[1][nPosNatEZ])
+		cMsg:="Indique o código da Natureza antes de solicitar o rateio externo!"+Chr(10)
+	EndIf
+
+	If !Empty(cMsg)
+		Aviso("Verifique as inconsistências",cMsg,{"Fechar"},3)
+		Return
+	EndIf
+
+	oDlg11 = MsDialog():New( 120, 1, 250, 310, OemToAnsi("Rateio Externo"),,,.F.,,,,,,.T.,, ,.F. )
+
+	 TSay():New( 20, 10,{||  OemToAnsi("Código Rateio:")},,,,.F.,.F.,.F.,.T.,,,,,.F.,.F.,.F.,.F.,.F.,.F. )
+
+	 oRateio := TGet():New( 20, 50, { | u | If( PCount() == 0, cCodRateio, cCodRateio := u ) },oDLG11, 070, 10, "@!",,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,"CTJ","cCodRateio",,,, )
+
+	 oBtn := SButton():New( 050, 120,1,{||  (oDlg11:End(),TrazCTJ(cCodRateio))}, oDlg11,.T.,,)
+
+	oDlg11:Activate( oDlg11:bLClicked, oDlg11:bMoved, oDlg11:bPainted,.T.,,,, oDlg11:bRClicked, )
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function TrazCTJ(cCodRateio)
+
+	Local aSaveArea	:= GetArea()
+	Local lCusto	:= CtbMovSaldo("CTT")
+	Local lItem	 	:= CtbMovSaldo("CTD")
+	Local lCLVL	 	:= CtbMovSaldo("CTH")
+	Local nValor	:= 0
+	Local nValRat	:= 0
+	Local cNumPC	:= ""
+	Local cContrato	:= ""
+	Local cNatureza := ""
+	Local aCabPC	:= {}
+
+	cNumPc := aCols[1][nPosNPCEZ]
+	nValor := aCols[1][nPosValEZ]
+	cContrato:=aCols[1][nPosContr]
+	cNatureza:=aCols[1][nPosNatEZ]
+	nValRat		:= 0
+
+	dbSelectArea("CTJ")
+	dbSetOrder(1)
+	dbSeek(xFilial("CTJ")+cCodRateio)
+	While CTJ->(!Eof()) .And.  CTJ->CTJ_FILIAL == xFilial() .And.  CTJ->CTJ_RATEIO == cCodRateio
+		aAdd( aCabPC, { cNumPc, CTJ->CTJ_CCD, CTJ->CTJ_ITEMD, CTJ->CTJ_CLVLDB, Round(nValor*CTJ->CTJ_PERCEN*0.01,2), cContrato, cNatureza, CTJ->CTJ_PERCEN } )
+		nValRat += aCabPC[Len(aCabPC)][5]
+		CTJ->(dbSkip())
+	EndDo
+
+	RestArea(aSaveArea)
+
+	MontAcols(,,aCabPC)
+
+	If !Empty(aCols[1][1])
+		oGetDados:aCols := aCols
+		oGetDados:ForceRefresh()
+	EndIf
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function ValidPer2(cPerg)
+
+	Local _sAlias := Alias()
+	Local aRegs := {}
+	Local i,j
+
+	dbSelectArea("SX1")
+	dbSetOrder(1)
+	cPerg := PADR(cPerg,Len(SX1->X1_GRUPO))
+
+	aAdd(aRegs,{cPerg,"01","Provisao de      ?"		,""	,"" ,"mv_ch1","C",9,0,0,"G",""	,"MV_PAR01","","","","","","","","","","","","","","","","","","","","","","","","","ZB1","",""})
+	aAdd(aRegs,{cPerg,"02","Provisao até     ?"		,""	,"" ,"mv_ch2","C",9,0,0,"G",""	,"MV_PAR02","","","","","","","","","","","","","","","","","","","","","","","","","ZB1","",""})
+	aAdd(aRegs,{cPerg,"03","Dt.Digitação de  ?"		,"" ,"" ,"mv_ch3","D",8,0,0,"G",""	,"MV_PAR03","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"04","Dt.Digitação até ?"		,"" ,"" ,"mv_ch4","D",8,0,0,"G",""	,"MV_PAR04","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"05","Fornecedor de    ?"		,"" ,"" ,"mv_ch5","C",6,0,0,"G",""	,"MV_PAR05","","","","","","","","","","","","","","","","","","","","","","","","","SA2","",""})
+	aAdd(aRegs,{cPerg,"06","Fornecedor até   ?"		,"" ,"" ,"mv_ch6","C",6,0,0,"G",""	,"MV_PAR06","","","","","","","","","","","","","","","","","","","","","","","","","SA2","",""})
+	aAdd(aRegs,{cPerg,"07","Dt.Contabilização de?"	,""	,"" ,"mv_ch7","D",8,0,0,"G",""	,"MV_PAR07","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"08","Dt.Contabilização até?"	,""	,"" ,"mv_ch8","D",8,0,0,"G",""	,"MV_PAR08","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"09","Imprime Saldo Zerado?"	,""	,"" ,"mv_ch9","N",1,0,2,"C",""	,"MV_PAR09","Sim","","","","","Não","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"10","Data de Referência:"	,""	,"" ,"mv_cha","D",8,0,0,"G",""	,"MV_PAR10","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"11","Imprime Ocorrências?"	,""	,""	,"mv_chb","C",1,0,2,"C",""	,"mv_par11","Sim","","","","","Não","","","","","","","","","","","","","","","","","","","","","","",""})
+
+	For i:=1 to Len(aRegs)
+		If !dbSeek(cPerg+aRegs[i,2])
+			RecLock("SX1", .T. )
+			For j:=1 to FCount()
+				If j <= Len(aRegs[i])
+					FieldPut(j,aRegs[i,j])
+				Endif
+			Next
+			MsUnlock()
+		Endif
+	Next
+
+	dbSelectArea(_sAlias)
+
+	Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Function U_GrvOcorPrv(cProvis,cTipo,dData,nValor,cOrigem,cHistor,cNomUsu)
+
+	Local aArea	  := GetArea()
+	Local cSequen := ""
+
+
+	cQuery := " SELECT MAX(ZB3_SEQUEN) SEQUEN "+Chr(13) + Chr(10)
+	cQuery += " FROM "+RetSqlName("ZB3") + " ZB3 "+Chr(13) + Chr(10)
+	cQuery += " WHERE ZB3.ZB3_FILIAL = '"+xFilial("ZB3")+"' "+Chr(13) + Chr(10)
+	cQuery += "  AND ZB3.ZB3_PROVIS  = '"+cProvis+"' "+Chr(13) + Chr(10)
+	cQuery += "  AND ZB3.D_E_L_E_T_  = ' ' "+Chr(13) + Chr(10)
+
+	cQuery := ChangeQuery(cQuery)
+
+	U_MontaView( cQuery, "TIMP" )
+
+	TIMP->( DbGoTop() )
+
+	If TIMP->( Eof() )
+		cSequen := "001"
+	Else
+		cSequen := Soma1(TIMP->SEQUEN)
+	EndIf
+
+	ZB3->( RecLock("ZB3", .t. ) )
+	ZB3->ZB3_FILIAL	:= xFilial("ZB3")
+	ZB3->ZB3_PROVIS	:= cProvis
+	ZB3->ZB3_TIPO	:= cTipo
+	ZB3->ZB3_DATA	:= DDATABASE
+	ZB3->ZB3_VALOR	:= nValor
+	ZB3->ZB3_ORIGEM	:= cOrigem
+	ZB3->ZB3_HISTOR	:= cHistor
+	ZB3->ZB3_USUARI := cNomUsu
+	ZB3->ZB3_SEQUEN := cSequen
+	ZB3->(MsUnLock())
+
+	RestArea(aArea)
+
+	Return( .t. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function CarrTabRat()
+
+
+
+	Local aArea		:= GetArea()
+	Local lRetorno	:= .T. 
+	Local aRegs		:= {}
+	Local cPerg		:= PADR("CTB12TR",Len(SX1->X1_GRUPO))
+	Local cAnoMes	:= ""
+	Local cUltRev	:= ""
+	Local nLoop		:= 0
+
+
+
+
+
+	Local cNaturez	:= ""
+	Local cPedCom	:= ""
+	Local cNatDes	:= ""
+
+
+
+
+	aAdd(aRegs,{cPerg,"01","Tabela de Rateio"		,"","","mv_ch1","C",06,0,0,"G","ExistCpo('ZB7')"	,"MV_PAR01","","","","", "","","","","","","","","","","","","","","","","","","","","ZBA"	,"","","","" })
+	aAdd(aRegs,{cPerg,"02","Mês/Ano da Tabela"		,"","","mv_ch2","D",08,0,0,"G",""					,"MV_PAR02","","","","", "","","","","","","","","","","","","","","","","","","","",""		,"","","","" })
+
+	CriaSx1(aRegs)
+
+	If !Pergunte(cPerg, .T. )
+		Return .F. 
+	Endif
+
+	dbSelectArea("ZBA")
+	dbSetOrder(1)
+	If !dbSeek(xFilial("ZBA")+MV_PAR01+__cUserID, .F. )
+		Aviso("Aviso","A tabela de rateio não existe ou o usuário logado não tem permissão de utilizá-la.",{"OK"},,"Atenção",,"BMPPERG")
+		Return .F. 
+	Endif
+
+	cAnoMes	:= Substr(DTOS(MV_PAR02),1,6)
+	cUltRev	:= U_RZB7ULTR(MV_PAR01,cAnoMes, .T. )
+
+	dbSelectArea("ZB8")
+	dbSetOrder(1)
+	If !dbSeek(xFilial("ZB8")+MV_PAR01+cAnoMes+cUltRev, .F. )
+		Aviso("Aviso","A tabela de rateio não tem vigencia para a data informada ou não tem itens preenchidos.",{"OK"},,"Atenção",,"BMPPERG")
+		Return .F. 
+	Endif
+
+
+	If Aviso("Aviso","A rotina irá recarregar a tabela com as informações de rateio da tabela selecionada.", {"OK","Cancelar"},,"Atenção",,"BMPPERG")==2
+		Return .F. 
+	Endif
+
+
+
+
+	aCols 		:= oGetDados:aCols
+
+	cNaturez	:= aCols[1,BuscaHeader(aHeader,"ZB2_NATURE")]
+	cPedCom		:= aCols[1,BuscaHeader(aHeader,"ZB2_PEDCOM")]
+	cNatDes		:= Posicione("SED",1,xFilial("SED")+cNaturez,"ED_DESCRIC")
+
+	aCols := {}
+
+
+
+
+	while !EOF() .and. ZB8->(ZB8_FILIAL+ZB8_CODRAT+ZB8_ANOMES+ZB8_REVISA)==xFilial("ZB8")+MV_PAR01+cAnoMes+cUltRev
+
+		AdicCols()
+
+
+
+
+
+		aCols[Len(aCols),BuscaHeader(aHeader,"ZB2_PEDCOM")]	:= 	cPedCom
+		aCols[Len(aCols),BuscaHeader(aHeader,"ZB2_NATURE")]	:= 	cNaturez
+
+
+
+
+		aCols[Len(aCols),BuscaHeader(aHeader,"ZB2_NATDES")]	:=	cNatDes
+
+		aCols[Len(aCols),BuscaHeader(aHeader,"ZB2_PERCEN")]	:= 	ZB8->ZB8_PERCEN
+		aCols[Len(aCols),BuscaHeader(aHeader,"ZB2_CCUSTO")]	:=	ZB8->ZB8_CCDBTO
+		aCols[Len(aCols),BuscaHeader(aHeader,"ZB2_ITEMCT")]	:=	ZB8->ZB8_ITDBTO
+		aCols[Len(aCols),BuscaHeader(aHeader,"ZB2_CLVL")]		:=	ZB8->ZB8_CLVLDB
+
+		aCols[Len(aCols),BuscaHeader(aHeader,"ZB2_VALOR")]		:=	Round((M->ZB1_VALDOC*ZB8->ZB8_PERCEN)/100,2)
+
+		dbSelectArea("ZB8")
+		dbSkip()
+	EndDo
+
+	oGetDados:aCols	:= aCols
+
+
+
+
+	RecValZB2()
+
+	RestArea(aArea)
+	Return lRetorno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function CriaSx1(aRegs)
+
+
+
+	Local aAreaAtu	:= GetArea()
+	Local aAreaSX1	:= SX1->(GetArea())
+	Local nJ		:= 0
+	Local nY		:= 0
+
+	dbSelectArea("SX1")
+	dbSetOrder(1)
+
+	For nY := 1 To Len(aRegs)
+		If !MsSeek(Padr(aRegs[nY,1],Len(SX1->X1_GRUPO))+aRegs[nY,2])
+			RecLock("SX1", .T. )
+			For nJ := 1 To FCount()
+				If nJ <= Len(aRegs[nY])
+					FieldPut(nJ,aRegs[nY,nJ])
+				EndIf
+			next
+			MsUnlock()
+		EndIf
+	next
+
+	RestArea(aAreaSX1)
+	RestArea(aAreaAtu)
+
+	Return(Nil)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Static Function BuscaHeader(aArrayHeader,cCampo)
+
+	Return(AScan(aArrayHeader,{|aDados| AllTrim(Upper(aDados[2])) == Alltrim(Upper(cCampo))}))
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_DesflegP
+
+Local _cSenha := ""
+
+If !Empty(ZB1->ZB1_DTLCTO) .Or.  !Empty(ZB1->ZB1_DTESTO) .Or.  !Empty(ZB1->ZB1_SLDEST) .Or.  !Empty(ZB1->ZB1_SLDEST )
+	If MsgYesNo("Confirma o Desflegue da Provisão: "+ZB1->ZB1_PROVIS)
+
+		_cSenha := ProvBlqSenha()
+
+		If Alltrim(_cSenha) <> GetMv("MV_SENHPRO")
+			Alert("Senha incorreta !!!!!!")
+			Return
+		EndIf
+
+
+		LimpaCam()
+	Else
+		MsgStop("Processo abortado")
+		Return Nil
+	EndIf
+Else
+	MsgAlert("A provisão "+ZB1->ZB1_PROVIS+" já encontra-se aberta!")
+EndIf
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function LimpaCam()
+Local aArea		:=	GetArea()
+Local _NomeUser := substr(cUsuario,7,15)
+Local _Usuario	:= ""
+Local cMsg1		:= ""
+Local _aRetUser	:= {}
+
+
+PswOrder(2)
+If PswSeek(_NomeUser, .T. )
+
+	_aRetUser	:= PswRet(1)
+	_Usuario	:= upper(alltrim(_aRetUser[1,4]))
+Else
+	_Usuario	:= UPPER(_NomeUser)
+EndIf
+
+Begin Sequence; BeginTran()
+
+Reclock("ZB1", .F. )
+	ZB1->ZB1_SALDO := ZB1->ZB1_VALDOC
+	ZB1->ZB1_DTLCTO := CTOD(" ")
+	ZB1->ZB1_DTESTO := CTOD(" ")
+	ZB1->ZB1_SLDEST := 0
+	ZB1->ZB1_VLESTO := 0
+MsUnlock()
+
+ZB2->(DbGoTop())
+
+If ZB2->(dbSeek(xFilial("ZB2")+ZB1->ZB1_PROVIS))
+	While !ZB2->(EOF()) .And.  ZB2->ZB2_PROVIS == ZB1->ZB1_PROVIS
+		Reclock("ZB2", .F. )
+			ZB2->ZB2_SALDO := ZB2->ZB2_VALOR
+			ZB2->ZB2_SLDEST := 0
+			ZB2->ZB2_VLESTO := 0
+		MsUnlock()
+
+		ZB2->(dbSkip())
+	EndDo
+Else
+	cMsg1:="Não existe registro para a Provisão selecionada!"
+	Aviso("Verifique as inconsistências.",cMsg1,{"Fechar"},3)
+	Return()
+EndIf
+
+
+cProvis	:= ZB1->ZB1_PROVIS
+dData	:= Date()
+cTime	:= TIME()
+DbSelectArea("ZV4")
+DbSetorder(1)
+If !ZV4->(dbSeek(xFilial("ZV4")+Dtoc(dData)+cTime))
+	RecLock("ZV4", .T. )
+	ZV4_FILIAL	:= "03"
+	ZV4_DATA	:= dData
+	ZV4_HORA	:= cTime
+	ZV4_USER	:= _Usuario
+	ZV4_PROVIS  := cProvis
+	MsUnlock()
+EndIf
+
+MsgAlert("Provisão "+ZB1->ZB1_PROVIS+" aberta!")
+
+EndTran(); end
+
+RestArea(aArea)
+return
+
+
+
+
+
+
+
+
+
+
+
+Static Function ProvBlqSenha
+
+Local oDlg_1,Passw,oSBtn5,oSay6
+Local cSenha := Space(20)
+oDlg_1 := MSDIALOG():Create()
+oDlg_1:cName := "oDlg_1"
+oDlg_1:cCaption := "Digite a senha para Desflegar a Provisão"
+oDlg_1:nLeft := 0
+oDlg_1:nTop := 0
+oDlg_1:nWidth := 284
+oDlg_1:nHeight := 110
+oDlg_1:lShowHint := .F. 
+oDlg_1:lCentered := .T. 
+
+Passw := TGET():Create(oDlg_1)
+Passw:cName := "Passw"
+Passw:cCaption := "Passw"
+Passw:nLeft := 111
+Passw:nTop := 22
+Passw:nWidth := 121
+Passw:nHeight := 21
+Passw:lShowHint := .F. 
+Passw:lReadOnly := .F. 
+Passw:Align := 0
+Passw:cVariable := "cSenha"
+Passw:bSetGet := {|u| If(PCount()>0,cSenha:=u,cSenha) }
+Passw:lVisibleControl := .T. 
+Passw:lPassword := .T. 
+Passw:lHasButton := .F. 
+
+oSBtn5 := SBUTTON():Create(oDlg_1)
+oSBtn5:cName := "oSBtn5"
+oSBtn5:cCaption := "Ok"
+oSBtn5:nLeft := 209
+oSBtn5:nTop := 52
+oSBtn5:nWidth := 52
+oSBtn5:nHeight := 22
+oSBtn5:lShowHint := .F. 
+oSBtn5:lReadOnly := .F. 
+oSBtn5:Align := 0
+oSBtn5:lVisibleControl := .T. 
+oSBtn5:nType := 1
+oSBtn5:bAction := {|| oDlg_1:END()}
+
+oSay6 := TSAY():Create(oDlg_1)
+oSay6:cName := "oSay6"
+oSay6:cCaption := "Senha:"
+oSay6:nLeft := 33
+oSay6:nTop := 23
+oSay6:nWidth := 65
+oSay6:nHeight := 17
+oSay6:lShowHint := .F. 
+oSay6:lReadOnly := .F. 
+oSay6:Align := 0
+oSay6:lVisibleControl := .T. 
+oSay6:lWordWrap := .F. 
+oSay6:lTransparent := .T. 
+
+oDlg_1:Activate()
+
+Return cSenha
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function AtuDci()
+Local aEstrut	:= {}
+Local aSX3		:= {}
+Local aSX2		:= {}
+Local aSIX		:= {}
+Local j,i
+
+
+
+
+aEstrut:= { "X3_ARQUIVO","X3_ORDEM"  ,"X3_CAMPO"  ,"X3_TIPO"   ,"X3_TAMANHO","X3_DECIMAL","X3_TITULO" ,"X3_TITSPA" ,"X3_TITENG" , "X3_DESCRIC","X3_DESCSPA","X3_DESCENG","X3_PICTURE","X3_VALID"  ,"X3_USADO"  ,"X3_RELACAO","X3_F3"     ,"X3_NIVEL"  , "X3_RESERV" ,"X3_CHECK"  ,"X3_TRIGGER","X3_PROPRI" ,"X3_BROWSE" ,"X3_VISUAL" ,"X3_CONTEXT","X3_OBRIGAT","X3_VLDUSER", "X3_CBOX"   ,"X3_CBOXSPA","X3_CBOXENG","X3_PICTVAR","X3_WHEN"   ,"X3_INIBRW" ,"X3_GRPSXG" ,"X3_FOLDER","X3_PYME"}
+
+
+Aadd(aSX3,{"ZV4","01","ZV4_FILIAL","C",2,0,"Filial","Filial","Filial","Filial do Sistema","Sucursal del Sistema","System Branch","@!","","€€€€€€€€€€€€€€€","","",1,"‚€","","","","N","","","","","","","","","","","","1"})
+Aadd(aSX3,{"ZV4","02","ZV4_DATA"  ,"D",8,0,"Data","Data","Data","Data da execucao","Data da execucao","Data da execucao","","","€€€€€€€€€€€€€€ ","","",1,"‚€","","","","S","","","","","","","","","","","","1"})
+Aadd(aSX3,{"ZV4","03","ZV4_HORA"  ,"C",8,0,"Hora","Hora","Hora","Hora","Hora","Hora","99:99","","€€€€€€€€€€€€€€ ","","",1,"‚€","","","","S","","","","","","","","","","","","1"})
+Aadd(aSX3,{"ZV4","06","ZV4_USER"  ,"C",30,0,"Usuario","Usuario","Usuario","Usuario","Usuario","Usuario","","","€€€€€€€€€€€€€€ ","","",1,"‚€","","","","S","","","","","","","","","","","","1"})
+Aadd(aSX3,{"ZV4","07","ZV4_PROVIS","C",9,0,"Provisao","Provisao","Provisao","Numero da Provisao","Numero da Provisao","Numero da Provisao","","","€€€€€€€€€€€€€€ ","","",1,"‚€","","","","S","","","","","","","","","","","","1"})
+
+
+dbSelectArea("SX3")
+dbSetOrder(2)
+If !dbSeek("ZV4")
+
+	For i:= 1 To Len(aSX3)
+		If !Empty(aSX3[i][1])
+			If !dbSeek(aSX3[i,3])
+				RecLock("SX3", .T. )
+				For j:=1 To Len(aSX3[i])
+					If FieldPos(aEstrut[j])>0
+						FieldPut(FieldPos(aEstrut[j]),aSX3[i,j])
+					EndIf
+				next
+				dbCommit()
+				MsUnLock()
+			EndIf
+		EndIf
+	next
+
+	aEstrut:= {"X2_CHAVE","X2_PATH","X2_ARQUIVO","X2_NOME","X2_NOMESPAC","X2_NOMEENGC","X2_ROTINA","X2_MODO","X2_MODOUN","X2_MODOEMP","X2_DELET","X2_TSS","X2_UNICO","X2_PYME","X2_MODULO"}
+
+	aAdd(aSX2,{"ZV4","\DADOSADV\","","Log de Desflegue Provisao","Log de Desflegue Provisao","Log de Desflegue Provisao","","E","E","E",0,"","ZV4_FILIAL+DTOS(ZV4_DATA)+ZV4_HORA","S",6})
+	dbSelectArea("SX2")
+	dbSetOrder(1)
+	dbSeek("ZV4")
+	cPath := "\DADOSADV\"
+	cNome := "ZV4050"
+	cModo	:= "E"
+
+	For i:= 1 To Len(aSX2)
+		If !Empty(aSX2[i][1])
+			If !dbSeek(aSX2[i,1])
+				RecLock("SX2", .T. )
+				For j:=1 To Len(aSX2[i])
+					If FieldPos(aEstrut[j]) > 0
+						FieldPut(FieldPos(aEstrut[j]),aSX2[i,j])
+					EndIf
+				next
+				SX2->X2_PATH    := cPath
+				SX2->X2_ARQUIVO := cNome
+				SX2->X2_MODO    := cModo
+				dbCommit()
+				MsUnLock()
+			EndIf
+		EndIf
+	next
+
+	aEstrut:= {"INDICE","ORDEM","CHAVE","DESCRICAO","DESCSPA","DESCENG","PROPRI","F3","NICKNAME"}
+
+	Aadd(aSIX,{"ZV4","1","ZV4_FILIAL+DTOS(ZV4_DATA)+ZV4_HORA","FILIAL+DATA+HORA","FILIAL+DATA+HORA","FILIAL+DATA+HORA","S","",""})
+
+	dbSelectArea("SIX")
+	dbSetOrder(1)
+	For i:= 1 To Len(aSIX)
+		If !Empty(aSIX[i,1])
+			If !dbSeek(aSIX[i,1]+aSIX[i,2])
+				lNew:= .T. 
+			Else
+				lNew:= .F. 
+			EndIf
+
+			If lNew .Or. UPPER(Alltrim(aSIX[i,3]))<>UPPER(AllTrim(CHAVE))
+				RecLock("SIX",lNew)
+				For j:=1 To Len(aSIX[i])
+					If FieldPos(aEstrut[j])>0
+						FieldPut(FieldPos(aEstrut[j]),aSIX[i,j])
+					EndIf
+				next
+				dbCommit()
+				MsUnLock()
+			EndIf
+		EndIf
+	next
+EndIf
+
+dbSelectArea("ZV4")
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_LogDesf()
+
+Local aItens	:= {}
+local nRBachou	:= 0
+
+dbselectarea("ZV4")
+ZV4->(dbgotop())
+
+while !ZV4->(eof())
+	nRBachou := aScan(aItens, ZV4->ZV4_DATA)
+	if nRBachou = 0
+
+		AADD(aItens, {ZV4_PROVIS, ZV4_DATA, ZV4_HORA, ZV4_USER} )
+
+	endif
+	ZV4->(dbskip())
+enddo
+
+ASORT(aItens, , , { | x,y | x[2] > y[2] } )
+
+
+oDlg = TDialog():New( 0, 0, 480, 1120, "log de execução do Desflegue da Provisão",,,.F.,,,,,,.T.,,,,, )
+
+
+oBrowse := TWBrowse():New( 02 , 01,560,210,,{"Num. Provisão","       Data        ","       Hora       ","       Usuário que processou "},{20,30,30}, oDlg,,,,,{||},,,,,,, .F. ,, .T. ,, .F. ,,, )
+aBrowse := aClone(aItens)
+
+oBrowse:SetArray(aItens)
+
+oBrowse:bLine := {||{aBrowse[oBrowse:nAt,01],aBrowse[oBrowse:nAt,02],aBrowse[oBrowse:nAt,03],aBrowse[oBrowse:nAt,04] } }
+
+If !Empty(aItens)
+
+	 TSay():New( 221, 010,{||  "ATENÇÃO: Ultimo desflegue realizado dia "+Dtoc(aItens[oBrowse:nAt,02])+" - Através do Usuário: "+aItens[oBrowse:nAt,04]},oDlg,,,.F.,.F.,.F.,.T., 128,,,,.F.,.F.,.F.,.F.,.F.,.F. )
+	SButton():New( 220,510,01,{||oDlg:End()},oDlg, .T. ,,)
+
+	oDlg:Activate(,,,.T.,, ,)
+EndIf
+
+Return

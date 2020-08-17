@@ -1,0 +1,17 @@
+#include "rwmake.ch"        
+
+User Function GFINA12()      //PAGFOR
+
+
+SetPrvt("_RETNOS,")
+
+//// RETORNA O NOSSO NUMERO QUANDO COM VALOR NO E2_CODBAR, E ZEROS QUANDO NAO
+//// TEM VALOR POSICAO ( 142 - 150 )
+
+IF SUBS(SE2->E2_CODBAR,01,3) != "237"
+    _RETNOS := "000000000"
+Else
+    _RETNOS := SUBS(SE2->E2_CODBAR,28,9)
+EndIf
+
+Return(_RETNOS)   

@@ -1,0 +1,37 @@
+#line 1 "C:\INCLUDE\topconn.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\aaj0026.prw"
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 16 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\aaj0026.prw"
+Function U_AAJ0026
+
+Processa({|lEnd| AAJ0026Processa(),"(0649/05) Eliminando flag CT2_ITFOL..."})
+
+STATIC FUNCTION AAJ0026Processa()
+
+ct2->(dbsetorder(1))
+_cFiltro:="dtos(ct2_data)=='20050228'.and.CT2_LOTE=='008891'.and.ct2_ITFOL=='S'"
+ct2->(IndRegua(alias(),criatrab(, .f. ),indexkey(),,_cFiltro))
+ct2->(dbgotop())
+
+
+
+ProcRegua(5376)
+
+
+DBSELECTAREA("CT2")
+
+while !eof()
+
+	IncProc("(0649/05) Eliminando flag CT2_ITFOL...")
+
+	RecLock( "CT2" , .F.  )
+	CT2_ITFOL := " "
+	MsUnLock()
+
+	dbSkip()
+
+enddo
+
+Return

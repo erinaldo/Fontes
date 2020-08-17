@@ -1,0 +1,428 @@
+#line 1 "C:\INCLUDE\Protheus.ch"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "Protheus.ch"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "Protheus.ch"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "Protheus.ch"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "Protheus.ch"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "Protheus.ch"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "Protheus.ch"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "Protheus.ch"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "Protheus.ch"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "Protheus.ch"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "Protheus.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbra0.prw"
+#line 1 "C:\INCLUDE\TopConn.ch"
+#line 3 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbra0.prw"
+#line 1 "C:\INCLUDE\report.ch"
+#line 19 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\rctbra0.prw"
+Function U_RCTBRA0()
+
+
+
+Local aRegs	:= {}
+Local cPerg := PADR("CTBRA0",Len(SX1->X1_GRUPO))
+Private Qry := GetNextAlias()
+
+
+
+
+
+
+
+
+
+aAdd(aRegs,{cPerg,"01","Digitação De"			,"","","mv_ch1","D",08,0,0,"G","","MV_PAR01","","","","", "","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{cPerg,"02","Digitação Até"			,"","","mv_ch2","D",08,0,0,"G","","MV_PAR02","","","","", "","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{cPerg,"03","Código Rateio De"		,"","","mv_ch3","C",06,0,0,"G","","MV_PAR03","","","","", "","","","","","","","","","","","","","","","","","","","","ZB7COD","","","","" })
+aAdd(aRegs,{cPerg,"04","Códito Rateio Até"		,"","","mv_ch4","C",06,0,0,"G","","MV_PAR04","","","","", "","","","","","","","","","","","","","","","","","","","","ZB7COD","","","","" })
+aAdd(aRegs,{cPerg,"05","NF De" 					,"","","mv_ch5","C",09,0,0,"G","","MV_PAR05","","","","", "","","","","","","","","","","","","","","","","","","","","SF1","","","","" })
+aAdd(aRegs,{cPerg,"06","NF Até"					,"","","mv_ch6","C",09,0,0,"G","","MV_PAR06","","","","", "","","","","","","","","","","","","","","","","","","","","SF1","","","","" })
+aAdd(aRegs,{cPerg,"07","Serie De"				,"","","mv_ch7","C",03,0,0,"G","","MV_PAR07","","","","", "","","","","","","","","","","","","","","","","","","","","","","","","" })
+aAdd(aRegs,{cPerg,"08","Serie Até"				,"","","mv_ch8","C",03,0,0,"G","","MV_PAR08","","","","", "","","","","","","","","","","","","","","","","","","","","","","","","" })
+Aadd(aRegs,{cPerg,"09","Status da Nota"			,"","","mv_ch9","C",01,0,1,"C","","MV_PAR09","Contabilizadas","","","","","Nao Contabilizadas","","","","","Ambas","","","","","","","","","","","","","","","","","",""})
+
+CriaSx1(aRegs)
+
+If !Pergunte(cPerg, .T. )
+	Return .F. 
+Endif
+
+RCTBRA0A()
+
+Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RCTBRA0A()
+
+
+
+Local oReport
+Local oBreak
+Local oSection
+Local cTitulo 	:= "Relatório de Rateio"
+
+oReport := TReport():New("REPORT",cTitulo,,{|oReport| PrintReport(oReport)},"Imprime Relatorio de Rateio")
+oReport:HideParamPage()
+
+
+
+
+
+oReport:SetLandScape( .T. )
+
+ oSection := TRSection():New(oReport, "Resumo Documentos de Entrada", { "SF1","SA2","ZB7"}, ,, ,,,,,,,,,,,,,,,)
+
+	 TRCell():New(oSection, "F1_DOC", "SF1", "Documento",, TAMSX3("F1_DOC")[1],, {||impLinha("F1_DOC")},,,,,,,,)
+	 TRCell():New(oSection, "F1_SERIE", "SF1", "Serie",, TAMSX3("F1_SERIE")[1],, {||impLinha("F1_SERIE")},,,,,,,,)
+	 TRCell():New(oSection, "F1_FORNECE", "SF1", "Fornec",, TAMSX3("F1_FORNECE")[1],, {||impLinha("F1_FORNECE")},,,,,,,,)
+	 TRCell():New(oSection, "F1_LOJA", "SF1", "Loja",, TAMSX3("F1_LOJA")[1],, {||impLinha("F1_LOJA")},,,,,,,,)
+	 TRCell():New(oSection, "A2_NREDUZ", "SA2", "Nome",, 15,, {||impLinha("A2_NREDUZ")},,,,,,,,)
+
+
+	 TRCell():New(oSection, "F1_EMISSAO", "SF1", "Emissao",, TAMSX3("F1_EMISSAO")[1],, {||impLinha("F1_EMISSAO")},,,,,,,,)
+	 TRCell():New(oSection, "F1_DTDIGIT", "SF1", "Digitac",, TAMSX3("F1_DTDIGIT")[1],, {||impLinha("F1_DTDIGIT")},,,,,,,,)
+
+	 TRCell():New(oSection, "ZB7_CODRAT", "ZB7", "Rateio",, TAMSX3("ZB7_CODRAT")[1],, {||impLinha("ZB7_CODRAT")},,,,,,,,)
+	 TRCell():New(oSection, "ZB7_DTDIGI", "ZB7", "Dig. Tab",, TAMSX3("ZB7_DTDIGI")[1],, {||impLinha("ZB7_DTDIGI")},,,,,,,,)
+	 TRCell():New(oSection, "ZB7_MESANO", "ZB7", "Mes/Ano",, 07,, {||impLinha("ZB7_ANOMES")},,,,,,,,)
+	 TRCell():New(oSection, "ZB7_PROCES", "ZB7", "Atual.",, TAMSX3("ZB7_PROCES")[1],, {||impLinha("ZB7_PROCES")},,,,,,,,)
+
+
+
+
+
+
+
+
+	 TRCell():New(oSection, "ZB7_USRFNA", "ZB7", OemToAnsi("Responsável"),, TAMSX3("ZB7_USRFNA")[1],, {||impLinha("ZB7_USRFNA")},,,,,,,,)
+
+	 TRCell():New(oSection, "ED_CODIGO", "SED", "Natureza",, TAMSX3("ED_CODIGO")[1],, {||impLinha("ED_CODIGO")},,,,,,,,)
+	 TRCell():New(oSection, "ED_DESCRIC", "SED", "Desc. Natureza",, TAMSX3("ED_DESCRIC")[1],, {||impLinha("ED_DESCRIC")},,,,,,,,)
+
+
+	 TRCell():New(oSection, "F1_XPRORAT", "SF1", "Proc.",, 04,, {||impLinha("F1_XPRORAT")},,,,,,,,)
+
+	 oBreak := TRBreak():New(oSection, oSection:Cell("F1_DOC"),,,,)
+
+oReport:PrintDialog()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function PrintReport(oReport)
+
+
+
+Local cDataDe 	:=	DtoS(MV_PAR01)
+Local cDataAte	:= 	DtoS(MV_PAR02)
+Local cRatDe	:= 	MV_PAR03
+Local cRatAte	:= 	MV_PAR04
+Local cNfDe 	:= 	MV_PAR05
+Local cNfAte	:= 	MV_PAR06
+Local cSerieDe	:= 	MV_PAR07
+Local cSerieAte	:= 	MV_PAR08
+Local cInvCodRat:=	Replicate(" ",TAMSX3("ZB7_CODRAT")[1])
+Local cXproRat	:= ""
+Local cBranco	:= ""
+
+
+
+
+
+oReport:SetLandScape( .T. )
+
+If Empty(MV_PAR09) .Or.  MV_PAR09 == 3
+	cXproRat := " ' = ' "
+Else
+	If MV_PAR09 == 1
+		cXproRat := " ' = ' ' AND F1_XPRORAT = '"+AllTrim(Str(MV_PAR09))+" "
+	Else
+		cXproRat := " ' = ' ' AND (F1_XPRORAT = '"+AllTrim(Str(MV_PAR09))+"' OR F1_XPRORAT = ' ' ) AND ' ' = ' "
+	Endif
+EndIf
+
+
+	oSection := oReport:Section(1)
+
+	MakeSqlExp("REPORT")
+
+
+
+
+
+	oSection:BeginQuery()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+__execSql(Qry," SELECT F1_FILIAL,F1_DOC,F1_SERIE,F1_FORNECE,F1_LOJA,F1_DUPL,F1_EMISSAO, EV_XCODRAT ZB7_CODRAT, ED_CODIGO, ED_DESCRIC, F1_XPRORAT, F1_DTDIGIT FROM  "+RetSqlName('SF1')+" SF1(NOLOCK), "+RetSqlName('SEV')+" SEV(NOLOCK),  "+RetSqlName('SED')+" SED(NOLOCK) WHERE F1_FILIAL >= ' ' AND F1_DOC BETWEEN  "+___SQLGetValue(CNFDE)+" AND  "+___SQLGetValue(CNFATE)+" AND F1_SERIE BETWEEN  "+___SQLGetValue(CSERIEDE)+" AND  "+___SQLGetValue(CSERIEATE)+" AND ( "+___SQLGetValue(ALLTRIM(CXPRORAT))+") AND F1_DTDIGIT BETWEEN  "+___SQLGetValue(CDATADE)+" AND  "+___SQLGetValue(CDATAATE)+" AND SF1.D_E_L_E_T_= ' ' AND EV_FILIAL =  '" +xFilial('SEV')+"'  AND EV_NUM = F1_DOC AND EV_PREFIXO = F1_PREFIXO AND EV_CLIFOR = F1_FORNECE AND EV_LOJA = F1_LOJA AND EV_XCODRAT BETWEEN  "+___SQLGetValue(CRATDE)+" AND  "+___SQLGetValue(CRATATE)+" AND EV_XCODRAT <>  "+___SQLGetValue(CINVCODRAT)+" AND SEV.D_E_L_E_T_= ' ' AND ED_FILIAL =  '" +xFilial('SED')+"'  AND ED_CODIGO = EV_NATUREZ AND SED.D_E_L_E_T_= ' ' ORDER BY F1_DTDIGIT, F1_FORNECE, F1_LOJA, F1_DOC, F1_SERIE",{},.F.)
+
+	oSection:EndQuery({})
+
+
+MemoWrite("RCTBR99.QRY",GETLastQuery()[2])
+
+oSection:Print()
+
+Return
+
+
+
+
+
+
+
+
+
+
+Static Function impLinha(_cCampo)
+
+
+
+Local _cRet 	:= " "
+Local cAnoMes	:= ""
+Local cUltRev	:= ""
+Local cConta	:= ""
+
+If _cCampo == "F1_DOC"
+	_cRet := (Qry)->F1_DOC
+
+ElseIf _cCampo == "F1_SERIE"
+	_cRet := (Qry)->F1_SERIE
+
+ElseIf _cCampo == "F1_FORNECE"
+	_cRet := (Qry)->F1_FORNECE
+
+ElseIf _cCampo == "F1_LOJA"
+	_cRet := (Qry)->F1_LOJA
+
+ElseIf _cCampo == "A2_NREDUZ"
+	_cRet := Alltrim(Posicione("SA2",1,xFilial("SA2")+(Qry)->F1_FORNECE+(Qry)->F1_LOJA,"A2_NREDUZ"))
+
+ElseIf _cCampo == "F1_DUPL"
+	_cRet	:= (Qry)->F1_DUPL
+
+ElseIf _cCampo == "F1_EMISSAO"
+	_cRet	:= (Qry)->F1_EMISSAO
+
+ElseIf _cCampo == "F1_DTDIGIT"
+	_cRet	:= (Qry)->F1_DTDIGIT
+
+ElseIf _cCampo == "ZB7_CODRAT"
+	If Empty((Qry)->ZB7_CODRAT)
+
+		_cRet	:= 	Replicate("-",TAMSX3("ZB7_CODRAT")[1])
+	Else
+		_cRet	:= (Qry)->ZB7_CODRAT
+	EndIf
+
+ElseIf _cCampo == "ZB7_DESCRI"
+	If Empty((Qry)->ZB7_CODRAT)
+
+   		_cRet	:=  Replicate("-",TAMSX3("ZB7_DESCRI")[1])
+	Else
+		_cRet	:= Alltrim(Posicione("ZB7",1,xFilial("ZB7")+(Qry)->ZB7_CODRAT,"ZB7_DESCRI"))
+	EndIf
+
+ElseIf _cCampo == "ZB7_USRFNA"
+	If !Empty((Qry)->ZB7_CODRAT)
+
+
+
+
+
+
+		cAnoMes	:= U_GetCompetencia((Qry)->F1_FILIAL+(Qry)->F1_DOC+(Qry)->F1_SERIE+(Qry)->F1_FORNECE+(Qry)->F1_LOJA)
+		cUltRev	:= U_RZB7ULTR((Qry)->ZB7_CODRAT,cAnoMes, .T. )
+
+
+
+		_cRet	:= Alltrim(Posicione("ZB7",1,xFilial("ZB7")+(Qry)->ZB7_CODRAT+cAnoMes+cUltRev+"A","ZB7_USRFNA"))
+	Else
+		_cRet	:= Replicate("-",TAMSX3("ZB7_USRFNA")[1])
+	EndIf
+
+ElseIf _cCampo == "ZB7_DTDIGI"
+	If !Empty((Qry)->ZB7_CODRAT)
+
+
+
+
+
+
+		cAnoMes	:= U_GetCompetencia((Qry)->F1_FILIAL+(Qry)->F1_DOC+(Qry)->F1_SERIE+(Qry)->F1_FORNECE+(Qry)->F1_LOJA)
+		cUltRev	:= U_RZB7ULTR((Qry)->ZB7_CODRAT,cAnoMes, .T. )
+
+
+
+		_cRet	:= Alltrim(DTOC(Posicione("ZB7",1,xFilial("ZB7")+(Qry)->ZB7_CODRAT+cAnoMes+cUltRev+"A","ZB7_DTDIGI")))
+	Else
+		_cRet	:= Replicate("-",TAMSX3("ZB7_DTDIGI")[1])
+	EndIf
+
+ElseIf _cCampo == "ZB7_ANOMES"
+	If !Empty((Qry)->ZB7_CODRAT)
+
+
+
+
+
+
+		cAnoMes	:= U_GetCompetencia((Qry)->F1_FILIAL+(Qry)->F1_DOC+(Qry)->F1_SERIE+(Qry)->F1_FORNECE+(Qry)->F1_LOJA)
+		cUltRev	:= U_RZB7ULTR((Qry)->ZB7_CODRAT,cAnoMes, .T. )
+
+
+
+		cAnoMes	:= Posicione("ZB7",1,xFilial("ZB7")+(Qry)->ZB7_CODRAT+cAnoMes+cUltRev+"A","ZB7_ANOMES")
+		_cRet	:= SUBSTR(cAnoMes,5,2)+"/"+SUBSTR(cAnoMes,1,4)
+	Else
+		_cRet	:= Replicate("-",TAMSX3("ZB7_ANOMES")[1])
+	EndIf
+
+ElseIf _cCampo == "ZB7_PROCES"
+	If !Empty((Qry)->ZB7_CODRAT)
+
+
+
+
+
+
+		cAnoMes	:= U_GetCompetencia((Qry)->F1_FILIAL+(Qry)->F1_DOC+(Qry)->F1_SERIE+(Qry)->F1_FORNECE+(Qry)->F1_LOJA)
+		cUltRev	:= U_RZB7ULTR((Qry)->ZB7_CODRAT,cAnoMes, .T. )
+
+
+
+		dbSelectArea("ZB8")
+		dbSetOrder(1)
+		If dbSeek(xFilial("ZB8")+(Qry)->ZB7_CODRAT+cAnoMes+cUltRev, .F. )
+			_cRet	:= "S"
+		Else
+			_cRet	:= "N"
+		Endif
+	Else
+		_cRet	:= Replicate("-",TAMSX3("ZB7_PROCES")[1])
+	EndIf
+
+ElseIf _cCampo == "ED_CODIGO"
+	_cRet	:=  (Qry)->ED_CODIGO
+
+ElseIf _cCampo == "ED_DESCRIC"
+	_cRet	:=  (Qry)->ED_DESCRIC
+
+ElseIf _cCampo == "F1_XPRORAT"
+	_cRet	:=  If((Qry)->F1_XPRORAT=="2" .or.  Empty(Alltrim((Qry)->F1_XPRORAT)),"Não","Sim")
+
+Endif
+
+Return _cRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CriaSx1(aRegs)
+
+
+
+Local aAreaAtu	:= GetArea()
+Local aAreaSX1	:= SX1->(GetArea())
+Local nJ		:= 0
+Local nY		:= 0
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+
+For nY := 1 To Len(aRegs)
+	If !MsSeek(Padr(aRegs[nY,1],Len(SX1->X1_GRUPO))+aRegs[nY,2])
+		RecLock("SX1", .T. )
+		For nJ := 1 To FCount()
+			If nJ <= Len(aRegs[nY])
+				FieldPut(nJ,aRegs[nY,nJ])
+			EndIf
+		next
+		MsUnlock()
+	EndIf
+next
+
+RestArea(aAreaSX1)
+RestArea(aAreaAtu)
+
+Return(Nil)

@@ -1,0 +1,758 @@
+#include "rwmake.ch"
+
+User Function ConvSRA()
+
+ Local	oDlg	:= NIL
+
+
+ Private cPerg	:= PADR("CONSRA",LEN(SX1->X1_GRUPO))
+ Private aInfo	:= {}
+ Private aDepende:= {}
+ Private nDepen	:= 0
+
+
+ @ 096,042 TO 323,505 DIALOG oDlg TITLE OemToAnsi("Conversao do Cadastro de Funcionarios")
+ @ 008,010 TO 084,222
+ @ 018,020 SAY OemToAnsi(" A conversao dos arquivos serЦo realizados de acordo com a ")						 												
+ @ 030,020 SAY OemToAnsi("Selecao dos Parametros")																		
+ @ 095,042 BMPBUTTON TYPE 5 					    ACTION Eval( { || fPergConv() , Pergunte(cPerg,.T.) } )	
+ @ 095,072 BUTTON OemToAnsi(" Converte Dados" ) SIZE 55,13 ACTION Eval( { || Pergunte(cPerg,.F.) , MigraSra() }  )      
+ @ 095,187 BMPBUTTON TYPE 2 ACTION Close(oDlg)
+ ACTIVATE DIALOG oDlg CENTERED
+
+Return( NIL )
+
+Static function MigraSra()
+
+ cArqOrig := MV_PAR01
+ cEmpOrig := MV_PAR02          
+ cFilDest := MV_PAR03
+
+//ARQUIVO DBO_PFUN.DBF 
+
+ dbUseArea(.T.,,cArqOrig,"ZZ1",.F.)  // Abrir exclusivo no Sigaadv
+ DBSELECTAREA("ZZ1")
+
+ dbUseArea(.T.,,"\CONV\DEZEMBRO\PPESSOA.DBF","ZZ2",.F.)  // Abrir exclusivo no Sigaadv
+ DBSELECTAREA("ZZ2")
+ cArqNtx  := CriaTrab(NIL,.f.)
+ cIndCond :="CODIGO"
+ IndRegua("ZZ2",cArqNtx,cIndCond,,,"Selecionando registros...")		//"Selecionando Registros..."
+
+ dbUseArea(.T.,,"\CONV\DEZEMBRO\PFDEPEND.DBF","ZZ3",.F.)  // Abrir exclusivo no Sigaadv
+ DBSELECTAREA("ZZ3")
+ cArqNtx  := CriaTrab(NIL,.f.)
+ cIndCond :="STRZERO(CODCOLIGAD,2) + ALLTRIM(CHAPA)"
+ IndRegua("ZZ3",cArqNtx,cIndCond,,,"Selecionando registros...")		//"Selecionando Registros..."
+                                                                                               
+ dbUseArea(.T.,,"\CONV\DEZEMBRO\PFCOMPL.DBF","ZZ4",.F.)  // Abrir exclusivo no Sigaadv
+ DBSELECTAREA("ZZ4")
+ cArqNtx  := CriaTrab(NIL,.f.)
+ cIndCond :="STRZERO(CODCOLIGAD,2) + CHAPA "
+ IndRegua("ZZ4",cArqNtx,cIndCond,,,"Selecionando registros...")		//"Selecionando Registros.. 
+                                                                                                
+ dbUseArea(.T.,,"\CONV\DEZEMBRO\Pfcodfix.dbf","ZZ5",.F.)  // Abrir exclusivo no Sigaadv
+ DBSELECTAREA("ZZ5")
+ cArqNtx  := CriaTrab(NIL,.f.)
+ cIndCond :="STRZERO(CODCOLIGAD,2) + CHAPA + CODEVENTO "
+ IndRegua("ZZ5",cArqNtx,cIndCond,,,"Selecionando registros...")		//"Selecionando Registros.. 
+ 
+//* dbUseArea(.T.,,"\CONV\ODONTOPREV.dbf","ZZ6",.F.)  // Abrir exclusivo no Sigaadv
+// DBSELECTAREA("ZZ6")
+// cArqNtx  := CriaTrab(NIL,.f.)
+// cIndCond := "ALLTRIM(ASSOCIADO) + DTOC(DATA_NASCI) + CPF1 "
+// IndRegua("ZZ6",cArqNtx,cIndCond,,,"Selecionando registros...")		//"Selecionando Registros.. 
+ 
+
+ #IFDEF WINDOWS
+//   Processa({|| Execute( ImpSra() )},"Importando SRA")
+   Processa({|| ImpSra() },"Importando SRA")
+  //static Function Impsra()
+
+ #ENDIF        
+
+//return
+  
+Static Function Impsra()
+
+dbSelectArea("ZZ1")
+dbGoTop()
+ ProcRegua(RecCount())                                       
+ 
+ DO WHILE !EOF()
+   
+   If Val(cEmpOrig) # ZZ1->CODCOLIG
+      DbSkip()
+      IncProc()
+      Loop
+   Endif
+
+
+//   DBSELECTAREA("SRA")
+//   RECLOCK("SRA",.T.)                
+   
+   If ZZ1->CODCOLIG = 3 .AND. ZZ1->CODFILIAL = 1
+      cFilDest := "08"
+   Elseif ZZ1->CODCOLIG = 3 .AND. ZZ1->CODFILIAL = 2   
+      cFilDest := "06"
+   Elseif ZZ1->CODCOLIG = 3 .AND. ZZ1->CODFILIAL = 4   
+      cFilDest := "04" 
+   Elseif ZZ1->CODCOLIG = 3 .AND. ZZ1->CODFILIAL = 5   
+      cFilDest := "05"
+   Elseif ZZ1->CODCOLIG = 3 .AND. ZZ1->CODFILIAL = 6   
+      cFilDest := "03"
+   Elseif ZZ1->CODCOLIG = 4 .AND. ZZ1->CODFILIAL = 1   
+      cFilDest := "07"
+   Elseif ZZ1->CODCOLIG = 5 .AND. ZZ1->CODFILIAL = 1   
+      cFilDest := "02"
+   Elseif ZZ1->CODCOLIG = 5 .AND. ZZ1->CODFILIAL = 2   
+      cFilDest := "09"
+   Elseif ZZ1->CODCOLIG = 5 .AND. ZZ1->CODFILIAL = 3   
+      cFilDest := "01"
+   Endif
+                     
+   
+   If SUBS(ZZ1->CHAPA,6,1)="B" 
+      _MAT := "5" + SUBS(ZZ1->CHAPA,1,5)
+   ElseIf SUBS(ZZ1->CHAPA,6,1)="R"                    
+      _MAT := "6"+SUBS(ZZ1->CHAPA,1,5)
+   ElseIf SUBS(ZZ1->CHAPA,6,1)=" "                    
+      _MAT := "0"+SUBS(ZZ1->CHAPA,1,5)      
+   Else    
+      _MAT := SUBS(ZZ1->CHAPA,1,6)
+   Endif     
+
+   DBSELECTAREA("SRA")
+   DBSETORDER(1)
+   
+   IF DBSEEK(CFILDEST+_MAT)
+      dbSelectArea("ZZ1")
+      DbSkip()
+      IncProc()
+      Loop
+   ELSE
+      RECLOCK("SRA",.T.)                
+   ENDIF
+
+
+   SRA->RA_FILIAL := cFilDest                 
+   SRA->RA_CC     := IIF(SUBS(ZZ1->CODSECAO,3,1)="R",SUBS(ZZ1->CODSECAO,1,1)+SUBS(ZZ1->CODSECAO,3,8),SUBS(ZZ1->CODSECAO,1,1)+SUBS(ZZ1->CODSECAO,3,2)+SUBS(ZZ1->CODSECAO,6,2)+SUBS(ZZ1->CODSECAO,9,2))
+   SRA->RA_CCANT  := IIF(SUBS(ZZ1->CODSECAO,3,1)="R",SUBS(ZZ1->CODSECAO,1,1)+SUBS(ZZ1->CODSECAO,3,8),SUBS(ZZ1->CODSECAO,1,1)+SUBS(ZZ1->CODSECAO,3,2)+SUBS(ZZ1->CODSECAO,6,2)+SUBS(ZZ1->CODSECAO,9,2))
+   SRA->RA_MAT    := _MAT
+//   SRA->RA_CODPESS:= STRZERO(ZZ1->CODPESSOA,6)
+   SRA->RA_NOME   := LEFT(ZZ1->NOME,50)
+   SRA->RA_PIS    := StrZERO(VAL(ZZ1->PISPASEP),11)
+   SRA->RA_DEPIR  := STRZERO(ZZ1->NRODEPIRR,2)
+   SRA->RA_DEPSF  := STRZERO(ZZ1->NRODEPSAL,2)
+   SRA->RA_DPASSME:= STRZERO(ZZ1->NRODEPIRR,2)
+   SRA->RA_ADMISSA:= ZZ1->DATAADMI
+   SRA->RA_DTTRANS:= IIF(SUBS(DTOC(ZZ1->DTTRANSF),1,2) == ("  "),ZZ1->DATAADMI,ZZ1->DTTRANSF)   
+   SRA->RA_OPCAO  := ZZ1->DTOPCAOF
+   SRA->RA_DEMISSA := ZZ1->DATADEMI
+   SRA->RA_MOTIADM := ZZ1->MOTIVOAD
+
+   If ZZ1->CODSITUA $ "A*Z"
+      SRA->RA_SITFOLH := " " 
+   ELSEIF ZZ1->CODSITUA $ "X*I"                
+      SRA->RA_SITFOLH := "D" 
+   ELSEIF ZZ1->CODSITUA $ "E*L*M*O*P*R*T*U*"                
+      SRA->RA_SITFOLH := "A"       
+   ELSE 
+      SRA->RA_SITFOLH := ZZ1->CODSITUA
+   ENDIF    
+   
+   If ZZ1->CODSITUA == "E" 
+      SRA->RA_AFASFGT := "Q"
+   Elseif ZZ1->CODSITUA == "I" 
+      SRA->RA_AFASFGT := "U"    
+   Elseif ZZ1->CODSITUA == "L"    
+      SRA->RA_AFASFGT := "X"    
+   Elseif ZZ1->CODSITUA == "M"    
+      SRA->RA_AFASFGT := "R"       
+   Elseif ZZ1->CODSITUA $ "O*P"     
+      SRA->RA_AFASFGT := "P"             
+   Elseif ZZ1->CODSITUA $ "R*U"    
+      SRA->RA_AFASFGT := "Y"       
+   Elseif ZZ1->CODSITUA == "T"    
+      SRA->RA_AFASFGT := "O"       
+   Endif    
+   
+   If ZZ1->TIPODEMI = "1"
+      SRA->RA_AFASFGT := "H"
+      SRA->RA_RESCRAI := "10"
+   ElseIf ZZ1->TIPODEMI = "2"
+      SRA->RA_AFASFGT := "I"
+      SRA->RA_RESCRAI := "11"      
+   ElseIf ZZ1->TIPODEMI = "3"
+      SRA->RA_AFASFGT := "K"
+      SRA->RA_RESCRAI := "20"        
+   ElseIf ZZ1->TIPODEMI = "4"
+      SRA->RA_AFASFGT := "J"
+      SRA->RA_RESCRAI := "21"          
+   ElseIf ZZ1->TIPODEMI = "5"
+      SRA->RA_AFASFGT := "N"
+      SRA->RA_RESCRAI := "31"     
+   ElseIf ZZ1->TIPODEMI = "6"
+      SRA->RA_AFASFGT := "I"
+      SRA->RA_RESCRAI := "30"     
+   ElseIf ZZ1->TIPODEMI = "7"
+      SRA->RA_AFASFGT := "I"
+      SRA->RA_RESCRAI := "50"     
+   ElseIf ZZ1->TIPODEMI = "8"
+      SRA->RA_AFASFGT := "S"
+      SRA->RA_RESCRAI := "60"     
+   ElseIf ZZ1->TIPODEMI = "9"
+      SRA->RA_AFASFGT := "I"
+      SRA->RA_RESCRAI := "10"     
+   ElseIf ZZ1->TIPODEMI = "A"
+      SRA->RA_AFASFGT := "U"
+      SRA->RA_RESCRAI := "73"     
+   ElseIf ZZ1->TIPODEMI = "B"
+      SRA->RA_AFASFGT := "I"
+      SRA->RA_RESCRAI := "80"           
+   ElseIf ZZ1->TIPODEMI = "C"
+      SRA->RA_AFASFGT := "2"
+      SRA->RA_RESCRAI := "20"           
+   ElseIf ZZ1->TIPODEMI = "D"
+      SRA->RA_AFASFGT := "1"
+      SRA->RA_RESCRAI := "27"     
+   ElseIf ZZ1->TIPODEMI = "E"
+      SRA->RA_AFASFGT := "U"
+      SRA->RA_RESCRAI := "79"     
+   ElseIf ZZ1->TIPODEMI = "F"
+      SRA->RA_AFASFGT := "S"
+      SRA->RA_RESCRAI := "62"     
+   ElseIf ZZ1->TIPODEMI = "I"
+      SRA->RA_AFASFGT := "U"
+      SRA->RA_RESCRAI := "72"     
+   ElseIf ZZ1->TIPODEMI = "J"
+      SRA->RA_AFASFGT := "V"
+      SRA->RA_RESCRAI := "78"        
+   ElseIf ZZ1->TIPODEMI = "M"
+      SRA->RA_AFASFGT := "M"
+      SRA->RA_RESCRAI := "40"           
+   ElseIf ZZ1->TIPODEMI = "O"
+      SRA->RA_AFASFGT := "U"
+      SRA->RA_RESCRAI := "76"        
+   ElseIf ZZ1->TIPODEMI = "P"
+      SRA->RA_AFASFGT := "S"
+      SRA->RA_RESCRAI := "64"        
+   ElseIf ZZ1->TIPODEMI = "R"
+      SRA->RA_AFASFGT := "U"
+      SRA->RA_RESCRAI := "70"        
+   ElseIf ZZ1->TIPODEMI = "S"
+      SRA->RA_AFASFGT := "V"
+      SRA->RA_RESCRAI := "71"           
+   ElseIf ZZ1->TIPODEMI = "T"
+      SRA->RA_AFASFGT := "I"
+      SRA->RA_RESCRAI := "12"     
+   ElseIf ZZ1->TIPODEMI = "U"
+      SRA->RA_AFASFGT := "U"
+      SRA->RA_RESCRAI := "75"     
+   Endif    
+
+   //("NцO ESQUEгA DE MUDAR O TAMANHO DO CAMPO CTA.DEPOSITO SALARIO - RA_CTDEPSA, PARA 10 POSIгуES")
+   SRA->RA_CTDEPSA:= STRZERO(VAL(STRTRAN(ALLTRIM(ZZ1->CONTAPAGA),"-","")) ,12)
+
+   //("NцO ESQUEгA DE MUDAR O TAMANHO DO CAMPO CTA.DEPOSITO FGTS - RA_CTDPFGT, PARA 10 POSIгуES")
+   SRA->RA_CTDPFGT:= STRZERO(VAL(ZZ1->CONTAFGT),12)
+   SRA->RA_BCDEPSA:= STRZERO(VAL(ZZ1->CODBANCOP),3)+STRZERO(VAL(ZZ1->CODAGENCI),5)
+   SRA->RA_BCDPFGT:= STRZERO(VAL(ZZ1->CODBANCOF),3)+"0000"
+   SRA->RA_HRSMES := ZZ1->JORNADAM/60
+   SRA->RA_HRSEMAN:= (ZZ1->JORNADAM / 60 / 5)
+   SRA->RA_CHAPA  := ZZ1->CHAPA
+   SRA->RA_TNOTRAB:= STRZERO(VAL(ZZ1->CODHORAR),3)
+   SRA->RA_VCTOEXP:= ZZ1->FIMPRAZO
+//   SRA->RA_DEXPER := (ZZ1->FIMPRAZO-ZZ1->DATAADMI)
+                                                      
+   If ZZ1->CODCOLIG == 5
+      If STRZERO(VAL(ZZ1->CODFUNCA),4) = "0507" 
+         SRA->RA_CODFUNC:= "0281"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0506" 
+         SRA->RA_CODFUNC:= "0279"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0044" 
+         SRA->RA_CODFUNC:= "0037"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0042" 
+         SRA->RA_CODFUNC:= "0040"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0503" 
+         SRA->RA_CODFUNC:= "0285"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0502" 
+         SRA->RA_CODFUNC:= "0286"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0501" 
+         SRA->RA_CODFUNC:= "0290"
+	  Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0130" 
+         SRA->RA_CODFUNC:= "0060"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0514" 
+         SRA->RA_CODFUNC:= "0292"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0508" 
+         SRA->RA_CODFUNC:= "0276"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0298" 
+         SRA->RA_CODFUNC:= "0283"
+      Else 
+         SRA->RA_CODFUNC:= STRZERO(VAL(ZZ1->CODFUNCA),4)
+      Endif 
+   Elseif ZZ1->CODCOLIG == 3
+      If STRZERO(VAL(ZZ1->CODFUNCA),4) = "0270" 
+         SRA->RA_CODFUNC:= "0281"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0271" 
+         SRA->RA_CODFUNC:= "0270"
+      Elseif STRZERO(VAL(ZZ1->CODFUNCA),4) = "0332" 
+         SRA->RA_CODFUNC:= "0322"
+      Else 
+         SRA->RA_CODFUNC:= STRZERO(VAL(ZZ1->CODFUNCA),4)
+      Endif                                          
+   Else 
+         SRA->RA_CODFUNC:= STRZERO(VAL(ZZ1->CODFUNCA),4)
+   Endif 
+   SRA->RA_CBO    := "39990"
+
+/*/If SRA->RA_FILIAL $"07"
+      SRA->RA_CESTAB := IIF(STRZERO(VAL(ZZ1->CODFUNCA),4)="0350","S","N")
+   Else             
+      SRA->RA_CESTAB := "N"
+   Endif    
+/*/              
+   If SUBS(ZZ1->CONTRIBS,1,1) == "L"
+      SRA->RA_PGCTSIN:= "N"
+   ElseIf SUBS(ZZ1->CONTRIBS,1,1) == "J"
+      SRA->RA_PGCTSIN:= "P"      
+//   ElseIf SUBS(ZZ1->CONTRIBS,1,1) == "N"
+//      SRA->RA_PGCTSIN:= "S"           
+   ElseIf SUBS(ZZ1->CONTRIBS,1,1) == "N"
+      SRA->RA_PGCTSIN:= "D"           
+   Endif                     
+      
+      
+      
+   IF SRA->RA_FILIAL = "07" 
+      IF SUBS(ZZ1->CODSINDIC,3,2) = "01" 
+         _CodSind := "12"
+      Elseif SUBS(ZZ1->CODSINDIC,3,2) = "02" 
+         _CodSind := "13"
+      Elseif SUBS(ZZ1->CODSINDIC,3,2) = "03" 
+         _CodSind := "14"                 
+      Elseif SUBS(ZZ1->CODSINDIC,3,2) = "04" 
+         _CodSind := "15"                  
+      Elseif SUBS(ZZ1->CODSINDIC,3,2) = "05" 
+         _CodSind := "16"                  
+      Elseif SUBS(ZZ1->CODSINDIC,3,2) = "06" 
+         _CodSind := "17"                  
+      Elseif SUBS(ZZ1->CODSINDIC,3,2) = "07" 
+         _CodSind := "18"                                    
+      Elseif SUBS(ZZ1->CODSINDIC,3,2) = "08" 
+         _CodSind := "19"                  
+      Elseif SUBS(ZZ1->CODSINDIC,3,2) = "09" 
+         _CodSind := "20"                  
+      Endif
+   Else                                        
+      _CodSind := SUBS(ZZ1->CODSINDIC,3,2)    
+   Endif   
+   
+    If SRA->RA_FILIAL = "02" .and. !_CodSind $"01*02" 
+	  _CodSind := "01"            
+	Endif 
+ 
+   SRA->RA_SINDICA:= _CodSind
+   SRA->RA_PERCADT:= ZZ1->PERCENTA
+   SRA->RA_TPFUNC := ZZ1->CODTIPO               
+   
+   If ZZ1->CODTIPO == "A"
+      SRA->RA_CATFUNC := "A" 
+   ELSEIF ZZ1->CODTIPO $ "C*D*E"                
+      SRA->RA_CATFUNC := "P" 
+   ElseIf ZZ1->CODTIPO $ "F*O"
+      SRA->RA_CATFUNC := "C"
+   ELSEIF ZZ1->CODTIPO $ "B*M*N*P*R*S*U*X*Z"                
+      SRA->RA_CATFUNC := "M"      
+   ELSEIF ZZ1->CODTIPO == "T"                
+      SRA->RA_CATFUNC := "G"       
+   ENDIF    
+
+   SRA->RA_TIPOPGT:= "M"
+   SRA->RA_SALARIO:= IIF(SRA->RA_CATFUNC="G",(ZZ1->SALARIO/SRA->RA_HRSMES),ZZ1->SALARIO)
+   SRA->RA_TPCONTR:= "1"          
+   SRA->RA_VIEMRAI:= "10"         
+   
+   IF ZZ1->TIPOADMI == "P"
+      SRA->RA_TIPOADM:= "9A"         
+   ELSEIF ZZ1->TIPOADMI == "R"
+      SRA->RA_TIPOADM:= "9B"         
+   ELSE
+      SRA->RA_TIPOADM:= "9C"         
+   ENDIF  
+        
+   SRA->RA_FICHA := STR(ZZ1->NROFICHA)
+       
+
+   MSUNLOCK()                                                 
+ 
+   DBSELECTAREA("ZZ2")
+   IF Dbseek(ZZ1->CODPESSOA)
+      DBSELECTAREA("SRA")       
+//          IF DBSEEK ( cFilDest +(Strzero(ZZ1->CODPESSOA,6)))
+//          IF DBSEEK (STRZERO(ZZ1->CODPESSOA,6))
+             RECLOCK("SRA",.F.)
+             SRA->RA_NASC   := ZZ2->DTNASCIMen
+             SRA->RA_APELIDO:= ZZ2->APELIDO
+             
+             IF ZZ2->ESTADOCIVI == "I"
+                SRA->RA_ESTCIVI := "D"
+             ELSEIF ZZ2->ESTADOCIVI == "D"    
+                SRA->RA_ESTCIVI := "Q"             
+             ELSE
+             	SRA->RA_ESTCIVI:= ZZ2->ESTADOCIVI             
+             ENDIF 	
+             
+             SRA->RA_SEXO   := ZZ2->SEXO
+             SRA->RA_NACIONA:= SUBS(ZZ2->NACIONALID,1,2)
+
+		     IF ZZ2->GRAUINSTRU = "1"
+        		     SRA->RA_GRINRAI:= "10"
+		     ELSEIF ZZ2->GRAUINSTRU = "2"
+		             SRA->RA_GRINRAI:= "20"
+		     ELSEIF ZZ2->GRAUINSTRU = "3"
+		             SRA->RA_GRINRAI:= "25"
+		     ELSEIF ZZ2->GRAUINSTRU = "4"
+        		     SRA->RA_GRINRAI:= "30"
+		     ELSEIF ZZ2->GRAUINSTRU = "5"
+		             SRA->RA_GRINRAI:= "35"
+		     ELSEIF ZZ2->GRAUINSTRU = "6"
+		            SRA->RA_GRINRAI:= "40" 
+		     ELSEIF ZZ2->GRAUINSTRU = "7"
+		            SRA->RA_GRINRAI:= "45"
+		     ELSEIF ZZ2->GRAUINSTRU = "8"
+		             SRA->RA_GRINRAI:= "50"
+		     ELSEIF ZZ2->GRAUINSTRU $ "9 *A "
+		            SRA->RA_GRINRAI:= "55"        
+    		 ELSEIF ZZ2->GRAUINSTRU $ "B *C "
+		            SRA->RA_GRINRAI:= "60"        
+    		 ELSEIF ZZ2->GRAUINSTRU $ "D " 
+		            SRA->RA_GRINRAI:= "65"        		            
+    		 ELSEIF ZZ2->GRAUINSTRU $ "G "
+		            SRA->RA_GRINRAI:= "75"        		            		            
+		     ENDIF                        
+		     
+             SRA->RA_ENDEREC:= ALLTRIM(ZZ2->RUA) +" "+ ALLTRIM(ZZ2->NUMERO)
+             SRA->RA_COMPLEM := ZZ2->COMPLEMENT
+             SRA->RA_BAIRRO := ZZ2->BAIRRO
+             SRA->RA_ESTADO := ZZ2->ESTADO
+             SRA->RA_MUNICIP:= LEFT(ZZ2->CIDADE,20)
+             SRA->RA_CEP    := IIF(SUBS(ZZ2->CEP,6,1)="-",SUBS(ZZ2->CEP,1,5)+SUBS(ZZ2->CEP,7,3),(ZZ2->CEP)) 
+             SRA->RA_CIC    := StrZERO(VAL(ZZ2->CPF),11) 
+             SRA->RA_TELEFON:= ZZ2->TELEFONE1
+             SRA->RA_TELEFO2:= ZZ2->TELEFONE2                                                                     
+             SRA->RA_RG     := ZZ2->CARTIDENTI
+			 SRA->RA_TITULOE:= ZZ2->TITULOELEI
+   			 SRA->RA_ZONASEC:= ALLTRIM(ZZ2->ZONATITELE)+ "/" + ALLTRIM(ZZ2->SECAOTITEL)
+             SRA->RA_NUMCP  := STRZERO(VAL(ZZ2->CARTEIRATR),6)
+             SRA->RA_SERCP  := STRZERO(VAL(ZZ2->SERIECARTT),5)
+			 SRA->RA_UFCP   := ZZ2->UFCARTTRAB           
+   			 SRA->RA_HABILIT:= ZZ2->CARTMOTORI
+			 SRA->RA_RESERVI:= ZZ2->CERTIFRESE
+			 SRA->RA_CIDNASC:= ALLTRIM(ZZ2->NATURALIDA)
+             SRA->RA_NATURAL:= ZZ2->ESTADONATA
+             
+             If SRA->RA_NATURAL = "  "
+                If SRA->RA_FILIAL $"01*02*04*08*09"
+                   SRA->RA_NATURAL := "SP"
+                ElseIf SRA->RA_FILIAL $"05"
+                   SRA->RA_NATURAL := "BA"
+                ElseIf SRA->RA_FILIAL $"07"
+                   SRA->RA_NATURAL := "MG"
+                Endif 
+			 Endif             
+
+             SRA->RA_EMAIL  := ZZ2->EMAIL
+             SRA->RA_RACACOR:= IIF(STRZERO(ZZ2->CORRACA,1)="0","2",STRZERO(ZZ2->CORRACA,1))
+             SRA->RA_DEFIFIS:= IIF(ZZ2->DEFICIENTE=1,"1","2")
+             
+           If SRA->RA_SINDICA $ "01*02" 
+            	SRA->RA_ADTPOSE := Iif(SRA->RA_CATFUNC$"M*H","T","N")
+           ElseIf SRA->RA_SINDICA= "16"                      
+           		SRA->RA_ADTPOSE := Iif(SRA->RA_CATFUNC$"M*H","A","N") 	
+           Else                      
+           		SRA->RA_ADTPOSE := "N"
+           Endif   
+             MSUNLOCK()
+    //    ENDIF
+   ENDIF           
+/*       
+ DBSELECTAREA("SRB")
+ cArqNtx  := CriaTrab(NIL,.f.)
+ cIndCond :="RB_FILIAL + RB_MAT + RB_FILIAC "
+ IndRegua("SRB",cArqNtx,cIndCond,,,"Selecionando registros...")	
+ 
+   If Dbseek(SRA->RA_FILIAL+SRA->RA_MAT+"6")
+   
+    	DBSELECTAREA("SRA")       
+        	RECLOCK("SRA",.F.)
+          	   	SRA->RA_PAI := SRB->RB_NOME 
+       		MSUNLOCK() 
+        DBSELECTAREA("SRB")       		
+        DBSKIP()
+    
+    Endif
+       
+    If Dbseek(SRA->RA_FILIAL+SRA->RA_MAT+"7")
+   
+    	DBSELECTAREA("SRA")       
+        	RECLOCK("SRA",.F.)
+          	   	SRA->RA_MAE := SRB->RB_NOME 
+       		MSUNLOCK() 
+        DBSELECTAREA("SRB")   		
+        DBSKIP()  		
+    
+    Endif
+*/                              
+ DBSELECTAREA("CTT")
+ cArqNtx  := CriaTrab(NIL,.f.)
+ cIndCond :="CTT_FILIAL + CTT_CCANT"
+ IndRegua("CTT",cArqNtx,cIndCond,,,"Selecionando registros...")	
+ 
+   If Dbseek("  " +SRA->RA_CCANT)
+   
+    	DBSELECTAREA("SRA")       
+       	  RECLOCK("SRA",.F.)              
+        	SRA->RA_CC := CTT->CTT_CUSTO
+          MSUNLOCK()
+    Endif
+        	
+    DBSELECTAREA("SRJ")
+    cArqNtx  := CriaTrab(NIL,.f.)
+    cIndCond :="RJ_FILIAL + RJ_COL4"
+    IndRegua("SRJ",cArqNtx,cIndCond,,,"Selecionando registros...")	
+ 
+    If Dbseek("  " +SRA->RA_CODFUNC)
+   
+    	DBSELECTAREA("SRA")       
+       	  RECLOCK("SRA",.F.)       
+       	    If SRA->RA_FILIAL ="07"
+       	       SRA->RA_CODFUNC := SRJ->RJ_FUNCAO 
+       	  //        If SRA->RA_FILIAL $"07"
+          //           SRA->RA_CESTAB := IIF(ALLTRIM(ZZ1->CODFUNCA)="0350","S","N")
+          //         Else             
+          //            SRA->RA_CESTAB := "N"
+          //         Endif    
+             Endif
+          MSUNLOCK()
+    Endif
+     	
+       DBSELECTAREA("ZZ4")
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA)
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+             If ZZ4->CODCOLIGAD = 4       
+                SRA->RA_GS := STRZERO(ZZ4->GS,2)
+             Else 
+                SRA->RA_GS := STRZERO(VAL(ZZ4->SALARIO),2)
+             Endif                                               
+          
+          SRA->RA_ESCALA  := Iif(SRA->RA_FILIAL="07","13",ZZ4->ESCALA)    //BH ESCALA 13
+          SRA->RA_INSTITU := ZZ4->INSTIT	
+          SRA->RA_CURSO   := ZZ4->CURSO
+          SRA->RA_SERIE   := ZZ4->SERIE
+                       
+             IF SRA->RA_FILIAL = "05" // Fil Salvador
+                _cCodVR := "05" 
+             Elseif SRA->RA_FILIAL = "06" // Fil Recife 
+                _cCodVR := "06" 
+             Elseif SRA->RA_CATFUNC $ "G*E" .AND. SRA->RA_HRSMES <= 180 //Estag. Atendimento
+				 _cCodVR := "04"                
+             Elseif SRA->RA_CATFUNC $ "G*E" .AND. SRA->RA_HRSMES > 180 //Estag. Administrativo
+				 _cCodVR := "03"                                                              
+             Elseif !SRA->RA_CATFUNC $ "G*E" .AND. SRA->RA_GS <= "13" .AND. SRA->RA_CODFUNC <> "0350" //Func. com GS Ate 13 
+				 _cCodVR := "01"                                                              				 
+             Elseif !SRA->RA_CATFUNC $ "G*E" .AND. SRA->RA_GS > "13" .AND. SRA->RA_CODFUNC <> "0350" //Func. com GS Acima de 13 
+				 _cCodVR := "02"                                                              				 
+			 ElseIf SRA->RA_CODFUNC = "0350"
+				 _cCodVR := "07"                                                              				 	 
+             Endif    
+             
+             SRA->RA_VALEREF := _cCodVR                 
+            MSUNLOCK()
+
+        Endif
+                        
+
+       DBSELECTAREA("ZZ5")
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) +ZZ1->CHAPA+ "0438") // ASS. MED. CIGNA
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+            If SRA->RA_GS $ "25*26"  
+               SRA->RA_ASMEDIC := "07"
+            ElseIf SRA->RA_GS $ "27*28*29*30"   
+               SRA->RA_ASMEDIC := "08"
+            Endif
+           MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+             
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) +ZZ1->CHAPA+ "0396") // ASS. MED. UNIMED MASTER
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+            If !SRA->RA_CATFUNC $ "E*G"
+               SRA->RA_ASMEDIC := "03" 
+            Else    
+               SRA->RA_ASMEDIC := "06" 
+            Endif    
+           MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+             
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA+ "0397") // ASS. MED. UNIMED PLENO
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+           If !SRA->RA_CATFUNC $ "E*G"
+               SRA->RA_ASMEDIC := "02"
+           Else 
+               SRA->RA_ASMEDIC := "05"
+           Endif     
+           MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+ 
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA+ "0302")  // ASS. MED. UNIMED BH
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+
+               SRA->RA_ASMEDIC := "17" 	
+               SRA->RA_CDODONT := "03" // ODONTO BH 
+           MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+             
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA+ "0407")  // ASS. MED. UNIPART 
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+
+               SRA->RA_ASMEDIC := "09"
+
+           MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA+ "0304") // ODONTO
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+
+               SRA->RA_CDODONT := "01"
+
+           MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+                               
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA+ "0331") // ODONTOPREV
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+
+               SRA->RA_CDODONT := "02"
+
+           MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+        
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA+ "0305") // P. SEGURO 
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+            
+            If  SRA->RA_CATFUNC = "P"             
+                SRA->RA_SEGUROV := "01"
+            Else    
+				SRA->RA_SEGUROV := "02"
+			Endif 	                   
+			
+           MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+             
+
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA+ "0341") // P. SEGURO - BH 
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+            
+            If  SRA->RA_CATFUNC = "P"             
+                SRA->RA_SEGUROV := "01"
+            Else    
+				SRA->RA_SEGUROV := "02"
+			Endif 	                   
+		   MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif
+
+        IF Dbseek(STRZERO(ZZ1->CODCOLIG,2) + ZZ1->CHAPA+ "0344") // SEGURO - HSBC
+           DBSELECTAREA("SRA")       
+           RECLOCK("SRA",.F.) 
+            
+            If  !SRA->RA_CATFUNC $ "E*G"             
+                SRA->RA_SEGUROV := "03"
+            Else    
+				SRA->RA_SEGUROV := "04"
+			Endif 	                   
+		   MSUNLOCK()               
+           DBSELECTAREA("ZZ5")   		
+        Endif                 
+        
+        
+ //DBSELECTAREA("SRA")   		
+ //DBSKIP()  	
+
+         
+   DBSELECTAREA("ZZ1")
+   DBSKIP()
+   INCPROC()
+
+ ENDDO
+
+ DBSELECTAREA("ZZ1")
+ DBCLOSEAREA()
+
+ DBSELECTAREA("ZZ2")
+ DBCLOSEAREA()
+ 
+ DBSELECTAREA("ZZ3")
+ DBCLOSEAREA()
+ 
+ DBSELECTAREA("ZZ4")
+ DBCLOSEAREA()
+
+ DBSELECTAREA("ZZ5") 
+ DBCLOSEAREA()
+ 
+ DBSELECTAREA("SRB")  
+ DBCLOSEAREA()
+
+ DBSELECTAREA("CTT")  
+ DBCLOSEAREA()
+
+ DBSELECTAREA("SRJ")  
+ DBCLOSEAREA()
+
+ #IFDEF WINDOWS
+    MsgAlert ("Importacao Finalizada")
+ #ELSE
+    Alert("Importacao Finalizada")
+ #ENDIF        
+
+RETURN                             
+
+Static Function fPergConv()
+
+Local aRegs     := {}
+
+/*
+здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+Ё           Grupo  Ordem Pergunta Portugues     Pergunta Espanhol  Pergunta Ingles Variavel Tipo Tamanho Decimal Presel  GSC Valid                              Var01      Def01         DefSPA1   DefEng1 Cnt01             Var02  Def02    		 DefSpa2  DefEng2	Cnt02  Var03 Def03      DefSpa3    DefEng3  Cnt03  Var04  Def04     DefSpa4    DefEng4  Cnt04  Var05  Def05       DefSpa5	 DefEng5   Cnt05  XF3   GrgSxg Ё
+юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды*/
+
+aAdd(aRegs,{cPerg,'01' ,'Arquivo Origem     ?',''				 ,''			 ,'mv_ch1','C'  ,30     ,0      ,0     ,'G','U_fOpen_Conv()                         ','mv_par01','               '  ,''		 ,''	 ,'                ',''   ,'        	   ',''   	 ,''   	  ,''	 ,''   ,'       ' ,''   	 ,''      ,''	 ,''	,'       ',''  		 ,''  	  ,''	 ,''	,''			,''  	   ,''		 ,''	,'   ',''})
+aAdd(aRegs,{cPerg,'02' ,'Empresa Origem     ?',''				 ,''			 ,'mv_ch2','C'  ,04     ,0      ,0     ,'G','naovazio                        ','mv_par02','               '  ,''		 ,''	 ,'                ',''   ,'        	   ',''   	 ,''  	  ,''	 ,''   ,'       ' ,''   	 ,''      ,''	 ,''	,'       ',''  		 ,'' 	  ,''	 ,''	,''			,''  	   ,''		 ,''	,'',''})
+//aAdd(aRegs,{cPerg,'03' ,'Filial Destino     ?',''				 ,''			 ,'mv_ch3','C'  ,02     ,0      ,0     ,'G','                                ','mv_par03','               '  ,''		 ,''	 ,'                ',''   ,'        	   ',''   	 ,''  	  ,''	 ,''   ,'       ' ,''  		 ,''      ,''	 ,''	,'       ',''  		 ,''  	  ,''	 ,''	,''			,'' 	   ,''		 ,''	,'SM0',''})
+
+//здддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
+//Ё Carrega as Perguntas no SX1                                  Ё
+//юдддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
+ValidPerg(aRegs,cPerg)
+
+
+Return NIL
+

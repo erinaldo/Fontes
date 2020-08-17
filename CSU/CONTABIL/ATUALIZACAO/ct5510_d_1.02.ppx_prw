@@ -1,0 +1,121 @@
+Function U_CT5510_D(_cFlg)
+
+
+
+
+
+
+
+
+_cArea  := GetArea()
+_cConta := "INF. C.DESP./PATRIM."
+
+
+DbSelectArea("SED")
+DbSetOrder(1)
+DbSeek( xFilial()+SE2->E2_NATUREZ )
+
+IF SED->ED_RECDEP == "D"
+
+
+
+	IF SE2->E2_RATCSU <> "S"
+
+
+
+		DbSelectArea("CTT")
+		DbSetOrder(1)
+		DbSeek( xFilial()+SE2->E2_CCUSTO, .F.  )
+
+		If Found()
+
+
+			DbSelectArea("SZ1")
+			DbSetOrder(1)
+			DbSeek( xFilial()+SE2->E2_NATUREZ+CTT->CTT_GRUPO, .F.  )
+
+			If Found() .and.  SZ1->Z1_NATUREZ==SE2->E2_NATUREZ .and.  SZ1->Z1_GRUPOCC==CTT->CTT_GRUPO
+				_cConta := If(!Empty(SZ1->Z1_CCONTAB),SZ1->Z1_CCONTAB,_cConta)
+			EndIf
+
+		EndIf
+
+	Else
+
+
+
+		_lAchou := .f. 
+
+		DbSelectArea("SZ6")
+		DbSetOrder(1)
+
+		DbSeek( xFilial()+SE2->E2_PREFIXO+SE2->E2_NUM+SE2->E2_PARCELA+SE2->E2_TIPO+ SE2->E2_FORNECE+SE2->E2_LOJA )
+
+		While !Eof() .and. _lAchou== .f.  .and. (SE2->E2_PREFIXO+SE2->E2_NUM+SE2->E2_PARCELA+SE2->E2_TIPO == SZ6->Z6_PREFIXO+SZ6->Z6_NUMERO+SZ6->Z6_PARCELA+SZ6->Z6_TIPO)
+
+			If _cFlg == "I" .AND.  Empty(Subs(SZ6->Z6_LA,1,1))
+
+				_lAchou  := .t. 
+				_cCCusto := SZ6->Z6_CC
+				Reclock("SZ6", .F. )
+				SZ6->Z6_LA := "S"+Subs(SZ6->Z6_LA,2,2)
+				MsUnlock()
+
+			ElseIf _cFlg == "E" .AND.  Empty(Subs(SZ6->Z6_LAEXC,1,1))
+
+				_lAchou  := .t. 
+				_cCCusto := SZ6->Z6_CC
+				Reclock("SZ6", .F. )
+				SZ6->Z6_LAEXC := "S"+Subs(SZ6->Z6_LAEXC,2,2)
+				MsUnlock()
+
+			EndIf
+
+			DbSkip()
+
+		End
+
+		If _lAchou == .t. 
+
+
+			DbSelectArea("CTT")
+			DbSetOrder(1)
+			DbSeek( xFilial()+_cCCusto )
+
+			If Found()
+
+
+				DbSelectArea("SZ1")
+				DbSetOrder(1)
+				DbSeek( xFilial()+SE2->E2_NATUREZ+CTT->CTT_GRUPO, .F.  )
+
+				If Found() .and.  SZ1->Z1_NATUREZ==SE2->E2_NATUREZ .and.  SZ1->Z1_GRUPOCC==CTT->CTT_GRUPO
+					_cConta := If(!Empty(SZ1->Z1_CCONTAB),SZ1->Z1_CCONTAB,_cConta)
+				EndIf
+
+			EndIf
+
+		EndIf
+
+	EndIf
+
+Else
+
+
+
+
+
+
+	DbSelectArea("SZ1")
+	DbSetOrder(1)
+	DbSeek( xFilial()+SE2->E2_NATUREZ, .F.  )
+
+	If Found() .and.  SZ1->Z1_NATUREZ==SE2->E2_NATUREZ
+		_cConta := If(!Empty(SZ1->Z1_CCONTAB),SZ1->Z1_CCONTAB,_cConta)
+	EndIf
+
+EndIf
+
+RestArea(_cArea)
+
+Return _cConta

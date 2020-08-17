@@ -1,0 +1,101 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\ajsez.prw"
+Function U_AjSez
+
+
+local _oDlg1
+
+private _cPerg:= PADR("AjSez",LEN(SX1->X1_GRUPO))
+validperg(_cPerg)
+
+_odlg1 := MSDialog():New(000, 000, 180, 400, OemToAnsi("Ajuste do percentual real em SEZ"),,,,,,,,, .t. ,,,)
+
+ IW_Say(010,010,"Batch para atualizacao do campo EZ_CSPERCR",,,,, )
+
+ SButton():New(040, 050, 1,{|| u_RsAguarde({||_fAjSez()},"Ajustando o percentual em SEZ")},,)
+ SButton():New(040, 090, 5,{|| (_fPar(),_oDlg1:End())},,)
+ SButton():New(040, 130, 2,{|| _oDlg1:End()},,)
+
+_oDlg1:Activate(,,,.T.,, ,)
+
+
+static function _fAjSez()
+
+pergunte(_cPerg, .f. )
+_dDataIni:=mv_par01
+_dDataFim:=mv_par02
+
+_cFiltro:="dtos(e2_emissao)>='"+dtos(mv_par01)+"'.and.dtos(e2_emissao)<='"+dtos(mv_par02)+"'"
+se2->(IndRegua(alias(),criatrab(, .f. ),indexkey(),,_cFiltro))
+
+_cUltimo:="/"+alltrim(str(se2->(lastrec())))
+_nJafoi:=0
+
+se2->(dbgotop())
+while se2->(!eof())
+   _fAjSez1()
+   se2->(dbskip(1))
+   u_RsProcTxt("Titulos: "+alltrim(str(++_nJafoi))+_cUltimo+"     Emissao:"+dtoc(se2->e2_emissao))
+enddo
+se2->(retindex())
+
+
+static function _fPar()
+
+
+pergunte(_cPerg, .t. )
+return
+
+
+static function _fAjSez1()
+
+
+
+local _cKeySe2:=se2->(e2_prefixo+e2_num+e2_parcela+e2_tipo+e2_fornece+e2_loja), _vAmbSev:=sev->(getarea()), _vAmbSez:=sez->(getarea())
+
+sev->(dbsetorder(1))
+sez->(dbsetorder(1))
+
+
+sev->(dbseek(xfilial()+_cKeySe2, .f. ))
+while sev->(!eof() .and. EV_FILIAL+EV_PREFIXO+EV_NUM+EV_PARCELA+EV_TIPO+EV_CLIFOR+EV_LOJA==xfilial()+_cKeySe2)
+   if sev->ev_recpag=="P"
+      _cKeySev:=sev->(EV_PREFIXO+EV_NUM+EV_PARCELA+EV_TIPO+EV_CLIFOR+EV_LOJA+EV_NATUREZ)
+      sez->(dbseek(xfilial()+_cKeySev, .f. ))
+
+      while sez->(!eof() .and. EZ_FILIAL+EZ_PREFIXO+EZ_NUM+EZ_PARCELA+EZ_TIPO+EZ_CLIFOR+EZ_LOJA+EZ_NATUREZ==xfilial()+_cKeySeV)
+         if sez->(ez_cspercr==0.and.ez_recpag=="P")
+            while sez->(!reclock(alias(), .f. ))
+            enddo
+            sez->ez_cspercr:=round(sev->ev_perc*sez->ez_perc,7)
+            sez->(msunlock())
+         endif
+         sez->(dbskip(1))
+      enddo
+   endif
+   sev->(dbskip(1))
+enddo
+
+sev->(restarea(_vAmbSev))
+sez->(restarea(_vAmbSez))
+return
+
+
+Static Function VALIDPERG(_cPerg)
+
+
+local aRegs := {}
+
+
+
+
+
+
+
+AADD(aRegs,{_cPerg,"01","Emissao de            :","mv_ch1","D",08,0,0,"G","","mv_par01",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"02","Emissao ate           :","mv_ch2","D",08,0,0,"G","","mv_par02",""    ,"","",""      ,"","","","","","","","","","",""})
+
+u__fAtuSx1(padr(_cPerg,len(sx1->x1_grupo)),aRegs)
+Return

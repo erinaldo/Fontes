@@ -1,0 +1,86 @@
+#line 1 "C:\INCLUDE\topconn.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\aaj0025.prw"
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 16 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\aaj0025.prw"
+Function U_AAJ0025
+
+Processa({|lEnd| AAJ0025Processa(),"(SR4) Processando a alteração dos valores..."})
+
+STATIC FUNCTION AAJ0025Processa()
+
+Private cArqTxt := "C:\ARQUIV.TXT"
+Private nHdl    := fCreate(cArqTxt)
+
+Private cEOL    := "CHR(13)+CHR(10)"
+If Empty(cEOL)
+	cEOL := CHR(13)+CHR(10)
+Else
+	cEOL := Trim(cEOL)
+	cEOL := &cEOL
+Endif
+
+If nHdl == -1
+	MsgAlert("O arquivo de nome "+cArqTxt+" nao pode ser executado! Verifique os parametros.","Atencao!")
+	Return
+Endif
+
+_cQuery := " SELECT RD_FILIAL, RD_MAT FROM SRD050 WHERE RD_DATARQ = '200401' "
+_cQuery += " AND RD_PD = '313' AND D_E_L_E_T_ <> '*' "
+
+If Select("TR0025") >0
+	DBSelectArea("TR0025")
+	DBCloseArea()
+EndIf
+
+dbSelectArea("SR4")
+dbSetOrder(1)
+
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "TR0025" , .F. , .T. )
+dbSelectArea("TR0025")
+
+
+
+ProcRegua(2469)
+
+dbGoTop()
+
+
+while !eof()
+
+	IncProc("(SR4) Processando a alteração dos valores...")
+
+	dbSelectArea("SR4")
+
+	cKey0025 := TR0025->RD_FILIAL+TR0025->RD_MAT
+
+	dbseek(cKey0025)
+	cKey0025 +=	R4_CPFCGC+R4_CODRET + "01T"
+	dbseek(cKey0025)
+
+
+	if found()
+
+
+		cLin := TR0025->RD_FILIAL+TR0025->RD_MAT+str(r4_valor*100)+cEOL
+
+		If fWrite(nHdl,cLin,Len(cLin)) <> Len(cLin)
+			If !MsgAlert("Ocorreu um erro na gravacao do arquivo. Continua?","Atencao!")
+				Exit
+			Endif
+		Endif
+
+		RecLock( "SR4" , .F.  )
+		r4_valor += r4_valor
+		MsUnLock()
+	endif
+
+	dbSelectArea("TR0025")
+	dbSkip()
+
+enddo
+
+fClose(nHdl)
+
+Return

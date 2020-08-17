@@ -1,0 +1,225 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 3 "c:\users\csu.ikawakami\desktop\protheus 12 desenv\projeto_csu\contabil\atualizacao\csuctb04_1.02.prw"
+
+
+
+Function U_CSUCTB04()
+
+If !(SM0->M0_CODIGO $ "02/03/04/09")
+	MsgAlert("A rotina em questão somente está disponível para as empresas Cardsystem, Telesystem, Credit & Risk e Institucional !!!","Atencao!")
+	Return
+EndIf
+
+_cPerg := PADR("ZZ0004",LEN(SX1->X1_GRUPO))
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+dbSeek( _cPerg )
+
+If Eof()
+
+	RecLock("SX1", .T. )
+	SX1->X1_GRUPO    := _cPerg
+	SX1->X1_ORDEM    := "01"
+	SX1->X1_PERGUNT  := "No. Lote a alterar?"
+	SX1->X1_VARIAVL  := "mv_ch1"
+	SX1->X1_TIPO     := "C"
+	SX1->X1_TAMANHO  := 6
+	SX1->X1_GSC      := "G"
+	SX1->X1_VAR01    := "mv_par01"
+	MsUnlock()
+
+	RecLock("SX1", .T. )
+	SX1->X1_GRUPO    := _cPerg
+	SX1->X1_ORDEM    := "02"
+	SX1->X1_PERGUNT  := "No. SubLote ?"
+	SX1->X1_VARIAVL  := "mv_ch2"
+	SX1->X1_TIPO     := "C"
+	SX1->X1_TAMANHO  := 3
+	SX1->X1_GSC      := "G"
+	SX1->X1_VAR01    := "mv_par02"
+	MsUnlock()
+
+	RecLock("SX1", .T. )
+	SX1->X1_GRUPO    := _cPerg
+	SX1->X1_ORDEM    := "03"
+	SX1->X1_PERGUNT  := "No. Documento ?"
+	SX1->X1_VARIAVL  := "mv_ch3"
+	SX1->X1_TIPO     := "C"
+	SX1->X1_TAMANHO  := 6
+	SX1->X1_GSC      := "G"
+	SX1->X1_VAR01    := "mv_par03"
+	MsUnlock()
+
+	RecLock("SX1", .T. )
+	SX1->X1_GRUPO    := _cPerg
+	SX1->X1_ORDEM    := "04"
+	SX1->X1_PERGUNT  := "Data Atual ?"
+	SX1->X1_VARIAVL  := "mv_ch4"
+	SX1->X1_TIPO     := "D"
+	SX1->X1_TAMANHO  := 8
+	SX1->X1_GSC      := "G"
+	SX1->X1_VAR01    := "mv_par04"
+	MsUnlock()
+
+	RecLock("SX1", .T. )
+	SX1->X1_GRUPO    := _cPerg
+	SX1->X1_ORDEM    := "05"
+	SX1->X1_PERGUNT  := "Nova Data ?"
+	SX1->X1_VARIAVL  := "mv_ch5"
+	SX1->X1_TIPO     := "D"
+	SX1->X1_TAMANHO  := 8
+	SX1->X1_GSC      := "G"
+	SX1->X1_VAR01    := "mv_par05"
+	MsUnlock()
+
+EndIf
+
+Pergunte(_cPerg, .F. )
+
+
+
+
+
+
+
+
+
+oLeTl01 := MSDialog():New(200, 1, 380, 450, OemToAnsi(OemToAnsi("Alteração Data Lançamento Contábil")),,,,,,,,, .t. ,,,)
+ TGroup():New(02,10,060,215,OemToAnsi(),, , , .t. )
+ IW_Say(10,018," Esta rotina tem como objetivo efetuar a alteração da data de um ",,,,196,0 )
+ IW_Say(18,018," lançamento contábil.                                            ",,,,196,0 )
+ IW_Say(34,018," IMPORTANTE: Após a(s) alteração(ões) em questão, é de suma      ",,,,196,0 )
+ IW_Say(44,018," importância a execução do REPROCESSAMENTO CONTÁBIL.             ",,,,196,0 )
+ IW_Say(60,018," Informe parâmetros ref. ao lançamento contábil a ser alterado...",,,,196,0 )
+
+ SButton():New(70, 128, 05,{|| Pergunte(_cPerg, .T. )},,)
+ SButton():New(70, 158, 01,{|| (Prvalid(),oLeTl01:End())},,)
+ SButton():New(70, 188, 02,{|| oLeTl01:End()},,)
+
+oLeTl01:Activate(,,,.T.,, ,)
+
+Return
+
+
+
+Static Function Prvalid()
+
+
+
+If 	Empty(Mv_Par01) .or.  Empty(Mv_Par02) .or.  Empty(Mv_Par03) .or.  Empty(Mv_Par04) .or.  Empty(Mv_Par05)
+	MsgAlert("Existe parâmetro não preenchido, verifique !!!","Atencao!")
+	Return
+EndIf
+
+
+If Mv_Par04 == Mv_Par05
+	MsgAlert("A data atual do lançamento é igual a nova data informada, verifique !!!","Atencao!")
+	Return
+EndIf
+
+
+If Year(Mv_Par04) <> Year(Mv_Par05)
+	MsgAlert("A nova data informada não corresponde ao mesmo exercício contábil da atual (ANO), verifique !!!","Atencao!")
+	Return
+EndIf
+
+
+
+If Mv_Par05 < ctod("01/02/02")
+	MsgAlert("Devido a conceitos envolvidos, esta rotina somente permite alterações para datas após 01/02/02.","Atencao!")
+	Return
+EndIf
+
+
+DbSelectArea("CT2")
+DbSetOrder(1)
+DbSeek( xFilial()+DTOS(Mv_Par04)+Mv_Par01+Mv_Par02+Mv_Par03 )
+
+If Eof()
+	MsgAlert("Lançamento contábil informado não encontrado na base de dados, verifique parâmetros !!!","Atencao!")
+	Return
+ElseIf !Empty(CT2->CT2_LP)
+	MsgAlert("O lançamento informado nos parâmetros foi gerado automaticamente pelo sistema, via integração com outros módulos. O mesmo não pode ser alterado !!! Efetue a devida alteração na fonte.","Atencao!")
+
+	Return
+EndIf
+
+
+aRecLan := {}
+
+
+
+While !Eof() .and.  CT2->CT2_DATA = Mv_Par04 .and.  CT2->CT2_LOTE == Mv_Par01 .and.  CT2->CT2_SBLOTE == Mv_Par02 .and.  CT2->CT2_DOC == Mv_Par03
+
+
+	aAdd( aRecLan,REcno())
+	DbSkip()
+
+End
+
+
+
+
+DbSelectArea("CT2")
+DbSetOrder(1)
+DbSeek( xFilial()+DTOS(Mv_Par05)+Mv_Par01+Mv_Par02+"999999", .T.  )
+
+DbSkip(-1)
+
+If CT2->CT2_DATA == Mv_Par05 .and.  CT2->CT2_LOTE == Mv_Par01 .and.  CT2->CT2_SBLOTE == Mv_Par02
+	cDOC := StrZero(Val(CT2->CT2_DOC) + 1,6)
+Else
+	cDoc := "000001"
+EndIf
+
+
+
+cMens1 := " LANÇAMENTO ATUAL"
+cMens2 := " Data: "+dtoc(Mv_Par04)+"  Lote: "+Mv_Par01+"  SubLote: "+Mv_Par02+"  Documento: "+Mv_Par03
+cMens3 := " LANÇAMENTO A SER GERADO (ALTERADO)"
+cMens4 := " Data: "+dtoc(Mv_Par05)+"  Lote: "+Mv_Par01+"  SubLote: "+Mv_Par02+"  Documento: "+cDoc
+
+oLeTl02 := MSDialog():New(200, 1, 380, 450, OemToAnsi(OemToAnsi("Alteração Data Lançamento Contábil")),,,,,,,,, .t. ,,,)
+ TGroup():New(02,10,060,215,OemToAnsi(),, , , .t. )
+
+ IW_Say(10,018,cMens1,,,,196,0 )
+ IW_Say(18,018,cMens2,,,,196,0 )
+ IW_Say(34,018,cMens3,,,,196,0 )
+ IW_Say(44,018,cMens4,,,,196,0 )
+ IW_Say(60,018,"Click OK para confirmar a alteração acima...",,,,196,0 )
+
+ SButton():New(70, 158, 01,{|| Processa({||OkLeTxt(),,oLeTl02:End()})},,)
+ SButton():New(70, 188, 02,{|| oLeTl02:End()},,)
+
+oLeTl02:Activate(,,,.T.,, ,)
+
+
+
+Static Function OkLeTxt()
+
+DbSelectArea("CT2")
+DbSetOrder(1)
+
+ProcRegua(Len(aRecLan))
+
+For x := 1 to Len(aRecLan)
+
+	IncProc("Efetuando Alteraçao...")
+	dbGoto(aRecLan[x])
+
+	RecLock("CT2", .F. )
+	CT2->CT2_DATA := Mv_Par05
+	CT2->CT2_DOC := cDoc
+	MsUnLock()
+
+Next
+
+ALERT("ALTERAÇÃO DE DATA EFETUADA COM SUCESSO !")
+
+
+
+
+Return

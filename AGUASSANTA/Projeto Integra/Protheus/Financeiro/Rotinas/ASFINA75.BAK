@@ -1,0 +1,51 @@
+#INCLUDE 'PROTHEUS.CH'
+#INCLUDE 'PARMTYPE.CH'
+
+//-----------------------------------------------------------------------
+/*/{Protheus.doc} ASFINA75()
+Utilizado na Rotina de AVP
+Chamado pelo Formula AVP
+
+@param		Nil
+@return		nValAVP - Valor do AVP
+@author 	Fabiano Albuquerque
+@since 		26/02/2018
+@version 	1.0
+@project	MAN0000001 - Aguassanta - Integra
+/*/
+//-----------------------------------------------------------------------
+USER FUNCTION ASFINA75()
+
+Local aAreaAnt	:= GetArea()
+Local nIndDia	:= 0
+Local nDiasAvp  := 0
+Local dDataFin  := SE1->E1_VENCTO
+Local dDataIni  := dDataBase //dDtProc
+Local nValVP	:= 0
+Local nDecimais := TamSX3("FIN_VLRAVP")[2]
+Local nValTit 	:= SE1->E1_SALDO
+Local nTxFin
+Local cVenda	:= SE1->E1_XCONTRA	
+
+DbSelectArea("SZ9")
+SZ9->( DbSetOrder(2) ) //Filial + Número da Venda
+IF MsSeek( xFilial("SZ9") + cVenda )
+	nTxFin := SZ9->Z9_TXFIN
+EndIF
+
+//Converto a Taxa informada
+nIndDia := 1+(nTxFin/100) //Taxa equivalente
+
+IF dDataFin > dDataIni
+
+	//Calculo o numero de dias para AVP
+	nDiasAvp := DateDiffMonth(dDataFin, dDataIni)
+
+	//Valor Presente
+	nValVP	:= Round( nValTit / (nIndDia**nDiasAVP), nDecimais)
+
+EndIF
+
+RestArea(aAreaAnt)
+
+Return nValVP

@@ -1,0 +1,38 @@
+#include "rwmake.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ SISP001  ³ Autor ³ Alexandre da Silva    ³ Data ³ 01/09/00 ³±±
+±±³Programa  ³ SISP001  ³ MODIFI³ Cesar Moura           ³ Data ³ 03/03/05 ³±±
+±±³Programa  ³ SISP001  ³ MODIFI³ Cesar Moura           ³ Data ³ 22/02/07 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ ExecBlock disparado do SISPAG.PAG para retornar agencia e  ³±±
+±±³          ³ conta do fornecedor - Campo 024-043.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ CNAB SISPAG                                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function SISP001()
+Local _cReturn
+
+IF empty(SA2->A2_BANCO)
+	cBanco := SA2->A2_BANCO
+	cAgenc := SA2->A2_AGENCIA
+	cConta := SA2->A2_NUMCON
+ENDIF
+
+IF cBanco == "341"
+//	_cReturn :=	"0"+SUBSTR(SA2->A2_AGENCIA,1,4)+" "+"0000000"+SUBSTR(SA2->A2_NUMCON,1,5)+" "+"0"
+	_cReturn :=	PADL(SUBSTR(SA2->A2_AGENCIA,1,4),5,"0") + " " + StrZero(Val(Alltrim(substr(SA2->A2_NUMCON,1,9))),12)+" "+ IIF(SEA->EA_MODELO == "10", "0" , SUBSTR(SA2->A2_NUMCON,10,1)) 
+  //	_cReturn :=	PADL(SUBSTR(cAgenc,1,4),5,"0") + " " + STRZERO(VAL(STRTRAN(SA2->A2_NUMCON,"-","")),12)+" "+ IIF(SEA->EA_MODELO == "10", "0" , SUBSTR(cConta,10,1)) 
+Else                                                                 
+//	_cReturn :=StrZero(Val(Alltrim(Substr(SA2->A2_AGENCIA,1,4))),5)+" "+StrZero(Val(Alltrim(substr(SA2->A2_NUMCON,1,9))),12)+" "+ substr(SA2->A2_NUMCON,10,1)
+	_cReturn :=StrZero(Val(Alltrim(Substr(cAgenc,1,4))),5)+" "+ STRZERO(VAL(STRTRAN(SA2->A2_NUMCON,"-","")),12)+" "+ substr(cConta,10,1)
+Endif                                                          
+
+Return(_cReturn)

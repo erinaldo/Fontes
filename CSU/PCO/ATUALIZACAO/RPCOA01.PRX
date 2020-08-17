@@ -1,0 +1,581 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP6 IDE em 05/04/04
+#include "stdwin.ch"
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ RPCOA01  ³ Autor ³ Fernando Garrigos     ³ Data ³ 25/09/06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Importa Planilha do PCO					                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ ESPECIFICO CSU                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Alterado por ³            Descricao da Alteracao            ³  Data    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄ´±±
+±±³             ³                                              ³          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+User Function RPCOA01()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP6 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("NOMEPROG,NLASTKEY,_CPERG,_ALOGERRO,_ALOGERRO2,_CSTRING")
+SetPrvt("_CTITULO,_CDESC1,_CDESC2,_CDESC3,TAMANHO,ARETURN")
+SetPrvt("_CCABEC1,_CCABEC2,_CTITREL,CBTXT,CBCONT,LI")
+SetPrvt("M_PAG,WNREL,_NTIPO,_CDTREF,_NREGS,_DDTULTFEC")
+SetPrvt("_CPATH,_CARQIMPF1,_CARQIMPF2,_CARQIMPD1,_CARQIMPD2,_CARQIMPE2")
+SetPrvt("_CARQIMPE1,_CARQIMPF4,_CARQIMPB1,_CARQIMPF3,_CARQIMPE5,_CARQIMPI3")
+SetPrvt("_CARQIMPD3,_CINDTD2,_CCHAVE,I,_CCAMPO,_CCAMPOD2")
+SetPrvt("_NPOSTMP,_CVALOR,_NPOSCAMPO,_CCAMPOF2,_CINDTD1,_CCAMPOD1")
+SetPrvt("_CCAMPOF1,_CCAMPOE1,_CCAMPOE2,_CCAMPOF4,_CCAMPOB1,_CCAMPOI3")
+SetPrvt("_CCHAVED3,_CCAMPOD3,_AREGISTRO,_CALIAS,J,_Erro")
+SetPrvt("cOrcamento,cVersao,dPeriodo,nValor,cMoeda","cOper","cClasse","cCount","cQuery2","dPer","_cId")
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nomeprog   := "RPCOA01"
+nLastKey   := 0
+cPerg     := PADR("RPCO01",LEN(SX1->X1_GRUPO))
+_aLogErro  := {}
+_aLogErro2 := {}
+_cString   := "AK2"
+_cTitulo   := PADC("Importacao da Planilha do PCO ",74)
+_cDesc1    := PADC("Este Programa visa importar dados do PCO oficial ",74)
+_cDesc2    := PADC("conforme parametros.  ",74)
+_cDesc3    := PADC("Específico CSU",74)
+tamanho    := "P"
+aReturn 	 := { "Zebrado", 1,"Administracao", 2, 2, 1, "",1 }
+_cCabec1   := " "
+_cCabec2   := " "
+_cTitRel   := "Log de Erros "
+cOrcamento 	:= ""
+cVersao		:= ""
+cClasse		:= "000001"
+cMoeda		:= 1
+_Erro		:= ""
+cCount		:= 0
+cOper		:= ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cbtxt  := SPACE(10)
+cbcont := 0
+li     := 80
+m_pag  := 1
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se o grupo de perguntas esta no arquivo SX1 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aPerg      := {}      // Array com perguntas do grupo
+// monta array
+// Monta array
+
+validperg()
+
+// Abandona programa se o usuario nao confirmou as perguntas
+IF !PERGUNTE(cPerg,.T.)
+	RETURN
+ENDIF
+
+cOrcamento	:= mv_par02
+cVersao   	:= mv_par03
+
+#IFDEF WINDOWS
+	IF !MSGBOX("Confirma Importacao de dados? ","Confirmacao","YESNO")
+		Return
+	Endif
+#ENDIF
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+wnrel := nomeprog            //Nome Default do relatorio em Disco
+wnrel := SetPrint(_cString,wnrel,cPerg,@_cTitulo,_cDesc1,_cDesc2,_cDesc3,.F.,,,Tamanho,"",.F.)
+
+If nLastKey == 27 .OR. LASTKEY() ==27
+	Return
+Endif
+
+SetDefault(aReturn,_cString,.F.)
+
+If aReturn[4]==1  // impressao normal ou comprimida
+	_nTipo:=GetMv("MV_COMP") // 15 ou 18, para padrao epson
+Else
+	_nTipo:=GetMv("MV_NORM")
+Endif
+
+If nLastKey == 27 .OR. LASTKEY() ==27
+	Return
+Endif
+
+//MONTA STRING COM DATA REFERENCIA
+_cCabec1 := "Data de referencia: "
+_nRegs   := 0
+
+
+//CAMINHO DO ARQUIVO PARA IMPORTAÇÃO
+//_cArqImpT1 := "\"+CURDIR()+"\PCO\"+MV_PAR01
+_cArqImpT1 := MV_PAR01
+
+IF !FILE(_cArqImpT1)
+	MSGBOX("NAO LOCALIZADOS ARQUIVOS P/ IMPORTACAO!!!  VERIFIQUE NOME DO ARQUIVO NA PASTA: "+MV_PAR01+"!!!","ARQUIVO NAO LOCALIZADO","ALERT")
+	RETURN
+	
+ENDIF
+aCampos := {}
+AAdd(aCampos,{'CO'   , 	'C' ,15 ,0})
+AAdd(aCampos,{'JAN'    , 'N' ,14 ,2})
+AAdd(aCampos,{'FEV'    , 'N' ,14 ,2})
+AAdd(aCampos,{'MAR'    , 'N' ,14 ,2})
+AAdd(aCampos,{'ABR'    , 'N' ,14 ,2})
+AAdd(aCampos,{'MAI'    , 'N' ,14 ,2})
+AAdd(aCampos,{'JUN'    , 'N' ,14 ,2})
+AAdd(aCampos,{'JUL'    , 'N' ,14 ,2})
+AAdd(aCampos,{'AGO'    , 'N' ,14 ,2})
+AAdd(aCampos,{'SET'    , 'N' ,14 ,2})
+AAdd(aCampos,{'OUT'    , 'N' ,14 ,2})
+AAdd(aCampos,{'NOV'    , 'N' ,14 ,2})
+AAdd(aCampos,{'DEZ'    , 'N' ,14 ,2})
+AAdd(aCampos,{'CC'     , 'C' ,10 ,0})
+AAdd(aCampos,{'ITCTB'  , 'C' ,9 ,0})
+AAdd(aCampos,{'CLVLR'  , 'C' ,9 ,0})
+
+//   dbCreate("\CONTROL\NFE\"+_cEst+cArq,aCampos,"DBFCDXADS")
+
+_cArq := CriaTrab(aCampos,.t.)
+
+DBUSEAREA(.T.,"",_cArq,"T1",.T.,.F.)
+
+//Append From _cArqImpT1 Delimited With ";"
+//Append From &_cArqImpT1 SDF         // para separacao do arquivo texto em ponto e virgula
+Append From &_cArqImpT1 DELIM
+
+// ABRE ARQUIVOS  E SOMA REGISTROS
+
+DBSELECTAREA("T1")
+_nRegs := _nRegs + RECCOUNT()
+
+DbSelectArea("AK1")
+DbGoTop()
+IF !(DbSeek(xFilial("AK1")+cOrcamento+cVersao,.T.))
+	DBSELECTAREA("T1")
+	DBCLOSEAREA("T1")
+	MSGBOX("PLANILHA NAO ENCONTRADA: "+MV_PAR02+" "+MV_PAR03+"!!!","VERIFICAR NO PCO E PARAMETROS","ALERT")
+	RETURN
+ENDIF
+
+RptStatus({|| RptDetail()})
+
+// FECHA ARQUIVOS TEMPORARIOS
+DBSELECTAREA("T1")
+DBCLOSEAREA("T1")
+
+// FIM
+
+MSGBOX("Importação Finalizada, se necessário reprocessar o lançamento 000252.","ALERT")
+
+
+Return (.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ RptDetail³ Autor ³ Fernando Garrigos     ³ Data ³ 25/09/06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Necessaria Funcao para Relatorios "For Windows"            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function RptDetail()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ IMPORTA PLANO DE CONTAS                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+DBSELECTAREA("T1")
+dbGotop()
+T1->(DBSKIP())
+
+// INICIA PROCESSAMENTO
+PcoIniLan("000252")
+DO WHILE !EOF()
+	
+	// INICIA VALIDACAO
+	
+	DBSELECTAREA("AK5") // VALIDA CONTA ORCAMENTARIA
+	IF !(DBSEEK(xFilial("AK5")+ALLTRIM(T1->CO),.T.)) //AK5_FILIAL+AK5_CODIGO
+		AADD(_aLogErro,{"Cta Orc. - AK5",ALLTRIM(T1->CO),"Inexistente"})
+		_Erro := "T"
+	Endif
+
+	IF AK5->AK5_TIPO == "1" // VALIDA SE ANALITICO (2) OU SINTETICO(1)    (16/01/07)
+		_Erro := "T"
+	Endif
+	
+	DBSELECTAREA("CTT") //VALIDA CENTRO DE CUSTO
+	IF !(DBSEEK(xFilial("CTT")+ALLTRIM(T1->CC),.T.)) //CTT_FILIAL+CTT_CUSTO
+		AADD(_aLogErro,{"C. Custo - CTT",(ALLTRIM(T1->CC)),"Inexistente"})
+		_Erro := "T"
+	Endif
+	
+	DBSELECTAREA("CTD") //VALIDA ITEM CONTABIL
+	IF !(DBSEEK(xFilial("AK5")+ALLTRIM(T1->ITCTB),.T.)) //CTD_FILIAL+CTD_ITEM
+		AADD(_aLogErro,{"Item CTB - CTD",(ALLTRIM(T1->ITCTB)),"Inexistente"})
+		_Erro := "T"
+	Endif
+	
+	DBSELECTAREA("CTH") //VALIDA CLASSE ORCAMENTÁRIA
+	IF !(DBSEEK(xFilial("AK5")+ALLTRIM(T1->CLVLR),.T.)) //CTH_FILIAL+CTH_CLVL
+		AADD(_aLogErro,{"Cl. Vl. - CTH",(ALLTRIM(T1->CLVLR)),"Inexistente"}) 
+		_Erro := "T"
+	Endif
+	
+	IF _Erro <> "T" //VALIDA SE OCORRERAM ERROS PARA POSSIBILITAR A IMPORTACAO
+		
+		// INICIA IMPORTACAO
+		
+		cQuery := "SELECT R_E_C_N_O_ AS CRECNO, AK2_PERIOD  "
+		cQuery += " "+"FROM "+RetSqlName("ak2")+" "
+		cQuery += "WHERE AK2_ORCAME = '"+cOrcamento+"' "
+		cQuery += "AND AK2_VERSAO = '"+cVersao+"' "
+		cQuery += "AND AK2_CO = '"+ALLTRIM(T1->CO)+"' "
+		cQuery += "AND AK2_CC =  '"+ALLTRIM(T1->CC)+"' "
+		cQuery += "AND AK2_ITCTB = '"+ALLTRIM(T1->ITCTB)+"' "
+		cQuery += "AND AK2_CLVLR = '"+ALLTRIM(T1->CLVLR)+"' "
+		cQuery += "AND D_E_L_E_T_ = '' "
+		cQuery += " Order By AK2_PERIOD "
+		
+		dbUseArea( .T., "TOPCONN", TcGenQry(,,cQuery), "TRB", .T., .F. )
+		
+		DbSelectArea("TRB")
+		DbGoTop()
+		
+//	MSGBOX(" " +cquery +"!!!","PONTO DE TESTE","ALERT")
+
+		IF !EMPTY(TRB->CRECNO)
+			
+			aCpos := {"JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"}
+			
+			For nI := 1 To Len(aCpos)
+				
+				cCount := cCount +1
+				
+				If cCount = 1
+					dPeriodo := "01/01/"+substr(mv_par04,3,2)
+					nValor	 := T1->JAN
+				ElseIf cCount = 2
+					dPeriodo := "01/02/"+substr(mv_par04,3,2)
+					nValor	 := T1->FEV
+				ElseIf cCount = 3
+					dPeriodo := "01/03/"+substr(mv_par04,3,2)
+					nValor	 := T1->MAR
+				ElseIf cCount = 4
+					dPeriodo := "01/04/"+substr(mv_par04,3,2)
+					nValor	 := T1->ABR
+				ElseIf cCount = 5
+					dPeriodo := "01/05/"+substr(mv_par04,3,2)
+					nValor	 := T1->MAI
+				ElseIf cCount = 6
+					dPeriodo := "01/06/"+substr(mv_par04,3,2)
+					nValor	 := T1->JUN
+				ElseIf cCount = 7
+					dPeriodo := "01/07/"+substr(mv_par04,3,2)
+					nValor	 := T1->JUL
+				ElseIf cCount = 8
+					dPeriodo := "01/08/"+substr(mv_par04,3,2)
+					nValor	 := T1->AGO
+				ElseIf cCount = 9
+					dPeriodo := "01/09/"+substr(mv_par04,3,2)
+					nValor	 := T1->SET
+				ElseIf cCount = 10
+					dPeriodo := "01/10/"+substr(mv_par04,3,2)
+					nValor	 := T1->OUT
+				ElseIf cCount = 11
+					dPeriodo := "01/11/"+substr(mv_par04,3,2)
+					nValor	 := T1->NOV
+				ElseIf cCount = 12
+					dPeriodo := "01/12/"+substr(mv_par04,3,2)
+					nValor	 := T1->DEZ
+				Endif
+
+				
+				DBSELECTAREA("AK2")	//INCLUI
+				DbGoTo(TRB->CRECNO) //Por recno
+				
+				
+				RECLOCK("AK2",.F.)
+				REPLACE  AK2_VALOR     WITH  nValor
+				MSUNLOCK()                 
+				PcoDetLan("000252","01","RPCOA01") 
+				DBCLOSEAREA("AK2")
+				
+				DbSelectArea("TRB")
+				DbSkip()
+				
+			Next
+			
+			cCount := 0
+			
+			
+			DbCloseArea("TRB")
+			
+		ELSE
+			
+			DbCloseArea("TRB")
+			
+			
+			aCpos := {"JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"}
+			
+			For nI := 1 To Len(aCpos)
+				
+				cCount := cCount +1
+				
+				If cCount = 1
+					dPeriodo := "01/01/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0101"
+					nValor	 := T1->JAN
+				ElseIf cCount = 2
+					dPeriodo := "01/02/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0201"
+					nValor	 := T1->FEV
+				ElseIf cCount = 3
+					dPeriodo := "01/03/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0301"
+					nValor	 := T1->MAR
+				ElseIf cCount = 4
+					dPeriodo := "01/04/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0401"
+					nValor	 := T1->ABR
+				ElseIf cCount = 5
+					dPeriodo := "01/05/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0501"
+					nValor	 := T1->MAI
+				ElseIf cCount = 6
+					dPeriodo := "01/06/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0601"
+					nValor	 := T1->JUN
+				ElseIf cCount = 7
+					dPeriodo := "01/07/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0701"
+					nValor	 := T1->JUL
+				ElseIf cCount = 8
+					dPeriodo := "01/08/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0801"
+					nValor	 := T1->AGO
+				ElseIf cCount = 9
+					dPeriodo := "01/09/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"0901"
+					nValor	 := T1->SET
+				ElseIf cCount = 10
+					dPeriodo := "01/10/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"1001"
+					nValor	 := T1->OUT
+				ElseIf cCount = 11
+					dPeriodo := "01/11/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"1101"
+					nValor	 := T1->NOV
+				ElseIf cCount = 12
+					dPeriodo := "01/12/"+substr(mv_par04,3,2)
+					dPer := mv_par04+"1201"
+					nValor	 := T1->DEZ
+				Endif
+				
+				//Define o número do ID - para não ter duplicados - Chave: AK2_FILIAL+AK2_ORCAME+AK2_VERSAO+AK2_CO+AK2_PERIOD+AK2_ID
+				
+				cQuery2 := " SELECT MAX (AK2_ID) AS ID  "
+				cQuery2 += " "+"FROM "+RetSqlName("ak2")+" "
+				cQuery2 += " WHERE AK2_ORCAME = '"+cOrcamento+"' "
+				cQuery2 += " AND AK2_VERSAO = '"+cVersao+"' "
+				cQuery2 += " AND AK2_CO = '"+ALLTRIM(T1->CO)+"' "
+				cQuery2 += " AND AK2_PERIOD =  '"+dPer+"' "
+				cQuery2 += " AND D_E_L_E_T_ = '' "
+				cQuery2 += " GROUP BY AK2_FILIAL+AK2_ORCAME+AK2_VERSAO+AK2_CO+AK2_PERIOD "
+				
+				dbUseArea( .T., "TOPCONN", TcGenQry(,,cQuery2), "TRB2", .T., .F. )
+				
+				DbSelectArea("TRB2")
+				DbGoTop()
+				
+				IF !Empty (TRB2->ID)
+					_cId := SOMA1(TRB2->ID)
+				ELSE
+					_cId := "0001"
+				Endif
+
+//	MSGBOX(" "+_cId +"!!!" +cquery2 +"!!!" +dper +"!!!","PONTO DE TESTE","ALERT")
+				
+				DbCloseArea("TRB2")
+				
+				//Inclusão de novos orçamentos
+				
+				DBSELECTAREA("AK2")	//INCLUI
+				
+				RECLOCK("AK2",.T.)
+				REPLACE  AK2_FILIAL    	WITH  xFilial("AK2")
+				REPLACE  AK2_ID        	WITH  _cId
+				REPLACE  AK2_ORCAME     WITH  cOrcamento
+				REPLACE  AK2_VERSAO     WITH  cVersao
+				REPLACE  AK2_CO        	WITH  ALLTRIM(T1->CO)
+				REPLACE  AK2_PERIOD    	WITH  ctod(dPeriodo)
+				REPLACE  AK2_CC        	WITH  ALLTRIM(T1->CC)
+				REPLACE  AK2_ITCTB     	WITH  ALLTRIM(T1->ITCTB)
+				REPLACE  AK2_CLVLR     	WITH ALLTRIM(T1->CLVLR)
+				REPLACE  AK2_CLASSE    	WITH  cClasse
+				REPLACE  AK2_VALOR     	WITH  nValor
+				REPLACE  AK2_OPER      	WITH  cOper
+				REPLACE  AK2_MOEDA     	WITH  cMoeda
+				REPLACE  AK2_DATAF     	WITH  LastDay(ctod((dPeriodo)))
+				REPLACE  AK2_DATAI     	WITH  ctod(dPeriodo)
+				MSUNLOCK()
+				PcoDetLan("000252","01","RPCOA01") 
+				DBCLOSEAREA("AK2")
+				
+			Next
+			
+			cCount := 0
+			
+		ENDIF
+
+		
+		
+	ENDIF
+	
+	DbCloseArea("TRB")
+	DBSELECTAREA("T1")
+	DBSKIP()
+	
+ENDDO
+PcoFinLan("000252")
+//FECHA ARQUIVOS TEMPORÁRIOS
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³                                         ³
+//³ IMPRIME RELATORIO DE OCORRENCIAS        ³
+//³                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF LEN(_aLogErro) > 0
+	FOR i := 1  TO LEN(_aLogErro)
+		IF li > 60
+			li := cabec(_cTitRel,_cCabec1,_cCabec2,nomeprog,tamanho,_nTipo)
+		EndIF
+		li := li + 1
+		@ li,00 PSAY _aLogErro[i][1]
+		@ li,16 PSAY _aLogErro[i][2]
+		@ li,31 PSAY _aLogErro[i][3]
+//	 	@ li,00 PSAY _aLogErro[i][4]
+	NEXT
+	
+	Set Device To Screen
+	If aReturn[5] == 1
+		Set Printer To
+		dbCommitAll()
+		ourspool(wnrel)
+	Endif
+	
+	MS_FLUSH()
+	
+ENDIF
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o	 ³ FGETPATH ³ Autor ³ Kleber Dias Gomes     ³ Data ³ 26/06/00 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Permite que o usuario decida onde sera criado o arquivo    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ CONVERTE													  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fGetPath()
+Local cRet  :=Alltrim(ReadVar())
+Local cPath  := mv_par01
+
+oWnd := GetWndDefault()
+
+While .T.
+	If Empty(cPath)
+		cPath := cGetFile( "Arquivos Texto de Importacao | *.DBF ",OemToAnsi("Selecione Arquivo"))
+	EndIf
+	
+	If Empty(cPath)
+		Return .F.
+	EndIf
+	&cRet := cPath
+	Exit
+EndDo
+
+If oWnd != Nil
+	GetdRefresh()
+EndIf
+
+
+Return .T.
+//Fim da Rotina
+
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³VALIDPERG ³ Autor ³  Luiz Carlos Vieira   ³ Data ³ 18/11/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica as perguntas inclu¡ndo-as caso n„o existam        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Espec¡fico para clientes Microsiga                         ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+// Substituido pelo assistente de conversao do AP5 IDE em 07/06/00 ==> Function ValidPerg
+
+Static Function ValidPerg()
+
+_sAlias := Alias()
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+_cPerg := PADR(cPerg,LEN(SX1->X1_GRUPO))
+aRegs:={}
+
+// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05
+aAdd(aRegs,{_cPerg,"01","Arquivo de Leitura?","","","mv_ch1","C",16,0,0,"G","","mv_par01","","DEFAULT.TXT","","","","","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"02","Orcamento?","","","mv_ch2","C",15,0,0,"G","","mv_par02","","","","","","","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"03","Versao?","","","mv_ch3","C",04,0,0,"G","","mv_par03","","","","","","","","","","","","","",""})
+aAdd(aRegs,{_cPerg,"04","Ano(aaaa)?","","","mv_ch4","C",04,0,0,"G","","mv_par04","","","","","","","","","","","","","",""})
+
+For i:=1 to Len(aRegs)
+	If !dbSeek(_cPerg+aRegs[i,2])
+		RecLock("SX1",.T.)
+		For j:=1 to FCount()
+			If j <= Len(aRegs[i])
+				FieldPut(j,aRegs[i,j])
+			Endif
+		Next
+		MsUnlock()
+	Endif
+Next
+
+dbSelectArea(_sAlias)
+
+Return
+
+

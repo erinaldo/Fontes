@@ -7,7 +7,7 @@
 			"name": "Debug",
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
-			"smartclientBin": "C:/TOTVS 12/Protheus/bin_12-1-25/smartclient/smartclient.exe",
+			"smartclientBin": "C:/Users/emerson.natali/Desktop/RISA_SMARTCLIENT/smartclient.exe",
 			"isMultiSession": true,
 			"enableTableSync": true,
 			"programArguments": "SIGAMDI",

@@ -1,0 +1,799 @@
+//#INCLUDE "TOTVS.CH"
+#INCLUDE "CALPLANO.CH"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    	³ CALPLANO   ³ Autor ³ Mauricio Takakura     	      ³ Data ³ 16/10/11 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o 	³ Calculo do Plano de Saude                                    			³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   	³ CALPLANO()                                                   			³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      	³ Generico ( DOS e Windows )                                   			³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.               			³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador  ³ Data     ³ FNC			³  Motivo da Alteracao                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Mauricio T.  ³16/10/2011³                ³Criacao novo fonte.                        ³±±
+±±³Mauricio T.  ³01/11/2011³00000026439/2011³Controle da TnewProcess somente apos a ver-³±±
+±±³             ³		   ³		   	    ³sao 10.1, parametrizacao e controle de gra-³±±
+±±³             ³		   ³		   	    ³vacao com controle de LOG.                 ³±±
+±±³Mauricio T.  ³07/11/2011³00000026439/2011³Alteracao do Nome do Programa de gravacao  ³±±
+±±³             ³		   ³		   	    ³do LOG, pois existe limitacao no tamanho.  ³±±
+±±³Mauricio T.  ³16/11/2011³00000028045/2011³Tratamento pra Situacao e Categorias em    ³±±
+±±³			    ³		   ³				³branco no grupo de perguntas.              ³±± 
+±±³Mauricio T.  ³19/11/2011³00000028460/2011³Nao permitir calcular funcionarios demitido³±±
+±±³			    ³		   ³				³em competencia superior a data de demissao.³±± 
+±±³Luis Ricardo ³26/12/2011³00000033183/2011³Ajustes no percentual de calculo do plano	³±±
+±±³Cinalli		³		   ³Chamados: TEEJDO³de saude para tipo de plano % Salario e	³±±
+±±³				³		   ³e TEDUJF		³ajuste na leitura dos funcionarios conforme³±±
+±±³				³		   ³				³param. Matricula De/Ate para ambientes DBF.³±±
+±±³Luis Ricardo ³03/01/2012³00000033643/2011³Ajuste para permitir o calculo de acordo	³±±
+±±³Cinalli		³		   ³Chamado: TEGFW4	³com a data de referencia, a qual deve ser	³±±
+±±³				³		   ³				³maior ou igual ao MV_FOLMES. Este ajuste eh³±±
+±±³				³		   ³				³devido a data final do plano estar igual ao³±±
+±±³				³		   ³				³mv_folmes e incluir um novo plano com data	³±±
+±±³				³		   ³				³de inicio maior que o mv_folmes.			³±±
+±±³				³		   ³				³Inclusao de ORDER BY na query.				³±±
+±±³Mauricio T.  ³09/01/2012³00000030820/2011³Tratamento para Periodos da Nova Folha de  ³±±
+±±³             ³		   ³TECFVT	   	    ³Pagamentos - Gestao Publica.               ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+User Function CALPLCSU()
+
+	Local aSays			:= {}
+	Local aButtons		:= {}
+	
+	Local bProcesso		:= { |oSelf| GPMProcessa(oSelf)}
+	
+	Local cPergCal  
+	Local cCadastro		:= OemToAnsi("Calculo do Plano de Saude")	//"Calculo do Plano de Saude"
+	Local cDescricao	:= OemToAnsi("Este Programa calculará os valores dos Planos de Saude" )	//"Este Programa calculará os valores dos Planos de Saude" 
+	
+	Local nOpca			:= 0
+	
+	Private aLog		:= {}
+	Private aTitle		:= {}
+
+	Private lGSP := If( GetMv( "MV_GSPUBL",, "1" ) == "1", .F., .T. ) // Gestao Publica 1=Nao; 2=Sim
+	
+	Private lVersao101 	:= (GetRpoRelease("R1.1"))
+	Private lAbortPrint := .F.
+
+	If !lGSP
+		cPergCal 	:= "GPCALPL"
+	Else
+		cPergCal 	:= 'GPGSPCALPL'
+	EndIf
+	Pergunte(cPergCal,.F.)
+	
+	If lVersao101
+		tNewProcess():New( "CALPLAN", cCadastro, bProcesso, cDescricao, cPergCal, , , , , .T., .T. )
+	Else
+		aAdd(aSays, cDescricao )
+
+		aAdd(aButtons, { 5,.T.,{|| Pergunte(cPergCal,.T. ) } } )
+		aAdd(aButtons, { 1,.T.,{|o| nOpca := 1,IF(gpconfOK(),FechaBatch(),nOpca:=0) }} )
+		aAdd(aButtons, { 2,.T.,{|o| FechaBatch() }} )
+
+		FormBatch( cCadastro, aSays, aButtons )
+	
+		If nOpca == 1
+			Processa({|lEnd| GPMProcessa()},OemToAnsi("Calculo do Plano de Saude"))
+		EndIf
+	EndIf
+
+Return
+
+/*                                	
+ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿
+³Fun‡„o    ³ GPMProcessa	³Autor³  Mauricio Takakura³ Data ³13/10/2011³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´
+³Descri‡„o ³Rotina de Processamento.                                    ³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³Sintaxe   ³< Vide Parametros Formais >									³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ Uso      ³CALPLANO                                                    ³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ Retorno  ³aRotina														³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³Parametros³< Vide Parametros Formais >									³
+ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+Static Function GPMProcessa(oSelf)
+    Local dDataRef
+    Local cMesAno
+    Local cFilDe
+    Local cFilAte
+    Local cCcDe
+    Local cCcAte
+    Local cMatrDe
+    Local cMatrAte
+    Local cCateg
+    Local cTpLan
+    Local cSituacao
+    
+    Local cLastPer
+	Local cLastNroPagto
+	
+	Local cSpcCodigo 	:= Space(GetSx3Cache("RHR_CODIGO", "X3_TAMANHO"))
+	Local cSpcTpPLan 	:= Space(GetSx3Cache("RHK_TPPLAN", "X3_TAMANHO"))
+	Local cSpcPlano 	:= Space(GetSx3Cache("RHK_PLANO", "X3_TAMANHO"))
+    
+    Local cAcessaSRA	:= &( " { || " + IF( Empty( cAcessaSRA := ChkRH( "CALPLANO" , "SRA" , "2" ) ) , ".T." , cAcessaSRA ) + " } " )
+
+	Local cAliasSRA		:= "SRA"
+	Local cFolMes 		:= cPeriodo //GetMv( "MV_FOLMES",,Space(08) ) 
+	Local cRHK_Titular
+	Local cCposQuery
+	Local cCatQuery
+	Local cSitQuery
+	
+	Local lRet 
+	Local lHasDep
+	
+	// Carregar as variaveis do grupo de perguntas //
+	If !lGSP
+		dDataRef	:=  mv_par01	//	Data de Referencia - Competencia
+		cAnoMes		:=  Substr(DTOS( dDataRef ), 1, 6)
+		cFilDe		:=	mv_par02	//	Filial De
+		cFilAte 	:=	mv_par03	//	Filial Ate
+		cCcDe		:=	mv_par04	//	Centro de Custo De
+		cCcAte		:=	mv_par05	//	Centro de Custo Ate
+		cMatrDe 	:=	mv_par06	//	Matricula De
+		cMatrAte	:=	mv_par07	//	Matricula Ate
+		cCateg      :=  mv_par08	//  Categorias a serem calculadas
+		cSituacao	:=  mv_par09	//  Situacoes a serem calculadas
+	Else
+		cAnoMes		:=  "" 
+		cProces		:=  mv_par01	//  Processo  
+		cRoteiro	:=  mv_par02	//  Roteiro 
+		cPeriodo	:=  mv_par03	//  Periodo
+		cNumPagto	:=  mv_par04	//  Numero de Pagamento
+		cFilDe		:=	mv_par05	//	Filial De
+		cFilAte 	:=	mv_par06	//	Filial Ate
+		cCcDe		:=	mv_par07	//	Centro de Custo De
+		cCcAte		:=	mv_par08	//	Centro de Custo Ate
+		cMatrDe 	:=	mv_par09	//	Matricula De
+		cMatrAte	:=	mv_par10	//	Matricula Ate
+		cCateg      :=  mv_par11	//  Categorias a serem calculadas
+		cSituacao	:=  mv_par12	//  Situacoes a serem calculadas
+	EndIf
+	nSalario	:=  0
+	nSalHora	:=  0 
+	nSalDia		:=  0 
+	nSalMes		:=  0  
+	
+	If !lGSP
+		If cAnoMes < cFolMes 
+			Help(,,'HELP',,OemToAnsi("Informe uma data de Referência maior ou igual à Competência da Folha de Pagamento!"),1,0)	//"Informe uma data de Referência maior ou igual à Competência da Folha de Pagamento!"
+			Return( .F. )
+		EndIf
+	Else
+		fGetLastPer( @cLastPer		,;	// Por referencia, retorna o ultimo periodo em aberto
+					  @cLastNroPagto,;	// Por referencia, retorna o Nro. de Pagamento do Ultimo Periodo em aberto
+					  cProces		,;	// Processo a ser pesquisado - Obrigatorio
+					  cRoteiro		,;	// Roteiro a ser pesquisado - Obrigatorio
+					  Nil			,;  // Se deve validar se o proximo periodo apos o encontrado em aberto esta fechado.
+					  Nil			,;  // Se deve mostrar a mensagem com o erro encontrado 
+					  @cAnoMes       ;  // Retorna a competencia a que se refere o ultimo periodo aberto
+					)
+		If cPeriodo < cLastPer .Or. ( cPeriodo == cLastPer .and. cNumPagto < cLastNroPagto )
+			Help(,,'HELP',,OemToAnsi("Informe um periodo maior ou igual ao Ultimo Periodo em aberto da Folha!"),1,0)	//"Informe um periodo maior ou igual ao Ultimo Periodo em aberto da Folha!"
+			Return( .F. )
+		EndIf
+		dDataRef := RCH->RCH_DTFIM
+	EndIf
+	
+    If lVersao101
+		oSelf:SetRegua1(SRA->(RecCount()))
+		oSelf:SaveLog( "Calculo do Plano de Saude" + " - " + "Inicio do processamento") //"Calculo do Plano de Saude"##"Inicio do processamento"
+	Else
+		ProcRegua(SRA->(RecCount()))
+	EndIf
+
+	// Filtrar os funcionarios que serao processados //    
+	dbSelectArea( "SRA" )
+	dbSetOrder( 1 )
+	dbSeek( cFilDe + cMatrDe , .T. )
+
+	#IFDEF TOP
+		If !ExeInAs400()
+			cAliasSRA 	:= "QSRA"
+			If ( Select( cAliasSRA ) > 0 )
+				( cAliasSRA )->( dbCloseArea() )
+			EndIf 
+			cCposQuery 	:= "%SRA.RA_FILIAL, SRA.RA_MAT%"
+			If Empty(cCateg)
+				cCatQuery 	:= "%'" + "*" + "'%"
+			Else
+				cCatQuery 	:= Upper("%" + fSqlIN( cCateg, 1 ) + "%")
+			EndIf
+			If Empty( cSituacao )
+				cSitQuery	:= "%'" + " " + "'%"
+			Else
+				cSitQuery	:= Upper("%" + fSqlIN( cSituacao, 1 ) + "%")
+			EndIf
+			cRHK_Titular := "%INNER JOIN "+ RetSqlName("RHK") + " RHK "
+		    cRHK_Titular += "ON  SRA.RA_FILIAL = RHK.RHK_FILIAL AND SRA.RA_MAT = RHK.RHK_MAT AND RHK.D_E_L_E_T_  = ' ' %" 
+		    
+		    If !lGSP
+		    	cFilProc := "%%"
+		    Else
+				cFilProc := "% AND SRA.RA_PROCES = '" + cProces + "'%"
+			EndIf
+
+			//Sempre que alterar esta query, a query abaixo (count), tb devera ser alterada.
+			BeginSql alias cAliasSRA   
+				SELECT %exp:cCposQuery%
+				FROM %table:SRA% SRA
+				%Exp:cRHK_Titular%
+				WHERE  SRA.RA_FILIAL BETWEEN %exp:cFilDe% AND %exp:cFilAte% 
+					   AND SRA.RA_MAT BETWEEN %exp:cMatrDe% AND %exp:cMatrAte%
+					   AND SRA.RA_CC BETWEEN %exp:cCCDe% AND %exp:cCCAte% 
+					   AND SRA.RA_CATFUNC IN (%exp:cCatQuery%) 
+					   AND SRA.RA_SITFOLH IN (%exp:cSitQuery%) 
+	   				   AND SRA.%notDel%
+	   				   %exp:cFilProc%
+	   			GROUP BY SRA.RA_FILIAL, SRA.RA_MAT
+	   			ORDER BY SRA.RA_FILIAL, SRA.RA_MAT
+			EndSql
+		EndIf
+	#ENDIF 
+	
+	Aadd(aTitle, OemToAnsi("Tabela nao Cadastrada ou Valores fora da Faixa" ))  //"Tabela nao Cadastrada ou Valores fora da Faixa" 
+	Aadd( aLog,{} )
+	
+	Aadd(aTitle, OemToAnsi("Dependentes e Agregados não calculados"))  //"Dependentes e Agregados não calculados"
+	Aadd( aLog,{} )
+
+	While (cAliasSRA)->( !Eof() )     
+    
+		If lVersao101
+			If oSelf:lEnd 
+				Break
+			EndIf
+		Else
+			If lAbortPrint
+				Break
+			Endif
+        EndIf
+
+		If Eof() .Or. ( (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT > cFilAte + cMatrAte )
+			Exit
+		Endif
+
+		#IFNDEF TOP
+		
+			/*
+			ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			³ Consiste o De / Ate 										   ³
+			ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+    		If ((cAliasSRA)->RA_CC < cCcDe .or. (cAliasSRA)->RA_CC > cCCAte ) .or. ; 
+				((cAliasSRA)->RA_MAT < cMatrDe .or. (cAliasSRA)->RA_MAT > cMatrAte ) .or. ;  
+				!( (cAliasSRA)->RA_SITFOLH $ cSituacao ) .or. !( (cAliasSRA)->RA_CATFUNC $ cCateg )
+				dbSelectArea(cAliasSRA)
+				dbSkip()
+				Loop
+			EndIf
+		#ELSE
+			/*
+			ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			³ Posiciona na tabela SRA - Fisica                    	 	   ³
+			ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+			DbSelectArea( "SRA" )
+			DbSetOrder( RetOrder( "SRA", "RA_FILIAL+RA_MAT" ))
+			DbSeek( (cAliasSRA)->(RA_FILIAL+RA_MAT),.F.)
+		#ENDIF
+		
+		/*
+		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		³Consiste Filiais e Acessos                                             ³
+		ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+		IF !( (cAliasSRA)->RA_FILIAL $ fValidFil() ) .or. !Eval( cAcessaSRA )
+			dbSelectArea(cAliasSRA)
+			dbSkip()
+			Loop
+		EndIF
+		
+		If lVersao101
+			oSelf:IncRegua1(OemToAnsi("Calculando Plano de Saude de:") + "  " + (cAliasSRA)->RA_FILIAL + " - " + (cAliasSRA)->RA_MAT + " - " + SRA->RA_NOME) //"Calculando Plano de Saude de:"
+		Else
+			IncProc( (cAliasSRA)->RA_FILIAL + " - " + (cAliasSRA)->RA_MAT + " - " + SRA->RA_NOME )
+		EndIf
+		
+		// Deletar o Calculo do Funcionario //
+		fDeleCalc()
+		
+		/*
+		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		³Nao calcular funcionarios demitidos fora do Mes                        ³
+		ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+		If SRA->RA_SITFOLH == "D" 
+			If (!lGSP .and. ( cAnoMes > Substr(DTOS( SRA->RA_DEMISSA ), 1, 6) )) .Or. ( lGSP .and. RCH->RCH_DTINI < SRA->RA_DEMISSA .Or. RCH->RCH_DTFIM > SRA->RA_DEMISSA  )
+				dbSelectArea(cAliasSRA)
+				dbSkip()
+				Loop
+			EndIf
+		EndIf
+
+		fSalario(@nSalario,@nSalHora,@nSalDia,@nSalMes,"A")
+
+		Begin Transaction 
+		
+			// Calculo dos Planos do Titular //
+			DbSelectArea( "RHK" )
+			DbSetorder( RetOrdem( "RHK", "RHK_FILIAL+RHK_MAT+RHK_TPFORN+RHK_CODFOR" ) )
+			DbSeek( (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT, .F. )
+			cPDDepAgr := ""
+			While RHK->( !Eof() ) .and. RHK->RHK_FILIAL + RHK->RHK_MAT == (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT
+				If !((cAnoMes >= Substr(RHK->RHK_PERINI,3,4)+Substr(RHK->RHK_PERINI,1,2)) .and. Empty( RHK->RHK_PERFIM) .or. (cAnoMes >= Substr(RHK->RHK_PERINI,3,4)+Substr(RHK->RHK_PERINI,1,2)) .and. (cAnoMes <=  Substr(RHK->RHK_PERFIM,3,4)+Substr(RHK->RHK_PERFIM,1,2)))
+					DbSkip()
+					Loop
+				EndIf
+
+				nVlrFunc := 0
+				nVlrEmpr := 0
+				lRet := fCalcPlano(1, RHK->RHK_TPFORN, RHK->RHK_CODFOR, RHK->RHK_TPPLAN, RHK->RHK_PLANO, dDataRef, SRA->RA_NASC, @nVlrFunc, @nVlrEmpr )
+				
+				If lRet 
+					fGravaCalc("1", cSpcCodigo, "1", RHK->RHK_TPFORN, RHK->RHK_CODFOR, RHK->RHK_TPPLAN, RHK->RHK_PLANO, RHK->RHK_PD, nVlrFunc, nVlrEmpr )
+				EndIf
+				
+				cPDDAgr := RHK->RHK_PDDAGR
+				                                                                    
+				// Calculo dos Planos dos Dependentes //
+				DbSelectArea( "RHL" )
+				DbSetorder( RetOrdem( "RHL", "RHL_FILIAL+RHL_MAT+RHL_TPFORN+RHL_CODFOR+RHL_CODIGO" ) )
+				DbSeek( (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT + RHK->RHK_TPFORN + RHK->RHK_CODFOR, .F. )
+				While RHL->( !Eof() ) .and. RHL->RHL_FILIAL + RHL->RHL_MAT + RHL->RHL_TPFORN + RHL->RHL_CODFOR == (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT + RHK->RHK_TPFORN + RHK->RHK_CODFOR
+                    
+					If !((cAnoMes >= Substr(RHL->RHL_PERINI,3,4)+Substr(RHL->RHL_PERINI,1,2)) .and. Empty( RHL->RHL_PERFIM) .or. (cAnoMes >= Substr(RHL->RHL_PERINI,3,4)+Substr(RHL->RHL_PERINI,1,2)) .and. (cAnoMes <=  Substr(RHL->RHL_PERFIM,3,4)+Substr(RHL->RHL_PERFIM,1,2)))
+						DbSkip()
+						Loop
+					EndIf
+
+					DbSelectArea( "SRB" )
+					DbSetOrder( RetOrdem( "SRB", "RB_FILIAL+RB_MAT" ) )
+					DbSeek( (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT, .F. )
+					lHasDep := .F.
+					While SRB->( !EOF() ) .and. SRB->RB_FILIAL + SRB->RB_MAT == SRA->RA_FILIAL + SRA->RA_MAT 
+						If SRB->RB_COD == RHL->RHL_CODIGO
+							lHasDep := .T.
+							Exit
+						EndIf
+						SRB->( DbSkip() )
+					EndDo
+				
+					If lHasDep
+						nVlrFunc := 0
+						nVlrEmpr := 0
+						lRet := fCalcPlano(2, RHL->RHL_TPFORN, RHL->RHL_CODFOR, RHL->RHL_TPPLAN, RHL->RHL_PLANO, dDataRef, SRB->RB_DTNASC, @nVlrFunc, @nVlrEmpr )
+					
+						If lRet .and. Round(nVlrFunc,2) > 0 .or. Round(nVlrEmpr,2) > 0
+							fGravaCalc("2", RHL->RHL_CODIGO, "1", RHL->RHL_TPFORN, RHL->RHL_CODFOR, RHL->RHL_TPPLAN, RHL->RHL_PLANO, cPDDAgr, nVlrFunc, nVlrEmpr )
+						EndIf
+						
+						If lRet .and. Round(nVlrFunc,2) <= 0 .and. Round(nVlrEmpr,2) <= 0
+							aAdd( aLog[2], Substr(SRA->RA_FILIAL + "  " + SRA->RA_MAT + "-" + SRA->RA_NOME,1,45) + " - " + ;
+								  			OemToAnsi( "Codigo " ) + " - " + RHL->RHL_CODIGO ) //"Codigo 
+                        EndIf
+					EndIf
+					
+					DbSelectArea( "RHL" )
+					DbSkip()
+
+				EndDo
+	
+				// Calculo dos Planos dos Agregados //
+				DbSelectArea( "RHM" )
+				DbSetorder( RetOrdem( "RHM", "RHM_FILIAL+RHM_MAT+RHM_TPFORN+RHM_CODFOR+RHM_CODIGO" ) )
+				DbSeek( (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT + RHK->RHK_TPFORN + RHK->RHK_CODFOR, .F. )
+				While RHM->( !Eof() ) .and. RHM->RHM_FILIAL + RHM->RHM_MAT + RHM->RHM_TPFORN + RHM->RHM_CODFOR == (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT + RHK->RHK_TPFORN + RHK->RHK_CODFOR
+
+					If !((cAnoMes >= Substr(RHM->RHM_PERINI,3,4)+Substr(RHM->RHM_PERINI,1,2)) .and. Empty( RHM->RHM_PERFIM) .or. (cAnoMes >= Substr(RHM->RHM_PERINI,3,4)+Substr(RHM->RHM_PERINI,1,2)) .and. (cAnoMes <=  Substr(RHM->RHM_PERFIM,3,4)+Substr(RHM->RHM_PERFIM,1,2)))
+						DbSkip()
+						Loop					
+					EndIf
+					nVlrFunc := 0
+					nVlrEmpr := 0
+					lRet := fCalcPlano(3, RHM->RHM_TPFORN, RHM->RHM_CODFOR, RHM->RHM_TPPLAN, RHM->RHM_PLANO, dDataRef, RHM->RHM_DTNASC, @nVlrFunc, @nVlrEmpr )
+	            
+					If lRet .and. Round(nVlrFunc,2) > 0 .or. Round(nVlrEmpr,2) > 0
+						fGravaCalc("3", RHM->RHM_CODIGO, "1", RHM->RHM_TPFORN, RHM->RHM_CODFOR, RHM->RHM_TPPLAN, RHM->RHM_PLANO, cPDDAgr, nVlrFunc, nVlrEmpr )
+					EndIf
+					
+					If lRet .and. Round(nVlrFunc,2) <= 0 .and. Round(nVlrEmpr,2) <= 0
+						aAdd( aLog[2], Substr(SRA->RA_FILIAL + "  " + SRA->RA_MAT + "-" + SRA->RA_NOME,1,45) + " - " + ;
+							  			OemToAnsi( "Codigo" ) + " - " + RHM->RHM_CODIGO ) //"Codigo 
+                    EndIf
+	
+					DbSelectArea( "RHM" )
+					DbSkip()
+			
+				EndDo
+
+				DbSelectArea( "RHK" )
+				DbSkip()
+			EndDo
+			
+			// Calcular Reembolso e Co-participacao //
+			DbSelectArea( "RHO" )
+			If !lGSP
+				DbSetorder( RetOrdem( "RHO", "RHO_FILIAL+RHO_MAT+RHO_COMPPG" ) ) 
+				DbSeek( (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT + cAnoMes, .F. )
+			Else
+				DbSetorder( RetOrdem( "RHO", "RHO_FILIAL+RHO_MAT+RHO_PROCES+RHO_PERIOD+RHO_NUMPAG+RHO_ROTEIR" ) ) 
+				DbSeek( (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT + cProces + cPeriodo + cNumPagto + cRoteiro , .F. )
+			EndIf
+			While RHO->( !Eof() ) 
+				If (!lGSP .and. RHO->( RHO_FILIAL + RHO_MAT + RHO_COMPPG ) <> (cAliasSRA)->( RA_FILIAL + RA_MAT ) + cAnoMes)   .Or. ;
+					(lGSP .and. RHO->( RHO_FILIAL+RHO_MAT+RHO_PROCES+RHO_PERIOD+RHO_NUMPAG+RHO_ROTEIR ) <> (cAliasSRA)->RA_FILIAL + (cAliasSRA)->RA_MAT + cProces + cPeriodo + cNumPagto + cRoteiro)
+					Exit
+				EndIf
+				cTpLan := If( RHO->RHO_TPLAN == "1", "2", "3")
+				fGravaCalc(RHO->RHO_ORIGEM, RHO->RHO_CODIGO, cTpLan, RHO->RHO_TPFORN, RHO->RHO_CODFOR, cSpcTpPLan, cSpcPlano, RHO->RHO_PD, RHO->RHO_VLRFUN, RHO->RHO_VLREMP )
+				
+				DbSelectArea( "RHO" )
+				DbSkip()
+	        EndDo
+	        
+        End Transaction 
+        
+		DbSelectArea( cAliasSRA )
+		DbSkip()
+	EndDo				
+		
+	If (Select( "QSRA" ) > 0)
+		QSRA->(DbCloseArea())
+	EndIf
+	
+	If lVersao101
+		oSelf:SaveLog( "Calculo da Folha de Pagamento"+" - "+"Termino do processamento") //"Calculo da Folha de Pagamento"##"Termino do processamento"
+	EndIf
+	
+	/*
+	ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	³ Apresenta com Log de erros                              ³
+	ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+	fMakeLog(aLog,aTitle,,.T.,"CALPS"+cAnoMes,"LOG de Calculo de Plano de Saude" ,"M","P",,.F.)  //"LOG de Calculo de Plano de Saude" 
+	
+Return
+
+/*                                	
+ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿
+³Fun‡„o    ³ fGravaCalc		³Autor³  Mauricio Takakura³ Data ³17/10/2011³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´
+³Descri‡„o ³Gravacao do calculo                                         ³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³Sintaxe   ³< Vide Parametros Formais >									³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ Uso      ³CALPLANO                                                    ³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ Retorno  ³aRotina														³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³Parametros³< Vide Parametros Formais >									³
+ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+Static Function fGravaCalc(cOrigem, cCodDepAgr, cTipoLan, cTpForn, cCodForn, cTpPlan, cPlano, cPD, nVlrFun, nVlrEmp )
+	Local aArea := GetArea()
+
+	DbSelectArea( "RHR" )
+	DbSetOrder( 1 )
+	DbSeek( SRA->RA_FILIAL + SRA->RA_MAT + 	cAnoMes + cOrigem + cCodDepAgr + cTipoLan + cTpForn + cCodForn + cTpPlan + cPlano + cPD, .F. )
+	If Eof()
+		RHR->( RecLock( "RHR" , .T. ) )
+		RHR->RHR_FILIAL := SRA->RA_FILIAL
+		RHR->RHR_MAT 	:= SRA->RA_MAT
+	Else
+		RHR->( RecLock( "RHR" , .F. ) )
+	EndIf
+	
+	RHR->RHR_DATA 		:= dDataBase
+	RHR->RHR_ORIGEM 	:= cOrigem
+	RHR->RHR_CODIGO		:= cCodDepAgr
+	RHR->RHR_TPLAN		:= cTipoLan
+	RHR->RHR_TPFORN		:= cTpForn
+	RHR->RHR_CODFORN	:= cCodForn
+	RHR->RHR_TPPLAN		:= cTpPlan
+	RHR->RHR_PLANO		:= cPlano
+	RHR->RHR_PD			:= cPD
+	RHR->RHR_VLRFUN		:= nVlrFun
+	RHR->RHR_VLREMP		:= nVlrEmp
+	If !lGSP
+		RHR->RHR_COMPPG		:= cAnoMes 
+	Else
+		RHR->RHR_PROCES 	:= cProces
+		RHR->RHR_ROTEIR		:= cRoteiro
+		RHR->RHR_PERIOD		:= cPeriodo
+		RHR->RHR_NUMPAG		:= cNumPagto
+	EndIf
+	
+	MsUnlock()
+	
+	RestArea( aArea )
+
+Return( .T. )
+
+
+/*                                	
+ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿
+³Fun‡„o    ³ fDeleCalc 		³Autor³  Mauricio Takakura³ Data ³23/10/2011³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´
+³Descri‡„o ³Deletar o Calculo anterior da Competencia a Calcular        ³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³Sintaxe   ³< Vide Parametros Formais >									³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ Uso      ³CALPLANO                                                    ³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ Retorno  ³aRotina														³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³Parametros³< Vide Parametros Formais >									³
+ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+Static Function fDeleCalc()
+	Local aArea := GetArea()
+                          
+	#IFDEF TOP
+ 		Local cQuery
+ 		Local cNameDB
+ 		Local cDelet
+ 		Local cSqlName := InitSqlName( "RHR" )
+ 		
+		cQuery := "DELETE " 
+		
+		If TcSrvType() != "AS/400"
+			cDelet 		:= "RHR.D_E_L_E_T_ = ' ' "
+		Else
+			cDelet 		:= "RHR.@DELETED@ = ' ' "
+		EndIf
+
+		/*
+		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		³O banco DB2 nao aceita o nome da tabela apos o comando DELETE			 ³
+		ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+		cNameDB	:= Upper(TcGetDb())
+
+		If !( cNameDB $ "DB2_ORACLE_INFORMIX_POSTGRES" )
+			cQuery += cSqlName
+		EndIf
+		
+		/*
+		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		³O Informix precisa do nome da tabela ao inves do Alias no comando DELETE³
+		ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+		If ( cNameDB $ "INFORMIX" )
+			cQuery += " FROM " + cSqlName
+		Else
+			cQuery += " FROM " + cSqlName + " RHR"
+			cSqlName := "RHR"
+		EndIf
+
+		cQuery += " WHERE " + cSqlName + ".RHR_FILIAL = '" + SRA->RA_FILIAL + "'"
+		cQuery += " AND " + cSqlName + ".RHR_MAT = '" + SRA->RA_MAT + "'"
+		If !lGSP
+			cQuery += " AND " + cSqlName + ".RHR_COMPPG = '" + cAnoMes + "'" 
+		Else
+			cQuery += " AND " + cSqlName + ".RHR_PROCES = '" + cProces  + "'" 
+			cQuery += " AND " + cSqlName + ".RHR_ROTEIR = '" + cRoteiro + "'" 
+			cQuery += " AND " + cSqlName + ".RHR_PERIOD = '" + cPeriodo + "'" 
+			cQuery += " AND " + cSqlName + ".RHR_NUMPAG = '" + cNumPagto + "'" 
+		EndIf
+		cQuery += " AND " + cDelet 
+		
+		TcSqlExec( cQuery )
+
+	#ELSE
+	
+		DbSelectArea( "RHR" )
+		DbSetOrder( 1 )
+		If !lGSP
+			DbSeek( SRA->RA_FILIAL + SRA->RA_MAT + 	cAnoMes, .F. )
+			While !Eof() .and. RHR->( RHR_FILIAL + RHR_MAT + RHR_COMPPG ) == SRA->RA_FILIAL + SRA->RA_MAT + 	cAnoMes
+				RecLock( "RHR" , .F. )
+				dbDelete()
+				MsUnlock() 
+				DbSkip()
+			EndDo
+		Else
+			aAdd(aSiXCpos,{'RHR', '1', 'RHR_FILIAL+RHR_MAT+RHR_PROCES+RHR_ROTEIR+RHR_PERIOD+RHR_NUMPAG+RHR_ORIGEM+RHR_CODIGO+RHR_TPLAN+RHR_TPFORN+RHR_CODFOR+RHR_TPPLAN+RHR_PLANO+RHR_PD', 'Matricula+Processo+Roteiro+Periodo+Num Pagto+Origem+Seq. Dep/Agr+Tipo Lancam.+Tipo+Cod. Forne', 'Matricula+Processo+Roteiro+Periodo+Num Pagto+Origem+Seq. Dep/Agr+Tipo Lancam.+Tipo+Cod. Forne', 'Matricula+Processo+Roteiro+Periodo+Num Pagto+Origem+Seq. Dep/Agr+Tipo Lancam.+Tipo+Cod. Forne', 'S', '', '', 'S'  })
+
+			DbSeek( SRA->RA_FILIAL + SRA->RA_MAT + cProces + cRoteiro + cPeriodo + cNumPagto, .F. )
+			While !Eof() .and. RHR->( RHR_FILIAL + RHR_MAT + RHR_PROCES + RHR_ROTEIR + RHR_PERIOD + RHR_NUMPAG ) == SRA->RA_FILIAL + SRA->RA_MAT + cProces + cRoteiro + cPeriodo + cNumPagto
+				RecLock( "RHR" , .F. )
+				dbDelete()
+				MsUnlock() 
+				DbSkip()
+			EndDo
+		EndIf		
+
+	#ENDIF	
+	
+	RestArea( aArea )
+
+Return( .T. )
+
+/*                                	
+ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿
+³Fun‡„o    ³ fCalcPlano		³Autor³  Mauricio Takakura³ Data ³17/10/2011³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´
+³Descri‡„o ³Efetuar o Calculo e Retornar  apenas o valor                ³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³Sintaxe   ³< Vide Parametros Formais >									³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ Uso      ³CALPLANO                                                    ³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ Retorno  ³aRotina														³
+ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³Parametros³< Vide Parametros Formais >									³
+ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+Static Function fCalcPlano( nTipo, cTpForn, cCodForn, cTpPlan, cCodPlan, dDtRef, dDtNasc, nVlrFunc, nVlrEmpr )
+	Local cTab
+	Local cTpLogForn
+	Local cTpLogPlano
+	
+	Local lRet 	:= .T.
+	
+	Local nLinha
+	Local nLinTab
+	Local nColVlr
+	Local nColPorc
+	Local nColTeto
+	Local nBusca
+	Local nValor
+	Local nPercentual
+	Local nTeto	
+
+	If cTpForn == "1"		// Assistencia Medica 
+	    If cTpPlan == "1"
+			cTab := "S008"
+		ElseIf cTpPlan == "2"
+			cTab := "S009"
+		ElseIf cTpPlan == "3"
+			cTab := "S028"
+		ElseIf cTpPlan == "4"
+			cTab := "S029"
+		EndIf
+		cTpLogForn := OemToAnsi( "Assistência Medica" ) // "Assistência Medica" 
+	Else					// Assistencia Odontologica 
+	    If cTpPlan == "1"
+			cTab := "S013"
+		ElseIf cTpPlan == "2"
+			cTab := "S014"
+		ElseIf cTpPlan == "3"
+			cTab := "S030"
+		ElseIf cTpPlan == "4"
+			cTab := "S031"
+		EndIf
+		cTpLogForn := OemToAnsi( "Assistência Odontologica" ) // "Assistência Odontologica" 
+	EndIf
+
+	If (SRA->RA_CATFUNC = "H")
+		nBusca := SRA->RA_HRSMES * SRA->RA_SALARIO
+	Else
+		nBusca := nSalMes
+	EndIf
+
+	// Se for por Faixa Etaria, calcular a idade //
+	If cTpPlan == "2" 
+		nBusca := Year( dDtRef ) - Year( dDtNasc )
+        If Month( dDtNasc ) > Month( dDtRef )
+             nBusca--
+		EndIf
+  	EndIf
+  	
+	If cTpPlan == "1" .or. cTpPlan == "2"
+	
+		If nTipo == 1 // Titular 
+			nColVlr 	:= 7
+			nColPorc	:= 10
+		ElseIf nTipo == 2 // Dependente
+			nColVlr 	:= 8
+			nColPorc	:= 11
+		ElseIf nTipo == 3 // Agregado
+			nColVlr 	:= 9
+			nColPorc	:= 12
+		EndIf
+
+		nLinTab := 0
+		If ( nLinha := fPosTab( cTab, cCodForn,"=", 13, cCodPlan,"=",4,,,@nLinTab ) ) > 0
+			If ( nLinha := fPosTab(cTab, cCodPlan,"=",4,nBusca,"<=",6,,nLinTab) ) > 0
+
+				nValor 		:= fTabela(cTab,nLinha,nColVlr)
+				nPercentual := fTabela(cTab,nLinha,nColPorc) / 100
+				nVlrFunc  	:= nValor * nPercentual
+				nVlrEmpr	:= nValor - nVlrFunc
+
+			EndIf
+		EndIf
+		
+		If cTpPlan == "1"
+			cTpLogPlano := OemToAnsi( "Faixa Salarial" ) //"Faixa Salarial" 
+		ElseIf cTpPlan == "2" 
+			cTpLogPlano := OemToAnsi( "Faixa Etaria"  ) //"Faixa Etaria" 
+		EndIf
+
+	ElseIf cTpPlan == "3"
+		cTpLogPlano := OemToAnsi( "Valor Fixo" ) //"Valor Fixo" 
+		If nTipo == 1 // Titular 
+			nColVlr 	:= 6
+			nColPorc	:= 9 
+		ElseIf nTipo == 2 // Dependente
+			nColVlr 	:= 7
+			nColPorc	:= 10
+		ElseIf nTipo == 3 // Agregado
+			nColVlr 	:= 8
+			nColPorc	:= 11
+		EndIf
+
+		nLinTab := 0
+		If ( nLinha := fPosTab( cTab, cCodForn,"=", 12, cCodPlan,"=",4,,,@nLinTab ) ) > 0
+			If ( nLinha := fPosTab(cTab, cCodPlan,"=",4,,,,,nLinTab) ) > 0
+
+				nValor		:= fTabela(cTab,nLinha,nColVlr)
+				nPercentual	:= fTabela(cTab,nLinha,nColPorc)
+				nVlrFunc	:= nPercentual
+				nVlrEmpr	:= nValor - nPercentual
+
+			EndIf
+		EndIf
+	ElseIf cTpPlan == "4"
+		cTpLogPlano := OemToAnsi( "Porcentagem sobre Salario"  ) //"Porcentagem sobre Salario" 
+		If nTipo == 1 // Titular 
+			nColVlr 	:= 6
+			nColPorc	:= 9 
+			nColTeto	:= 10
+		ElseIf nTipo == 2 // Dependente
+			nColVlr 	:= 7
+			nColPorc	:= 11
+			nColTeto	:= 12
+		ElseIf nTipo == 3 // Agregado
+			nColVlr 	:= 8
+			nColPorc	:= 13
+			nColTeto	:= 14
+		EndIf
+
+		nLinTab := 0
+		If ( nLinha := fPosTab( cTab, cCodForn,"=", 15, cCodPlan,"=",4,,,@nLinTab ) ) > 0
+			If ( nLinha := fPosTab(cTab, cCodPlan,"=",4,,,,,nLinTab) ) > 0
+
+				// nValor eh o valor do plano de saude a pagar
+				nValor		:= fTabela(cTab,nLinha,nColVlr)
+
+				//CSU - No plano 01 de Odonto, dependente/agregado ate 12 anos reduz em 50% o valor do plano
+				If cTpForn == "2" .and. cCodPlan == '01' .and. (nTipo == 2 .or. nTipo == 3)
+					nAnos_ := Year( dDtRef ) - Year( dDtNasc )
+			        If Month( dDtNasc ) > Month( dDtRef )
+			             nAnos_--
+					EndIf
+					If nAnos_ <= 12
+						nValor 		:= round(nValor/2,2)
+					EndIF
+				EndIf					
+				//CSU - fim
+
+				nPercentual	:= fTabela(cTab,nLinha,nColPorc) / 100
+				nTeto		:= fTabela(cTab,nLinha,nColTeto)
+
+				// O valor a pagar do funcionario eh sobre o salario do mes
+				nVlrFunc	:= ( nBusca * nPercentual )
+
+				If nVlrFunc > nTeto
+					nVlrFunc := nTeto
+				EndIf
+
+				nVlrEmpr := nValor - (If( nVlrFunc <= nTeto, nVlrFunc, nTeto )) 
+			EndIf
+		EndIf
+	EndIf	 
+	
+	If nLinha == 0
+		aAdd( aLog[1], Substr(SRA->RA_FILIAL + "  " + SRA->RA_MAT + "-" + SRA->RA_NOME,1,45) + " - " + ;
+						cTpLogForn + " - " +; //"Assistencia Medica" ou "Assistencia Odontologica"
+						cTpLogPlano + " - " +; // "Faixa Salarial" ou "Faixa Etaria" ou "Valor Fixo" ou "Porcentagem sobre Salario"
+						OemToAnsi("Codigo ") + " " + cCodPlan  ) //"Codigo 
+		lRet := .F.
+	EndIf
+
+Return( lRet )

@@ -1,0 +1,409 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 18 "c:\users\csu.ikawakami\desktop\protheus 12 desenv\projeto_csu\desenvolvimento\atualizacao\chkct2seq_ap710.prw"
+Function U_ChkCt2Seq()
+
+Local cTextoAviso := ""
+Local nOpcAviso := 2
+Local lRet
+
+
+
+
+
+
+cTextoAviso := "Esta Rotina ira verificar a integridade da sequencia dos"
+cTextoAviso += "lancamentos do CT2."
+
+While .T. 
+
+	nOpcAviso := Aviso("CHKCT2SEQ",cTextoAviso,{"Executar","Cancelar"})
+
+	If nOpcAviso == 1
+		lRet := .T. 
+		Exit
+	Else
+		Return
+	Endif
+End
+
+IF lRet
+
+	cTextoAviso := "Executar somente a geracao do LOG ou Efetuar a correcao"
+	cTextoAviso += "da base de dados?"
+
+	nOpcAviso := Aviso("Tipo de Processamento:",cTextoAviso,{"Somente Log","Atualizar"})
+
+	Processa({|lEnd| ChkCt2Prc(IF(nOpcAviso == 2, .T. , .F. ))})
+ENDIF
+
+RETURN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ChkCt2Prc(lAltera)
+
+Local cTmpIndex
+Local cKeyIndex
+Local cArqLog
+Local nIndex
+Local cKeyCT2
+Local lFirst
+Local aCamposLog := {}
+Local cNomArq := "\SIGAADV\CT2LOG.DBF"
+Local cTextoAviso := ""
+Local nOpcAviso := 2
+Local cSeqHisAnt
+Local cSeqLanAnt
+Local cSeqLinAnt
+Local cSeqMoeAnt
+
+
+
+
+
+
+
+
+
+
+
+
+
+aCamposLog := 	{ {"CT2_FILIAL"	, "C", 02,0}, {"CT2_DATA"		, "D", 08, 0}, {"CT2_LOTE"		, "C", 06, 0}, {"CT2_SBLOTE"	, "C", 03, 0}, {"CT2_DOC"		, "C", 06, 0}, {"CT2_LINHA"	, "C", 03, 0}, {"CT2_MOEDLC"   , "C", 02, 0}, {"CT2_DC"	 	, "C", 01, 0}, {"CT2_SEQLAN"	, "C", 03, 0}, {"CT2_SEQHIS"	, "C", 03, 0}, {"CT2_ERRO"		, "C", 80, 0}, {"CT2_RECNO"	, "N", 06, 0}}
+
+IF File(cNomArq)
+	cTextoAviso := "Ja existe um arquivo de .log em \SIGAADV."
+	cTextoAviso += " Deseja mante-lo ou sobrescreve-lo ?"
+
+	nOpcAviso := Aviso("Arquivo de LOG",cTextoAviso,{"Manter","Excluir"})
+
+	If nOpcAviso == 1
+		RENARQS(cNomArq)
+	Else
+		fErase(cNomArq)
+	Endif
+Endif
+
+dbCreate(cNomArq,aCamposLog,"DBFCDX")
+dbUseArea( .T. ,"DBFCDX",cNomArq,"CT2LOG", .F. , .F. )
+
+cKeyIndex := "CT2_FILIAL+DTOS(CT2_DATA)+CT2_LOTE+CT2_SBLOTE+CT2_DOC+CT2_LINHA+CT2_MOEDLCCT2_SEQLAN+CT2_SEQHIS"
+cTmpIndex := CriaTrab(nil, .F. )
+
+DbSelectArea("CT2")
+IndRegua("CT2", cTmpIndex, cKeyIndex,,,"Indexando CT2 para o processamento ....")
+nIndex := RetIndex("CT2")
+
+
+
+DbSetOrder(nIndex+1)
+
+DbSelectArea("CT2")
+DbGotop()
+ProcRegua(CT2->(RECCOUNT())*2)
+
+
+
+While CT2->(!EOF())
+
+	cKeyCT2 := CT2->CT2_FILIAL+CT2->(DTOS(CT2_DATA))+CT2->CT2_LOTE+CT2->CT2_SBLOTE+CT2->CT2_DOC
+	cSeqHisAnt := CT2->CT2_SEQHIS
+	cSeqLanAnt := CT2->CT2_SEQLAN
+	cSeqLinAnt := CT2->CT2_LINHA
+	cSeqMoeAnt := CT2->CT2_MOEDLC
+
+	lFirst := .T. 
+
+	While CT2->CT2_FILIAL+CT2->(DTOS(CT2_DATA))+CT2->CT2_LOTE+CT2->CT2_SBLOTE+CT2->CT2_DOC == cKeyCT2
+
+		IncProc()
+
+
+
+
+		If lFirst
+
+			lFirst := .F. 
+
+
+
+
+		ElseIf CT2->CT2_LINHA == cSeqLinAnt .AND.  CT2->CT2_MOEDLC <> cSeqMoeAnt .AND.  CT2->CT2_SEQLAN <> cSeqLanAnt
+
+			GravaErroCT2("S1")
+
+			If lAltera
+				AlteraCT2(1,cSeqLanAnt)
+			Endif
+
+
+
+
+		ElseIf CT2->CT2_LINHA > cSeqLinAnt .AND.  CT2->CT2_DC == "4" .AND.  CT2->CT2_SEQLAN <> cSeqLanAnt
+
+			GravaErroCT2("S2")
+
+			If lAltera
+				AlteraCT2(1,cSeqLanAnt)
+			Endif
+
+
+
+		ElseIf CT2->CT2_LINHA > cSeqLinAnt .AND.  CT2->CT2_DC <> "4" .AND.  CT2->CT2_SEQLAN <> Soma1(cSeqLanAnt)
+
+			GravaErroCT2("S3")
+
+			If lAltera
+				AlteraCT2(1,Soma1(cSeqLanAnt))
+			Endif
+
+		Endif
+
+		DbSelectArea("CT2")
+		cSeqHisAnt := CT2->CT2_SEQHIS
+		cSeqLanAnt := CT2->CT2_SEQLAN
+		cSeqLinAnt := CT2->CT2_LINHA
+		cSeqMoeAnt := CT2->CT2_MOEDLC
+		CT2->(dbSkip())
+	End
+End
+
+DbSelectArea("CT2")
+DbGotop()
+
+
+
+While CT2->(!EOF())
+
+	cKeyCT2 := CT2->CT2_FILIAL+CT2->(DTOS(CT2_DATA))+CT2->CT2_LOTE+CT2->CT2_SBLOTE+CT2->CT2_DOC
+	cSeqHisAnt := CT2->CT2_SEQHIS
+	cSeqLanAnt := CT2->CT2_SEQLAN
+	cSeqLinAnt := CT2->CT2_LINHA
+	cSeqMoeAnt := CT2->CT2_MOEDLC
+
+	lFirst := .T. 
+
+	While CT2->CT2_FILIAL+CT2->(DTOS(CT2_DATA))+CT2->CT2_LOTE+CT2->CT2_SBLOTE+CT2->CT2_DOC == cKeyCT2
+
+		IncProc()
+
+
+
+		If lFirst
+
+			If CT2->CT2_SEQHIST <> "001"
+	    			GravaErroCT2("H1")
+	    			If lAltera
+	    				AlteraCT2(2,"001")
+	    			Endif
+    			Endif
+
+    			lFirst := .F. 
+
+
+
+		ElseIf CT2->CT2_SEQLAN > cSeqLanAnt .AND.  CT2->CT2_SEQHIS <> "001"
+			GravaErroCT2("H2")
+
+	    		If lAltera
+	    			AlteraCT2(2,"001")
+	    		Endif
+
+
+
+
+
+
+
+
+
+
+
+		ElseIf CT2->CT2_SEQLAN == cSeqLanAnt .AND.  CT2->CT2_MOEDLC <> cSeqMoeAnt .AND.  CT2_DC <> "4" .AND.  CT2->CT2_SEQHIS <> cSeqHisAnt
+			GravaErroCT2("H3")
+	    		If lAltera
+	    			AlteraCT2(2,cSeqHisAnt)
+	    		Endif
+
+		ElseIf CT2->CT2_SEQLAN == cSeqLanAnt .AND.  CT2->CT2_MOEDLC <> cSeqMoeAnt .AND.  CT2_DC == "4" .AND.  CT2->CT2_SEQHIS <> Soma1(cSeqHisAnt)
+			GravaErroCT2("H4")
+	    		If lAltera
+	    			AlteraCT2(2,Soma1(cSeqHisAnt))
+	    		Endif
+
+		ElseIf CT2->CT2_SEQLAN == cSeqLanAnt .AND.  CT2->CT2_MOEDLC == cSeqMoeAnt .AND.  CT2_DC == "4" .AND.  CT2->CT2_SEQHIS <> Soma1(cSeqHisAnt)
+			GravaErroCT2("H5")
+	    		If lAltera
+	    			AlteraCT2(2,Soma1(cSeqHisAnt))
+	    		Endif
+
+		Endif
+
+		DbSelectArea("CT2")
+		cSeqHisAnt := CT2->CT2_SEQHIS
+		cSeqLanAnt := CT2->CT2_SEQLAN
+		cSeqLinAnt := CT2->CT2_LINHA
+		cSeqMoeAnt := CT2->CT2_MOEDLC
+		CT2->(dbSkip())
+	End
+End
+
+DbSelectArea("CT2")
+DbSetOrder(1)
+
+DbSelectArea("CT2LOG")
+DbCloseArea("CT2LOG")
+
+MSGALERT("Processo terminado - Verifique o arquivo: \SIGAADV\CT2LOG.DBF","Concluido")
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function GravaErroCT2(cOcorr)
+
+Local cDescErro := ""
+
+Do Case
+	Case cOcorr == "S1"
+		cDescErro := "SEQUENCIA NO DESDOBRAMENTO DE MOEDAS INCORRETA"
+	Case cOcorr == "S2"
+		cDescErro := "SEQUENCIA NO HISTORICO COMPLEMENTAR INCORRETA"
+	Case cOcorr == "S3"
+		cDescErro := "SEQUENCIA CONTINUADA DO LANCAMENTO INCORRETA"
+	Case cOcorr == "H1"
+		cDescErro := "SEQUENCIA DO HISTORICO DO PRIMEIRO LANCAMENTO INCORRETA"
+	Case cOcorr == "H2"
+		cDescErro := "SEQUENCIA DO HISTORICO NA MUDANCA DE LANCAMENTO INCORRETA"
+	Case cOcorr == "H3"
+		cDescErro := "SEQUENCIA DE HISTORICO NO DESDOBRAMENTO DE MOEDAS INCORRETA"
+	Case cOcorr == "H4"
+		cDescErro := "SEQUENCIA DE HISTORICO COMPLEMENTAR NO DESDOBRAMENTO DE MOEDAS INCORRETA"
+	Case cOcorr == "H5"
+		cDescErro := "SEQUENCIA DE HISTORICO COMPLEMENTAR INCORRETA"
+EndCase
+
+DbSelectArea("CT2LOG")
+RecLock("CT2LOG", .T. )
+CT2LOG->CT2_FILIAL 		:= CT2->CT2_FILIAL
+CT2LOG->CT2_DATA 		:= CT2->CT2_DATA
+CT2LOG->CT2_LOTE 		:= CT2->CT2_LOTE
+CT2LOG->CT2_SBLOTE 		:= CT2->CT2_SBLOTE
+CT2LOG->CT2_DOC  		:= CT2->CT2_DOC
+CT2LOG->CT2_LINHA		:= CT2->CT2_LINHA
+CT2LOG->CT2_MOEDLC		:= CT2->CT2_MOEDLC
+CT2LOG->CT2_DC    		:= CT2->CT2_DC
+CT2LOG->CT2_SEQLAN		:= CT2->CT2_SEQLAN
+CT2LOG->CT2_SEQHIS		:= CT2->CT2_SEQHIS
+CT2LOG->CT2_ERRO 		:= cDescErro
+CT2LOG->CT2_RECNO		:= CT2->(RECNO())
+MsUnLock()
+
+DbSelectArea("CT2")
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function AlteraCT2(nTipoSeq,cSeq)
+
+dbSelectArea("CT2")
+RecLock("CT2", .F. )
+
+If nTipoSeq == 1
+	CT2->CT2_SEQLAN := cSeq
+Else
+	CT2->CT2_SEQHIS := cSeq
+Endif
+
+MsUnLock()
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RENARQS(cArqTrf)
+
+Local cRenDbf  	:= "CT2LOG"
+Local cAux     	:= ""
+Local cSequenc 	:= ""
+Local nPos		:= 0
+Local cPath		:= ""
+Local cTextoAviso := ""
+
+If File(cArqTrf)
+
+	cSequenc := "01"
+	nPos := Rat( "\",cArqTrf)
+
+	If nPos<>0
+		cPath := Substr(cArqTrf,1,nPos)
+	Else
+		cPath := ""
+	Endif
+
+	While .T. 
+
+		cAux := cRenDbf + cSequenc + ".DBF"
+
+		If File( cPath + cAux )
+			cSequenc := SOMA1(cSequenc)
+		Else
+			FRename( cArqTrf, cPath + cAux )
+			Exit
+		Endif
+	End
+Endif
+
+cTextoAviso := "Arquivo renomeado para: "+cPath+cAux
+
+Aviso("Arquivo de LOG",cTextoAviso,{"OK"})
+
+Return

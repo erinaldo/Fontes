@@ -1,0 +1,459 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\aaj0010.prw"
+#line 1 "C:\INCLUDE\topconn.ch"
+#line 17 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\aaj0010.prw"
+Function U_AAJ0010
+
+
+
+
+
+
+Private cPerg       := PADR("AJ0010",LEN(SX1->X1_GRUPO))
+Private oGeraXls
+
+dbSelectArea("SRA")
+dbSetOrder(1)
+
+ValidPerg(cPerg)
+
+
+
+
+
+oGeraXls := MSDialog():New(200, 1, 380, 400, OemToAnsi(OemToAnsi("Arquivo Excel Dados Acumulados")),,,,,,,,, .t. ,,,)
+ TGroup():New(02,10,080,190,OemToAnsi(),, , , .t. )
+ IW_Say(10,018," Este programa ira gerar um arquivo no Excel conforme os para- ",,,,, )
+ IW_Say(18,018," metros definidos  pelo usuario, com os registros  do  arquivo  de ",,,,, )
+ IW_Say(26,018," Acumulados Anuais.",,,,, )
+
+ SButton():New(60, 098, 01,{|| (OkGeraXls(),oGeraXls:End())},,)
+ SButton():New(60, 128, 02,{|| oGeraXls:End()},,)
+ SButton():New(60, 158, 05,{|| Pergunte(cPerg, .T. )},,)
+
+oGeraXls:Activate(,,,.T.,, ,)
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OkGeraXls
+
+
+
+
+
+Processa({|| RunCont() },"Processando...")
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function RunCont
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cVerbas := alltrim(MV_PAR02)+alltrim(MV_PAR03)+alltrim(MV_PAR04)
+nTamStr := len(cVerbas)
+for i=1 to nTamStr/3-1
+	cVerbas := left(cVerbas,i*6-3)+"','"+subs(cVerbas,i*6-2)
+next
+cVerbas := "'"+cVerbas+"'"
+
+
+
+Do Case
+	Case MV_PAR01 == 1
+
+
+
+
+
+		_cQuery := "select NUM.FIL AS FILIAL, NUM.MAT AS MATRICULA, RA.RA_NOME AS NOME, "
+		_cQuery += "RA.RA_CC AS CCUSTO, CTT.CTT_DESC01 AS DESCCC, NUM.ANT AS " + "Mes_"+MesAno(MV_PAR05) + ",  "
+		_cQuery += "NUM.ATU AS " + "Mes_"+MesAno(MV_PAR06) + ", DIFERENCA = (NUM.ATU-NUM.ANT) FROM  "
+
+		_cQuery += "( select tabA.RD_FILIAL AS FIL, tabA.RD_MAT AS MAT,  "
+		_cQuery += "tabA.SUMATU AS ATU, tabB.SUMANT AS ANT from "
+
+		_cQuery += "( "
+		_cQuery += "select RD_FILIAL, RD_MAT, SUM(RD_VALOR) AS SUMATU  "
+		_cQuery += "from "+RETSQLNAME("SRD")+" WHERE RD_PD IN("+cVerbas+") AND RD_DATARQ  = '" + MesAno(MV_PAR06) + "' "
+		_cQuery += "AND   D_E_L_E_T_ <> '*' group by RD_FILIAL,RD_MAT  "
+		_cQuery += ") as tabA  "
+
+		_cQuery += "left join "
+
+		_cQuery += "( "
+		_cQuery += "select RD_FILIAL, RD_MAT, SUM(RD_VALOR) AS SUMANT  "
+		_cQuery += "from "+RETSQLNAME("SRD")+" WHERE RD_PD IN("+cVerbas+") AND RD_DATARQ  = '" + MesAno(MV_PAR05) + "' "
+		_cQuery += "AND D_E_L_E_T_ <> '*' group by RD_FILIAL,RD_MAT  "
+		_cQuery += ") as tabB  "
+
+		_cQuery += "ON (tabB.RD_FILIAL = tabA.RD_FILIAL AND tabB.RD_MAT = tabA.RD_MAT) "
+
+		_cQuery += "union "
+
+		_cQuery += "select tabB.RD_FILIAL AS FIL, tabB.RD_MAT AS MAT, tabA.SUMATU AS ATU,  "
+		_cQuery += "tabB.SUMANT AS ANT from "
+
+		_cQuery += "( "
+		_cQuery += "select RD_FILIAL, RD_MAT, SUM(RD_VALOR) AS SUMATU from SRD050  "
+		_cQuery += "WHERE RD_PD IN("+cVerbas+") AND RD_DATARQ  = '" + MesAno(MV_PAR06) + "'	AND   D_E_L_E_T_ <> '*' "
+		_cQuery += "group by RD_FILIAL,RD_MAT  "
+		_cQuery += ") as tabA  "
+
+		_cQuery += "right join "
+
+		_cQuery += "( "
+		_cQuery += "select RD_FILIAL, RD_MAT, SUM(RD_VALOR) AS SUMANT  "
+		_cQuery += "from "+RETSQLNAME("SRD")+" WHERE RD_PD IN("+cVerbas+") AND RD_DATARQ  = '" + MesAno(MV_PAR05) + "' "
+		_cQuery += "AND D_E_L_E_T_ <> '*' group by RD_FILIAL,RD_MAT  "
+		_cQuery += ") as tabB  "
+
+		_cQuery += "ON (tabB.RD_FILIAL = tabA.RD_FILIAL AND tabB.RD_MAT = tabA.RD_MAT) "
+
+		_cQuery += ") as NUM, "
+
+		_cQuery += "( "
+		_cQuery += "SELECT RA_FILIAL,RA_MAT,RA_NOME,RA_CC FROM "+RETSQLNAME("SRA")+" WHERE D_E_L_E_T_ <> '*' "
+		_cQuery += ") AS RA, "
+
+		_cQuery += "( "
+		_cQuery += "SELECT CTT_CUSTO,CTT_DESC01 FROM "+RETSQLNAME("CTT")+" WHERE D_E_L_E_T_ <> '*' "
+		_cQuery += ") AS CTT "
+
+		_cQuery += "WHERE NUM.FIL  = RA.RA_FILIAL AND NUM.MAT  = RA.RA_MAT AND  "
+		_cQuery += "RA.RA_CC = CTT.CTT_CUSTO ORDER BY NUM.FIL+NUM.MAT "
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Case MV_PAR01 == 2
+
+
+
+
+
+
+		_cQuery := "SELECT NUM.FIL AS FILIAL, NUM.CC AS CCUSTO, CTT.CTT_DESC01 AS DESCCC, "
+		_cQuery += "NUM.ANT AS " + "Mes_"+MesAno(MV_PAR05) + ", NUM.ATU AS " + "Mes_"+MesAno(MV_PAR06) + ", DIFERENCA = (NUM.ATU-NUM.ANT) FROM  "
+
+		_cQuery += "( select tabA.RD_FILIAL AS FIL, tabA.RD_CC AS CC,  "
+		_cQuery += "tabA.SUMATU AS ATU, tabB.SUMANT AS ANT from "
+
+		_cQuery += "( select RD_FILIAL, RD_CC, SUM(RD_VALOR) AS SUMATU from "+RETSQLNAME("SRD")+"  "
+		_cQuery += "WHERE RD_PD      IN("+cVerbas+") AND RD_DATARQ  = '" + MesAno(MV_PAR06) + "'  "
+		_cQuery += "AND D_E_L_E_T_ <> '*' group by RD_FILIAL,RD_CC "
+		_cQuery += ") as tabA  "
+
+		_cQuery += "LEFT JOIN "
+
+		_cQuery += "(select RD_FILIAL, RD_CC, SUM(RD_VALOR) AS SUMANT  "
+		_cQuery += "from "+RETSQLNAME("SRD")+" WHERE RD_PD IN("+cVerbas+") AND RD_DATARQ  = '" + MesAno(MV_PAR05) + "' "
+		_cQuery += "AND   D_E_L_E_T_ <> '*' group by RD_FILIAL,RD_CC "
+		_cQuery += ") as tabB  "
+
+		_cQuery += "ON (tabB.RD_FILIAL = tabA.RD_FILIAL AND tabB.RD_CC = tabA.RD_CC) "
+
+		_cQuery += "UNION "
+
+		_cQuery += "select tabB.RD_FILIAL AS BFIL, tabB.RD_CC AS BCC, "
+		_cQuery += "tabA.SUMATU, tabB.SUMANT from "
+
+		_cQuery += "( select RD_FILIAL, RD_CC, SUM(RD_VALOR) AS SUMATU  "
+		_cQuery += "from "+RETSQLNAME("SRD")+" WHERE RD_PD IN("+cVerbas+") AND RD_DATARQ  = '" + MesAno(MV_PAR06) + "'  "
+		_cQuery += "AND D_E_L_E_T_ <> '*' group by RD_FILIAL,RD_CC "
+		_cQuery += ") as tabA  "
+
+		_cQuery += "Right JOIN "
+
+		_cQuery += "(select RD_FILIAL, RD_CC, SUM(RD_VALOR) AS SUMANT  "
+		_cQuery += "from "+RETSQLNAME("SRD")+" WHERE RD_PD IN("+cVerbas+") AND RD_DATARQ  = '" + MesAno(MV_PAR05) + "' "
+		_cQuery += "AND D_E_L_E_T_ <> '*' group by RD_FILIAL,RD_CC "
+		_cQuery += ") as tabB  "
+
+		_cQuery += "ON (tabB.RD_FILIAL = tabA.RD_FILIAL AND tabB.RD_CC = tabA.RD_CC) "
+
+		_cQuery += ") AS NUM, "
+
+		_cQuery += "(SELECT CTT_CUSTO,CTT_DESC01 FROM "+RETSQLNAME("CTT")+" WHERE D_E_L_E_T_ <> '*') AS CTT "
+
+		_cQuery += "WHERE CTT.CTT_CUSTO = NUM.CC "
+
+		_cQuery += "ORDER BY FILIAL,CCUSTO "
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+EndCase
+
+
+ProcRegua(2)
+IncProc("Selecionando Registros...")
+
+
+
+
+
+If Select("TRBAAJ") >0
+	DBSelectArea("TRBAAJ")
+	DBCloseArea()
+EndIf
+
+
+
+
+
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "TRBAAJ" , .F. , .T. )
+IncProc("Selecionando Registros...")
+
+DBSelectArea("TRBAAJ")
+
+
+
+
+
+
+_cNomeArq 	:= CriaTrab(NIL, .F. )
+
+__dbCopy((_cNomeArq) , { },,,,,.F., )
+Dbusearea( .T. ,,_cNomeArq,"TRBEXL", .F. , .F. )
+
+DbSelectArea("TRBEXL")
+
+DBGOTOP()
+
+ProcRegua(2)
+IncProc("Ajustando registros selecionados...")
+
+vAnt := "Mes_"+MesAno(MV_PAR05)
+vAtu := "Mes_"+MesAno(MV_PAR06)
+
+while !eof()
+	if empty(&vAnt) .or.  empty(&vAtu) .or.  empty(diferenca)
+		RecLock("TRBEXL", .F. )
+		If empty(&vAnt)
+			TRBEXL->&vAnt := 0
+		Endif
+		If empty(&vAtu)
+			TRBEXL->&vAtu := 0
+		Endif
+		If empty(diferenca)
+			TRBEXL->DIFERENCA := &vAtu - &vAnt
+		Endif
+		MSUnlock()
+	EndIf
+	DbSkip()
+Enddo
+
+IncProc("Ajustando registros selecionados...")
+
+TRBEXL->(dbCloseArea())
+
+
+
+
+
+OpExcel(_cNomeArq)
+
+
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function OpExcel(cArqTRC)
+Local cDirDocs	:= MsDocPath()
+Local cPath		:= AllTrim(GetTempPath())
+
+
+
+
+
+If FILE(cArqTRC+".DBF")
+	__CopyFile( (cArqTRC+".DBF") , (cPath+cArqTRC+".DBF") )
+EndIf
+
+If !ApOleClient("MsExcel")
+	MsgStop("MsExcel nao instalado.")
+	Return
+EndIf
+
+
+
+
+oExcelApp := MsExcel():New()
+
+
+
+
+oExcelApp:WorkBooks:Open(cPath+cArqTRC+".DBF")
+oExcelApp:SetVisible( .T. )
+Return()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function ValidPerg(Pg)
+
+_sAlias := Alias()
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+_cPerg := PADR(Pg,LEN(SX1->X1_GRUPO))
+aRegs:={}
+
+aAdd(aRegs,{_cPerg,"01","Tipo do Arquivo ","","","mv_ch1","n",01,0,0,"C","            ","mv_par01","Analitico","","","","","Sintetico","","","","","","","","","","","","","","","","","","","   ","","",".RHTPREL. "})
+aAdd(aRegs,{_cPerg,"02","Verbas          ","","","mv_ch2","C",30,0,0,"G","fVerbas     ","mv_par02","         ","","","","","         ","","","","","","","","","","","","","","","","","","","   ","","","          "})
+aAdd(aRegs,{_cPerg,"03","Verbas          ","","","mv_ch3","C",30,0,0,"G","fVerbas     ","mv_par03","         ","","","","","         ","","","","","","","","","","","","","","","","","","","   ","","","          "})
+aAdd(aRegs,{_cPerg,"04","Verbas          ","","","mv_ch4","C",30,0,0,"G","fVerbas     ","mv_par04","         ","","","","","         ","","","","","","","","","","","","","","","","","","","   ","","","          "})
+aAdd(aRegs,{_cPerg,"05","Data Anterior   ","","","mv_ch5","D",08,0,0,"G","            ","mv_par05","         ","","","","","         ","","","","","","","","","","","","","","","","","","","   ","","","          "})
+aAdd(aRegs,{_cPerg,"06","Data Atual      ","","","mv_ch6","D",08,0,0,"G","            ","mv_par06","         ","","","","","         ","","","","","","","","","","","","","","","","","","","   ","","","          "})
+
+
+For i:=1 to Len(aRegs)
+	If !dbSeek(_cPerg+aRegs[i,2])
+		RecLock("SX1", .T. )
+		For j:=1 to FCount()
+			If j <= Len(aRegs[i])
+				FieldPut(j,aRegs[i,j])
+			Endif
+		Next
+		MsUnlock()
+	Endif
+Next
+
+dbSelectArea(_sAlias)
+
+Pergunte(Pg, .F. )
+
+Return

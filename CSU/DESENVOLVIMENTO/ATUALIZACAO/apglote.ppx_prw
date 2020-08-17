@@ -1,0 +1,97 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\apglote.prw"
+Function U_ApgLote()
+
+
+
+private _cPerg:= PADR("ApgLo",LEN(SX1->X1_GRUPO))
+validperg(_cPerg)
+
+oBase := MSDialog():New(100, 091, 250, 610, OemToAnsi(OemToAnsi("Eliminacao de lotes contabeis por periodo")),,,,,,,,, .t. ,,,)
+ IW_Say(012,016,u__fAjTxt("Esta rotina elimina todos os registros de um mesmo lote contabil na"),,,,, )
+ IW_Say(022,016,u__fAjTxt("empresa atual e periodo definido nos parametros."),,,,, )
+
+ SButton():New(045, 090, 1,{|| _fProssegue()},,)
+ SButton():New(045, 130, 5,{|| _fPar()},,)
+ SButton():New(045, 170, 2,{|| oBase:End()},,)
+oBase:Activate(,,,.T.,, ,)
+Return
+
+
+static function _fPar()
+
+
+pergunte(_cPerg, .t. )
+return
+
+
+static Function _fProssegue
+
+pergunte(_cPerg, .f. )
+
+_dDataIni:=mv_par01
+_dDataFim:=mv_par02
+_cLote   :=mv_par03
+_cMens:=_cMen2:=""
+if !msgyesno("Atencao: TODOS os registros pertencentes ao lote ["+_cLote+"], no periodo de "+dtoc(_dDataIni)+" a "+dtoc(_dDataFim)+" na empresa atual serao eliminados, confirma ?")
+   return
+endif
+
+cursorwait()
+u_rsaguarde({||_fDesfl()},"Eliminando registros...")
+cursorarrow()
+
+
+static Function _fDesfl()
+
+
+ct2->(dbsetorder(1))
+ct2->(dbseek(xfilial()+dtos(_dDataIni), .t. ))
+_nPerc:=_nApag:=0
+_cRefer:=dtoc(date())+" as "+time()+" h"
+_cMens2:=""
+while ct2->(!eof() .and. ct2_filial==xfilial() .and. ct2_data<=_dDataFim)
+   if ct2->ct2_lote==_cLote
+      while ct2->(!eof() .and. ct2_filial==xfilial() .and. ct2_data<=_dDataFim .and. ct2_lote==_cLote)
+
+         if ct2->(reclock(alias(), .f. ))
+            ct2->ct2_origem:=alltrim(ct2->ct2_origem)+" ApgLote em "+_cRefer
+            ct2->(dbdelete())
+            ct2->(msunlock())
+            _nApag++
+         endif
+         ct2->(dbskip(1))
+         u_rsproctxt(_cMens+(_cMen2:=" Eliminados: "+alltrim(str(_nApag)))+" Data: "+dtoc(ct2->ct2_data))
+         _nPerc++
+      enddo
+   else
+      ct2->(dbskip(1))
+      _nPerc++
+   endif
+   u_rsproctxt(_cMens+_cMen2+" Data: "+dtoc(ct2->ct2_data))
+enddo
+
+IW_MsgBox("Concluido, "+_cMens+_cMens2)
+
+return
+
+
+Static Function VALIDPERG(_cPerg)
+
+
+local aRegs := {}
+
+
+
+
+
+
+
+AADD(aRegs,{_cPerg,"01","Emissao de            :","mv_ch1","D",08,0,0,"G","","mv_par01",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"02","Emissao ate           :","mv_ch2","D",08,0,0,"G","","mv_par02",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"03","Lote contabil         :","mv_ch3","C",06,0,0,"G","","mv_par03",""    ,"","",""      ,"","","","","","","","","","",""})
+
+u__fAtuSx1(padr(_cPerg,len(sx1->x1_grupo)),aRegs)
+Return

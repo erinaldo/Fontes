@@ -1,0 +1,29 @@
+Function U_CT5500_C()
+
+
+
+
+
+
+
+
+_cArea  := GetArea()
+_cConta := "INF. C. CONTABIL"
+
+
+DbSelectArea("SED")
+DbSetOrder(1)
+DbSeek( xFilial()+SE1->E1_NATUREZ )
+
+
+DbSelectArea("SZ1")
+DbSetOrder(1)
+DbSeek( xFilial()+SE1->E1_NATUREZ, .F.  )
+
+If Found() .and.  SZ1->Z1_NATUREZ==SE1->E1_NATUREZ
+	_cConta := If(!Empty(SZ1->Z1_CCONTAB),SZ1->Z1_CCONTAB,_cConta)
+EndIf
+
+RestArea(_cArea)
+
+Return _cConta

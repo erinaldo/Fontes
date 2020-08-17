@@ -1,0 +1,151 @@
+#line 1 "C:\INCLUDE\PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "PROTHEUS.CH"
+#line 3 "c:\users\cst1350.br\desktop\PROJET~1\DESENV~1\ATUALI~1\csurepts.prw"
+Function U_CSUREPTS()
+
+Local nOpc      := 0
+Local cCadastro := "Replace campo TES"
+Local aSay      := {}
+Local aButton   := {}
+
+aAdd( aSay, "O objetivo desta rotina e efetuar a leitura, em um arquivo texto do tipo .csv" )
+aAdd( aSay, "os dados das notas fiscais de saída que devem ter o conteúdo do campo TES alterado." )
+
+aAdd( aButton, { 1, .T. ,{|| nOpc := 1,FechaBatch()}})
+aAdd( aButton, { 2, .T. ,{|| FechaBatch() }} )
+
+FormBatch( cCadastro, aSay, aButton )
+
+If nOpc == 1
+	Processa( {|| Import() }, "Processando..." )
+Endif
+
+Return
+
+
+STATIC FUNCTION Import()
+
+Local cBuffer   := ""
+Local cFileOpen := ""
+Local cTitulo1  := "Selecione o arquivo"
+Local cExtens   := "Arquivo CSV | *.csv"
+Local aLinha    := {}
+Local aDados    := {}
+Local _lFez     := .T. 
+
+cFileOpen := cGetFile(cExtens,cTitulo1,,, .T. )
+
+If !File(cFileOpen)
+   	MsgAlert("Arquivo: " + cFileOpen + " não localizado", cCadastro)
+   	Return
+Endif
+
+FT_FUSE(cFileOpen)
+FT_FGOTOP()
+ProcRegua(FT_FLASTREC())
+
+While !FT_FEOF()
+   	IncProc()
+
+	cBuffer := FT_FREADLN()
+    aLinha := ImpArr(cBuffer)
+	aAdd(aDados,{aLinha[1],aLinha[2],aLinha[3],aLinha[4],aLinha[5],aLinha[6],aLinha[7]})
+   	FT_FSKIP()
+EndDo
+
+FT_FUSE()
+
+GravaDados(aDados)
+
+If _lFez
+	MsgInfo("Replace Finalizado")
+EndIf
+
+Return
+
+
+
+Static Function ImpArr(cString)
+
+Local aRet    := {}
+Local nProc
+Local cDelim  := ";"
+
+
+
+
+cString := If( cString == nil, "", cString ) ;
+
+
+
+
+cString += if( len(cString)==0, "", cDelim )
+
+
+
+
+
+
+while !Empty(cString)
+	If ! ( nProc := at( cDelim, cString ) ) == 0
+		aAdd( aRet, SubStr( cString, 1, nProc - 1 ) )
+		cString := SubStr( cString, nProc + Len( cDelim ) )
+	Endif
+EndDo
+
+Return(aRet)
+
+Static Function GravaDados(aDados)
+
+Local _cQuery := ""
+Local _cMens  := ""
+
+For nX := 1 to Len(aDados)
+	_cQuery := "SELECT SD2.R_E_C_N_O_ AS RECNO FROM " + RetSqlName("SD2") + " SD2 WHERE "
+	_cQuery += "SD2.D2_FILIAL = '" + aDados[nX,1] + "' AND "
+	_cQuery += "SD2.D2_DOC = '" + aDados[nX,2] + "' AND "
+	_cQuery += "SD2.D2_EMISSAO = '" + Dtos(Ctod(aDados[nX,3])) + "' AND "
+	_cQuery += "SD2.D2_COD = '" + aDados[nX,4] + "' AND "
+	_cQuery += "SD2.D2_TES = '" + aDados[nX,6] + "' AND "
+	_cQuery += "SD2.D_E_L_E_T_ = ' '"
+
+	U_MontaView(_cQuery,"TRAB")
+	TRAB->(dbGotop())
+	If TRAB->(EOF())
+		_cMens += "NF "+aDados[nX,2]+" FILIAL "+aDados[nX,1]+" NÃO ALTERADA"+Chr(10)+Chr(13)
+	Else
+		Begin Sequence; BeginTran()
+			dbSelectArea("SD2")
+			dbGoTo(TRAB->RECNO)
+			RecLock("SD2", .F. )
+			  	SD2->D2_TES := aDados[nX,7]
+			MsUnlock()
+		EndTran(); end
+	EndIf
+	TRAB->(dbCloseArea())
+next
+
+If _cMens <> ""
+	MsgInfo(_cMens)
+EndIf
+
+Return

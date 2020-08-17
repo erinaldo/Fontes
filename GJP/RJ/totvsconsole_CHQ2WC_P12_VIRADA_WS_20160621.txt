@@ -1,0 +1,779 @@
+
+[INFO ][SERVER] Send TERMINATE (IMMEDIATE) to Thread (360356) User [JOB_WS_0101HD0001] Computer [THIS] Server []
+
+[INFO ][SERVER] Send TERMINATE (IMMEDIATE) to Thread (285312) User [JOB_WS_0101HD0001] Computer [THIS] Server []
+
+[INFO ][SERVER] [Thread 878792] [21/06/2016 16:14:02] Monitor finished (emerson.natali, SPON4905)
+validating LOJI701.PRW...
+validating LOJXFUNC.PRW...
+deleting LOJI701.PRW...
+deleting LOJI701.PRW_SOURCE...
+deleting LOJXFUNC.PRW...
+deleting LOJXFUNC.PRW_SOURCE...
+updating: LOJI701.PRW...
+updating: LOJXFUNC.PRW...
+
+[INFO ][SERVER] [Thread 556764] [21/06/2016 16:14:21] Debugger finished (emerson.natali, SPON4905)
+
+[21/06/2016 16:14:43] Checking job [JOB_WS_0101HD0001]
+
+[21/06/2016 16:14:44] Checking job [GJP04]
+LJGrvBatch: Empresa:04 Filial:01HA0001
+            Iniciando processo de gravacao batch...
+*** Loading dbapi.dll
+*** Loading dbapi.dll
+
+************************************************************
+*                      A T E N Ç Ã O                       *
+*O controle de numeração do License Server está desligado !*
+************************************************************
+
+LJGrvBatch: nOpcProc = 2
+Habilita SetAbendLock - .T.
+Log - Orcamento: 001185 - mensagem: 1) LOJXFUNC -- LjGrvTudo ----------------------------------------
+	2) cEstacao = 578
+	3) lFiscal = .F.
+	4) cUsuario = 
+	5) xNumCaixa() = C02
+	6) lImpCupFis = .T.
+	7) L1_DOC = 000045807
+	8) L1_SERIE = 1  
+	9) Tem Log = N
+	10) Tem Monitoramento = N
+	11) BEGIN TRANSACTION
+LJGrvBatch: Filial 01HA0001. Iniciando gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: Antes do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: Depois do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: 26) Antes da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 27) Depois da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 17) Antes da LjGrvSF2
+	18) nItens = 1
+	19) cNumNota = 000045807
+	20) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 21) Depois da LjGrvSF2
+	22) cNumNota = 000045807
+	23) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 24) Antes do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 25) Depois do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 27) Antes da LjGrvFin
+
+************************************************************
+*                      A T E N Ç Ã O                       *
+*O controle de numeração do License Server está desligado !*
+************************************************************
+
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 2) Antes da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 3) Depois da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 6) antes da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 7) Depois da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 8) antes da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 9) depois da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: 28) Depois da LjGrvFin
+Log - Orcamento: 001185 - mensagem: 29) Depois do ponto de entrada LJFIMGRV
+LJGrvBatch: Filial 01HA0001. Terminando a gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([669152], GJP04, THIS)   21/06/2016 16:15:04
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTRAN(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 12020
+Called from {|| LjGrvTran(	lScreen		, 	cNumOrc		, 	aSL1		, 	aSL2		, lImpCupFis	, 	@aNotas		, 	cNumNota	, 	cSerie		, nMaxItens	, 	aImpsSF2	, 	nTotLiq		, 	nTotImp		, nTotDesc	, 	nBaseDup	, 	nDecimais	, 	nBasePS2	, nValPS2		, 	nBaseCF2	, 	nValCF2		, 	aRecSE1		, aVlrAcres	, 	cMV_TPNRNFS	, 	lFinanceiro	, 	nNccUsada	, aNccItens	,	nNccGerada	,	aReceb		,	aImpCheque	, nMoedaCor	,	nNumItens	,   nFrete	  	,	nSeguro	    , nDespesa	,	nCheck      ,   cLQFrete    ,   lRetIncSx5  , aAcrFin		,	lPedFin 	,	cCgcCli   	,	cNomeCli	, lNfManual	,   @cEspecNf 	,   aBreakNota	,	@aNewNCC	, cTpGeraGdp	,	nOpc 		, 	@lIsVendaVP , 	@lIsVdRecCP , nArredondar )}(LOJXFUNC.PRW) 21/06/2016 16:00:42
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 896
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: Ocorreu erro na transacao de gravacao - 1
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([669152], GJP04, THIS)   21/06/2016 16:15:04
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 942
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+
+[INFO ][SERVER] [Thread 851672] [21/06/2016 16:16:34] Starting Monitor (emerson.natali, SPON4905)
+
+/*-------------------------------------------------------
+THREAD ERROR ([426676], emerson.natali, SPON4905)   21/06/2016   16:16:36
+
+ Stack : 
+variable does not exist __CUSERID on PSWLOGWRONGPASSWORD(SIGAPSW.PRG) 14/12/2015 18:11:36 line : 4006
+
+[build: 7.00.131227A-20160114 NG]
+[platform: x86]
+[environment: CHQ2WC_P12_VIRADA_WS]
+[thread: 426676]
+[rpodb: Top]
+[localfiles: CTREE]
+[remark: ]
+[threadtype: WThread]
+ on PSWLOGWRONGPASSWORD(SIGAPSW.PRG) 14/12/2015 18:11:36 line : 4006
+Called from PSWLOGWRONGPASSWORD(SIGAPSW.PRG) 14/12/2015 18:11:36 line : 4006
+Called from MPUSERACCOUNT:AUTHENTICATION(MPUSERACCOUNT.PRX) 21/01/2016 10:50:32 line : 192
+Called from PSWADMIN(SIGAPSW.PRG) 14/12/2015 18:11:36 line : 6596
+-------------------------------------------------------*/
+
+[FATAL][SERVER] *************************************************************************
+TOTVS Build 7.00.131227A-20160114 NG
+THREAD ERROR ([426676], emerson.natali, SPON4905)   21/06/2016   16:16:36
+variable does not exist __CUSERID on PSWLOGWRONGPASSWORD(SIGAPSW.PRG) 14/12/2015 18:11:36 line : 4006
+
+[build: 7.00.131227A-20160114 NG]
+[platform: x86]
+[environment: CHQ2WC_P12_VIRADA_WS]
+[thread: 426676]
+[rpodb: Top]
+[localfiles: CTREE]
+[remark: ]
+[threadtype: WThread]
+ on PSWLOGWRONGPASSWORD(SIGAPSW.PRG) 14/12/2015 18:11:36 line : 4006
+Called from PSWLOGWRONGPASSWORD(SIGAPSW.PRG) 14/12/2015 18:11:36 line : 4006
+Called from MPUSERACCOUNT:AUTHENTICATION(MPUSERACCOUNT.PRX) 21/01/2016 10:50:32 line : 192
+Called from PSWADMIN(SIGAPSW.PRG) 14/12/2015 18:11:36 line : 6596
+
+
+Variables in use
+Publicas
+  Public 1: CPAISLOC(C) :BRA
+  Public 2: LQUERY(L) :.F.
+  Public 3: __MVCOMBOBOX(L) :.F.
+  Public 4: __LSX8(L) :.F.
+  Public 5: ASX8(A) :
+  Public 6: ACOORDENA(A) :
+  Public 7: VAR_IXB(U) :NIL
+  Public 8: __TTSBREAK(L) :.F.
+  Public 9: __TTSPUSH(A) :
+  Public 10: __CLOGSIGA(C) :NNNNNN
+  Public 11: __TTSINUSE(U) :NIL
+  Public 12: __LFKINUSE(L) :.F.
+  Public 13: __TTSCOMMIT(U) :NIL
+  Public 14: __LACENTO(L) :.F.
+  Public 15: __LANGUAGE(C) :PORTUGUESE
+  Public 16: __LPYME(L) :.F.
+  Public 17: __LPYMESX1(L) :.F.
+  Public 18: __LPYMESX2(L) :.F.
+  Public 19: __LPYMESX3(L) :.F.
+  Public 20: __LPYMESX6(L) :.F.
+  Public 21: RPTPARAM(C) :Parâmetros
+  Public 22: RPTHORA(C) :Hora...:
+  Public 23: RPTDTREF(C) :DT.Ref.:
+  Public 24: RPTEMISS(C) :Emissão:
+  Public 25: RPTPERG(C) :Pergunta
+  Public 26: RPTFOLHA(C) :Folha..:
+  Public 27: RPTEND(C) :Hora Término:
+  Public 28: __DRIVER(C) :                                                                
+  Public 29: __RELDIR(C) :        
+  Public 30: __IDIOMA(C) : 
+  Public 31: __VLDUSER(D) :00/00/00
+  Public 32: __GRPUSER(C) :      
+  Public 33: __ALTPSW(L) :.F.
+  Public 34: __NUSERACS(N) :0
+  Public 35: __AIMPRESS(A) :
+  Public 36: __LDIRACS(L) :.F.
+  Public 37: __READVAR(C) :
+  Public 38: MV_PAR01(C) :
+  Public 39: MV_PAR02(C) :
+  Public 40: MV_PAR03(C) :
+  Public 41: MV_PAR04(C) :
+  Public 42: MV_PAR05(C) :
+  Public 43: MV_PAR06(C) :
+  Public 44: MV_PAR07(C) :
+  Public 45: MV_PAR08(C) :
+  Public 46: MV_PAR09(C) :
+  Public 47: MV_PAR10(C) :
+  Public 48: MV_PAR11(C) :
+  Public 49: MV_PAR12(C) :
+  Public 50: MV_PAR13(C) :
+  Public 51: MV_PAR14(C) :
+  Public 52: MV_PAR15(C) :
+  Public 53: MV_PAR16(C) :
+  Public 54: MV_PAR17(C) :
+  Public 55: MV_PAR18(C) :
+  Public 56: MV_PAR19(C) :
+  Public 57: MV_PAR20(C) :
+  Public 58: MV_PAR21(C) :
+  Public 59: MV_PAR22(C) :
+  Public 60: MV_PAR23(C) :
+  Public 61: MV_PAR24(C) :
+  Public 62: MV_PAR25(C) :
+  Public 63: MV_PAR26(C) :
+  Public 64: MV_PAR27(C) :
+  Public 65: MV_PAR28(C) :
+  Public 66: MV_PAR29(C) :
+  Public 67: MV_PAR30(C) :
+  Public 68: MV_PAR31(C) :
+  Public 69: MV_PAR32(C) :
+  Public 70: MV_PAR33(C) :
+  Public 71: MV_PAR34(C) :
+  Public 72: MV_PAR35(C) :
+  Public 73: MV_PAR36(C) :
+  Public 74: MV_PAR37(C) :
+  Public 75: MV_PAR38(C) :
+  Public 76: MV_PAR39(C) :
+  Public 77: MV_PAR40(C) :
+  Public 78: MV_PAR41(C) :
+  Public 79: MV_PAR42(C) :
+  Public 80: MV_PAR43(C) :
+  Public 81: MV_PAR44(C) :
+  Public 82: MV_PAR45(C) :
+  Public 83: MV_PAR46(C) :
+  Public 84: MV_PAR47(C) :
+  Public 85: MV_PAR48(C) :
+  Public 86: MV_PAR49(C) :
+  Public 87: MV_PAR50(C) :
+  Public 88: MV_PAR51(C) :
+  Public 89: MV_PAR52(C) :
+  Public 90: MV_PAR53(C) :
+  Public 91: MV_PAR54(C) :
+  Public 92: MV_PAR55(C) :
+  Public 93: MV_PAR56(C) :
+  Public 94: MV_PAR57(C) :
+  Public 95: MV_PAR58(C) :
+  Public 96: MV_PAR59(C) :
+  Public 97: MV_PAR60(C) :
+  Public 98: __CSX1HLP(C) :        
+  Public 99: __LOCALDRIVER(C) :DBFCDX
+  Public 100: __CRDD(C) :TOPCONN
+  Public 101: LAS400(L) :.T.
+  Public 102: LFILAS(L) :.F.
+  Public 103: CFILAS(C) :
+  Public 104: __ASPLIST(A) :
+  Public 105: __CRDDNTTS(C) :DBFCDX
+  Public 106: AMOTBX(A) :
+  Public 107: MV_MOEDA1(N) :0
+  Public 108: MV_MOEDA2(N) :0
+  Public 109: MV_MOEDA3(N) :0
+  Public 110: MV_MOEDA4(N) :0
+  Public 111: MV_MOEDA5(N) :0
+  Public 112: MV_SIMB1(C) :
+  Public 113: MV_SIMB2(C) :
+  Public 114: MV_SIMB3(C) :
+  Public 115: MV_SIMB4(C) :
+  Public 116: MV_SIMB5(C) :
+  Public 117: MV_CRNEG(C) :
+  Public 118: MV_CPNEG(C) :
+  Public 119: MV_MULNATR(L) :.F.
+  Public 120: MV_MULNATP(L) :.F.
+  Public 121: MVPROVIS(C) :
+  Public 122: MVPAGANT(C) :
+  Public 123: MVRECANT(C) :
+  Public 124: MVNOTAFIS(C) :
+  Public 125: MVABATIM(C) :
+  Public 126: MVDUPLIC(C) :
+  Public 127: MVFATURA(C) :
+  Public 128: MVCHEQUE(C) :
+  Public 129: MVCHEQUES(C) :
+  Public 130: MVRPA(C) :
+  Public 131: MVTAXA(C) :
+  Public 132: MVTXA(C) :
+  Public 133: MVIRF(C) :
+  Public 134: MVINSS(C) :
+  Public 135: MVCOFINS(C) :
+  Public 136: MVPIS(C) :
+  Public 137: MVCS(C) :
+  Public 138: MVISS(C) :
+  Public 139: MVFUABT(C) :
+  Public 140: MVIRABT(C) :
+  Public 141: MVINABT(C) :
+  Public 142: MVISABT(C) :
+  Public 143: MVPIABT(C) :
+  Public 144: MVCFABT(C) :
+  Public 145: MVCSABT(C) :
+  Public 146: MVFEABT(C) :
+  Public 147: MVENVBCOR(C) :
+  Public 148: MVENVBCOP(C) :
+  Public 149: MVIVABT(C) :
+  Public 150: VALOR(N) :0
+  Public 151: VALOR2(N) :0
+  Public 152: VALOR3(N) :0
+  Public 153: VALOR4(N) :0
+  Public 154: VALOR5(N) :0
+  Public 155: CUSTO(C) :
+  Public 156: DEBITO(C) :
+  Public 157: CREDITO(C) :
+  Public 158: VARIACAO(N) :0
+  Public 159: __NQUANTAS(U) :NIL
+  Public 160: LGSPINUSE(L) :.F.
+  Public 161: LFISCAL(L) :.F.
+  Public 162: LGAVETA(L) :.F.
+  Public 163: LUSACMC7(L) :.F.
+  Public 164: LUSATEF(L) :.F.
+  Public 165: LTEFOK(L) :.F.
+  Public 166: CTIPTEF(U) :NIL
+  Public 167: NHDLECF(N) :-1
+  Public 168: NHDLCH(N) :-1
+  Public 169: NHDLPINPAD(N) :-1
+  Public 170: NHDLCMC7(N) :-1
+  Public 171: NHDLGAVETA(N) :-1
+  Public 172: NHDLCUPOM(N) :-1
+  Public 173: NHDLLEITOR(N) :-1
+  Public 174: NHDLDISPLAY(N) :-1
+  Public 175: LINICIALIZOU(L) :.F.
+  Public 176: CESTACAO(C) :
+  Public 177: LIMPCUP(U) :NIL
+  Public 178: LUSACH(U) :NIL
+  Public 179: LUSALEITOR(U) :NIL
+  Public 180: LUSADISPLAY(U) :NIL
+  Public 181: LLAYAWAY(L) :.F.
+  Public 182: NTDATA(N) :8
+  Public 183: CCANCEL(C) :Cancelado pelo Operador !!
+  Public 184: CCANCELA(C) :Cancelado pelo Operador !!
+  Public 185: NVALOROR(N) :0
+  Public 186: NVALORDP(N) :0
+  Public 187: NVALORCO(N) :0
+  Public 188: NVALORCD(N) :0
+  Public 189: NVALBXOR(N) :0
+  Public 190: NVALBXDP(N) :0
+  Public 191: NVALBXCO(N) :0
+  Public 192: NVALBXCD(N) :0
+  Public 193: CUSTBEMCTB(C) :
+  Public 194: CCCORRCTB(C) :
+  Public 195: CCDESPCTB(C) :
+  Public 196: CCCDESCTB(C) :
+  Public 197: CCCDEPCTB(C) :
+  Public 198: SUBCCONCTB(C) :
+  Public 199: SUBCCORCTB(C) :
+  Public 200: SUBCDESCTB(C) :
+  Public 201: SUBCDEPCTB(C) :
+  Public 202: SUBCCDECTB(C) :
+  Public 203: CLVLCONCTB(C) :
+  Public 204: CLVLCORCTB(C) :
+  Public 205: CLVLDESCTB(C) :
+  Public 206: CLVLDEPCTB(C) :
+  Public 207: CLVLCDECTB(C) :
+  Public 208: CTABEM(U) :NIL
+  Public 209: DESPDEPR(U) :NIL
+  Public 210: DEPREACUM(U) :NIL
+  Public 211: CORREDEPR(U) :NIL
+  Public 212: CORREBEM(U) :NIL
+  Public 213: MV_MODFOL(C) :
+
+STACK STATICCALL(SIGAPSW.PRG) 14/12/2015 18:11:36
+
+
+STACK PSWADMIN(SIGAPSW.PRG) 14/12/2015 18:11:36
+
+  Local 1: CLOGIN(C) :Administrador
+  Local 2: CPSW(C) :
+  Local 3: CID(C) :
+  Local 4: AUSER(A) :
+  Local 5: LISWORKSHEET(L) :.F.
+  Local 6: NRETORNO(N) :0
+  Local 7: OUSER(O) :O
+
+STACK MPUSERACCOUNT:AUTHENTICATION(MPUSERACCOUNT.PRX) 21/01/2016 10:50:32
+
+  Param 1: CUSERLOGIN(C) : Administrador
+  Param 2: CPASSWORD(C) :                          
+  Param 3: LLOGON(L) : .T.
+  Param 4: LPSWCHG(L) : .F.
+  Local 1: SELF(O) :O
+  Local 2: CUSERLOGIN(C) :Administrador
+  Local 3: CPASSWORD(C) :                         
+  Local 4: LLOGON(L) :.T.
+  Local 5: LPSWCHG(L) :.F.
+  Local 6: ARETORNO(U) :NIL
+  Local 7: NRETORNO(N) :0
+
+STACK PSWLOGWRONGPASSWORD(SIGAPSW.PRG) 14/12/2015 18:11:36
+
+  Local 1: CUSER(C) :Administrador
+  Local 2: CDATETIME(C) :20160621-16:16:36
+
+Files
+
+
+[21/06/2016 16:16:50] Checking job [JOB_WS_0101HD0001]
+
+[21/06/2016 16:16:50] Checking job [GJP04]
+LJGrvBatch: Empresa:04 Filial:01HA0001
+            Iniciando processo de gravacao batch...
+
+************************************************************
+*                      A T E N Ç Ã O                       *
+*O controle de numeração do License Server está desligado !*
+************************************************************
+
+LJGrvBatch: nOpcProc = 2
+Habilita SetAbendLock - .T.
+Log - Orcamento: 001185 - mensagem: 1) LOJXFUNC -- LjGrvTudo ----------------------------------------
+	2) cEstacao = 578
+	3) lFiscal = .F.
+	4) cUsuario = 
+	5) xNumCaixa() = C02
+	6) lImpCupFis = .T.
+	7) L1_DOC = 000045807
+	8) L1_SERIE = 1  
+	9) Tem Log = N
+	10) Tem Monitoramento = N
+	11) BEGIN TRANSACTION
+LJGrvBatch: Filial 01HA0001. Iniciando gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: Antes do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: Depois do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: 26) Antes da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 27) Depois da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 17) Antes da LjGrvSF2
+	18) nItens = 1
+	19) cNumNota = 000045807
+	20) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 21) Depois da LjGrvSF2
+	22) cNumNota = 000045807
+	23) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 24) Antes do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 25) Depois do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 27) Antes da LjGrvFin
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 2) Antes da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 3) Depois da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 6) antes da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 7) Depois da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 8) antes da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 9) depois da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: 28) Depois da LjGrvFin
+Log - Orcamento: 001185 - mensagem: 29) Depois do ponto de entrada LJFIMGRV
+LJGrvBatch: Filial 01HA0001. Terminando a gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([757048], GJP04, THIS)   21/06/2016 16:17:06
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTRAN(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 12020
+Called from {|| LjGrvTran(	lScreen		, 	cNumOrc		, 	aSL1		, 	aSL2		, lImpCupFis	, 	@aNotas		, 	cNumNota	, 	cSerie		, nMaxItens	, 	aImpsSF2	, 	nTotLiq		, 	nTotImp		, nTotDesc	, 	nBaseDup	, 	nDecimais	, 	nBasePS2	, nValPS2		, 	nBaseCF2	, 	nValCF2		, 	aRecSE1		, aVlrAcres	, 	cMV_TPNRNFS	, 	lFinanceiro	, 	nNccUsada	, aNccItens	,	nNccGerada	,	aReceb		,	aImpCheque	, nMoedaCor	,	nNumItens	,   nFrete	  	,	nSeguro	    , nDespesa	,	nCheck      ,   cLQFrete    ,   lRetIncSx5  , aAcrFin		,	lPedFin 	,	cCgcCli   	,	cNomeCli	, lNfManual	,   @cEspecNf 	,   aBreakNota	,	@aNewNCC	, cTpGeraGdp	,	nOpc 		, 	@lIsVendaVP , 	@lIsVdRecCP , nArredondar )}(LOJXFUNC.PRW) 21/06/2016 16:00:42
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 896
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: Ocorreu erro na transacao de gravacao - 1
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([757048], GJP04, THIS)   21/06/2016 16:17:07
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 942
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+
+[21/06/2016 16:18:52] Checking job [JOB_WS_0101HD0001]
+
+[21/06/2016 16:18:52] Checking job [GJP04]
+LJGrvBatch: Empresa:04 Filial:01HA0001
+            Iniciando processo de gravacao batch...
+
+************************************************************
+*                      A T E N Ç Ã O                       *
+*O controle de numeração do License Server está desligado !*
+************************************************************
+
+LJGrvBatch: nOpcProc = 2
+Habilita SetAbendLock - .T.
+Log - Orcamento: 001185 - mensagem: 1) LOJXFUNC -- LjGrvTudo ----------------------------------------
+	2) cEstacao = 578
+	3) lFiscal = .F.
+	4) cUsuario = 
+	5) xNumCaixa() = C02
+	6) lImpCupFis = .T.
+	7) L1_DOC = 000045807
+	8) L1_SERIE = 1  
+	9) Tem Log = N
+	10) Tem Monitoramento = N
+	11) BEGIN TRANSACTION
+LJGrvBatch: Filial 01HA0001. Iniciando gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: Antes do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: Depois do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: 26) Antes da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 27) Depois da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 17) Antes da LjGrvSF2
+	18) nItens = 1
+	19) cNumNota = 000045807
+	20) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 21) Depois da LjGrvSF2
+	22) cNumNota = 000045807
+	23) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 24) Antes do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 25) Depois do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 27) Antes da LjGrvFin
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 2) Antes da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 3) Depois da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 6) antes da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 7) Depois da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 8) antes da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 9) depois da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: 28) Depois da LjGrvFin
+Log - Orcamento: 001185 - mensagem: 29) Depois do ponto de entrada LJFIMGRV
+LJGrvBatch: Filial 01HA0001. Terminando a gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([281248], GJP04, THIS)   21/06/2016 16:19:07
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTRAN(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 12020
+Called from {|| LjGrvTran(	lScreen		, 	cNumOrc		, 	aSL1		, 	aSL2		, lImpCupFis	, 	@aNotas		, 	cNumNota	, 	cSerie		, nMaxItens	, 	aImpsSF2	, 	nTotLiq		, 	nTotImp		, nTotDesc	, 	nBaseDup	, 	nDecimais	, 	nBasePS2	, nValPS2		, 	nBaseCF2	, 	nValCF2		, 	aRecSE1		, aVlrAcres	, 	cMV_TPNRNFS	, 	lFinanceiro	, 	nNccUsada	, aNccItens	,	nNccGerada	,	aReceb		,	aImpCheque	, nMoedaCor	,	nNumItens	,   nFrete	  	,	nSeguro	    , nDespesa	,	nCheck      ,   cLQFrete    ,   lRetIncSx5  , aAcrFin		,	lPedFin 	,	cCgcCli   	,	cNomeCli	, lNfManual	,   @cEspecNf 	,   aBreakNota	,	@aNewNCC	, cTpGeraGdp	,	nOpc 		, 	@lIsVendaVP , 	@lIsVdRecCP , nArredondar )}(LOJXFUNC.PRW) 21/06/2016 16:00:42
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 896
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: Ocorreu erro na transacao de gravacao - 1
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([281248], GJP04, THIS)   21/06/2016 16:19:08
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 942
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+*** Loading dbapi.dll
+
+************************************************************
+*                      A T E N Ç Ã O                       *
+*O controle de numeração do License Server está desligado !*
+************************************************************
+
+
+[21/06/2016 16:20:54] Checking job [JOB_WS_0101HD0001]
+
+[21/06/2016 16:20:54] Checking job [GJP04]
+LJGrvBatch: Empresa:04 Filial:01HA0001
+            Iniciando processo de gravacao batch...
+
+************************************************************
+*                      A T E N Ç Ã O                       *
+*O controle de numeração do License Server está desligado !*
+************************************************************
+
+LJGrvBatch: nOpcProc = 2
+Habilita SetAbendLock - .T.
+Log - Orcamento: 001185 - mensagem: 1) LOJXFUNC -- LjGrvTudo ----------------------------------------
+	2) cEstacao = 578
+	3) lFiscal = .F.
+	4) cUsuario = 
+	5) xNumCaixa() = C02
+	6) lImpCupFis = .T.
+	7) L1_DOC = 000045807
+	8) L1_SERIE = 1  
+	9) Tem Log = N
+	10) Tem Monitoramento = N
+	11) BEGIN TRANSACTION
+LJGrvBatch: Filial 01HA0001. Iniciando gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: Antes do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: Depois do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: 26) Antes da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 27) Depois da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 17) Antes da LjGrvSF2
+	18) nItens = 1
+	19) cNumNota = 000045807
+	20) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 21) Depois da LjGrvSF2
+	22) cNumNota = 000045807
+	23) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 24) Antes do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 25) Depois do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 27) Antes da LjGrvFin
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 2) Antes da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 3) Depois da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 6) antes da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 7) Depois da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 8) antes da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 9) depois da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: 28) Depois da LjGrvFin
+Log - Orcamento: 001185 - mensagem: 29) Depois do ponto de entrada LJFIMGRV
+LJGrvBatch: Filial 01HA0001. Terminando a gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([335896], GJP04, THIS)   21/06/2016 16:21:01
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTRAN(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 12020
+Called from {|| LjGrvTran(	lScreen		, 	cNumOrc		, 	aSL1		, 	aSL2		, lImpCupFis	, 	@aNotas		, 	cNumNota	, 	cSerie		, nMaxItens	, 	aImpsSF2	, 	nTotLiq		, 	nTotImp		, nTotDesc	, 	nBaseDup	, 	nDecimais	, 	nBasePS2	, nValPS2		, 	nBaseCF2	, 	nValCF2		, 	aRecSE1		, aVlrAcres	, 	cMV_TPNRNFS	, 	lFinanceiro	, 	nNccUsada	, aNccItens	,	nNccGerada	,	aReceb		,	aImpCheque	, nMoedaCor	,	nNumItens	,   nFrete	  	,	nSeguro	    , nDespesa	,	nCheck      ,   cLQFrete    ,   lRetIncSx5  , aAcrFin		,	lPedFin 	,	cCgcCli   	,	cNomeCli	, lNfManual	,   @cEspecNf 	,   aBreakNota	,	@aNewNCC	, cTpGeraGdp	,	nOpc 		, 	@lIsVendaVP , 	@lIsVdRecCP , nArredondar )}(LOJXFUNC.PRW) 21/06/2016 16:00:42
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 896
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: Ocorreu erro na transacao de gravacao - 1
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([335896], GJP04, THIS)   21/06/2016 16:21:01
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 942
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+
+[21/06/2016 16:22:55] Checking job [JOB_WS_0101HD0001]
+
+[21/06/2016 16:22:55] Checking job [GJP04]
+LJGrvBatch: Empresa:04 Filial:01HA0001
+            Iniciando processo de gravacao batch...
+
+************************************************************
+*                      A T E N Ç Ã O                       *
+*O controle de numeração do License Server está desligado !*
+************************************************************
+
+LJGrvBatch: nOpcProc = 2
+Habilita SetAbendLock - .T.
+Log - Orcamento: 001185 - mensagem: 1) LOJXFUNC -- LjGrvTudo ----------------------------------------
+	2) cEstacao = 578
+	3) lFiscal = .F.
+	4) cUsuario = 
+	5) xNumCaixa() = C02
+	6) lImpCupFis = .T.
+	7) L1_DOC = 000045807
+	8) L1_SERIE = 1  
+	9) Tem Log = N
+	10) Tem Monitoramento = N
+	11) BEGIN TRANSACTION
+LJGrvBatch: Filial 01HA0001. Iniciando gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: Antes do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: Depois do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: 26) Antes da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 27) Depois da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 17) Antes da LjGrvSF2
+	18) nItens = 1
+	19) cNumNota = 000045807
+	20) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 21) Depois da LjGrvSF2
+	22) cNumNota = 000045807
+	23) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 24) Antes do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 25) Depois do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 27) Antes da LjGrvFin
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 2) Antes da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 3) Depois da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 6) antes da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 7) Depois da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 8) antes da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 9) depois da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: 28) Depois da LjGrvFin
+Log - Orcamento: 001185 - mensagem: 29) Depois do ponto de entrada LJFIMGRV
+LJGrvBatch: Filial 01HA0001. Terminando a gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([476344], GJP04, THIS)   21/06/2016 16:23:02
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTRAN(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 12020
+Called from {|| LjGrvTran(	lScreen		, 	cNumOrc		, 	aSL1		, 	aSL2		, lImpCupFis	, 	@aNotas		, 	cNumNota	, 	cSerie		, nMaxItens	, 	aImpsSF2	, 	nTotLiq		, 	nTotImp		, nTotDesc	, 	nBaseDup	, 	nDecimais	, 	nBasePS2	, nValPS2		, 	nBaseCF2	, 	nValCF2		, 	aRecSE1		, aVlrAcres	, 	cMV_TPNRNFS	, 	lFinanceiro	, 	nNccUsada	, aNccItens	,	nNccGerada	,	aReceb		,	aImpCheque	, nMoedaCor	,	nNumItens	,   nFrete	  	,	nSeguro	    , nDespesa	,	nCheck      ,   cLQFrete    ,   lRetIncSx5  , aAcrFin		,	lPedFin 	,	cCgcCli   	,	cNomeCli	, lNfManual	,   @cEspecNf 	,   aBreakNota	,	@aNewNCC	, cTpGeraGdp	,	nOpc 		, 	@lIsVendaVP , 	@lIsVdRecCP , nArredondar )}(LOJXFUNC.PRW) 21/06/2016 16:00:42
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 896
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: Ocorreu erro na transacao de gravacao - 1
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([476344], GJP04, THIS)   21/06/2016 16:23:02
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 942
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+
+[21/06/2016 16:24:57] Checking job [JOB_WS_0101HD0001]
+
+[21/06/2016 16:24:57] Checking job [GJP04]
+LJGrvBatch: Empresa:04 Filial:01HA0001
+            Iniciando processo de gravacao batch...
+
+************************************************************
+*                      A T E N Ç Ã O                       *
+*O controle de numeração do License Server está desligado !*
+************************************************************
+
+LJGrvBatch: nOpcProc = 2
+Habilita SetAbendLock - .T.
+Log - Orcamento: 001185 - mensagem: 1) LOJXFUNC -- LjGrvTudo ----------------------------------------
+	2) cEstacao = 578
+	3) lFiscal = .F.
+	4) cUsuario = 
+	5) xNumCaixa() = C02
+	6) lImpCupFis = .T.
+	7) L1_DOC = 000045807
+	8) L1_SERIE = 1  
+	9) Tem Log = N
+	10) Tem Monitoramento = N
+	11) BEGIN TRANSACTION
+LJGrvBatch: Filial 01HA0001. Iniciando gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: Antes do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: Depois do bloco  LJGRVAD2
+Log - Orcamento: 001185 - mensagem: 26) Antes da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 27) Depois da LjGrvSB3
+Log - Orcamento: 001185 - mensagem: 17) Antes da LjGrvSF2
+	18) nItens = 1
+	19) cNumNota = 000045807
+	20) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 21) Depois da LjGrvSF2
+	22) cNumNota = 000045807
+	23) cSerie = 1  
+Log - Orcamento: 001185 - mensagem: 24) Antes do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 25) Depois do bloco  "LJ010SF3"
+Log - Orcamento: 001185 - mensagem: 27) Antes da LjGrvFin
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 2) Antes da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 3) Depois da Rotina A040DupRec
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 6) antes da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 7) Depois da Rotina AtuSalBco
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 8) antes da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: LjGrvFin - 9) depois da Bloco LJTES
+Log - Orcamento: 001185 - mensagem: 28) Depois da LjGrvFin
+Log - Orcamento: 001185 - mensagem: 29) Depois do ponto de entrada LJFIMGRV
+LJGrvBatch: Filial 01HA0001. Terminando a gravacao do orcamento: 001185
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([285128], GJP04, THIS)   21/06/2016 16:25:04
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTRAN(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 12020
+Called from {|| LjGrvTran(	lScreen		, 	cNumOrc		, 	aSL1		, 	aSL2		, lImpCupFis	, 	@aNotas		, 	cNumNota	, 	cSerie		, nMaxItens	, 	aImpsSF2	, 	nTotLiq		, 	nTotImp		, nTotDesc	, 	nBaseDup	, 	nDecimais	, 	nBasePS2	, nValPS2		, 	nBaseCF2	, 	nValCF2		, 	aRecSE1		, aVlrAcres	, 	cMV_TPNRNFS	, 	lFinanceiro	, 	nNccUsada	, aNccItens	,	nNccGerada	,	aReceb		,	aImpCheque	, nMoedaCor	,	nNumItens	,   nFrete	  	,	nSeguro	    , nDespesa	,	nCheck      ,   cLQFrete    ,   lRetIncSx5  , aAcrFin		,	lPedFin 	,	cCgcCli   	,	cNomeCli	, lNfManual	,   @cEspecNf 	,   aBreakNota	,	@aNewNCC	, cTpGeraGdp	,	nOpc 		, 	@lIsVendaVP , 	@lIsVdRecCP , nArredondar )}(LOJXFUNC.PRW) 21/06/2016 16:00:42
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 896
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: Ocorreu erro na transacao de gravacao - 1
+Log - Orcamento: 001185 - mensagem: ****************************************
+Log - Orcamento: 001185 - mensagem: DESCRIPTION:array out of bounds ( 11 of 0 ) 
+Log - Orcamento: 001185 - mensagem: ERRORSTACK:
+THREAD ERROR ([285128], GJP04, THIS)   21/06/2016 16:25:05
+array out of bounds ( 11 of 0 )  on MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+
+[TOTVS build: 7.00.131227A-20160114 NG]
+Called from MAFISATUSF3(MATXFIS.PRX) 23/05/2016 16:00:43 line : 5547
+Called from LJGRVTUDO(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 942
+Called from LJGRVBATCH(LOJXFUNC.PRW) 21/06/2016 16:00:42 line : 2676
+
+Log - Orcamento: 001185 - mensagem: ****************************************

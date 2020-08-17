@@ -1,0 +1,809 @@
+#Include "FiveWin.ch"
+#INCLUDE "_GPER140.CH"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ GPER140  ³ Autor ³ Mauro                   ³ Data ³ 30/05/95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Impressao de Rescisao                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ GPER140()                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Esecifico                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data     ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Natie       ³ 04/10/01 ³------³ Alteracao Pergunte "Simples"             ³±±
+±±³Natie       | 19/10/01 |------|  Subst.Impres.Word pela Impres.Grafica   ³±±   
+±±³Natie       | 23/11/01 |------|  Transf.TMSPrinter  para IMPGRFC         ³±±   
+±±³Natie       | 30/11/01 |011609|  Codigo de mov.Av.Previo -IMPGRFC        ³±±   
+±±³Natie       | 06/12/01 |------|  Pergunte -Dt publicacao dissidio/acordo ³±±
+±±³Natie       | 06/02/02 |------|  TMSPrinter - Carr.obj p/impr.grafica e  ³±±
+±±³            |          |      |  Traducao Valid Perg.                    ³±±
+±±³Emerson     ³ 21/03/02 ³------³ Ajustar teste do RA_DEMISSA por conta do ³±±
+±±³            |          |      | calculo de rescisao para o mes seguinte. ³±±
+±±³Natie       | 16/05/02 |------| aDtResc - armazena dt de geracao de resc.³±±
+±±³Emerson     ³ 02/09/02 ³------³ Exclusao da funcao ValidPerg().          ³±±
+±±³Andreia     ³ 01/10/02 ³------³ Impressao do percentual de pensao alimen-³±±
+±±³            ³          ³------³ a partir do cadastro de beneficiarios.   ³±±
+±±³Mauro       | 06/11/02 |060647| Tratar Cod.Afas.Qdo.Resc.Meses Seguintes ³±±
+±±³            |          |      | Criada Var.cCodR p/usar Impgrfc.     	³±±
+±±³Priscila    | 18/11/02 |------| Inclusao de opcao para Novo Lay out Termo³±±
+±±³            |          |------| Rescisao (Zebrado e Grafico), retirado a ³±±
+±±³            |          |------| opcao de Pre-Impresso.                   ³±±
+±±³Mauro       | 02/01/03 |Q.3569| Cod.Afast. "U" LISTAR COMO "U1"		    ³±±
+±±³Marinaldo   | 15/04/03 |063300| Nao imprimir Valores Zerados  "	        ³±±
+±±³Marinaldo   ³ 09/05/03 ³Melhor³Se existir o campo RQ_IMPCTRE verificar se³±±
+±±³            ³          ³      ³deve imprimir o % da Pensao Alimenticia no³±±
+±±³            ³          ³      ³Termo de Rescisao de Trabalho             ³±±
+±±³Natie       | 27/10/03 |Melhor|Novos Codigos Identifidadores p/mv_par16, ³±±
+±±³            ³          ³      ³p/Impressao Ferias/13o. em Avos ou Horas  ³±±
+±±³Natie       | 10/11/03 |Melhor|Passa a Considerar filtros do Usuario na  ³±±
+±±³            |          |      |impressao Grafica ( SETDEFAULT)           ³±±
+±±³Natie       | 19/11/03 |067738|Imprime ref 13o salario em avos/dias sepa-|±±
+±±³            |          |      |radamente das ref. de Ferias-Nova Pergunta³±±  
+±±³Mauro       | 16/12/03 |067867|Nao passava o roteiro na Buaca % pensao   |±±
+±±³Pedro Eloy  | 12/01/04 |067191|Foi usada a funcao fConvHoras() para    a |±±
+±±³            | 		  |      |conversao da quantidade em horas.         |±±
+±±³Pedro Eloy  | 09/02/04 |Melhor|Ajuste no relatorio pois esta saltando Pag|±±
+±±³Pedro Eloy  | 25/03/04 |      |Aplicado o SetPgEject(.T.) para ejectar   |±±
+±±³            |          |      |apos impressao de uma rescisao individual |±±
+±±³Ricardo D.  | 04/11/04 |075083|Ajuste na impressao de rescisoes complemen|±±
+±±³            |          |      |tares quando tiver mais de uma complemen- |±±
+±±³            |          |      |tar em meses posteriores.                 |±±
+±±³Ricardo D.  | 07/01/05 |077585|Ajustadas as opcoes para o simples e recri|±±
+±±³            |          |      |ada a pergunta mv_par21.                  |±±
+±±³Tania       ³29/07/2005³084485³Inclusao das perguntas 25 e 26 no Sx1, pa-³±±
+±±³            ³          ³      ³ra impressao do Orgao Homologador no cam- ³±±
+±±³            ³          ³      ³po 63 do Termo de Rescisao.               ³±±
+±±³Natie/      |17/10/2005|087243|Ajuste no retorno do relatorio p/o browse ³±±
+±±³Ricardo     |          |      |mantendo o filtro de browse selecionado   ³±±
+±±³            |          |      |anteriormente no calculo da rescisao.     ³±±
+±±³Natie       |16/12/2005|088503|Retirada do SetPgEject- configurar param. ³±±
+±±³            |          |      |MV_CANSALT e MV_SALTPAG                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß/*/
+User Function CSUR140
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais (Basicas)                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cString  :="SRA"        						// aLias do arquivo principal (Base)
+Local aOrd     := {" Fil + Nome "," Nome "} 	//" Matricula "###" Centro de Custo, Nome "
+//Local aOrd     := {STR0001,STR0002} 	//" Matricula "###" Centro de Custo "
+//Local aOrd     := {STR0001,STR0002," Nome"} 	//" Matricula "###" Centro de Custo "  + OS 2597/05
+Local aRegs	   := {}
+Local nTotregs,nMult,nPosAnt,nPosAtu,nPosCnt,cSav20,cSav7 //Regua
+Local cDesc1   := STR0003				//"Termo de Recis„o do Contrato "
+Local cDesc2   := STR0004				//"Ser  impresso de acordo com os parametros solicitados pelo"
+Local cDesc3   := STR0005				//"usu rio."
+Local cSavAlias,nSavRec,nSavOrdem
+Local aHelp		:= 	{} 
+Local cHelp		:=	""                       
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Private(Basicas)                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private aReturn := {STR0006, 1,STR0007, 1, 2, 1, "",1 }	//"Zebrado"###"Administra‡„o"
+Private nomeprog:="CSU140"
+Private anLinha := { },nLastKey := 0
+Private cPerg   :=PADR("CSU140",LEN(SX1->X1_GRUPO))
+Private aAreaSRA:= SRA->(getarea())
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis UtinLizadas na funcao IMPR                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private Titulo  := STR0008		//"EMISSO TERMO RESCISO DO CONTRATO"
+Private AT_PRG  := "GPER140"
+Private wCabec0 := 3
+Private wCabec1 := ""
+Private wCabec2 := ""
+Private wCabec3 := ""
+Private Contfl  := 1
+Private nLi     := 0
+Private nTamanho:="M"
+
+
+//Objetos p/ Impresssao Grafica 
+Private oFont07,oFont08, oFont10, oFont15, oFont10n, oFont21, oFont12,oFont16
+Private oPrint
+
+oFont07	:= TFont():New("Courier New",07,07,,.F.,,,,.T.,.F.)
+oFont08	:= TFont():New("Courier New",08,08,,.T.,,,,.T.,.F.)		//negrito 
+oFont10	:= TFont():New("Courier New",10,10,,.F.,,,,.T.,.F.)
+oFont10n:= TFont():New("Courier New",10,10,,.T.,,,,.T.,.F.)
+oFont12	:= TFont():New("Courier New",12,12,,.F.,,,,.T.,.F.)		//Normal s/negrito
+oFont15	:= TFont():New("Courier New",15,15,,.T.,,,,.T.,.F.)
+oFont21 := TFont():New("Courier New",21,21,,.T.,,,,.T.,.T.)
+oFont16	:= TFont():New("Arial",16,16,,.T.,,,,.T.,.F.)
+
+cSavAlias := Alias()
+nSavRec   := RecNo()
+nSavOrdem := IndexOrd()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ajusta pergunta no SX1                                       ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aAdd(aRegs,{cPerg,"21"  ,"Opcao Simples ?","Opcion Simples ?","Simple Option ?","mv_chl","C",1,0,0,"G","fOpSimples()","mv_par21","","","","","","","","","","","","","","","","","","","","","","","","","","S","","",""})
+ValidPerg(aRegs,cPerg,.T.)
+
+aHelp := {	"Informe o tipo do orgao homologador."}
+cHelp := ".GPR14025."
+Aadd(aRegs,{"GPR140","25","Tipo do Orgao Homologador ?" ,"¿Tipo do Orgao Homologador ?" ,"Tipo do Orgao Homologador ?" ,"MV_CHP","N",1,0,1,"C","NaoVazio()"                         ,"MV_PAR25","Sindicato","Sindicato","Sindicato","" ,"","Ministerio","Ministerio","Ministerio","","","Nao Preencher","Nao Preencher","Nao Preencher","","","","","","","","","","","",""  ,"","",aHelp,"","",cHelp})
+
+aHelp := {	"Informe o codigo do Sindicato utili-",;
+			"zado para cadastrar o Ministerio."}
+cHelp := ".GPR14026."
+Aadd(aRegs,{"GPR140","26","Codigo do Ministerio ?"      ,"¿Codigo do Ministerio ?"      ,"Codigo do Ministerio ?"      ,"MV_CHQ","C",2,0,0,"G","IIF(MV_PAR25#2,.T.,ExistCpo('RCE'))","MV_PAR26",""         ,""         ,""         ,"" ,"",""         ,""          ,""          ,"","",""             ,""             ,""             ,"","","","","","","","","","","","RCE","","",aHelp,"","",cHelp})
+
+ValidPerg(aRegs,"GPR140",.T.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+pergunte("GPR140",.F.)
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utinLizadas para parametros                        ³
+//³ Variavel  Ordem                                              ³
+//³ mv_par01  01    //  Zebrado / Grafico / grfp /grfc zebrado / grfc Grafica ³
+//³ mv_par02  02    //  FiLial De                                ³
+//³ mv_par03  03    //  FiLial Ate                               ³
+//³ mv_par04  04    //  Matricula De                             ³
+//³ mv_par05  05    //  Matricula Ate                            ³
+//³ mv_par06  06    //  Centro De Custo De                       ³
+//³ mv_par07  07    //  Centro De Custo Ate                      ³
+//³ mv_par08  08    //  Normal Ou Complementar                   ³
+//³ mv_par09  09    //  Imprime CGC  Sim ou Nao                  ³
+//³ mv_par10  10    //  Data Demissao De                         ³
+//³ mv_par11  11    //  Data Demissao Ate                        ³
+//³ mv_par12  12    //  Data Geracao De                          ³
+//³ mv_par13  13    //  Data Geracao Ate                         ³
+//³ mv_par14  14    //  Imprime Data de Homologacao              ³
+//³ mv_par15  15    //  N§ de Vias                               ³
+//³ mv_par16  16    //  Imp. Ferias    		 Avos ou Dias        ³
+//³ mv_par17  17    //  Data de Homologa‡Æo De                   ³
+//³ mv_par18  18    //  Data de Homologa‡Æo At‚                  ³
+//³ mv_par19  19    //  Nome para Contato                        ³
+//³ mv_par20  20    //  DDDD/Telefone                            ³
+//³ mv_par21  21    //  Optante do Simples                       ³
+//³ mv_par22  22    //  Dt. Entrega GRFC                         ³
+//³ mv_par23  23    //  Recol.Dissidio (dt homologacao/acordo Col³
+//³ mv_par24  24    //  Imp. 13o Salario  	 Avos ou Dias        ³
+//³ mv_par25  25    //  Tipo do Orgao Homologador                ³
+//³ mv_par26  26    //  Cod.Sindicato usado para o Ministerio.   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel:="CSU140"            //Nome Default do relatorio em Disco
+wnrel:=SetPrint(cString,wnrel,cPerg,@Titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,,nTamanho)
+If nLastKey = 27
+	Return
+Endif
+	
+SetDefault(aReturn,cString)
+
+If nLastKey = 27
+	Return
+Endif                             
+
+If Mv_par01 = 2 .or. Mv_par01 = 5
+	//-- Objeto para impressao grafica
+	oPrint 	:= TMSPrinter():New( If(Mv_par01 = 2 , ;
+	 								 "Termo de Rescisao de Contrato de Trabalho ",;
+ 	                                 "GRFC - Guia de Recolhimento Rescisorio do FGTS e da Contribuicao Social") ;
+ 	                            )
+ 	                                 
+	oPrint:SetPortrait()               
+Endif
+   
+RptStatus({|lEnd| GP140Imp(@lEnd,wnRel,cString)},Titulo)
+
+If Mv_par01==5 .or. mv_par01==2
+	oPrint:Preview()  							// Visualiza impressao grafica antes de imprimir
+Endif	
+
+dbselectarea(cSavAlias)
+dbsetorder(nSavOrdem)
+dbgoto(nSavrec)   
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ GP140imp ³ Autor ³ R.H. - Mauro          ³ Data ³ 26.04.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Recibo de Quitacao                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ GPER140(void)                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function GP140IMP(lEnd,WnRel,cString)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Locais (Programa)                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cVerCodFol
+Local cFilMat
+Local nI
+Local nImprVias
+Local nx
+/*
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Variaveis de Acesso do Usuario                               ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+Local cAcessaSRA	:= &( " { || " + ChkRH( "GPER140" , "SRA" , "2" ) + " } " )
+Local cAcessaSRG	:= &( " { || " + ChkRH( "GPER140" , "SRG" , "2" ) + " } " )
+Local cAcessaSRR	:= &( " { || " + ChkRH( "GPER140" , "SRR" , "2" ) + " } " )
+Local aCodBenef := {}
+Local nHoras	:= ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis Privadas(Programa)                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Private nProv   	:= nDesc := 0.00
+Private cCausa  	:= Space(30)
+Private cCodSaq 	:= "  "
+Private cImpSac 	:= " "
+Private cAvPrevio	:= " "
+Private cDtDissid 	:= " " 
+Private aPdv    	:= {}
+Private aPdd    	:= {}
+Private aCodFol 	:= {}         // Matriz com Codigo da folha
+Private nLin    	:= 0
+Private aInfo   	:= {}         // Matriz com dados da empresa                       
+Private cArqWord 	:= MV_PAR23
+Private aDtResc 	:={}		  // Matriz com  data Geracao da Rescisao/complemento
+Private nPerPensa 	:= 0
+Private cCodR		:= " "
+Private aTitulo   := {} 
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Ordem Do Relatorio                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nOrdem  := aReturn[8]
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posiciona no Primeiro Registro Selecionado                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SRA")
+nSavRec   := RecNo()
+nSavOrdem := IndexOrd()                             
+
+If nOrdem == 1
+	dbSetOrder(1)
+ElseIf nOrdem == 2
+	dbSetOrder(2)
+ElseIf nOrdem == 3  //OS 2597/05
+    /*/
+    cFiltro := "RA_FILIAL >= mv_par02 .AND. RA_FILIAL <= mv_par03"
+	cIndice := "RA_NOME"
+	cArqTRB := CriaTrab(NIL,.F.)
+	IndRegua("SRA",cArqTRB,cIndice,,cFiltro,'Selecionando Registros...')
+	/*/	
+	dbSetOrder(14)
+Endif
+
+If nOrdem == 1
+	SRA->( dbSeek( mv_par02 + mv_par04, .T. ) )
+	cInicio  := "SRA->RA_FILIAL + SRA->RA_MAT"
+	cFim     := mv_par03 + mv_par05
+ElseIf nOrdem == 2
+	SRA->( dbSeek( mv_par02 + mv_par06 + mv_par04, .T. ) )
+	cInicio  := "SRA->RA_FILIAL + SRA->RA_CC + SRA->RA_MAT"
+	cFim     := mv_par03 + mv_par07 + mv_par05
+ElseIf nOrdem == 3  //OS 2597/05
+    SRA->(dbSeek(mv_par29,.T.))//SRP - MIGRACAO 8.11
+    cInicio  := "SRA->RA_NOME"
+    cFim     := mv_par30
+Endif
+
+Private cFiliAnt := "__cFiliAnt__"
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega Regua de Processamento                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+SRA->( SetRegua(RecCount()) )
+SetPrc(0,0)
+
+While SRA->( !Eof() .And. &cInicio <= cFim )
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Movimenta Regua de Processamento                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IncRegua()
+      
+	aPdv := {}
+	aPdd := {} 
+	
+	cFilMat := ( SRA->RA_FILIAL + RA_MAT )
+
+	If lEnd
+		@Prow()+1,0 PSAY cCancel
+		Exit
+    Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Consiste Parametrizacao do Intervalo de Impressao            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If (SRA->RA_MAT < mv_par04) .Or. (SRA->RA_MAT > mv_par05) .Or. ;
+		(SRA->RA_CC  < mv_par06) .Or. (SRA->RA_CC  > mv_par07)
+		SRA->(dbSkip(1))		
+		Loop
+	EndIf                                   
+	
+    //OS 2597/05
+	If (SRA->RA_FILIAL < mv_par02) .or. (SRA->RA_FILIAL > mv_par03) .or.;
+	   (SRA->RA_NOME < mv_par29) .or. (SRA->RA_NOME > mv_par30) //SRP - MIGRACAO 8.11
+          SRA->(dbskip())
+          Loop
+      Endif
+
+	/*
+	ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	³Consiste Filiais e Acessos                                             ³
+	ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+	IF SRA->( !( RA_FILIAL $ fValidFil() ) .or. !Eval( cAcessaSRA ) )
+		dbSelectArea("SRA")
+      	SRA->( dbSkip() )
+       	Loop
+	EndIF
+
+	/*
+	ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	³ Carrega Variaveis Codigos Da Folha                           ³
+	ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+	If ( cFiliAnt # SRA->RA_FILIAL )
+		cFiliAnt := SRA->RA_FILIAL
+		If !fP_CodFol(@aCodFol,cFiliAnt)
+			Return
+		Endif
+	Endif
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Define Codigos de Identificadores para o pergunte mv_par16, ³
+	//³ para calcular Ferias em Avos ou em Horas.                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cVerCodFol:=aCodFol[086,1]+"*"+ ;	//  Ferias Indenizadas
+	            aCodFol[087,1]+"*"+ ;	//  Ferias Proporcionais
+	            aCodFol[230,1]+"*"+ ;	//	Ferias s/ Av.Previo Indenizado
+	            aCodFol[248,1]+"*"+ ;	//	Media Ferias Vencidas Rescisao
+	            aCodFol[249,1]+"*"+ ;	//	Media Ferias Proporcionais Rescisao
+	            aCodFol[252,1]			//	Media Ferias Sobre Aviso Indenizado Rescisao
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Define Codigos de Identificadores para o pergunte mv_par24, ³
+	//³ para calcular 13 Sal.em Avos ou em Horas.                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cVerCod13 :=aCodFol[114,1]+"*"+ ;	//  13o. na Indenizacao
+	            aCodFol[115,1]+"*"+ ;  	//  13o. Sobre Aviso Previo
+	            aCodFol[251,1]+"*"+ ; 	//	Media 13o. Salario Rescisao
+	            aCodFol[253,1]        	//	Media 13o. Salario Sobre Aviso Indenizado Rescisao
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Procura no Arquivo de Cabecalho da Rescisao "SRG"            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SRG")
+	If SRG->( dbSeek( cFilMat ) .and. ( RG_FILIAL $ fValidFil() .and. Eval( cAcessaSRG ) ) ) //Consiste Filial e Acessos
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Quando Complementar Ver Se Existe + de Um Registro no "SRG"  ³
+		//³ e Poscionar no Ultimo Registro do Funcionario.               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nContSrg := 0
+		If Mv_Par08 = 2
+			While SRG->( !Eof() .And. ( cFilMat ) == ( RG_FILIAL + RG_MAT ) )
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Adiciona somente os cabecalhos das rescisoes complementares. ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				Aadd(aDtResc,{SRG->RG_FILIAL+SRG->RG_MAT,SRG->RG_DTGERAR,SRG->RG_DATADEM,SRG->RG_DATAHOM}) //-- Data da ultima Geracao da Rescisao/complemento
+				nContSrg++
+				SRG->( dbSkip() )
+			Enddo
+			SRG->( dbSkip(-1) )
+			If nContSrg <= 1
+				dbSelectArea("SRA")
+				SRA->( dbSkip() )
+				Loop
+			else
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Se tiver pelo menos 01 complementar posiciona no registro que³
+				//³ que corresponder aos parametros de impressao.				 ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				For nx := 2 to Len(aDtResc)
+					If	(aDtResc[nx,3] >= mv_par10 .And. aDtResc[nx,3] <= mv_par11) .And.;
+						(aDtResc[nx,2] >= mv_par12 .And. aDtResc[nx,2] <= mv_par13) .And.;
+						(aDtResc[nx,4] >= mv_par17 .And. aDtResc[nx,4] <= mv_par18)
+						SRG->( dbseek( aDtResc[nx,1] + dtos( aDtResc[nx,2] ) ) )
+					endif
+				next nx
+			Endif
+		Endif
+
+		/*
+		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		³Consiste Periodos do SRG                                      ³
+		ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+		If  SRG->(;
+					(RG_DATADEM >= mv_par10 .And. RG_DATADEM <= mv_par11) .And.;
+					(RG_DTGERAR >= mv_par12 .And. RG_DTGERAR <= mv_par13) .And.;
+					(RG_DATAHOM >= mv_par17 .And. RG_DATAHOM <= mv_par18)	   ;	
+				 )	
+
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Procura Arquivo de Verbas da Rescisao                        ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SRR")
+			nProv := nDesc := 0.00
+			If SRR->( dbSeek( cFilMat + "R" ) )
+				While SRR->( !Eof() .And. ( cFilMat + "R" ) == ( RR_FILIAL + RR_MAT + RR_TIPO3 ) )
+					
+					/*
+					ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					³Consiste Filiais e Acessos                                             ³
+					ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+					IF SRR->( !( RR_FILIAL $ fValidFil() ) .or. !Eval( cAcessaSRR ) )
+						dbSelectArea("SRR")
+				      	SRR->( dbSkip() )
+				       	Loop
+					EndIF
+					
+					/*
+					ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					³Consiste data de geracao                                               ³
+					ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+					If ( SRR->RR_DATA == SRG->RG_DTGERAR )
+					
+						/*
+						ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						³Nao imprime valores Zerados                                            ³
+						ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+						IF ( SRR->RR_VALOR == 0.00 )
+							SRR->( dbSkip() )
+							Loop
+						EndIF
+					
+						/*
+						ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						³Verifica o Tipo da Verba e Carrega no aPd? correspondente              ³
+						ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+						nHoras	:= IF (SRR->RR_TIPO1=="H",fConvHoras(SRR->RR_HORAS,"1"),SRR->RR_HORAS)
+
+						If PosSrv(SRR->RR_PD,SRA->RA_FILIAL,"RV_TIPOCOD") == "1" //Provento
+						/*	ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+							³ Ferias                                                                ³
+							ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+                           If mv_par16==2 .and. SRR->RR_PD$cVerCodFol .And. (SRR->RR_HORAS - Int(SRR->RR_HORAS)) = 0.12 
+	                           	Aadd(aPdv,DescPd(SRR->RR_PD,SRA->RA_FILIAL)+' '+Str(Int(nHoras)*2.5,6,2)+' '+Transform(SRR->RR_VALOR,"@E 99,999,999.99") )
+                           ElseIf mv_par16==1 .and. SRR->RR_PD$cVerCodFol .And. (SRR->RR_HORAS - Int(SRR->RR_HORAS)) # 0.12
+	                           	Aadd(aPdv,DescPd(SRR->RR_PD,SRA->RA_FILIAL)+' '+Str((SRR->RR_HORAS / 2.5) + 0.12 ,6,2)+' '+Transform(SRR->RR_VALOR,"@E 99,999,999.99") )
+                           Else
+							/*	ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								³ 13o Salario                                                           ³
+								ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
+	                           	If mv_par24==2 .and. SRR->RR_PD$cVerCod13 .And. (SRR->RR_HORAS - Int(SRR->RR_HORAS)) = 0.12 
+		                        	Aadd(aPdv,DescPd(SRR->RR_PD,SRA->RA_FILIAL)+' '+Str(Int(SRR->RR_HORAS)*2.5,6,2)+' '+ Transform(SRR->RR_VALOR,"@E 99,999,999.99") )
+        	                   	ElseIf mv_par24==1 .and. SRR->RR_PD$cVerCod13 .And. (SRR->RR_HORAS - Int(SRR->RR_HORAS)) # 0.12
+	        	                   	Aadd(aPdv,DescPd(SRR->RR_PD,SRA->RA_FILIAL)+' '+Str((nHoras / 2.5) + 0.12 ,6,2)+' '+Transform(SRR->RR_VALOR,"@E 99,999,999.99") )
+								Else					
+                          			Aadd(aPdv,DescPd(SRR->RR_PD,SRA->RA_FILIAL)+' '+Str(nHoras,6,2)+' '+Transform(SRR->RR_VALOR,"@E 99,999,999.99") )
+                          		Endif	
+                           Endif
+                           nProv += SRR->RR_VALOR
+						Elseif PosSrv(SRR->RR_PD,SRA->RA_FILIAL,"RV_TIPOCOD") == "2" .And. SRR->RR_PD # aCodfol[126,1]  // Desconto e Despreza Liq. da Rescisao
+							Aadd(aPdd,DescPd(SRR->RR_PD,SRA->RA_FILIAL)+' '+Str(nHoras,6,2)+" "+Transform(SRR->RR_VALOR,"@E 99,999,999.99") )
+							nDesc += SRR->RR_VALOR
+						Endif
+					Endif
+
+					SRR->( dbSkip() )
+
+				Enddo
+
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Carrega Matriz Com Dados da Empresa                          ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				fInfo(@aInfo,SRA->RA_FILIAL)
+				cCausa  	:= Space(30)
+				cCodSaq 	:= "  "
+				cImpSac 	:= " "    
+				cCodR		:= " "
+				fPHist82(SRA->RA_FILIAL ,"32",SRG->RG_TIPORES+"  ",1,30,@cCausa)
+				fPHist82(SRA->RA_FILIAL ,"32",SRG->RG_TIPORES+"  ",49,2,@cCodSaq)
+				fPHist82(SRA->RA_FILIAL ,"32",SRG->RG_TIPORES+"  ",56,1,@cImpSac)
+				fPHist82(SRA->RA_FILIAL ,"32",SRG->RG_TIPORES+"  ",32,1,@cAvPrevio)
+				fPHist82(SRA->RA_FILIAL ,"32",SRG->RG_TIPORES+"  ",48,1,@cCodR)				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Codigo de movimentacao do FGTS                                ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				//-- Se funcionario estiver demitido no cadastro considera afastamento do cadastro 
+				//-- caso contrario utiliza o afastamento do tipo da rescisao parametro 32.
+				cCodR 	:= If (SRA->RA_SITFOLH = "D" , SRA->RA_AFASFGT , cCodR)
+				If cCodR == "I"
+					cCodR := "I1"
+				Elseif cCodR == "U"
+					cCodR := "U1"
+				Elseif cCodR == "1"
+					cCodR := "U3"
+				Elseif cCodR == "2"
+					cCodR := "I2"
+				Elseif cCodR == "3"
+					cCodR := "I3"
+				Elseif cCodR == "4"
+					cCodR := "I4"
+				Elseif cCodR =="N"
+			   		cCodR := "N2"
+				Elseif cCodR =="5"
+	   				cCodR := "N1"
+				Elseif cCodR =="V"
+	   				cCodR := "U2"
+				Elseif cCodR =="9"
+	   				cCodR := "S3"
+				Elseif cCodR =="S"
+	   				cCodR := "S2"
+			    EndIf		
+                
+				//--Codigo da Empresa no FGTS
+				cCodFgts := Space(13)
+				If fPHist82(SRA->RA_FILIAL,"14",SRA->RA_FILIAL+SRA->RA_TPCONTR+"3") .Or. fPHist82(SRA->RA_FILIAL,"14","  "+SRA->RA_TPCONTR+"3")
+					cCodFgts := Left(SRX->RX_TXT,13)
+				Endif
+				//-- Busca percentual de pensao alimenticia no cadastro de Beneficiarios
+				aCodBenef := {}
+				nPerPensa := 0
+				fBusCadBenef(@aCodBenef,"FOL")
+                For nI := 1 to len(aCodBenef)
+                   IF ( aCodBenef[nI,15] == "S" ) //Apenas se Imprime % no Termo de Rescisao.
+						nPerPensa += aCodBenef[nI,2]
+					EndIF	
+                Next nI
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Imprime o Numero de Vias Especificado                        ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				SET CENTURY OFF
+				For nImprVias := 1 to mv_Par15
+					If Mv_par01 == 1
+	    				If cPaisLoc == "BRA"
+							If ExistBlock("IMPRESZ1")
+								ExecBlock('IMPRESZ1',.F.,.F.)						
+							Else	
+								ExecBlock('IMPRESZ',.F.,.F.)						
+							Endif	
+						Else
+							GeraTitulo() // Carrega o nome dos titulos dos campos para impressao.
+							ExecBlock('IMPLIFIN',.F.,.F.)
+						EndIf
+					ElseIf Mv_par01 == 2
+						If ExistBlock("IMPRESG1")
+							ExecBlock('IMPRESG1',.F.,.F.)						
+						Else	
+							ExecBlock('IMPRESG',.F.,.F.)						
+						Endif	
+					ElseIF Mv_par01 == 3
+						If ExistBlock("IMPRESC1")
+							ExecBlock('IMPRESC1',.F.,.F.)						
+						Else	
+							ExecBlock('IMPRESC',.F.,.F.)						
+						Endif	
+					ElseIF Mv_par01 == 4 .Or. Mv_par01 = 5
+						If ExistBlock("IMPGRFC1")
+							ExecBlock('IMPGRFC1',.F.,.F.)						
+						Else	              
+							ExecBlock('IMPGRFC',.F.,.F.)						
+						Endif	
+					Endif
+				Next nImprVias
+				If nTData == 10
+					SET CENTURY ON
+				Else
+					SET CENTURY OFF
+				Endif
+			Endif
+		Endif
+	Endif
+	dbSelectArea("SRA")
+	SRA->( dbSkip() )
+Enddo
+   
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Termino do relatorio                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SRA")
+If Type( "bFiltraBrw") <> "U"
+	Eval( bFiltraBrw )
+endif	
+RestArea(aAreaSRA)
+
+nlin:= 0	
+Set Device To Screen
+If (aReturn[5] = 1 .and. mv_par01 # 5 .And. mv_par01 # 2)
+	Set Printer To
+	Commit
+	ourspool(wnrel)
+Endif
+   
+MS_FLUSH()
+Return
+
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³GPER140   ºAutor  ³Microsiga           º Data ³  09/27/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function fSelGrfc()
+&(ReadVar()) := cGetFile("GRFC.DOT | GRFC.DOT ", "Selecione arquivo ")
+Return(.T.)
+
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºProgram   ³GeraTituloºAuthor ³Alexandre Silva     º Date ³  13-03-03   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Alimenta a matriz a  aTitulo que sera usada no relatorio    º±±
+±±º          ³IMPLIFIN, com os titulos dos campos constantes no SX3.      º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUse       ³ SigaGPE - Localizacoes                                     º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+Static Function GeraTitulo()
+
+If Len(aTitulo) = 0
+	aAdd(aTitulo,Rtrim(RetTitle("A2_CGC"))			+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("A2_FILIAL"))		+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_CC"))			+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_NOME"))			+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_MAT"))			+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_ENDEREC"))		+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_BAIRRO"))		+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_MUNICIP"))		+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_ESTADO"))		+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_CEP"))			+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_CIC"))			+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_NASC"))			+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_MAE"))			+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RG_SALMES"))		+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RA_ADMISSA"))		+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RG_DTAVISO"))		+" ")
+	aAdd(aTitulo,Rtrim(RetTitle("RG_DATADEM"))		+" ")
+EndIf
+
+Return .T.
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o	 ³fOpSimples³ Autor ³ Ricardo Duarte Costa  ³ Data ³ 07/01/05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Selecionar o tipo de Opcao pelo Simples.                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe	 ³ fSituacao() 												  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso		 ³ Generico 												  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß/*/
+Static Function fOpSimples()
+
+Local cTitulo:=""
+Local lRet := .F.
+Local MvPar
+Local MvParDef:=""
+
+Private aSimples :={}
+l1Elem := .T.
+
+cAlias := Alias() 					 // Salva Alias Anterior
+
+MvPar:=&(Alltrim(ReadVar()))		 // Carrega Nome da Variavel do Get em Questao
+mvRet:=Alltrim(ReadVar())			 // Iguala Nome da Variavel ao Nome variavel de Retorno
+
+aSimples := {;
+			STR0010,; 	//	"1 - nao optante"
+			STR0011,;	//  "2 - optante - faturamento anual ate R$ 1.200.000,00"
+			STR0012,;	//  "3 - optante - faturamento anual superior a R$ 1.200.000,00"
+			STR0013,;	//  "4 - nao optante - produtor rural pessoa fisica (CEI e FPAS 604)"
+			STR0014,;	//  "5 - nao optante - Liminar para nao recolhimento da C.Social"
+			STR0015;	//  "6 - optante - fat.anual > R$1.200.000,00 - Liminar p/nao recolh.C.Social"
+		}  
+MvParDef:="123456"
+cTitulo :=STR0016  //	"Opcao Simples"
+
+While !lRet
+	IF f_Opcoes(@MvPar,cTitulo,aSimples,MvParDef,,,l1Elem)  // Chama funcao f_Opcoes
+		&MvRet := mvpar                                                                          // Devolve Resultado
+	EndIF
+	If !empty(mvpar)
+		lRet := .T.
+	Endif
+Enddo
+
+dbSelectArea(cAlias) 								 // Retorna Alias
+
+Return( MvParDef )
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³fGetOrgao	 ³ Autor ³ Tania Bronzeri       ³ Data ³27/07/2005³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Retorna Dados do Sindicato, baseado na SRA 			  	  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß/*/
+Static Function fGetOrgao(cSindic,cFilSindic)
+
+Local aSaveSRA	:= SRA->( GetArea() )
+Local cOrgao	:=	space(155)
+
+dbSelectArea("RCE")
+If RCE->(IndexOrd()) != 0
+	dbSetOrder(1)
+	dbSeek(cFilSindic+cSindic)	
+EndIf
+If !Eof()
+	cOrgao	:=	AllTrim(cOrgao)+      RCE->RCE_ENTSIN
+	cOrgao	:=	AllTrim(cOrgao)
+	If !Empty(RCE->RCE_ENTSIN)
+		cOrgao	:=	cOrgao+" - "
+	EndIf
+	cOrgao	:=	cOrgao+RCE->RCE_DESCRI
+	cOrgao	:=	AllTrim(cOrgao)
+	If !Empty(RCE->RCE_DESCRI)
+		cOrgao	:=	cOrgao+" - "
+	EndIf
+	cOrgao	:=	cOrgao+RCE->RCE_ENDER
+	cOrgao	:=	AllTrim(cOrgao)
+	If !Empty(RCE->RCE_ENDER)
+		cOrgao	:=	cOrgao+", " +RCE->RCE_NUMER
+	EndIf
+	cOrgao	:=	AllTrim(cOrgao)
+	If !Empty(RCE->RCE_ENDER) .And. !Empty(RCE->RCE_NUMER)
+		cOrgao	:=	cOrgao+" - "
+	EndIf                       
+	cOrgao	:=	cOrgao+RCE->RCE_MUNIC
+	cOrgao	:=	AllTrim(cOrgao)
+	If !Empty(RCE->RCE_MUNIC)
+		cOrgao	:=	cOrgao+" - "
+	EndIf                    
+	cOrgao	:=	cOrgao+RCE->RCE_UF
+	cOrgao	:=	AllTrim(cOrgao)   
+	If !Empty(RCE->RCE_UF)
+		cOrgao	:=	cOrgao+" - "
+	EndIf
+	If !Empty(FieldGet(FieldPos("RCE_DDD"))) .And. !Empty(FieldGet(FieldPos("RCE_Fone")))
+		cOrgao	:=	cOrgao+"Fone: "
+	EndIf
+	If !Empty(FieldGet(FieldPos("RCE_DDD")))
+		cOrgao	:=	cOrgao+"("+FieldGet(FieldPos("RCE_DDD"))
+		cOrgao	:=	AllTrim(cOrgao)+")"
+	EndIF
+	If !Empty(FieldGet(FieldPos("RCE_FONE")))
+		cOrgao	:=	cOrgao+FieldGet(FieldPos("RCE_FONE"))
+	EndIf
+	cOrgao	:=	AllTrim(cOrgao)                  
+EndIf
+
+RestArea(aSaveSRA)
+
+Return( cOrgao )

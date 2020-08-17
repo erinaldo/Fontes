@@ -1,0 +1,496 @@
+#include "topconn.ch"
+#include "rwmake.ch"
+
+User Function Corretudo()
+
+Processa({ ||Prep_Dados() } )
+
+Processa({ ||Proc_Ini2() } )
+
+Return
+
+
+Static Function Proc_Ini2()
+
+private num:=0
+
+DBSelectArea("TRSC51")
+ProcRegua (Reccount())
+
+WHILE !EOF()
+	
+	IncProc("Analisando SC5")
+	
+	DBSelectArea("SC5")
+	DBgoto(TRSC51->REC)
+	IncProc("Atualisando")
+	
+	
+	IF ALLTRIM(SC5->C5_SERIE)=="BA"
+		Reclock("SC5",.F.)
+		SC5->C5_SERIE	:= SM0->M0_CODIGO+"A"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC5->C5_SERIE)=="BAR"
+		Reclock("SC5",.F.)
+		SC5->C5_SERIE	:= SM0->M0_CODIGO+"B"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC5->C5_SERIE)=="MG"
+		Reclock("SC5",.F.)
+		SC5->C5_SERIE	:= SM0->M0_CODIGO+"C"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC5->C5_SERIE)=="PE"
+		Reclock("SC5",.F.)
+		SC5->C5_SERIE	:= SM0->M0_CODIGO+"D"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC5->C5_SERIE)=="SP"
+		Reclock("SC5",.F.)
+		SC5->C5_SERIE	:= SM0->M0_CODIGO+"E"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC5->C5_SERIE)=="RJ"
+		Reclock("SC5",.F.)
+		SC5->C5_SERIE	:= SM0->M0_CODIGO+"F"
+		MsUnlock()
+	Endif
+	
+	num:=num+1
+	
+	DBSelectArea("TRSC51")
+	DBSkip()
+	
+EndDo
+
+
+//SC6
+
+DBSelectArea("TRSC61")
+ProcRegua (Reccount())
+
+WHILE !EOF()
+	
+	IncProc("Analisando SC6")
+	
+	DBSelectArea("SC6")
+	DBgoto(TRSC61->REC)
+	IncProc("Atualisando")
+	
+	
+	IF ALLTRIM(SC6->C6_SERIE)=="BA"
+		Reclock("SC6",.F.)
+		SC6->C6_SERIE	:= SM0->M0_CODIGO+"A"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC6->C6_SERIE)=="BAR"
+		Reclock("SC6",.F.)
+		SC6->C6_SERIE	:= SM0->M0_CODIGO+"B"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC6->C6_SERIE)=="MG"
+		Reclock("SC6",.F.)
+		SC6->C6_SERIE	:= SM0->M0_CODIGO+"C"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC6->C6_SERIE)=="PE"
+		Reclock("SC6",.F.)
+		SC6->C6_SERIE	:= SM0->M0_CODIGO+"D"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC6->C6_SERIE)=="SP"
+		Reclock("SC6",.F.)
+		SC6->C6_SERIE	:= SM0->M0_CODIGO+"E"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC6->C6_SERIE)=="RJ"
+		Reclock("SC6",.F.)
+		SC6->C6_SERIE	:= SM0->M0_CODIGO+"F"
+		MsUnlock()
+	Endif
+	
+	num:=num+1
+	
+	DBSelectArea("TRSC61")
+	DBSkip()
+	
+EndDo
+
+//SC9
+
+DBSelectArea("TRSC91")
+ProcRegua (Reccount())
+
+WHILE !EOF()
+	
+	IncProc("Analisando SC9")
+	
+	DBSelectArea("SC9")
+	DBgoto(TRSC91->REC)
+	IncProc("Atualisando")
+	
+	
+	IF ALLTRIM(SC9->C9_SERIENF)=="BA"
+		Reclock("SC9",.F.)
+		SC9->C9_SERIENF	:= SM0->M0_CODIGO+"A"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC9->C9_SERIENF)=="BAR"
+		Reclock("SC9",.F.)
+		SC9->C9_SERIENF	:= SM0->M0_CODIGO+"B"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC9->C9_SERIENF)=="MG"
+		Reclock("SC9",.F.)
+		SC9->C9_SERIENF	:= SM0->M0_CODIGO+"C"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC9->C9_SERIENF)=="PE"
+		Reclock("SC9",.F.)
+		SC9->C9_SERIENF	:= SM0->M0_CODIGO+"D"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC9->C9_SERIENF)=="SP"
+		Reclock("SC9",.F.)
+		SC9->C9_SERIENF	:= SM0->M0_CODIGO+"E"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SC9->C9_SERIENF)=="RJ"
+		Reclock("SC9",.F.)
+		SC9->C9_SERIENF	:= SM0->M0_CODIGO+"F"
+		MsUnlock()
+	Endif
+	
+	num:=num+1
+	
+	DBSelectArea("TRSC91")
+	DBSkip()
+	
+EndDo
+
+//SD2
+
+DBSelectArea("TRSD21")
+ProcRegua (Reccount())
+
+WHILE !EOF()
+	
+	IncProc("Analisando SD2")
+	
+	DBSelectArea("SD2")
+	DBgoto(TRSD21->REC)
+	IncProc("Atualisando")
+	
+	
+	IF ALLTRIM(SD2->D2_SERIE)=="BA"
+		Reclock("SD2",.F.)
+		SD2->D2_SERIE	:= SM0->M0_CODIGO+"A"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SD2->D2_SERIE)=="BAR"
+		Reclock("SD2",.F.)
+		SD2->D2_SERIE	:= SM0->M0_CODIGO+"B"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SD2->D2_SERIE)=="MG"
+		Reclock("SD2",.F.)
+		SD2->D2_SERIE	:= SM0->M0_CODIGO+"C"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SD2->D2_SERIE)=="PE"
+		Reclock("SD2",.F.)
+		SD2->D2_SERIE	:= SM0->M0_CODIGO+"D"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SD2->D2_SERIE)=="SP"
+		Reclock("SD2",.F.)
+		SD2->D2_SERIE	:= SM0->M0_CODIGO+"E"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SD2->D2_SERIE)=="RJ"
+		Reclock("SD2",.F.)
+		SD2->D2_SERIE	:= SM0->M0_CODIGO+"F"
+		MsUnlock()
+	Endif
+	
+	num:=num+1
+	
+	DBSelectArea("TRSD21")
+	DBSkip()
+	
+EndDo
+
+//SF2
+
+DBSelectArea("TRSF21")
+ProcRegua (Reccount())
+
+WHILE !EOF()
+	
+	IncProc("Analisando SF2")
+	
+	DBSelectArea("SF2")
+	DBgoto(TRSF21->REC)
+	IncProc("Atualisando")
+	
+	
+	IF ALLTRIM(SF2->F2_SERIE)=="BA"
+		Reclock("SF2",.F.)
+		SF2->F2_SERIE	:= SM0->M0_CODIGO+"A"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SF2->F2_SERIE)=="BAR"
+		Reclock("SF2",.F.)
+		SF2->F2_SERIE	:= SM0->M0_CODIGO+"B"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SF2->F2_SERIE)=="MG"
+		Reclock("SF2",.F.)
+		SF2->F2_SERIE	:= SM0->M0_CODIGO+"C"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SF2->F2_SERIE)=="PE"
+		Reclock("SF2",.F.)
+		SF2->F2_SERIE	:= SM0->M0_CODIGO+"D"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SF2->F2_SERIE)=="SP"
+		Reclock("SF2",.F.)
+		SF2->F2_SERIE	:= SM0->M0_CODIGO+"E"
+		MsUnlock()
+	Endif
+	
+	IF ALLTRIM(SF2->F2_SERIE)=="RJ"
+		Reclock("SF2",.F.)
+		SF2->F2_SERIE	:= SM0->M0_CODIGO+"F"
+		MsUnlock()
+	Endif
+	
+	num:=num+1
+	
+	DBSelectArea("TRSF21")
+	DBSkip()
+	
+EndDo
+
+
+Return
+
+
+Static Function Prep_Dados()
+
+//SE2
+ProcRegua(3)
+
+_cQuery := " SELECT  R_E_C_N_O_ AS REC, E1_PREFIXO,E1_NUM,E1_PARCELA,E1_TIPO,E1_SERIE,E1_PEDIDO "
+_cQuery += " FROM SE1010 WHERE D_E_L_E_T_ <> '*'"
+
+
+IncProc("Obtendo Dados ")
+TCQUERY _cQuery NEW ALIAS "QTRSE1"
+
+DBSelectArea("QTRSE1")
+
+acampos := QTRSE1->( dbStruct()  )
+
+cArqTrb := CriaTrab(aCampos,.t.)
+
+Copy to &cArqTrb
+
+dbUseArea(.T.,,cArqTrb,"TRSE11",.T.)
+
+cIndTrb1 := CriaTrab(Nil,.F.)
+
+IncProc("Indexando Dados CH")
+DbSelectArea("TRSE11")
+cChave1 := "E1_PREFIXO+E1_NUM"
+
+IndRegua("TRSE11",cIndTrb1,cChave1,,,OemToAnsi("Criando Arquivo Temporario...") )
+
+
+// TRSE51
+
+_cQuery := " SELECT  R_E_C_N_O_ AS REC,E5_PREFIXO,E5_NUMERO,E5_PARCELA,E5_TIPO "
+_cQuery += " FROM SE5010 WHERE D_E_L_E_T_ <> '*' AND E5_RECPAG='R' AND E5_NUMERO<>''"
+
+IncProc("Obtendo Dados ")
+TCQUERY _cQuery NEW ALIAS "TRSE5"
+
+DBSelectArea("TRSE5")
+
+acampos := TRSE5->( dbStruct()  )
+
+cArqTrb := CriaTrab(aCampos,.t.)
+
+Copy to &cArqTrb
+
+dbUseArea(.T.,,cArqTrb,"TRSE51",.T.)
+
+cIndTrb1 := CriaTrab(Nil,.F.)
+
+IncProc("Indexando Dados CH")
+DbSelectArea("TRSE51")
+cChave1 := "E5_PREFIXO+E5_NUMERO"
+
+IndRegua("TRSE51",cIndTrb1,cChave1,,,OemToAnsi("Criando Arquivo Temporario...") )
+
+
+// TRSC5
+
+_cQuery := " SELECT  R_E_C_N_O_ AS REC,C5_NOTA,C5_SERIE,C5_NUM "
+_cQuery += " FROM "+RETSQLNAME('SC5')+" WHERE D_E_L_E_T_ <> '*' AND C5_SERIE<>' '"
+
+IncProc("Obtendo Dados ")
+TCQUERY _cQuery NEW ALIAS "TRSC5"
+
+DBSelectArea("TRSC5")
+
+acampos := TRSC5->( dbStruct()  )
+
+cArqTrb := CriaTrab(aCampos,.t.)
+
+Copy to &cArqTrb
+
+dbUseArea(.T.,,cArqTrb,"TRSC51",.T.)
+
+cIndTrb1 := CriaTrab(Nil,.F.)
+
+IncProc("Indexando Dados CH")
+DbSelectArea("TRSC51")
+cChave1 := "C5_SERIE+C5_NOTA"
+
+IndRegua("TRSC51",cIndTrb1,cChave1,,,OemToAnsi("Criando Arquivo Temporario...") )
+
+
+// TRSC6
+
+_cQuery := " SELECT  R_E_C_N_O_ AS REC,C6_NOTA,C6_SERIE,C6_NUM "
+_cQuery += " FROM "+RETSQLNAME('SC6')+" WHERE D_E_L_E_T_ <> '*' AND C6_SERIE<>' '"
+
+IncProc("Obtendo Dados ")
+TCQUERY _cQuery NEW ALIAS "TRSC6"
+
+DBSelectArea("TRSC6")
+
+acampos := TRSC6->( dbStruct()  )
+
+cArqTrb := CriaTrab(aCampos,.t.)
+
+Copy to &cArqTrb
+
+dbUseArea(.T.,,cArqTrb,"TRSC61",.T.)
+
+cIndTrb1 := CriaTrab(Nil,.F.)
+
+IncProc("Indexando Dados CH")
+DbSelectArea("TRSC61")
+cChave1 := "C6_SERIE+C6_NOTA"
+
+IndRegua("TRSC61",cIndTrb1,cChave1,,,OemToAnsi("Criando Arquivo Temporario...") )
+
+// TRSC9
+
+_cQuery := " SELECT  R_E_C_N_O_ AS REC,C9_NFISCAL,C9_SERIENF,C9_PEDIDO "
+_cQuery += " FROM "+RETSQLNAME('SC9')+" WHERE D_E_L_E_T_ <> '*' AND C9_SERIENF<>' '"
+
+IncProc("Obtendo Dados ")
+TCQUERY _cQuery NEW ALIAS "TRSC9"
+
+DBSelectArea("TRSC9")
+
+acampos := TRSC9->( dbStruct()  )
+
+cArqTrb := CriaTrab(aCampos,.t.)
+
+Copy to &cArqTrb
+
+dbUseArea(.T.,,cArqTrb,"TRSC91",.T.)
+
+cIndTrb1 := CriaTrab(Nil,.F.)
+
+IncProc("Indexando Dados CH")
+DbSelectArea("TRSC91")
+cChave1 := "C9_SERIENF+C9_NFISCAL"
+
+IndRegua("TRSC91",cIndTrb1,cChave1,,,OemToAnsi("Criando Arquivo Temporario...") )
+
+// TRSD2
+
+_cQuery := " SELECT  R_E_C_N_O_ AS REC,D2_DOC,D2_SERIE,D2_PEDIDO "
+_cQuery += " FROM "+RETSQLNAME('SD2')+" WHERE D_E_L_E_T_ <> '*' AND D2_SERIE<>' ' "
+
+IncProc("Obtendo Dados ")
+TCQUERY _cQuery NEW ALIAS "TRSD2"
+
+DBSelectArea("TRSD2")
+
+acampos := TRSD2->( dbStruct()  )
+
+cArqTrb := CriaTrab(aCampos,.t.)
+
+Copy to &cArqTrb
+
+dbUseArea(.T.,,cArqTrb,"TRSD21",.T.)
+
+cIndTrb1 := CriaTrab(Nil,.F.)
+
+IncProc("Indexando Dados CH")
+DbSelectArea("TRSD21")
+cChave1 := "D2_SERIE+D2_DOC"
+
+IndRegua("TRSD21",cIndTrb1,cChave1,,,OemToAnsi("Criando Arquivo Temporario...") )
+
+
+// TRSF2
+
+_cQuery := " SELECT  R_E_C_N_O_ AS REC,F2_DOC,F2_SERIE "
+_cQuery += " FROM "+RETSQLNAME('SF2')+" WHERE D_E_L_E_T_ <> '*' "
+
+IncProc("Obtendo Dados ")
+TCQUERY _cQuery NEW ALIAS "TRSF2"
+
+DBSelectArea("TRSF2")
+
+acampos := TRSF2->( dbStruct()  )
+
+cArqTrb := CriaTrab(aCampos,.t.)
+
+Copy to &cArqTrb
+
+dbUseArea(.T.,,cArqTrb,"TRSF21",.T.)
+
+cIndTrb1 := CriaTrab(Nil,.F.)
+
+IncProc("Indexando Dados CH")
+DbSelectArea("TRSF21")
+cChave1 := "F2_SERIE+F2_DOC"
+
+IndRegua("TRSF21",cIndTrb1,cChave1,,,OemToAnsi("Criando Arquivo Temporario...") )
+
+Return
+

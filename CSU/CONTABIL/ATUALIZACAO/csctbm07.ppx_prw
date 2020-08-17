@@ -1,0 +1,434 @@
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csctbm07.prw"
+#line 1 "C:\INCLUDE\tbiconn.ch"
+#line 1 "C:\INCLUDE\TotvsMail.ch"
+#line 9 "tbiconn.ch"
+#line 5 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csctbm07.prw"
+Function U_CsCtbM07(_cOperP)
+
+
+
+
+
+
+
+
+
+
+
+private _cPergDiu:=PADR("CTBM7D",LEN(SX1->X1_GRUPO)), _cPergNot:=PADR("CTBM7N",LEN(SX1->X1_GRUPO)), _cLogUsu:="CsCtbm07.Lo1", _cLogAdm:="CsCtbm07.Lo2", _cAmbiente:="PRODUCAO", _dDatDIni,_dDatDFim,_cHoraD,_cStatusD, _dDatNIni,_dDatNFim,_cHoraN,_cStatusN, _cQuebral:=chr(13)+chr(10), _cOper:=_cOperP
+
+
+
+if valtype(_cOper)=="A"
+   _cOper:=_cOper[1]
+   if type("cUsuario")=="U"
+      cUsuario:="      WorkFlow"
+   endif
+endif
+
+if _cOper<>nil
+
+   _cOper:=lower(alltrim(_cOper))
+   _lContinua:= .t. 
+
+   if _cOper$"diurno/noturno"
+
+      If (.F. );CallProc( "RpcSetEnv", "98", "01",,,,, { } ); Else; RpcSetEnv( "98", "01",,,,, { } ); endif
+      _fAtuLog("Usu","Colhendo parametros para o reprocessamento nas empresas de origem - "+_cOper)
+      _vEmpresas:={"02","03","04","09"}
+      pergunte(if(_cOper=="diurno",_cPergDiu,_cPergNot), .f. )
+      _dDataIni:=mv_par01
+      _dDataFim:=mv_par02
+
+
+      for _nVez:=1 to len(_vEmpresas)
+          _cEmpresa:=_vEmpresas[_nVez]
+          _fAtuLog("Usu","Reprocessamento de saldos - Iniciado  - Empresa "+_cEmpresa+" - "+_cOper)
+          If (.F. );CallProc( "RpcSetEnv", _cEmpresa, "01",,,,, { } ); Else; RpcSetEnv( _cEmpresa, "01",,,,, { } ); endif
+          if sx1->(Dbseek("CTB190"+"02", .f. ) .and. Reclock(alias(), .F. ))
+             SX1->X1_CNT01:="'"+dtoc(_dDataIni)+"'"
+             sx1->(MsUnlock())
+             if sx1->(Dbseek("CTB190"+"03", .f. ) .and. Reclock(alias(), .F. ))
+                SX1->X1_CNT01:="'"+dtoc(_dDataFim)+"'"
+                sx1->(MsUnlock())
+                dbselectarea("SM0")
+                dbClearFilter()
+                SetHideInd( .T. )
+                ctba190( .t. )
+                _fAtuLog("Usu","Reprocessamento de saldos - Concluido - Empresa "+_cEmpresa+" - "+_cOper)
+             endif
+          endif
+
+      next
+
+
+      If (.F. );CallProc( "RpcSetEnv", "98", "01",,,,, { } ); Else; RpcSetEnv( "98", "01",,,,, { } ); endif
+      _fAtuLog("Usu","Colhendo parametros para a consolidacao - "+_cOper)
+      pergunte(if(_cOper=="diurno",_cPergDiu,_cPergNot), .f. )
+      if mv_par04<>1
+         _fAtuLog("Usu","A rotina nao esta ativa - "+_cOper)
+         _fAtuLog("Adm","A rotina nao esta ativa - "+_cOper)
+         return
+      endif
+      sx1->(dbsetorder(1))
+
+      if sx1->(Dbseek("CTB220"+"02", .f. ) .and. Reclock(alias(), .F. ))
+         SX1->X1_CNT01:="'"+dtoc(mv_par01)+"'"
+		 sx1->(MsUnlock())
+	     if sx1->(Dbseek("CTB220"+"03", .f. ) .and. Reclock(alias(), .F. ))
+
+            SX1->X1_CNT01:="'"+dtoc(mv_par02)+"'"
+            sx1->(MsUnlock())
+            dbselectarea("SM0")
+            dbSetFilter({||  m0_codigo$"02/03/04/09/98"},'m0_codigo$"02/03/04/09/98"' )
+            SetHideInd( .T. )
+            _fAtuLog("Usu","Iniciando a consolidacao - "+_cOper)
+            ctba220( .t. )
+            _fAtuLog("Usu","Consolidacao concluida, iniciando o reprocessamento - "+_cOper)
+            pergunte(if(_cOper=="diurno",_cPergDiu,_cPergNot), .f. )
+            if sx1->(Dbseek("CTB190"+"02", .f. ) .and. Reclock(alias(), .F. ))
+
+               SX1->X1_CNT01:="'"+dtoc(mv_par01)+"'"
+               sx1->(MsUnlock())
+               if sx1->(Dbseek("CTB190"+"03", .f. ) .and. Reclock(alias(), .F. ))
+
+                  SX1->X1_CNT01:="'"+dtoc(mv_par02)+"'"
+                  sx1->(MsUnlock())
+                  dbselectarea("SM0")
+                  dbClearFilter()
+                  SetHideInd( .T. )
+                  ctba190( .t. )
+                  _fAtuLog("Usu","Reprocessamento concluido - "+_cOper)
+               endif
+            endif
+         endif
+      endif
+   endif
+   return
+Endif
+
+if sm0->m0_codigo<>"98"
+
+   IW_MsgBox("Esta rotina apenas podera ser executada da empresa 98 (Consolidadora)")
+   return
+endif
+
+validpD(_cPergDiu)
+validpN(_cPergNot)
+validwf()
+
+_fColhepar()
+
+_oBase := MSDialog():New(100, 091, 350, 520, OemToAnsi(OemToAnsi("Consolidacao automatica - Administracao")),,,,,,,,, .t. ,,,)
+
+
+ TGroup():New(005,005,095,100,OemToAnsi("Diurno"),, , , .t. )
+
+ IW_Say(015,010,"Periodo de: ",,,,, )
+ IW_Edit(015,045,"_dDatDIni",,035,010,,{|| .f. },,,,{|x| iif(PCount()>0,_dDatDIni := x,_dDatDIni) })
+
+ IW_Say(030,010,"Periodo ate: ",,,,, )
+ IW_Edit(030,045,"_dDatDFim",,035,010,,{|| .f. },,,,{|x| iif(PCount()>0,_dDatDFim := x,_dDatDFim) })
+
+ IW_Say(045,010,"Horario : ",,,,, )
+ IW_Edit(045,045,"_cHoraD",,035,010,,{|| .f. },,,,{|x| iif(PCount()>0,_cHoraD := x,_cHoraD) })
+
+ IW_Say(060,010,"Status : ",,,,, )
+ IW_Edit(060,045,"_cStatusD",,035,010,,{|| .f. },,,,{|x| iif(PCount()>0,_cStatusD := x,_cStatusD) })
+
+ IW_Say(080,010,"Alterar -> ",,,,, )
+ SButton():New(075, 045, 5,{|| (_fAltPar("Dia"))},,)
+
+
+_nColuna:=110
+ TGroup():New(005,005+_nColuna,095,100+_nColuna,OemToAnsi("Noturno"),, , , .t. )
+
+ IW_Say(015,010+_nColuna,"Periodo de: ",,,,, )
+ IW_Edit(015,045+_nColuna,"_dDatNIni",,035,010,,{|| .f. },,,,{|x| iif(PCount()>0,_dDatNIni := x,_dDatNIni) })
+
+ IW_Say(030,010+_nColuna,"Periodo ate: ",,,,, )
+ IW_Edit(030,045+_nColuna,"_dDatNFim",,035,010,,{|| .f. },,,,{|x| iif(PCount()>0,_dDatNFim := x,_dDatNFim) })
+
+ IW_Say(045,010+_nColuna,"Horario : ",,,,, )
+ IW_Edit(045,045+_nColuna,"_cHoraN",,035,010,,{|| .f. },,,,{|x| iif(PCount()>0,_cHoraN := x,_cHoraN) })
+
+ IW_Say(060,010+_nColuna,"Status : ",,,,, )
+ IW_Edit(060,045+_nColuna,"_cStatusN",,035,010,,{|| .f. },,,,{|x| iif(PCount()>0,_cStatusN := x,_cStatusN) })
+
+ IW_Say(080,010+_nColuna,"Alterar -> ",,,,, )
+ SButton():New(075, 045+_nColuna, 5,{|| (_fAltPar("Noite"))},,)
+
+ IW_Say(110,010,"Eventos",,,,, )
+ SButton():New(105, 040, 15,{|| _fViewLog("Usu")},,)
+
+ _oLabAdm := IW_Say(110,080,"Eventos Adm",,,,, )
+ _oButAdm := SButton():New(105, 115, 15,{|| _fViewLog("Adm")},,)
+
+PswOrder(1)
+PswSeek(__cUserId)
+_vDatuser:= PswRet(1)
+if ascan(_vDatUser[1][10],"000000")==0
+   _oLabAdm:lVisible:= .f. 
+   _oButAdm:lVisible:= .f. 
+endif
+
+ SButton():New(105, 180, 1,{|| _oBase:End()},,)
+
+_oBase:Activate(,,,.T.,, ,)
+
+Return
+
+
+Static Function _fViewLog(_cLog)
+
+local _oFont:=TFont():New( "Courier New",,nHeight:=15,,lBold:= .f. ,,,,,lUnderLine:= .f. )
+
+_cLog:=lower(alltrim(_cLog))
+_cArq:=if(_cLog=="usu",_cLogUsu,_cLogAdm)
+_oLog := MSDialog():New(0, 0, 480, 776, OemToAnsi("Exibicao do Log "+if(_cLog=="usu","Usuario","Administrador")),,,,,,,,, .t. ,,,)
+_cLog:=memoread(_cArq)
+ _oGetLog := IW_Edit(5,5,"_cLog",,382,215,,,,.T.,,{|x| iif(PCount()>0,_cLog := x,_cLog) })
+ SButton():New(225, 280, 1,{|| (_oLog:End())},,)
+_oGetLog:lReadOnly:= .t. 
+_oGetLog:oFont:=_oFont
+_oLog:Activate(,,,.T.,, ,)
+return
+
+
+Static Function _fAltPar(_cDN)
+
+_cDn:=lower(alltrim(_cDN))
+if _cDn=="dia"
+   if pergunte(_cPergDiu, .t. )
+
+
+
+      if _dDatDIni<>mv_par01 .or.  _dDatDFim<>mv_par02 .or.  _cHoraD<>mv_par03 .or.  _cStatusD=="Ativo" .and. mv_par04<>1
+
+
+
+
+
+
+
+         _fAtuLog("adm","Atualizacao de parametros (Diurno) "+_cQuebral+ "Antes : Periodo de: "+ dtoc(_dDatDIni)+" ate: "+ dtoc(_dDatDFim)+" horario: "+_cHoraD+" Status: "+_cStatusD+_cQuebral+ "Depois: Periodo de: "+ dtoc(mv_par01)+" ate: "+ dtoc(mv_par02)+" horario: "+mv_par03+" Status: "+if(mv_par04==1,"Ativo","Inativo"))
+
+         _fAtuPar("Dia",mv_par03)
+      endif
+   endif
+elseif _cDn=="noite"
+   if pergunte(_cPergNot, .t. )
+
+
+
+      if _dDatNIni<>mv_par01 .or.  _dDatNFim<>mv_par02 .or.  _cHoraN<>mv_par03 .or.  _cStatusN=="Ativo" .and. mv_par04<>1
+
+
+
+
+
+
+
+         _fAtuLog("adm","Atualizacao de parametros (Noturno) "+_cQuebral+ "Antes : Periodo de: "+ dtoc(_dDatNIni)+" ate: "+ dtoc(_dDatNFim)+" horario: "+_cHoraN+_cQuebral+ "Depois: Periodo de: "+ dtoc(mv_par01)+" ate: "+ dtoc(mv_par02)+" horario: "+mv_par03+" Status: "+if(mv_par04==1,"Ativo","Inativo"))
+
+         _fAtuPar("Noite",mv_par03)
+      endif
+   endif
+endif
+
+_fColhePar()
+return
+
+
+Static Function _fAtuPar(_cDn,_cHora)
+
+
+_cDn:=lower(alltrim(_cDN))
+
+dbusearea( .t. ,,"SXM980","SXM", .T. , .F. )
+while sxm->(!eof())
+   if alltrim(sxm->xm_codigo)==if(_cDn=="dia","CTBM07DIA","CTBM07NOITE")
+      sxm->(reclock(alias(), .f. ))
+
+      sxm->XM_HRINI  :=_cHora
+      sxm->XM_HRFIM  :=_cHora
+      sxm->XM_DTPROX :=date()+if(left(time(),5)>_cHora,1,0)
+      sxm->XM_HRPROX :=_cHora
+
+      sxm->(msunlock())
+      exit
+   endif
+
+   sxm->(dbskip(1))
+enddo
+
+sxm->(dbclosearea())
+
+
+Function U_INITSCHED()
+
+Local aParams := {"98","01"}
+WFScheduler(aParams)
+
+Return .T. 
+
+
+Static Function _fColhePar()
+
+
+
+pergunte(_cPergDiu, .f. )
+_dDatDIni:=mv_par01
+_dDatDFim:=mv_par02
+_cStatusD:=if(mv_par04==1,"Ativo","Inativo")
+
+pergunte(_cPergNot, .f. )
+_dDatNIni:=mv_par01
+_dDatNFim:=mv_par02
+_cStatusN:=if(mv_par04==1,"Ativo","Inativo")
+
+dbusearea( .t. ,,"SXM980","SXM", .T. , .F. )
+while sxm->(!eof())
+   if alltrim(sxm->xm_codigo)=="CTBM07DIA"
+      _cHoraD:=sxm->xm_hrini
+   elseif alltrim(sxm->xm_codigo)=="CTBM07NOITE"
+      _cHoraN:=sxm->xm_hrini
+   endif
+   sxm->(dbskip(1))
+enddo
+sxm->(dbclosearea())
+
+return
+
+
+Static Function ValidWf()
+
+local _lTemDia:=_lTemnoite:= .f. 
+
+dbusearea( .t. ,,"SXM980","SXM", .T. , .F. )
+while sxm->(!eof())
+   if alltrim(sxm->xm_codigo)=="CTBM07DIA"
+      _lTemDia:= .t. 
+   elseif alltrim(sxm->xm_codigo)=="CTBM07NOITE"
+      _lTemNoite:= .t. 
+   endif
+   sxm->(dbskip(1))
+enddo
+
+if !_lTemDia
+
+   sxm->(reclock(alias(), .t. ))
+   sxm->XM_FILIAL :=""
+   sxm->XM_CODIGO :="CTBM07DIA"
+   sxm->XM_NOME   :="CsCtbm07 Diurno"
+   sxm->XM_DESCR  :="Consolidacao automatica - Diurno"
+   sxm->XM_TIPO   :=1
+   sxm->XM_DTINI  :=ctod("01/03/2005")
+   sxm->XM_HRINI  :="12:30"
+   sxm->XM_DTFIM  :=ctod("31/12/2009")
+   sxm->XM_HRFIM  :="12:30"
+   sxm->XM_INTERV :="00:00"
+   sxm->XM_SEMANA :=""
+   sxm->XM_MENSAL :=""
+   sxm->XM_DTPROX :=date()+if(left(time(),5)>"12:30",1,0)
+   sxm->XM_HRPROX :="12:30"
+   sxm->XM_AMBIENT:=upper(_cAmbiente)
+   sxm->XM_ACAO   :="u_CsCtbm07('Diurno')"
+   sxm->xm_ativo  :="T"
+   sxm->xm_timeout:="F"
+
+   sxm->(msunlock())
+endif
+
+if !_lTemNoite
+
+   sxm->(reclock(alias(), .t. ))
+   sxm->XM_FILIAL :=""
+   sxm->XM_CODIGO :="CTBM07NOITE"
+   sxm->XM_NOME   :="CsCtbm07 Noturno"
+   sxm->XM_DESCR  :="Consolidacao automatica - Noturno"
+   sxm->XM_TIPO   :=1
+   sxm->XM_DTINI  :=ctod("01/03/2005")
+   sxm->XM_HRINI  :="00:30"
+   sxm->XM_DTFIM  :=ctod("31/12/2009")
+   sxm->XM_HRFIM  :="00:30"
+   sxm->XM_INTERV :="00:30"
+   sxm->XM_SEMANA :=""
+   sxm->XM_MENSAL :=""
+   sxm->XM_DTPROX :=date()+1
+   sxm->XM_HRPROX :="00:30"
+   sxm->XM_AMBIENT:=upper(_cAmbiente)
+   sxm->XM_ACAO   :="u_CsCtbm07('Noturno')"
+   sxm->xm_ativo  :="T"
+   sxm->xm_timeout:="F"
+
+   sxm->(msunlock())
+endif
+sxm->(dbclosearea())
+return
+
+
+Static Function _fAtuLog(_cLog,_cOcor)
+
+local _cArq,_cTextAtu,_cNovoTexto,_cCab
+_cLog:=lower(alltrim(_cLog))
+_cArq:=if(_cLog=="usu",_cLogUsu,_cLogAdm)
+_cTextAtu:=memoread(_cArq)
+
+if _cLog=="adm"
+   _cNovoTexto:="*-----"+alltrim(substr(cUsuario,7,15))+" em "+dtoc(date())+" as "+time()+" h "
+   _cNovoTexto:=padr(_cNovoTexto,79,"-")+"*"
+   _cGrava:=_cNovoTexto+_cQuebral+_cOcor+_cQuebral+_cTextAtu
+else
+   _cNovoTexto:=alltrim(substr(cUsuario,7,15))+" "+dtoc(date())+" "+time()+" h : "
+   _cGrava:=_cNovoTexto+_cOcor+_cQuebral+_cTextAtu
+endif
+if len(_cGrava)>65535
+   _cGrava:=left(_cGrava,65535)
+endif
+memowrit(_cArq,_cGrava)
+
+return
+
+
+Static Function ValidPD(_cPerg)
+
+
+local aRegs := {}
+
+
+
+
+
+
+
+AADD(aRegs,{_cPerg,"01","Periodo de            :","mv_ch1","D",08,0,0,"G","","mv_par01",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"02","Periodo ate           :","mv_ch2","D",08,0,0,"G","","mv_par02",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"03","Horario               :","mv_ch3","C",05,0,0,"G","","mv_par03",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"04","Status da rotina      :","mv_ch4","N",05,0,0,"C","","mv_par04","Ativo"    ,"","","Inativo"      ,"","","","","","","","","","",""})
+
+u__fAtuSx1(padr(_cPerg,len(sx1->x1_grupo)),aRegs)
+Return
+
+
+Static Function ValidPN(_cPerg)
+
+
+local aRegs := {}
+
+
+
+
+
+
+
+AADD(aRegs,{_cPerg,"01","Periodo de            :","mv_ch1","D",08,0,0,"G","","mv_par01",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"02","Periodo ate           :","mv_ch2","D",08,0,0,"G","","mv_par02",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"03","Horario               :","mv_ch3","C",05,0,0,"G","","mv_par03",""    ,"","",""      ,"","","","","","","","","","",""})
+AADD(aRegs,{_cPerg,"04","Status da rotina      :","mv_ch4","N",05,0,0,"C","","mv_par04","Ativo"    ,"","","Inativo"      ,"","","","","","","","","","",""})
+
+u__fAtuSx1(padr(_cPerg,len(sx1->x1_grupo)),aRegs)
+Return

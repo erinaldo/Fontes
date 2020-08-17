@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<FileZilla3>
+    <Servers>
+        <Folder expanded="1">GJP
+            <Server>
+                <Host>ftpdtc.totvs.com.br</Host>
+                <Port>21</Port>
+                <Protocol>0</Protocol>
+                <Type>0</Type>
+                <User>chq2wc_desenv@datacenter.local</User>
+                <Pass encoding="base64">cGVucWdoNTQ=</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>GJP - DESENV</Name>
+                <Comments />
+                <LocalDir />
+                <RemoteDir>1 0 13 chq2wc_desenv</RemoteDir>
+                <SyncBrowsing>0</SyncBrowsing>GJP - DESENV
+            </Server>
+            <Server>
+                <Host>ftpdtc.totvs.com.br</Host>
+                <Port>21</Port>
+                <Protocol>0</Protocol>
+                <Type>0</Type>
+                <User>chq2wc_homolog@datacenter.local</User>
+                <Pass encoding="base64">emNndGRrYzk=</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>GJP - HOMOLOG</Name>
+                <Comments />
+                <LocalDir />
+                <RemoteDir>1 0 14 chq2wc_homolog</RemoteDir>
+                <SyncBrowsing>0</SyncBrowsing>GJP - HOMOLOG
+            </Server>
+            <Server>
+                <Host>ftpdtc.totvs.com.br</Host>
+                <Port>21</Port>
+                <Protocol>0</Protocol>
+                <Type>0</Type>
+                <User>chq2wc_p12_virada</User>
+                <Pass encoding="base64">Q2hxMkAjMTIz</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>GJP - P12_VIRADA</Name>
+                <Comments />
+                <LocalDir />
+                <RemoteDir>8 0 17 chq2wc_p12_virada</RemoteDir>
+                <SyncBrowsing>0</SyncBrowsing>GJP - P12_VIRADA
+            </Server>
+            <Server>
+                <Host>ftpdtc.totvs.com.br</Host>
+                <Port>21</Port>
+                <Protocol>0</Protocol>
+                <Type>0</Type>
+                <User>chq2wc_p12@datacenter.local</User>
+                <Pass encoding="base64">I0dqcEAzMjE=</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>GJP - PRE-PROD</Name>
+                <Comments />
+                <LocalDir />
+                <RemoteDir>1 0 10 chq2wc_p12</RemoteDir>
+                <SyncBrowsing>0</SyncBrowsing>GJP - PRE-PROD
+            </Server>
+            <Server>
+                <Host>ftpdtc.totvs.com.br</Host>
+                <Port>21</Port>
+                <Protocol>0</Protocol>
+                <Type>0</Type>
+                <User>chq2wc@datacenter.local</User>
+                <Pass encoding="base64">Z2pwYWRtQDIwMTQh</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>GJP - PRODUÇÃO</Name>
+                <Comments />
+                <LocalDir />
+                <RemoteDir>1 0 6 chq2wc</RemoteDir>
+                <SyncBrowsing>0</SyncBrowsing>GJP - PRODUÇÃO
+            </Server>
+            <Server>
+                <Host>ftpdtc.totvs.com.br</Host>
+                <Port>21</Port>
+                <Protocol>0</Protocol>
+                <Type>0</Type>
+                <User>chq2wc_teste@datacenter.local</User>
+                <Pass encoding="base64">NDU1cWd4NTQ=</Pass>
+                <Logontype>1</Logontype>
+                <TimezoneOffset>0</TimezoneOffset>
+                <PasvMode>MODE_DEFAULT</PasvMode>
+                <MaximumMultipleConnections>0</MaximumMultipleConnections>
+                <EncodingType>Auto</EncodingType>
+                <BypassProxy>0</BypassProxy>
+                <Name>GJP - TESTE</Name>
+                <Comments />
+                <LocalDir />
+                <RemoteDir>1 0 12 chq2wc_teste</RemoteDir>
+                <SyncBrowsing>0</SyncBrowsing>GJP - TESTE
+            </Server>
+        </Folder>
+    </Servers>
+</FileZilla3>

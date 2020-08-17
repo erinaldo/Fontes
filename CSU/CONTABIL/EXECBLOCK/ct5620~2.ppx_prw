@@ -1,0 +1,23 @@
+Function U_CT5620C()
+
+
+
+
+
+
+
+
+_cArea := Alias()
+_cConta := "INFORMAR C.CLIENTE"
+
+DbSelectArea("SZ2")
+Dbsetorder(1)
+DbSeek( xFilial()+SF2->F2_CLIENTE+SF2->F2_LOJA+SF2->F2_CODAREA, .f.  )
+
+If Found()
+	_cConta := SZ2->Z2_CONTA
+EndIf
+
+DbSelectArea(_cArea)
+
+Return _cConta

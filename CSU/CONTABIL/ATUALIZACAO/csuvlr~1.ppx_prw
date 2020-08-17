@@ -1,0 +1,26 @@
+Function U_CSUVLRCR()
+
+
+
+
+
+
+
+
+local _lReturn:= .f. ,_vAmbSe2
+
+
+
+if se2->e2_multnat=="1"
+   _lReturn:= .t. 
+else
+   if !empty(se2->e2_csukey)
+      _vAmbSe2:=se2->(getarea())
+      if se2->(dbseek(e2_csukey, .f. ) .and. e2_multnat=="1")
+         _lReturn:= .t. 
+      endif
+      se2->(restarea(_vAmbSe2))
+   endif
+endif
+
+Return _lReturn

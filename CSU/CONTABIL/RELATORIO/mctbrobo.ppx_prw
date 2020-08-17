@@ -1,0 +1,305 @@
+#line 1 "C:\INCLUDE\PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Dialog.ch"
+#line 27 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Font.ch"
+#line 28 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\PTMenu.ch"
+#line 30 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Print.ch"
+#line 32 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Colors.ch"
+#line 34 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\Folder.ch"
+#line 36 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\msobject.ch"
+#line 37 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\VKey.ch"
+#line 41 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\WinApi.ch"
+#line 43 "PROTHEUS.CH"
+#line 1 "C:\INCLUDE\FWCommand.ch"
+#line 47 "PROTHEUS.CH"
+#line 2 "c:\users\cst1350.br\desktop\PROJET~1\contabil\RELATO~1\mctbrobo.prw"
+#line 1 "C:\INCLUDE\TBICONN.CH"
+#line 1 "C:\INCLUDE\TotvsMail.ch"
+#line 9 "TBICONN.CH"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\RELATO~1\mctbrobo.prw"
+Function U_TESTEROBO()
+Return (u_MCTBROBO())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_MCTBROBO()
+
+Local _cContaI := ""
+Local _cContaF := ""
+Local _dDataIni  := Ctod("  /  /  ")
+Local _dDataFim  := Ctod("  /  /  ")
+Local _lNoMov    := .T. 
+Local _dAdmDe    := Ctod("  /  /  ")
+Local _dAdmAt    := Ctod("  /  /  ")
+Local _cCCusDe   := ""
+Local _cCCusAt   := ""
+Local _cSituac   := ""
+local _dDemde    := Ctod("  /  /  ")
+Local _dDemAt    := Ctod("  /  /  ")
+
+If (.F. );CallProc( "RpcSetEnv", "05", "01",,, "CTB",, { } ); Else; RpcSetEnv( "05", "01",,, "CTB",, { } ); endif
+
+	DbSelectArea("SX5")
+	dbSetOrder(1)
+	dbSeek(xFilial("SX5") + "ZK" + "DADMDE")
+	_dAdmde  := Ctod(X5Descri())
+	dbSeek(xFilial("SX5") + "ZK" + "DADMAT")
+	_dAdmAt := Ctod(X5Descri())
+	dbSeek(xFilial("SX5") + "ZK" + "CCCUDE")
+	_cCCusDe := Left(X5Descri(),20)
+	dbSeek(xFilial("SX5") + "ZK" + "CCCUAT")
+	_cCCusAt := Left(X5Descri(),20)
+	dbSeek(xFilial("SX5") + "ZK" + "SITUAC")
+	_cSituac := Left(X5Descri(),5)
+	dbSeek(xFilial("SX5") + "ZK" + "DTDMDE")
+	_dDemde  := Ctod(X5Descri())
+	dbSeek(xFilial("SX5") + "ZK" + "DTDMAT")
+	_dDemAt := Ctod(X5Descri())
+
+
+	U_CSARQAUTO(_dAdmde,_dAdmAt,_cCCusDe,_cCCusAt,_cSituac,_dDemde,	_dDemAt)
+
+	dbSelectArea("SX5")
+	dbSetOrder(1)
+	dbSeek(xFilial("SX5") + "ZE" + "CTAINI")
+	_cContaI := Left(X5Descri(),20)
+	dbSeek(xFilial("SX5") + "ZE" + "CTAFIM")
+	_cContaF := Left(X5Descri(),20)
+	dbSeek(xFilial("SX5") + "ZE" + "DTAINI")
+	_dDataIni := Ctod(X5Descri())
+	dbSeek(xFilial("SX5") + "ZE" + "DTAFIM")
+	_dDataFim := Ctod(X5Descri())
+	dbSeek(xFilial("SX5") + "ZE" + "NAOMOV")
+	_lNoMov := X5Descri() == "SIM"
+
+
+
+
+
+		U_RAZARIO(_cContaI,_cContaF,_dDataIni,_dDataFim,"01","1","   ", .T. ,"         ","ZZZZZZZZZ", .T. ,"         ","ZZZZZZZZZ", .T. ,"         ","ZZZZZZZZZ", .T. ,_lNoMov)
+
+
+
+
+If (.F. );CallProc( "RpcClearEnv" ); Else; RpcClearEnv( ); endif
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_MCFGROBO()
+
+Local oDlg
+Local oCombo
+Local _lRet    := .F. 
+Local _cContaI := Space(20)
+Local _cContaF := Space(20)
+Local _dDataI  := Stod(Space(8))
+Local _dDataF  := Stod(Space(8))
+Local _cNoMov  := Space(3)
+Local _aCombo  := {"SIM","NAO"}
+
+dbSelectArea("SX5")
+dbSetOrder(1)
+dbSeek(xFilial("SX5") + "ZE" + "CTAINI")
+_cContaI := Left(X5Descri(),20)
+dbSeek(xFilial("SX5") + "ZE" + "CTAFIM")
+_cContaF := Left(X5Descri(),20)
+dbSeek(xFilial("SX5") + "ZE" + "DTAINI")
+_dDataI := Ctod(X5Descri())
+dbSeek(xFilial("SX5") + "ZE" + "DTAFIM")
+_dDataF := Ctod(X5Descri())
+dbSeek(xFilial("SX5") + "ZE" + "NAOMOV")
+_cNoMov := X5Descri()
+
+oDlg = MsDialog():New( 0, 0, 300, 552, "Configuração Razario",,,.F.,,,,, oDlg,.T.,, ,.F. )
+
+ TSay():New( 15, 15,{||  "Conta Inicio:"},oDlg,,,.F.,.F.,.F.,.T.,,, 45, 8,.F.,.F.,.F.,.F.,.F.,.F. )
+ TGet():New( 15, 85, { | u | If( PCount() == 0, _cContaI, _cContaI := u ) },oDlg, 80, 10,,,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"_cContaI",,,, )
+
+ TSay():New( 35, 15,{||  "Conta Fim:"},oDlg,,,.F.,.F.,.F.,.T.,,, 45, 8,.F.,.F.,.F.,.F.,.F.,.F. )
+ TGet():New( 35, 85, { | u | If( PCount() == 0, _cContaF, _cContaF := u ) },oDlg, 80, 10,,,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"_cContaF",,,, )
+
+ TSay():New( 55, 15,{||  "Data Inicio:"},oDlg,,,.F.,.F.,.F.,.T.,,, 45, 8,.F.,.F.,.F.,.F.,.F.,.F. )
+ TGet():New( 55, 85, { | u | If( PCount() == 0, _dDataI, _dDataI := u ) },oDlg, 80, 10,,,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"_dDataI",,,, )
+
+ TSay():New( 75, 15,{||  "Data Fim:"},oDlg,,,.F.,.F.,.F.,.T.,,, 65, 8,.F.,.F.,.F.,.F.,.F.,.F. )
+ TGet():New( 75, 85, { | u | If( PCount() == 0, _dDataF, _dDataF := u ) },oDlg, 80, 10,,,,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F. ,,"_dDataF",,,, )
+
+ TSay():New( 95, 15,{||  "Imp. Conta S/Movto.:"},oDlg,,,.F.,.F.,.F.,.T.,,, 65, 8,.F.,.F.,.F.,.F.,.F.,.F. )
+ oCombo := TComboBox():New( 95, 85, { | u | If( PCount() == 0, _cNoMov, _cNoMov := u ) }, _aCombo, 80, 10, oDlg,,,,,,.T.,,,.F.,,.F.,,, ,"_cNoMov" )
+
+ TButton():New( 113, 235, "&Ok",,{||  (_lRet:= .T. ,oDlg:End())}, 36, 16,,,.F.,.T.,.F.,,.F.,,,.F. )
+ TButton():New( 133, 235, "&Cancelar",,{||  (_lRet:= .F. ,oDlg:End())}, 36, 16,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,.T.,,,, oDlg:bRClicked, )
+
+
+If _lRet
+	dbSelectArea("SX5")
+	dbSetOrder(1)
+	dbSeek(xFilial("SX5") + "ZE" + "CTAINI")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := _cContaI
+		_FIELD->X5_DESCSPA := _cContaI
+		_FIELD->X5_DESCENG := _cContaI
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZE" + "CTAFIM")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := _cContaF
+		_FIELD->X5_DESCSPA := _cContaF
+		_FIELD->X5_DESCENG := _cContaF
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZE" + "DTAINI")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := Dtoc(_dDataI)
+		_FIELD->X5_DESCSPA := Dtoc(_dDataI)
+		_FIELD->X5_DESCENG := Dtoc(_dDataI)
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZE" + "DTAFIM")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := Dtoc(_dDataF)
+		_FIELD->X5_DESCSPA := Dtoc(_dDataF)
+		_FIELD->X5_DESCENG := Dtoc(_dDataF)
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZE" + "NAOMOV")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := _cNoMov
+		_FIELD->X5_DESCSPA := _cNoMov
+		_FIELD->X5_DESCENG := _cNoMov
+	MsUnlock()
+EndIf
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_MCFGHC()
+
+Local cPerg    := PADR("CFGHC",LEN(SX1->X1_GRUPO))
+Local aRegs    := {}
+
+
+aAdd(aRegs,{cPerg,"01","Data Admissao De       ?","","","mv_ch1","D",08,0,0,"G","           ","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+aAdd(aRegs,{cPerg,"02","Data Admissao Ate      ?","","","mv_ch2","D",08,0,0,"G","           ","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+aAdd(aRegs,{cPerg,"03","Centro de Custo De     ?","","","mv_ch3","C",20,0,0,"G","           ","mv_par03","","","","","","","","","","","","","","","","","","","","","","","","","CTT","","","","",""})
+aAdd(aRegs,{cPerg,"04","Centro de Custo Ate    ?","","","mv_ch4","C",20,0,0,"G","           ","mv_par04","","","","","","","","","","","","","","","","","","","","","","","","","CTT","","","","",""})
+aAdd(aRegs,{cPerg,"05","Situacoes              ?","","","mv_ch5","C",05,0,0,"G","fSituacao  ","mv_par05","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+aAdd(aRegs,{cPerg,"06","Data Demissao De       ?","","","mv_ch6","D",08,0,0,"G","           ","mv_par06","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+aAdd(aRegs,{cPerg,"07","Data Demissao Ate      ?","","","mv_ch7","D",08,0,0,"G","           ","mv_par07","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
+
+U_ValidPerg( cPerg, aRegs )
+
+If Pergunte(cPerg, .t. )
+	dbSelectArea("SX5")
+	dbSetOrder(1)
+	dbSeek(xFilial("SX5") + "ZK" + "DADMDE")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := Dtoc(MV_PAR01)
+		_FIELD->X5_DESCSPA := Dtoc(MV_PAR01)
+		_FIELD->X5_DESCENG := Dtoc(MV_PAR01)
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZK" + "DADMAT")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := Dtoc(MV_PAR02)
+		_FIELD->X5_DESCSPA := Dtoc(MV_PAR02)
+		_FIELD->X5_DESCENG := Dtoc(MV_PAR02)
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZK" + "CCCUDE")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := MV_PAR03
+		_FIELD->X5_DESCSPA := MV_PAR03
+		_FIELD->X5_DESCENG := MV_PAR03
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZK" + "CCCUAT")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := MV_PAR04
+		_FIELD->X5_DESCSPA := MV_PAR04
+		_FIELD->X5_DESCENG := MV_PAR04
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZK" + "SITUAC")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := MV_PAR05
+		_FIELD->X5_DESCSPA := MV_PAR05
+		_FIELD->X5_DESCENG := MV_PAR05
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZK" + "DTDMDE")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := Dtoc(MV_PAR06)
+		_FIELD->X5_DESCSPA := Dtoc(MV_PAR06)
+		_FIELD->X5_DESCENG := Dtoc(MV_PAR06)
+	MsUnlock()
+
+	dbSeek(xFilial("SX5") + "ZK" + "DTDMAT")
+	RecLock("SX5", .F. )
+		_FIELD->X5_DESCRI := Dtoc(MV_PAR07)
+		_FIELD->X5_DESCSPA := Dtoc(MV_PAR07)
+		_FIELD->X5_DESCENG := Dtoc(MV_PAR07)
+	MsUnlock()
+
+
+EndIf
+
+Return

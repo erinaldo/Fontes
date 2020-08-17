@@ -1,0 +1,450 @@
+#line 1 "C:\INCLUDE\topconn.ch"
+#line 3 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csudiar.prw"
+#line 1 "C:\INCLUDE\rwmake.ch"
+#line 1 "C:\INCLUDE\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 4 "c:\users\cst1350.br\desktop\PROJET~1\contabil\ATUALI~1\csudiar.prw"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function U_CSUDIAR()
+
+Local WnRel
+Local aCtbMoeda:={}
+LOCAL cString	:= "CT2"
+LOCAL cDesc1 	:= ""
+LOCAL cDesc2 	:= ""
+LOCAL cDesc3	:= ""
+Local Titulo 	:= ""
+Local lRet		:= .T. 
+
+PRIVATE Tamanho	:= "M"
+PRIVATE aReturn 	:= {"", 1,, 2, 2, 1, "",1 }
+PRIVATE nomeprog	:= "CTBR110"
+PRIVATE aLinha  	:= { }
+PRIVATE nLastKey	:= 0
+PRIVATE cPerg   	:= PADR("CTR110",LEN(SX1->X1_GRUPO))
+Private ntransp:=0
+
+
+If ( !AMIIn(34) )
+	Return
+EndIf
+
+wnrel :="CTBR110"
+
+Pergunte("CTR110", .F. )
+
+
+
+
+
+
+
+
+
+
+
+
+wnrel := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3, .F. ,"",,Tamanho)
+
+If nLastKey = 27
+	dbClearFilter()
+	Return
+Endif
+
+
+
+
+
+If !ct040Valid(mv_par04)
+	lRet := .F. 
+Else
+	aSetOfBook := CTBSetOf(mv_par04)
+EndIf
+
+If lRet
+	aCtbMoeda	:= CtbMoeda(mv_par03)
+	If Empty(aCtbMoeda[1])
+		Help(" ",1,"NOMOEDA")
+		lRet := .F. 
+	EndIf
+EndIf
+
+If !lRet
+	dbClearFilter()
+	Return
+EndIf
+
+SetDefault(aReturn,cString)
+
+If nLastKey = 27
+	dbClearFilter()
+	Return
+Endif
+
+RptStatus({|lEnd| CTR110Imp(@lEnd,wnRel,cString,aSetOfBook,aCtbMoeda)})
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function CTR110Imp(lEnd,WnRel,cString,aSetOfBook,aCtbMoeda)
+
+
+
+Local CbTxt
+Local Cbcont
+Local Cabec1		:= ""
+Local Cabec2		:= ""
+Local Titulo		:= ""
+
+Local cPicture
+Local cDescMoeda
+Local cCodMasc
+Local cSeparador	:= ""
+Local cMascara
+Local cGrupo
+Local cLote			:= ""
+Local cSubLote		:= ""
+Local cDoc			:= ""
+Local cCancel		:= ""
+Local dData			:= Ctod("")
+Local dDataAnte 	:= Ctod("")
+Local lData			:= .T. 
+Local lFirst		:= .T. 
+Local nQuebra		:= 0
+Local nTotDiaD		:= 0
+Local nTotDiaC		:= 0
+Local nTotMesD		:= 0
+Local nTotMesC		:= 0
+Local nTotDeb		:= 0
+Local nTotCred	 	:= 0
+Local nDia
+Local nMes
+Local nReg			:= 0
+Local nTamDeb		:= 15
+Local nTamCrd		:= 14
+
+Local nColDeb		:= 102
+Local nColCrd		:= 118
+Local dDataFim		:= mv_par02
+
+
+PRIVATE _cDATA
+Private cMoeda
+
+
+
+
+cbtxt    := SPACE(10)
+cbcont   := 0
+li       := 80
+cMoeda	:= mv_par03
+m_pag 	:= mv_par06
+
+
+
+
+
+cDescMoeda 	:= aCtbMoeda[2]
+nDecimais 	:= DecimalCTB(aSetOfBook,cMoeda)
+
+If Empty(aSetOfBook[2])
+	cMascara := GetMv("MV_MASCARA")
+Else
+	cMascara := RetMasCtb(aSetOfBook[2],@cSeparador)
+EndIf
+cPicture 	:= aSetOfBook[4]
+
+ProcRegua(3)
+
+_cQuery := " SELECT R_E_C_N_O_ AS REC,* FROM "+RETSQLNAME("CT2")+" "
+_cQuery += " WHERE D_E_L_E_T_ <> '*' AND CT2_DATA >= '"+DTOS(MV_PAR01)+"'AND CT2_DATA <='"+DTOS(MV_PAR02)+"'"
+_cQuery += " ORDER BY CT2_FILIAL+CT2_DATA+CT2_LOTE+CT2_SBLOTE+CT2_DOC+CT2_LINHA+CT2_TPSALD+CT2_EMPORI+CT2_FILORI+CT2_MOEDLC"
+
+
+If Select("TRD2") >0
+	DBSelectArea("TRD2")
+	DBCloseArea()
+EndIf
+
+IncProc("Obtendo Dados ")
+dbUseArea(.T., "TOPCONN", TCGENQRY(,,_cQuery), "TRD2" , .F. , .T. )
+
+DBSelectArea("TRD2")
+dbGoTop()
+
+
+Titulo		:= "DIARIO GERAL DE " + DTOC(mv_par01) + " ATE " + DTOC(mv_par02) + "EM " + cDescMoeda
+
+
+dbSelectArea("TRD2")
+SetRegua(Reccount())
+While !Eof()
+
+	IF lEnd
+		PrintOut(_PROW()+1,0,cCancel,)
+		Exit
+	EndIF
+
+
+
+
+
+	_cdata:= CTOD(SUBSTR(TRD2->CT2_DATA,7,2)+"/"+SUBSTR(TRD2->CT2_DATA,5,2)+"/"+SUBSTR(TRD2->CT2_DATA,3,2))
+	nMes := Month(_cDATA)
+
+
+	While ! Eof() .And.  DTOS(_CDATA) <= DTOS(mv_par02) .And.  Month(_CDATA) == nMes
+
+
+
+
+
+
+		nDia := Day(_cDATA)
+		lData:= .T. 
+
+		While !Eof() .And.  DTOS(_CDATA) <= DTOS(mv_par02) .And.  Month(_CDATA) == nMes .And.  Day(_CDATA) == nDia
+
+			IF lEnd
+				PrintOut(_PROW()+1,0,cCancel,)
+				Exit
+			EndIF
+
+
+
+
+
+
+
+
+			cDoc 		:= TRD2->CT2_DOC
+			cLote		:= TRD2->CT2_LOTE
+			cSubLote	:= TRD2->CT2_SBLOTE
+
+
+
+
+
+
+
+			While !Eof() .And.  	TRD2->CT2_DOC == cDoc .And.  TRD2->CT2_LOTE == cLote .And.  TRD2->CT2_SBLOTE == cSubLote .And.  DTOS(_CDATA) <= DTOS(mv_par02) .And.  Month(_CDATA) == nMes .And.  Day(_CDATA) == nDia
+
+				IncRegua()
+
+
+
+
+
+
+
+
+
+				If li > 55
+					li++
+
+					If !lFirst .And.  (nTotDiaD <> 0 .or.  nTotDiaC <> 0)
+						PrintOut(li,055," a transportar -----> ",)
+						If nTotDiaD <> 0
+							ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+						EndIf
+						If nTotDiaC <> 0
+							ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+						EndIf
+						li++
+					EndIF
+
+					If m_pag > mv_par07
+						m_pag := mv_par08
+					EndIF
+					CtCGCCabec(,,,Cabec1,Cabec2,dDataFim,Titulo,,"2",Tamanho)
+					li++
+					PrintOut(li,010,"C O N T A",)
+					PrintOut(li,042,"H I S T O R I C O",)
+					PrintOut(li,083,"N U M E R O",)
+					PrintOut(li,118,"V A L O R",)
+					li++
+					PrintOut(li,000,"DEBITO",)
+					PrintOut(li,021,"CREDITO",)
+					PrintOut(li,083,"LANCTO",)
+					PrintOut(li,111,"DEBITO",)
+					PrintOut(li,125,"CREDITO",)
+					li++
+					PrintOut(li,000,REPLICATE("_",133),)
+					li++
+
+					If !lFirst .And.  (nTotDiaD <> 0 .or.  nTotDiaC <> 0)
+						li++
+						PrintOut(li,055,"de transporte --------> ",)
+						If nTotDiaD <> 0
+							ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+						EndIf
+						If nTotDiaC <> 0
+							ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+						EndIf
+						li+=2
+					EndIF
+					lFirst := .F. 
+				EndIF
+
+				If lData
+					li++
+					PrintOut(li,000,DTOC(_cDATA),)
+					li++
+					lData := .F. 
+				EndIf
+
+				EntidadeCTB(TRD2->CT2_DEBITO,li,00,20, .F. ,cMascara,cSeparador)
+				EntidadeCTB(TRD2->CT2_CREDIT,li,21,20, .F. ,cMascara,cSeparador)
+
+				PrintOut(li,042,Substr(TRD2->CT2_HIST,1,40),)
+
+				PrintOut(li,083,TRD2->CT2_LOTE+TRD2->CT2_SBLOTE+TRD2->CT2_DOC+TRD2->CT2_LINHA,)
+				nValor := TRD2->CT2_VALOR
+				If TRD2->CT2_DC == "1" .Or.  TRD2->CT2_DC == "3"
+					ValorCTB(nValor,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+				EndIf
+				If TRD2->CT2_DC == "2" .Or.  TRD2->CT2_DC == "3"
+					ValorCTB(nValor,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+				EndIf
+
+				If TRD2->CT2_DC == "1" .Or.  TRD2->CT2_DC == "3"
+					nTotDeb 	+= TRD2->CT2_VALOR
+					nTotDiaD	+= TRD2->CT2_VALOR
+					nTotMesD	+= TRD2->CT2_VALOR
+				EndIf
+				If TRD2->CT2_DC == "2" .Or.  TRD2->CT2_DC == "3"
+					nTotCred += TRD2->CT2_VALOR
+					nTotdiaC += TRD2->CT2_VALOR
+					nTotMesC += TRD2->CT2_VALOR
+				EndIf
+
+				Dbselectarea("TRD2")
+				Dbskip()
+				_cdata:= CTOD(SUBSTR(TRD2->CT2_DATA,7,2)+"/"+SUBSTR(TRD2->CT2_DATA,5,2)+"/"+SUBSTR(TRD2->CT2_DATA,3,2))
+
+				If TRD2->CT2_DC == "4"
+					dbSelectArea("TRD2")
+					cSeqLan := TRD2->CT2_SEQLAN
+
+
+
+
+
+					While !Eof() .AND. 	TRD2->CT2_LOTE == cLote .And.  TRD2->CT2_SBLOTE == cSubLote .And.  TRD2->CT2_DOC == cDoc .And.  TRD2->CT2_SEQLAN == cSeqLan .And.  TRD2->CT2_DC == "4" .And.  Dtos(_cdata) == DTOS(mv_par02)
+						li++
+						PrintOut(li,042,Substr(TRD2->CT2_HIST,1,40),)
+						cLinha := TRD2->CT2_LINHA
+						dData  := _cdata
+						dbSelectArea("TRD2")
+						dbSkip()
+						_cdata:= CTOD(SUBSTR(TRD2->CT2_DATA,7,2)+"/"+SUBSTR(TRD2->CT2_DATA,5,2)+"/"+SUBSTR(TRD2->CT2_DATA,3,2))
+					EndDo
+
+				EndIf
+				li++
+
+			EndDo
+		EndDO
+		If lEnd
+			Exit
+		Endif
+		IF (nTotDiad+nTotDiac)>0
+			li++
+		PrintOut(li,055,"Total do Dia",)
+
+			ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+			ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+			nTotDiaD	:= 0
+			nTotDiaC	:= 0
+			li+=2
+		EndIF
+	EndDO
+	If lEnd
+		Exit
+	End
+
+	IF (nTotMesd+nTotMesc) > 0
+		PrintOut(li,055,"Total do Mês ",)
+		ValorCTB(nTotMesD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+		ValorCTB(nTotMesC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+		nTotMesD := 0
+		nTotMesC := 0
+		li+=2
+	EndIF
+EndDO
+
+IF (nTotDiad+nTotDiac)>0 .And.  !lEnd
+
+	li++
+	PrintOut(li,055,"Total do Dia ",)
+	ValorCTB(nTotDiaD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+	ValorCTB(nTotDiaC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+	li++
+
+
+	PrintOut(li,055,"Total do Mês ",)
+	ValorCTB(nTotMesD,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+	ValorCTB(nTotMesC,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+	li++
+EndIF
+
+
+IF (nTotDeb + nTotCred) > 0 .And.  !lEnd
+	PrintOut(li,055,"Total Geral ",)
+	ValorCTB(nTotDeb ,li,nColDeb,nTamDeb,nDecimais, .F. ,cPicture,"1")
+	ValorCTB(nTotCred,li,nColCrd,nTamCrd,nDecimais, .F. ,cPicture,"2")
+EndIF
+
+
+
+
+
+If aReturn[5] = 1
+	Set( 24, "" )
+	dbCommitAll()
+	Ourspool(wnrel)
+End
+MS_FLUSH()
+
+Return
