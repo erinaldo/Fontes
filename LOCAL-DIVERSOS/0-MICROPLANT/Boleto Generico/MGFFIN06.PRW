@@ -499,7 +499,9 @@ User Function RF01B062(xBanco,xAgencia,xConta,xSubCt, lEmail)
 
 		if SEE->EE_CODIGO $ "033"
 			cCtaCorrente := IIf(Empty(SEE->EE_NUMCTR),SUBSTR(SA6->A6_NUMCON,1,6),SEE->EE_NUMCTR)
-		else
+		elseif SEE->EE_CODIGO $ "237"
+		   cCtaCorrente := SUBSTR(SA6->A6_NUMCON,1,7)
+		Else
 			cCtaCorrente := SUBSTR(SA6->A6_NUMCON,1,6)
 		endif
 
@@ -597,9 +599,12 @@ User Function RF01B062(xBanco,xAgencia,xConta,xSubCt, lEmail)
 		ElseIf !Empty(SEE->EE_FAXATU)   // a partir da 2 vez vez
 
 			If aDadosBanco[1] == "001"
-				cNroDoc	:= StrZero(Val(SEE->EE_FAXATU),5)
+				//cNroDoc	:= StrZero(Val(SEE->EE_FAXATU),5)
+				cNroDoc	:= StrZero(Val(SEE->EE_FAXATU),TamSx3("EE_FAXATU")[1]  )
 			ElseIf aDadosBanco[1] = "237"
-				cNroDoc := StrZero(Val(SEE->EE_FAXATU),11)
+				//cNroDoc	 := AllTrim(SE1->E1_NUM) + AllTrim(cParcel)  // --> Alterado por Jorge Neto - 19/06/2020 
+				cNroDoc	 := AllTrim(cParcel) + AllTrim(SE1->E1_NUM)  // --> Alterado por Jorge Neto - 19/06/2020 
+				//cNroDoc := StrZero(Val(SEE->EE_FAXATU),11)
 			ElseIf aDadosBanco[1] == "341"
 				cNroDoc := StrZero(Val(SEE->EE_FAXATU),8)
 			ElseIf aDadosBanco[1] == "033"
@@ -725,6 +730,7 @@ Static Function Modulo11(cData,cBanc)
 	Local L, D, P := 0
 
 	If cBanc == "001"  // Banco do brasil
+		/*
 		L := Len(cdata)
 		D := 0
 		P := 10
@@ -742,6 +748,30 @@ Static Function Modulo11(cData,cBanc)
 		Else
 			D := AllTrim(Str(D))
 		End
+		*/
+		
+		L := Len(cdata)
+		D := 0
+		P := 1
+		While L > 0
+			If L <> 5
+			   P := P + 1
+			   D := D + (Val(SubStr(cData, L, 1)) * P)
+			   If P = 9
+			   	  P := 1
+			   End
+			EndIf
+			L := L - 1
+		End
+		
+		D := 11 - (mod(D,11))
+
+		If (D == 10 .Or. D == 11 .Or. D == 0) 
+			D := 1
+		End
+		
+		D := AllTrim(Str(D))
+				
 	ElseIf cBanc == "341" .Or. cBanc == "453" .Or. cBanc == "399" .or. cBanc == "422" // Itau/Mercantil/Rural/HSBC/Safra
 		L := Len(cdata)
 		D := 0
@@ -951,10 +981,16 @@ Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cCarteira,cNroDoc,nValo
 	//Campo Livre (Definir campo livre com cada banco)
 
 	If Substr(cBanco,1,3) == "001"  // Banco do brasil
-
+		
 		If Len(AllTrim(cConvenio)) == 7
-			//Nosso Numero sem digito
-			cNNumSDig := AllTrim(cConvenio)+strzero(val(cSequencial),10)
+		    // Alterado por Jorge Neto - 16/06/2020 - Inicio
+			If !Empty(SE1->E1_NUMBCO)
+			   cNNumSDig := AllTrim(SE1->E1_NUMBCO)
+			Else
+			   //Nosso Numero sem digito
+			   cNNumSDig := AllTrim(cConvenio)+strzero(val(cSequencial),10)
+			EndIf
+			// Alterado por Jorge Neto - 16/06/2020 - Fim
 			//Nosso Numero com digito
 			cNNum := cNNumSDig
 
@@ -1017,24 +1053,33 @@ Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cCarteira,cNroDoc,nValo
 		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
 	Elseif Substr(cBanco,1,3) == "237" // Banco bradesco
-
-		cNrDoc := Right(cSequencial,11)
+		// Alterado por Jorge Neto - 16/06/2020 - Inicio
+		cNrDoc := strzero(val(Right(cSequencial,11)),11)
 
 		//Nosso Numero sem digito
 		cNNumSDig := Right(cCarteira,2) + cNrDoc
 
 		//Nosso Numero
 		//cNNum := cNNumSDig + AllTrim( Str( modulo11( cNNumSDig ) ) )
-		cNNum := cNNumSDig + AllTrim( modulo11( cNNumSDig ) )
-
+		//cNNum := cNNumSDig + AllTrim( modulo11( cNNumSDig, "237" ) )
+		
+		If !Empty(SE1->E1_NUMBCO)
+		   cNNum := Right(AllTrim(SE1->E1_NUMBCO), 1)
+		Else
+		   cNNum := AllTrim( modulo11A( cNNumSDig, "237" ) )
+		EndIf
+		
 		//Nosso Numero para impressao
 		//cNossoNum := cCarteira + '/' + Substr(cNrDoc,1,2)+"/"+Substr(cNrDoc,3,9) + '-' + AllTrim( Str( modulo11( cNNumSDig ) ) )
-		cNossoNum := Right(cCarteira,2) + '/'+ Right(cNrDoc,11) + '-' + AllTrim( modulo11( cNNumSDig,"237" ) )
+		//cNossoNum := Right(cCarteira,2) + '/'+ Right(cNrDoc,11) + '-' + AllTrim( modulo11( cNNumSDig,"237" ) )
+		//cCpoLivre := cAgencia + Right(cCarteira,2) + cNrDoc + StrZero(Val(cConta),7) + "0"
 
-		cCpoLivre := cAgencia + Right(cCarteira,2) + cNrDoc + StrZero(Val(cConta),7) + "0"
+	   cNossoNum := Right(cCarteira,2) + Right(cNrDoc,11) + AllTrim( cNNum )
+	   cCpoLivre := cAgencia + Right(cCarteira,2) + cNrDoc + StrZero(Val(cConta),7) + "0"
 
-		//cCpoLivre := strzero(val(substr(cAgencia,1,3)),4) + Right(cCarteira,2) + substr(digv,3,11) + StrZero(Val(cConta),7) + "0"
-
+	   //cCpoLivre := strzero(val(substr(cAgencia,1,3)),4) + Right(cCarteira,2) + substr(digv,3,11) + StrZero(Val(cConta),7) + "0"
+	   // Alterado por Jorge Neto - 16/06/2020 - Fim
+		
 	Elseif Substr(cBanco,1,3)$("341")  // Banco Itau
 		//Nosso Numero sem digito
 		cNNumSDig := cCarteira+strzero(val(/*cNroDoc*/cSequencial),/*6*/8)/*+ _cParcela*/
@@ -1113,45 +1158,92 @@ Static Function Ret_cBarra(cBanco,cAgencia,cConta,cDacCC,cCarteira,cNroDoc,nValo
 		cCpoLivre := StrZero(Val(cAgencia),4) + StrZero(Val(cConta),7) + AllTrim(Str( modulo10( StrZero(Val(cAgencia),4) + StrZero(Val(cConta),7)+cNNumSDig ) ) ) + cNNumSDig
 
 	Endif
+	
+	// Alterado por Jorge Neto - 16/06/2020 - Inicio
+	If SubStr(cBanco,1,3) == "001"
+	   //Dados para Calcular o Dig Verificador Geral
+	   cCBSemDig := cBanco + " " + cFatVenc + blvalorfinal + AllTrim(cCpoLivre)
+	
+	ElseIf SubStr(cBanco,1,3) == "237"
+		//Dados para Calcular o Dig Verificador Geral
+		cCBSemDig := cBanco + cFatVenc + blvalorfinal + cCpoLivre
+		//Codigo de Barras Completo
+		cCodBarra := cBanco + Modulo11A(cCBSemDig,SubStr(cBanco,1,3)) + cFatVenc + blvalorfinal + cCpoLivre
 
-	//Dados para Calcular o Dig Verificador Geral
-	cCBSemDig := cBanco + cFatVenc + blvalorfinal + cCpoLivre
-	//Codigo de Barras Completo
-	cCodBarra := cBanco + Modulo11(cCBSemDig) + cFatVenc + blvalorfinal + cCpoLivre
+		//Digito Verificador do Primeiro Campo
+		cPrCpo := cBanco + SubStr(cCodBarra,20,5)
+		cDvPrCpo := AllTrim(Str(Modulo10(cPrCpo)))
 
-	//Digito Verificador do Primeiro Campo
-	cPrCpo := cBanco + SubStr(cCodBarra,20,5)
-	cDvPrCpo := AllTrim(Str(Modulo10(cPrCpo)))
+		//Digito Verificador do Segundo Campo
+		cSgCpo := SubStr(cCodBarra,25,10)
+		cDvSgCpo := AllTrim(Str(Modulo10(cSgCpo)))
 
-	//Digito Verificador do Segundo Campo
-	cSgCpo := SubStr(cCodBarra,25,10)
-	cDvSgCpo := AllTrim(Str(Modulo10(cSgCpo)))
-
-	//Digito Verificador do Terceiro Campo
-	if Substr(cBanco,1,3) $ '033'
-		cTrCpo := SubStr(cCodBarra,34,10)
-	else
+		//Digito Verificador do Terceiro Campo
 		cTrCpo := SubStr(cCodBarra,35,10)
-	endif
-	cDvTrCpo := AllTrim(Str(Modulo10(cTrCpo)))
+		cDvTrCpo := AllTrim(Str(Modulo10(cTrCpo)))
 
-	//Digito Verificador Geral
-	cDvGeral := SubStr(cCodBarra,5,1)
+		//Digito Verificador Geral
+		cDvGeral := SubStr(cCodBarra,5,1)
 
-	//Linha Digitavel
-	cLindig := SubStr(cPrCpo,1,5) + "." + SubStr(cPrCpo,6,4) + cDvPrCpo + " "   //primeiro campo
-	cLinDig += SubStr(cSgCpo,1,5) + "." + SubStr(cSgCpo,6,5) + cDvSgCpo + " "   //segundo campo
-	cLinDig += SubStr(cTrCpo,1,5) + "." + SubStr(cTrCpo,6,5) + cDvTrCpo + " "   //terceiro campo
-
-	if Substr(cBanco,1,3) $ '033|001'
-		cLinDig += cDvGeral + " "              //dig verificador geral
-		cLinDig += SubStr(cCodBarra,6,4)+SubStr(cCodBarra,10,10)  // fator de vencimento e valor nominal do titulo
-	else
+		//Linha Digitavel
+		cLindig := SubStr(cPrCpo,1,5) + "." + SubStr(cPrCpo,6,4) + cDvPrCpo + " "   //primeiro campo
+		cLinDig += SubStr(cSgCpo,1,5) + "." + SubStr(cSgCpo,6,5) + cDvSgCpo + " "   //segundo campo
+		cLinDig += SubStr(cTrCpo,1,5) + "." + SubStr(cTrCpo,6,5) + cDvTrCpo + " "   //terceiro campo
 		cLinDig += " " + cDvGeral              //dig verificador geral
 		cLinDig += "  " + SubStr(cCodBarra,6,4)+SubStr(cCodBarra,10,10)  // fator de vencimento e valor nominal do titulo
-	endif
-	//cLinDig += "  " + cFatVenc +blvalorfinal  // fator de vencimento e valor nominal do titulo
-
+		//cLinDig += "  " + cFatVenc +blvalorfinal  // fator de vencimento e valor nominal do titulo
+		
+	Else
+	   //Dados para Calcular o Dig Verificador Geral
+	   cCBSemDig := cBanco + cFatVenc + blvalorfinal + cCpoLivre
+	EndIf
+	
+	If SubStr(cBanco,1,3) <> "237"
+	   
+	   If SubStr(cBanco,1,3) == "001"
+	      //Codigo de Barras Completo
+	      cCodBarra := cBanco + Modulo11(cCBSemDig,SubStr(cBanco,1,3)) + cFatVenc + blvalorfinal + AllTrim(cCpoLivre)
+	   Else
+	      //Codigo de Barras Completo
+	      cCodBarra := cBanco + Modulo11(cCBSemDig,SubStr(cBanco,1,3)) + cFatVenc + blvalorfinal + cCpoLivre	   
+	   EndIf
+	   
+	   //Digito Verificador do Primeiro Campo
+	   cPrCpo := cBanco + SubStr(cCodBarra,20,5)
+	   cDvPrCpo := AllTrim(Str(Modulo10(cPrCpo)))
+   
+	   //Digito Verificador do Segundo Campo
+	   cSgCpo := SubStr(cCodBarra,25,10)
+	   cDvSgCpo := AllTrim(Str(Modulo10(cSgCpo)))
+   
+	   //Digito Verificador do Terceiro Campo
+	   if Substr(cBanco,1,3) $ '033'
+	   	cTrCpo := SubStr(cCodBarra,34,10)
+	   else
+	   	cTrCpo := SubStr(cCodBarra,35,10)
+	   endif
+	   cDvTrCpo := AllTrim(Str(Modulo10(cTrCpo)))
+   
+	   //Digito Verificador Geral
+	   cDvGeral := SubStr(cCodBarra,5,1)
+   
+	   //Linha Digitavel
+	   cLindig := SubStr(cPrCpo,1,5) + "." + SubStr(cPrCpo,6,4) + cDvPrCpo + " "   //primeiro campo
+	   cLinDig += SubStr(cSgCpo,1,5) + "." + SubStr(cSgCpo,6,5) + cDvSgCpo + " "   //segundo campo
+	   cLinDig += SubStr(cTrCpo,1,5) + "." + SubStr(cTrCpo,6,5) + cDvTrCpo + " "   //terceiro campo
+   
+	   if Substr(cBanco,1,3) $ '033|001'
+	   	cLinDig += cDvGeral + " "              //dig verificador geral
+	   	cLinDig += SubStr(cCodBarra,6,4)+SubStr(cCodBarra,10,10)  // fator de vencimento e valor nominal do titulo
+	   else
+	   	cLinDig += " " + cDvGeral              //dig verificador geral
+	   	cLinDig += "  " + SubStr(cCodBarra,6,4)+SubStr(cCodBarra,10,10)  // fator de vencimento e valor nominal do titulo
+	   endif
+	   //cLinDig += "  " + cFatVenc +blvalorfinal  // fator de vencimento e valor nominal do titulo
+   EndIf
+   
+   // Alterado por Jorge Neto - 16/06/2020 - Fim
+   
 Return({cCodBarra,cLinDig,cNossoNum})
 
 /*/
@@ -1263,6 +1355,7 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	LOCAL oFont13
 	LOCAL oFont16n
 	LOCAL oFont15
+	LOCAL oFont 
 	LOCAL nI := 0
 
 	LOCAL cMailDestino := Space(70)
@@ -1284,7 +1377,7 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	Local nMulta 	:= 0
 	Local nMora 	:= 0
 	
-	
+	oFont    := TFont():New('Courier new',,-16,.T.)
 	oFont8   := TFont():New("Arial",9,8,.T.,.F.,5,.T.,5,.T.,.F.)
 	oFont9   := TFont():New("Arial",9,10,.T.,.T.,5,.T.,5,.T.,.F.)
 	oFont11c := TFont():New("Courier New",9,11,.T.,.T.,5,.T.,5,.T.,.F.)
@@ -1371,8 +1464,11 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	endif
 
 	oPrint:Say  (nRow1+0150,1510,"Nro.Documento",oFont8)
-	oPrint:Say  (nRow1+0200,1510,aDadosTit[7]+aDadosTit[1],oFont10) //Prefixo +Numero+Parcela
-
+	If aDadosBanco[1] == "237"
+		oPrint:Say  (nRow1+0200,1510,aDadosTit[7] + SubStr(AllTrim(aDadosTit[1]),1,(Len(AllTrim(aDadosTit[1])) - 1)) + "/" + Right(AllTrim(aDadosTit[1]),1),oFont10) //Prefixo +Numero+Parcela
+	Else
+		oPrint:Say  (nRow1+0200,1510,aDadosTit[7]+aDadosTit[1],oFont10) //Prefixo +Numero+Parcela
+	EndIf
 	If aDadosBanco[1] == "237" .or. aDadosBanco[1] == "341" .or. aDadosBanco[1] == "001"  //ajuste 26/05/2020 - microplant
 		oPrint:Say  (nRow1+0250,100 ,"Pagador",oFont8)
 	Else
@@ -1529,8 +1625,11 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	oPrint:Say  (nRow2+0940,100, StrZero(Day(aDadosTit[2]),2) +"/"+ StrZero(Month(aDadosTit[2]),2) +"/"+ Right(Str(Year(aDadosTit[2])),4),oFont10)
 	//BrenoInicio
 	oPrint:Say  (nRow2+0910,505 ,"Nro.Documento",oFont8)
-	oPrint:Say  (nRow2+0940,605 ,aDadosTit[7]+aDadosTit[1],oFont10) //Prefixo +Numero+Parcela
-
+	If aDadosBanco[1] == "237"
+		oPrint:Say  (nRow2+0940,605 ,aDadosTit[7] + SubStr(AllTrim(aDadosTit[1]),1,(Len(AllTrim(aDadosTit[1])) - 1)) + "/" + Right(AllTrim(aDadosTit[1]),1),oFont10) //Prefixo +Numero+Parcela
+	Else
+		oPrint:Say  (nRow2+0940,605 ,aDadosTit[7]+aDadosTit[1],oFont10) //Prefixo +Numero+Parcela
+	EndIf
 	oPrint:Say  (nRow2+0910,1005,"Espécie Doc.",oFont8)
 	//oPrint:Say  (nRow2+0940,1050,aDadosTit[8],oFont10) //Tipo do Titulo
 	oPrint:Say  (nRow2+0940,1050,"DM",oFont10) //Tipo do Titulo  ALTERADO EM 16.09.2010
@@ -1542,12 +1641,16 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	oPrint:Say  (nRow2+0940,1550,StrZero(Day(aDadosTit[3]),2) +"/"+ StrZero(Month(aDadosTit[3]),2) +"/"+ Right(Str(Year(aDadosTit[3])),4),oFont10) // Data impressao
 	//BrenoFim
 	oPrint:Say  (nRow2+0910,1810,"Nosso Número",oFont8)
-
+	
+	// Alterado por Jorge Neto - 16/06/2020 - Inicio
 	If aDadosBanco[1] == "001"
 		cString := Alltrim(aCB_RN_NN[3])
+	ElseIf aDadosBanco[1] == "237"
+		cString := Alltrim(substr(aDadosTit[6],1,2)) +"/"+ Alltrim(substr(aDadosTit[6],3,11)) + "-" + (substr(aDadosTit[6],14,1))
 	Else
 		cString := Alltrim(aDadosTit[6])
 	EndIf
+	// Alterado por Jorge Neto - 16/06/2020 - Fim
 
 	nCol := 1810+(374-(len(cString)*22))
 	oPrint:Say  (nRow2+0940,nCol,cString,oFont11c)
@@ -1783,8 +1886,11 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	oPrint:Say (nRow3+2230,100, StrZero(Day(aDadosTit[2]),2) +"/"+ StrZero(Month(aDadosTit[2]),2) +"/"+ Right(Str(Year(aDadosTit[2])),4), oFont10)
 
 	oPrint:Say  (nRow3+2200,505 ,"Nro.Documento",oFont8)
-	oPrint:Say  (nRow3+2230,605 ,aDadosTit[7]+aDadosTit[1],oFont10) //Prefixo +Numero+Parcela
-
+	If aDadosBanco[1] == "237"
+		oPrint:Say  (nRow3+2230,605 ,aDadosTit[7] + SubStr(AllTrim(aDadosTit[1]),1,(Len(AllTrim(aDadosTit[1])) - 1)) + "/" + Right(AllTrim(aDadosTit[1]),1),oFont10) //Prefixo +Numero+Parcela
+	Else
+		oPrint:Say  (nRow3+2230,605 ,aDadosTit[7]+aDadosTit[1],oFont10) //Prefixo +Numero+Parcela
+	EndIf
 	oPrint:Say  (nRow3+2200,1005,"Espécie Doc.",oFont8)
 	oPrint:Say  (nRow3+2230,1050,"DM",oFont10) //Tipo do Titulo  -- alterado em 16.09.2010
 
@@ -1795,13 +1901,17 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	oPrint:Say  (nRow3+2230,1550,StrZero(Day(aDadosTit[3]),2) +"/"+ StrZero(Month(aDadosTit[3]),2) +"/"+ Right(Str(Year(aDadosTit[3])),4)                               ,oFont10) // Data impressao
 
 	oPrint:Say  (nRow3+2200,1810,"Nosso Número",oFont8)
-
+	
+	// Alterado por Jorge Neto - 16/06/2020 - Inicio
 	If aDadosBanco[1] == "001"
 		cString := Alltrim(aCB_RN_NN[3])
+	ElseIf aDadosBanco[1] == "237"
+		cString := Alltrim(substr(aDadosTit[6],1,2)) +"/"+ Alltrim(substr(aDadosTit[6],3,11)) + "-" + (substr(aDadosTit[6],14,1))
 	Else
 		cString := Alltrim(aDadosTit[6])
 	EndIf
-
+	// Alterado por Jorge Neto - 16/06/2020 - Fim
+	
 	nCol 	 := 1810+(374-(len(cString)*22))
 	oPrint:Say  (nRow3+2230,nCol,cString,oFont11c)
 
@@ -1912,10 +2022,16 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	tms_Line(oPrint,nRow3+2690,100 ,nRow3+2690,2300)
 	tms_Line(oPrint,nRow3+2850,100 ,nRow3+2850,2300)
 
-	//MSBAR("INT25"  ,24.6,1.0, aCB_RN_NN[1] ,oPrint,.F.,,,,1.3,1.0,,,.F.)
-	oPrint:FWMsBar("INT25" , 65, 02  , aCB_RN_NN[1], oPrint, .F.  ,     , .T. , 0.025 , 1.5   , .F.   , "Arial", NIL, .F., 2, 2, .F.)
-		
-	//MSBAR3("INT25", 24.3, 1, aCB_RN_NN[1], oPrint, .F., Nil, Nil, 0.025, 1.5, Nil, Nil, "A", .F.)
+	If aDadosBanco[1] $ "001;237"
+	   //oPrint:Int25(2850,100,aCB_RN_NN[1],0.73,40,.F.,.F., oFont)
+	   oPrint:FWMsBar("INT25" , 65, 02  , aCB_RN_NN[1], oPrint, .F.  ,     , .T. , 0.025 , 1.5   , .F.   , "Arial", NIL, .F., 2, 2, .F.)
+	Else
+	    //
+		//MSBAR("INT25"  ,24.6,1.0, aCB_RN_NN[1] ,oPrint,.F.,,,,1.3,1.0,,,.F.)
+		oPrint:FWMsBar("INT25" , 65, 02  , aCB_RN_NN[1], oPrint, .F.  ,     , .T. , 0.025 , 1.5   , .F.   , "Arial", NIL, .F., 2, 2, .F.)
+			
+		//MSBAR3("INT25", 24.3, 1, aCB_RN_NN[1], oPrint, .F., Nil, Nil, 0.025, 1.5, Nil, Nil, "A", .F.)
+	EndIf
 
 	If Empty(Alltrim(SE1->E1_NUMBCO)) //Caio de Castro - 10/08 - Somente atualiza faixa se não for reimpressão de boleto
 		DbSelectArea("SEE")
@@ -1927,9 +2043,10 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	DbSelectArea("SE1")
 
 	If aDadosBanco[1] == "001"
-		cNumBco := SubStr(Alltrim(aCB_RN_NN[3]),1,11)+SubStr(Alltrim(aCB_RN_NN[3]),13,1) //SubStr(Alltrim(aCB_RN_NN[3]),7,5)//Right(Alltrim(aCB_RN_NN[3]),10)
+		cNumBco := aCB_RN_NN[3]//SubStr(Alltrim(aCB_RN_NN[3]),1,11)+SubStr(Alltrim(aCB_RN_NN[3]),13,1) //SubStr(Alltrim(aCB_RN_NN[3]),7,5)//Right(Alltrim(aCB_RN_NN[3]),10)
 	ElseIf aDadosBanco[1] == "237"
-		cNumBco := SubStr(Alltrim(aCB_RN_NN[3]),4)   //Elton
+		//cNumBco := SubStr(Alltrim(aCB_RN_NN[3]),4)   //Elton
+		cNumBco := SubStr(Alltrim(aCB_RN_NN[3]),3,Len(Alltrim(aCB_RN_NN[3])))   // --> Alterado por Jorge Neto - 19/06/2020 
 	ElseIf aDadosBanco[1] == "341"
 		cNumBco := SubStr(aCB_RN_NN[3],5,8)
 	ElseIf aDadosBanco[1] == "033"
@@ -1998,3 +2115,154 @@ static function sMod11(cStr,nPeso1,nPeso2) // módulo 11, com pesos nPeso1 (inici
 		nMul := if(nMul=nPeso2, nPeso1, nMul+1)
 	next
 return if(nTot%11 < 2, "0", Str(11-(nTot%11),1))
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ Modulo11A ³ Autor ³ Ronaldo Bicudo       ³ Data ³ 05/10/11 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ IMPRESSAO DO BOLETO LASER                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Modulo11A(cData,cBanco)
+Local L, D, P, R := 0
+
+If cBanco == "033" //Santander
+	L := Len(cdata)
+	D := 0
+	P := 1
+	R := 0
+	While L > 0
+		P := P + 1
+		D := D + (Val(SubStr(cData, L, 1)) * P)
+		If P = 9
+			P := 1
+		End
+		L := L - 1
+	End
+	
+	R := mod(D,11)
+	If (R == 10)
+		D := 1
+	ElseIf (R == 0 .or. R == 1)
+    	D := 0
+	Else
+    	D := (11 - R)
+	End              
+	
+	D := AllTrim(Str(D))
+	
+
+/*L := Len(cdata)   analista
+D := 0
+P := 1
+While L > 0
+	P := P + 1
+	D := D + (Val(SubStr(cData,L,1)) * P)
+	If P = 9
+		P := 1
+	End
+	L := L - 1
+End
+
+R := mod(D,11)
+If (R == 10)
+	D := 1
+ElseIf (R == 0 .or. R == 1)
+    D := 0
+Else
+    D := (11 - R)
+End              
+
+D := AllTrim(Str(D))*/
+	
+ElseIf cBanco == "237"
+	L := Len(cdata)    //ficou faltando a carteira
+	D := 0
+	P := 1
+	While L > 0
+		P := P + 1
+		D := D + (Val(SubStr(cData, L, 1)) * P)
+		If P = 7
+			P := 1
+		End
+		L := L - 1
+	End
+	
+	If (mod(D,11)) == 0
+		D:= 0
+	ElseIf (mod(D,11)) == 1
+	   D := 1
+	Else
+		D := 11 - (mod(D,11))
+		
+		If (D == 10)
+			D2 := ''
+			D2 := 'P'
+			Return(D2)
+		endif
+	Endif
+	D := AllTrim(Str(D))
+	
+ElseIf cBanco == "001"  // Banco do brasil
+	L := Len(cdata)
+	D := 0
+	P := 10
+	While L > 0
+		P := P - 1
+		D := D + (Val(SubStr(cData, L, 1)) * P)
+		If P = 2
+			P := 10
+		End
+		L := L - 1
+	End
+	D := mod(D,11)
+	If D == 10
+		D := "X"
+	End
+	D := AllTrim(Str(D))
+	
+ElseIf cBanco == "399" // HSBC
+	L := Len(cdata)
+	D := 0
+	P := 1
+	While L > 0
+		P := P + 1
+		D := D + (Val(SubStr(cData, L, 1)) * P)
+		If P = 7
+			P := 1
+		End
+		L := L - 1
+	End
+	D := 11 - (mod(D,11))
+	If (D == 1 .Or. D == 0 .Or. D == 10 .Or. D == 11)
+		D := 0
+	End
+	D := AllTrim(Str(D))
+	
+Else
+	L := Len(cdata)
+	D := 0
+	P := 1
+	
+	While L > 0
+		P := P + 1
+		D := D + (Val(SubStr(cData, L, 1)) * P)
+		If P = 9
+			P := 1
+		End
+		L := L - 1
+	End
+	D := 11 - (mod(D,11))
+	If (D == 1 .Or. D == 0 .Or. D == 10 .Or. D == 11)
+		D := 1
+	End
+	D := AllTrim(Str(D))
+endif
+
+Return(D)

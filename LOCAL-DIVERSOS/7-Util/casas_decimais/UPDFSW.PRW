@@ -2,18 +2,17 @@
 #include "tbiconn.ch"
 #include "dbstruct.ch"
 #INCLUDE "Protheus.ch"
-//#include "tryexception.ch"
 #DEFINE _CRLF	Chr(13) + Chr(10)
 
 /*
 ‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ±±⁄ƒƒƒƒƒƒƒƒƒƒ¬ƒƒƒƒƒƒƒƒƒ¬ƒƒƒƒƒƒ¬ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ¬ƒƒƒƒƒ¬ƒƒƒƒƒƒƒƒƒƒø±±
-±±≥FunáÖo    ≥ UPDFSW  ≥Autor ≥ FSW                   ≥Data ≥ 25.Jun.09≥±±
+±±≥FunáÖo    ≥ UPDFSW  ≥Autor ≥ TOTVS                 ≥Data ≥ 25.Jun.09≥±±
 ±±√ƒƒƒƒƒƒƒƒƒƒ≈ƒƒƒƒƒƒƒƒƒ¡ƒƒƒƒƒƒ¡ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ¡ƒƒƒƒƒ¡ƒƒƒƒƒƒƒƒƒƒ¥±±
 ±±≥DescriáÑo ≥ Compatibilizador de tabelas e campos                    ≥±±
 ±±√ƒƒƒƒƒƒƒƒƒƒ≈ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒ¥±±
-±±≥Uso       ≥ Bardella                                             ≥±±
+±±≥Uso       ≥ TOTVS                                                   ≥±±
 ±±¿ƒƒƒƒƒƒƒƒƒƒ¡ƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒƒŸ±±
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂ
@@ -61,8 +60,7 @@ If ( lOpen := MyOpenSm0(.T.) )
 
 	SM0->(DbGoTop())
 	RpcSetType(3) 
-	//RpcSetEnv(SM0->M0_CODIGO, SM0->M0_CODFIL)
-	RpcSetEnv("99", "01")
+	RpcSetEnv(SM0->M0_CODIGO, SM0->M0_CODFIL) //"99","01"
 	lMsFinalAuto := .F.
 	
 	//-- Obtem a lista de Updates disponiveis para execucao:
@@ -325,7 +323,6 @@ ACTIVATE MSDIALOG oDlgSM0 CENTERED
 
 Return( aEmpresas )
 
-
 //--------------------------------------------------------------------
 /*/{Protheus.doc} MyOpenSM0
 FunÁ„o de processamento abertura do SM0 modo exclusivo
@@ -356,12 +353,7 @@ For nLoop := 1 To 20
 	EndIf
 	Sleep( 500 )
 Next nLoop
-/*
-If !lOpen
-	MsgStop( "N„o foi possÌvel a abertura da tabela " + ;
-	IIf( lShared, "de empresas (SM0).", "de empresas (SM0) de forma exclusiva." ), "ATEN«√O" )
-EndIf
-*/
+
 Return lOpen
 
 /*‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹

@@ -8,7 +8,7 @@
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
 			"smartclientBin": "C:/Users/emerson.natali/Desktop/RISA_SMARTCLIENT/smartclient.exe",
-			"isMultiSession": true,
+			"isMultiSession": false,
 			"enableTableSync": true,
 			"programArguments": "SIGAMDI",
 			"enableMultiThread": false,
@@ -36,5 +36,5 @@
 			"description": ""
 		}
 	],
-	"lastProgramExecuted": "U_UPDFSW"
+	"lastProgramExecuted": "SIGAMDI"
 }
