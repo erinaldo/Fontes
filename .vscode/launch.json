@@ -8,7 +8,7 @@
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
 			"smartclientBin": "C:/Users/emerson.natali/Desktop/RISA_SMARTCLIENT/smartclient.exe",
-			"isMultiSession": false,
+			"isMultiSession": true,
 			"enableTableSync": true,
 			"programArguments": "SIGAMDI",
 			"enableMultiThread": false,

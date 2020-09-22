@@ -25,10 +25,10 @@ Private lTstQry := .t.
 cTexto  := ""
 cFOpen  := ""
 
-//IF !(__cUserID $ "000000")//Administrador 
-//	MsgStop("Você não tem Acesso a essa Rotina !!!")
-//	Return
-//Endif
+IF !(__cUserID $ "000315")//totvs.emerson (RISA) //000000 - Administrador 
+	MsgStop("Você não tem Acesso a essa Rotina !!!")
+	Return
+Endif
 
 aHeader := {{"   ","cTmp"  ,""  ,2 , 0,"","","C","",""}}
 aCols   := {{"  ",.f.}}

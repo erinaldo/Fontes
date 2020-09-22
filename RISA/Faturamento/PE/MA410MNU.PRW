@@ -19,6 +19,9 @@ User Function MA410MNU()
 
 Local aArea	:= GetArea()
 
+If ExistBlock("CFXGMNUPV") //verifica se PV esta bloqueado por regra RISA
+	ExecBlock("CFXGMNUPV", .F., .F.)
+EndIf
 
 //                                            ^
 //                                            |

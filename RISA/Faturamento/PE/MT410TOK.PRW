@@ -14,22 +14,9 @@ Ponto de Entrada
 
 User Function MT410TOK()
 Local lRet   := .T.
-Local lRegra := .T.
-
-lRegra := U_PEGC()	// Pontos de entrada da Gestao de Cereais
-
-If Type("l410Auto") == "U"
-	lRegra := .F.		// Se for gestao de cerais pode vir vazio (NIL)
-Else
-	lRegra := ! ( l410Auto ) // Se for EXECUATO nao pode executar as Regra de Precos e descontos
-Endif
-
-IF ! ALTERA .AND. ! INCLUI
-	lRegra := .F.
-Endif
 
 // Verifica os campos obrigatorios para regra de precos e descontos
-If  lRegra
+If  lRet
 	If ExistBlock("CMPREGRA")
 		lRet := ExecBlock( "CMPREGRA", .F., .F.)
 	EndIf

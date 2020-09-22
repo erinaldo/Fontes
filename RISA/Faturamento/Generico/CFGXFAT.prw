@@ -91,7 +91,7 @@ If Type("l410Auto") == "U" .OR. l410Auto     // Ignora se não identificar a orig
     Return(lRet)   
 Endif
 
-If ! U_PEGC()
+If ! U_USAREGRA()
     Return(lRet)   
 Endif
 
@@ -463,7 +463,7 @@ User Function ConsReg()
 Local bRetorno  := { || .F. }
 Local aArea 	:= GetArea()
 Local cCampo	:= ReadVar()
-Local lRegra    := U_PEGC()
+Local lRegra    := U_USAREGRA()
 
 If lRegra
     IF Empty( M->C5_CLIENTE )
@@ -472,6 +472,19 @@ If lRegra
     ElseIf Empty( M->C5_XOPER )
         MsgStop("Falta preencher o campo de Tp.operacao","Campo obrigatorio")
         Return( Eval( bRetorno ) )
+    ElseIf Empty( M->C6_TABELA )
+        If Empty( M->C5_VEND1 )
+            MsgStop("Falta preencher o campo de Vendedor","Campo obrigatorio")
+            Return( Eval( bRetorno ) )
+        Endif
+    ElseIf Empty( M->C6_PRODUTO )
+        If Empty( M->C5_VEND1 )
+            MsgStop("Falta preencher o campo de Vendedor","Campo obrigatorio")
+            Return( Eval( bRetorno ) )
+        ElseIf Empty( M->C5_TABELA )
+            MsgStop("Falta preencher o tabela de preco","Campo obrigatorio")
+            Return( Eval( bRetorno ) )
+        Endif
     Endif
 Endif
 
@@ -710,14 +723,14 @@ If Alltrim(M->C5_XOPER) $ GetMV('FS_REGRAGA',,"01/02/04")
     Return    
 Endif
 
-For nLinha := 1 TO Len(aCols)
+For nLinha := 1 TO Len(aCols) //Vare os itens do Pedido para saber se deve bloquear por Regra de Desconto (gatilho preenche o campo C6_XBLQ)
     nTotal += aCols[nLinha,nPosTOT]
     If aCols[nLinha,nPosXBLQ] == "1"
         cBloq   := "X"
     EndIf
 Next
 
-If Empty( cBloq )
+If Empty( cBloq ) //cBloq verifica a Regra de Preços e Descontos - quando vazio passa para Bloqueio em Garantia
     If M->C5_TIPO == "N"
         If nTotal > GetMV('FS_VLRGAR',,0)
             cBloq     := "Y"
@@ -789,12 +802,20 @@ Return( lRet )
 // Validacao de campos para Regras de Precos e descontos
 User Function CMPREGRA
 Local lRet := .T.
+Local nLinha    := 0
 
-If Type("l410Auto") == "U" .OR. l410Auto     // Ignora se não identificar a origem do cadastro ou se for um EXECAUTO
+// Ignora se não identificar a origem do cadastro ou se for um EXECAUTO
+If Type("l410Auto") == "U" .OR. l410Auto     
     Return(lRet)   
 Endif
 
-If ! U_PEGC()
+// Nao valida as regras se for uma EXCLUSAO
+IF ! ALTERA .AND. ! INCLUI
+    Return(lRet)   
+Endif
+
+// Condicoes que nao validam as regras de precos e descontos 
+If ! U_USAREGRA()
     Return(lRet)   
 Endif
 
@@ -802,6 +823,7 @@ If Empty(M->C5_XOPER)
     MsgStop("Campo de Operacao e Obrigatorio !")
     lRet := .F.
 EndIf
+
 If lRet 
     If M->C5_XOPER $ GetMV('FS_OPERVEN',,"01/02/04")
         If ! GetMV('FS_REGRATB',,.F.)
@@ -824,36 +846,68 @@ If lRet
         Endif
     Endif
 Endif
+
+For nLinha := 1 TO Len(aCols) //Vare os itens do Pedido para saber se deve bloquear por Regra de Desconto (gatilho preenche o campo C6_XBLQ)
+    aCols[nLinha,aScan( aHeader, {|x| Alltrim(x[2]) == 'C6_QTDLIB'  })] := 0
+Next
+
 Return( lRet )
 
-// Pontos de Entrada da Gestao de Cereais
-User Function PEGC()
+// Chamadas de Outros Modulos que nao devem utilizar as regras de precos e descontos
+User Function USAREGRA()
 Local lRet  := .T.
+
+// Ignora se não identificar a origem do cadastro ou se for um EXECAUTO
+If Type("l410Auto") == "U" .OR. l410Auto 
+    lRet := .F.   
+Endif
 
 If       IsInCallStack("VEIXA018")      ;   // VEICULOS       - Função que não obriga o preenchimento de campos
     .OR. IsInCallStack("OFIXA100")      ;   // OFICINA        - Função que não obriga o preenchimento de campos
     .OR. IsInCallStack("OFIXA011")      ;   // OFICINA BALCAO - Função que não obriga o preenchimento de campos
-    .OR. IsInCallStack("GCSC5BRW")      ;
-    .OR. IsInCallStack("MOV01ADEV")     ;
-    .OR. IsInCallStack("AUT001NFS")     ;
-    .OR. IsInCallStack("AUT004NFS")     ;
-    .OR. IsInCallStack("AUT004DOCS")    ;
-    .OR. IsInCallStack("AUT005DOCS")    ;
-    .OR. IsInCallStack("CTS01GRDEV")    ;
-    .OR. IsInCallStack("CTV01NFEXP")    ;
-    .OR. IsInCallStack("U_CTV01NFMAN")  ;
-    .OR. IsInCallStack("CTC01ENFGH")    ;
-    .OR. IsInCallStack("CTC01ENFF7")    ;
-    .OR. IsInCallStack("CTS01BENPR")    ;
-    .OR. IsInCallStack("CTT01GERPV")    ;
-    .OR. IsInCallStack("CTT01EXCPV")    ;
-    .OR. IsInCallStack("CTT001SWCT")    ;
-    .OR. IsInCallStack("CTV01NFCMP")    ;
-    .OR. IsInCallStack("MONTADOCDEV")   ;
-    .OR. IsInCallStack("AUT001EXCDOCS") ;
-    .OR. IsInCallStack("AUT004EXCDOCS") ;
-    .OR. IsInCallStack("AUT005EXCDOCS") ;
-    .OR. IsInCallStack("MONTADOCSAIDA")
+    .OR. IsInCallStack("GCSC5BRW")      ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("MOV01ADEV")     ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("AUT001NFS")     ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("AUT004NFS")     ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("AUT004DOCS")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("AUT005DOCS")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTS01GRDEV")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTV01NFEXP")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("U_CTV01NFMAN")  ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTC01ENFGH")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTC01ENFF7")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTS01BENPR")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTT01GERPV")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTT01EXCPV")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTT001SWCT")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("CTV01NFCMP")    ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("MONTADOCDEV")   ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("AUT001EXCDOCS") ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("AUT004EXCDOCS") ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("AUT005EXCDOCS") ;   // P.E. Gestao de Cereais
+    .OR. IsInCallStack("MONTADOCSAIDA")     // P.E. Gestao de Cereais
     lRet := .F.
 Endif
+
 Return( lRet )
+
+//Ajusta menu Pedido de VEndas
+User Function CFXGMNUPV()
+
+//Rotina de preparação Documento de Saida ("Ma410PvNfs")
+aRotina[ascan(arotina,{|x| alltrim(x[2]) == "Ma410PvNfs"}),2] := "u_CFXGBLOQ()"
+
+Return()
+
+//Nao permite acessar rotina se pedido bloqueadp
+User Function CFXGBLOQ()
+
+If SC5->C5_BLQ == "Y" //Bloqueado em Garantia
+    MsgStop("Pedido Bloqueado em Garantia")
+ElseIf SC5->C5_BLQ == "Y" //Bloqueado Regras de Preços e Descontos
+    MsgStop("Pedido Bloqueado por Regras de Preços e Descontos")
+Else
+    Ma410PvNfs()
+EndIf
+
+Return

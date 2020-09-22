@@ -15,24 +15,20 @@ Ponto de Entrada apos confirmacao da alteracao do pedido
 User Function MT410ALT()
 Local lRet := .T.
 
-If Type("l410Auto") == "U" .OR. l410Auto     // Ignora se não identificar a origem do cadastro ou se for um EXECAUTO
-    Return(lRet)   
-Endif
+// Chamadas de outros modulos que nao utilizam as regras de precos e descontos
+If U_USAREGRA()
 
-If ! U_PEGC()
-    Return(lRet)   
-Endif
-
-If ExistBlock("BlocPed")
-    ExecBlock( "BlocPed", .F., .F.)
-Endif
-
-If ExistBlock("AESS001")
-    IF SC5->C5_BLQ <> "X"
-        If MSGYESNO("Deseja imprimir o pedido?")
-            ExecBlock( "AESS001", .F., .F.)
+    If ExistBlock("BlocPed")
+        ExecBlock( "BlocPed", .F., .F.)
+    Endif
+    If ExistBlock("AESS001")
+        IF SC5->C5_BLQ <> "X"
+            If MSGYESNO("Deseja imprimir o pedido?")
+                ExecBlock( "AESS001", .F., .F.)
+            Endif
         Endif
     Endif
+
 Endif
 
 Return(lRet)
