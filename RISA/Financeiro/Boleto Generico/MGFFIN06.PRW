@@ -29,9 +29,8 @@ User Function MULTIBOL(lDanfe,lEmail,lTitulo)
 	Local 	aParam		:= {}
 	Local 	aRet		:= {}
 	Local 	nXi			:= 0
-	Local   cSubCta		:= "REA"
 	Local   aBcoPad		:= StrToKarr( Alltrim( SuperGetMV("FS_BCOPAD",.T.,"SUB;BCO;AGE;CTA") ), ";" )
-
+	Local   cSubCta		:= aBcoPad[1]
 
 	Private lExec      := .F.
 	Private cIndexName := ''
@@ -124,12 +123,13 @@ User Function MULTIBOL(lDanfe,lEmail,lTitulo)
 			Endif
 		Endif	
 	
+		/*
 		// Nao imprime Se Cond Pagamento == A Vista
 		If Alltrim(SF2->F2_COND) == "001"
 			Help(" ",1,"MULTIBOL",,"Condicao de Pagamento A VISTA. Boleto nao sera impresso.",1,0)
 			Return .f.	
 		Endif			
-					
+		*/			
 		// Atualiza parametro do banco MV_PAR20 A MV_PAR21
 
 		MV_PAR01	:= SPACE(3)				//De Prefixo
@@ -150,7 +150,10 @@ User Function MULTIBOL(lDanfe,lEmail,lTitulo)
 		MV_PAR16	:= SF2->F2_EMISSAO+5000	//Ate Vencimento
 		MV_PAR17	:= SPACE(6)				//Do Bordero
 		MV_PAR18	:= "ZZZZZZ"				//Ate Bordero
-		
+		MV_PAR19	:= aBcoPad[1] //SubConta
+		MV_PAR20	:= aBcoPad[2] //Banco 
+		MV_PAR21	:= aBcoPad[3] //Agencia 
+		MV_PAR22	:= aBcoPad[4] //Conta
 	ElseIf lTitulo	
 	
 	
@@ -195,12 +198,17 @@ User Function MULTIBOL(lDanfe,lEmail,lTitulo)
 		MV_PAR17	:= SPACE(6)				//Do Bordero
 		MV_PAR18	:= "ZZZZZZ"				//Ate Bordero	
 
+		MV_PAR19	:= iif(Empty(aMV[19]),cSubCta,aMV[19]) //SubConta
+		MV_PAR20	:= SE1->E1_PORTADO //Banco 
+		MV_PAR21	:= SE1->E1_AGEDEP //Agencia 
+		MV_PAR22	:= SE1->E1_CONTA //Conta
+
 	Endif
 
 
 	cIndexName	:= Criatrab(Nil,.F.)
 	cIndexKey	:= "E1_PORTADO+E1_CLIENTE+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO+DTOS(E1_EMISSAO)"
-	/*
+
 	cFilter		+= "E1_FILIAL=='"+xFilial("SE1")+"'.And.E1_SALDO>0.And."
 	cFilter		+= "E1_PREFIXO>='" + MV_PAR01 + "'.And.E1_PREFIXO<='" + MV_PAR02 + "'.And."
 	cFilter		+= "E1_NUM>='" + MV_PAR03 + "'.And.E1_NUM<='" + MV_PAR04 + "'.And."
@@ -209,21 +217,8 @@ User Function MULTIBOL(lDanfe,lEmail,lTitulo)
 	cFilter		+= "E1_CLIENTE>='" + MV_PAR09 + "'.And.E1_CLIENTE<='" + MV_PAR10 + "'.And."
 	cFilter		+= "E1_LOJA >='" + MV_PAR11 + "'.And.E1_LOJA<='"+MV_PAR12+"'.And."
 	cFilter		+= "DTOS(E1_EMISSAO)>='"+DTOS(mv_par13)+"'.and.DTOS(E1_EMISSAO)<='"+DTOS(mv_par14)+"'.And."
-	cFilter		+= 'DTOS(E1_VENCREA)>="'+DTOS(mv_par15)+'".and.DTOS(E1_VENCREA)<="'+DTOS(mv_par16)+'".And.'
-	cFilter		+= "E1_NUMBOR>='" + MV_PAR17 + "'.And.E1_NUMBOR<='" + MV_PAR18 + "'.And."
-	cFilter     += "!(E1_TIPO$MVABATIM) .And. "
-	cFilter		+= "(E1_PORTADO = '   ' .or. E1_PORTADO = '"+ MV_PAR20 +"' ) " 
-	*/
-	cFilter		+= "E1_FILIAL=='"+xFilial("SE1")+"'.And.E1_SALDO>0.And."
-	cFilter		+= "E1_PREFIXO>='" + MV_PAR01 + "'.And.E1_PREFIXO<='" + MV_PAR02 + "'.And."
-	cFilter		+= "E1_NUM>='" + MV_PAR03 + "'.And.E1_NUM<='" + MV_PAR04 + "'.And."
-	cFilter		+= "E1_PARCELA>='" + MV_PAR05 + "'.And.E1_PARCELA<='" + MV_PAR06 + "'.And."
-	cFilter		+= "E1_PORTADO>='" + MV_PAR07 + "'.And.E1_PORTADO<='" + MV_PAR08 + "'.And."
-	cFilter		+= "E1_CLIENTE>='" + MV_PAR09 + "'.And.E1_CLIENTE<='" + MV_PAR10 + "'.And."
-	cFilter		+= "E1_LOJA >='" + MV_PAR11 + "'.And.E1_LOJA<='"+MV_PAR12+"'.And."
-	cFilter		+= "DTOS(E1_EMISSAO)>='"+DTOS(mv_par13)+"'.and.DTOS(E1_EMISSAO)<='"+DTOS(mv_par14)+"'.And."
-	cFilter		+= 'DTOS(E1_VENCREA)>="'+DTOS(mv_par15)+'".and.DTOS(E1_VENCREA)<="'+DTOS(mv_par16)+'".And.'
-	cFilter		+= "E1_NUMBOR>='" + MV_PAR17 + "'.And.E1_NUMBOR<='" + MV_PAR18 + "'.And."
+	cFilter		+= "DTOS(E1_VENCREA)>='"+DTOS(mv_par15)+"'.and.DTOS(E1_VENCREA)<='"+DTOS(mv_par16)+"'.And."
+	cFilter		+= IIF(lDanfe," ","E1_NUMBOR>='" + MV_PAR17 + "'.And.E1_NUMBOR<='" + MV_PAR18 + "'.And.")
 	cFilter     += "!(E1_TIPO$MVABATIM) "
 
 	IndRegua("SE1", cIndexName, cIndexKey,, cFilter, "Aguarde selecionando registros....")
@@ -275,9 +270,9 @@ User Function MULTIBOL(lDanfe,lEmail,lTitulo)
 	MV_PAR17 := aMV[17]
 	MV_PAR18 := aMV[18]
 	MV_PAR19 := aMV[19]
-	MV_PAR20 := aMV[20]
-	MV_PAR21 := aMV[21]
-	MV_PAR22 := aMV[22]
+	MV_PAR20 := aMV[20] // Banco
+	MV_PAR21 := aMV[21] // Agencia
+	MV_PAR22 := aMV[22] // Conta
 
 Return .t.
 
@@ -457,10 +452,9 @@ User Function RF01B062(xBanco,xAgencia,xConta,xSubCt, lEmail)
 			Endif
 		Endif	
 	
-		xBanco   := MV_PAR20//SA1->A1_BCO1
-
-		xAgencia := MV_PAR21//aBco[1]
-		xConta   := MV_PAR22//aBco[2]
+		xBanco   := MV_PAR20	//SA1->A1_BCO1
+		xAgencia := MV_PAR21	//aBco[1]
+		xConta   := MV_PAR22	//aBco[2]
 
 		cBanco   := iif(xBanco   ==nil .or. empty(xBanco),SE1->E1_PORTADO,xBanco)
 		cAgencia := iif(xAgencia ==nil .or. empty(xAgencia),SE1->E1_AGEDEP,xAgencia)
@@ -1326,6 +1320,7 @@ Static Function VldPrg1()
 	aAdd(aRegs,{cPerg,"16","Ate Vencimento ?","","","mv_chg","D",8,0,0,"G","","MV_PAR16","","","","31/12/03","","","","","","","","","","","","","","","","","","","","","","","","",""})
 	aAdd(aRegs,{cPerg,"17","Do Bordero     ?","","","mv_chh","C",6,0,0,"G","","MV_PAR17","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
 	aAdd(aRegs,{cPerg,"18","Ate Bordero    ?","","","mv_chi","C",6,0,0,"G","","MV_PAR18","","","","ZZZZZZ","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"19","SubConta       ?","","","mv_chj","C",3,0,0,"G","","MV_PAR19","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""})
 
 	//aAdd(aRegs,{cPerg,"20","Env.E-mail     ?","","","mv_chk","N",1,0,2,"C","","MV_PAR20","Nao","","","","","Sim","","","","","","","","","","","","","","","","","","","","","","","",""})
 
